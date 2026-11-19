@@ -28,6 +28,8 @@ export const PANELS: Messages = {
   "panels.concurrent_writers_full": { zh: "同时写的名额满了", en: "Concurrent writers full" },
   "panels.confirm_and_create": { zh: "确认创建", en: "Confirm and create" },
   "panels.confirm_stopping_background_task_cmd": { zh: "确定停止后台任务：{cmd}", en: "Confirm stopping background task: {cmd}" },
+  "panels.unclassified": { zh: "未计入", en: "Unclassified" },
+  "panels.what_the_prompt_costs_outside": { zh: "请求本身的开销：协议框架、比估算更密的分词，以及没有单独计价的部分。与上面的分段相加等于当前占用。", en: "What the request itself costs: protocol framing, a tokenizer denser than the estimate, and anything not priced as a class. It adds up with the classes to the usage figure above." },
   "panels.context_window_tokens": { zh: "上下文窗口（tokens）", en: "Context window (tokens)" },
   "panels.copy_output": { zh: "复制输出", en: "Copy output" },
   "panels.could_not_read_the_progress": { zh: "无法读取无进展设置。", en: "Could not read the progress settings." },

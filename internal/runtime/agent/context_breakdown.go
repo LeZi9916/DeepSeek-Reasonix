@@ -31,8 +31,16 @@ type ContextBreakdown struct {
 	User               int                 `json:"user"`   // what the user typed
 	Reply              int                 `json:"reply"`  // what the model said
 	Output             int                 `json:"output"` // what tools returned
-	Total              int                 `json:"total"`
-	Window             int                 `json:"window"`
+	// Prompt is the sum of the classes above, priced piece by piece.
+	Prompt int `json:"prompt"`
+	// Budget is the fold trigger's reading of Total; the panel scales onto it.
+	Budget int `json:"-"`
+	// Total is the prompt size the next request sends: the provider's own count
+	// where it has answered, the local estimate otherwise.
+	Total  int `json:"total"`
+	Window int `json:"window"`
+	// Overhead is what Total carries beyond the measured classes.
+	Overhead int `json:"overhead"`
 	// CompactAt is the lower of the two configured bounds, which is where this
 	// session actually folds: a gauge drawn against the window instead can look
 	// nearly empty at the moment maintenance happens.
@@ -108,6 +116,10 @@ func (a *Agent) ContextBreakdown() ContextBreakdown {
 	}
 	out.ProjectMemory = a.window().classTokens(memory, false)
 	out.Largest = holdersByClass(largest)
+	out.Prompt = out.System + out.Tools + out.ProjectMemory + out.User + out.Reply + out.Output
+	out.Total = a.ContextUsedTokens()
+	out.Budget = a.window().contextUsedTokens()
+	out.Overhead = max(0, out.Total-out.Prompt)
 	return out
 }
 

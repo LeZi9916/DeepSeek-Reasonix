@@ -18,6 +18,10 @@ export interface ContextBreakdown {
   compact_at: number;
   boundary: string;
   capacity_at: number;
+  // What the prompt costs beyond the classed messages: provider framing, a
+  // tokenizer denser than the cold estimate, and fields the breakdown does not
+  // price. The classes are scaled onto used, so this is what that leaves over.
+  overhead?: number;
   // The largest single messages of each class, largest first; sizes and the
   // producing tool, never text. Absent when the session holds none.
   largest?: ContextHolder[];

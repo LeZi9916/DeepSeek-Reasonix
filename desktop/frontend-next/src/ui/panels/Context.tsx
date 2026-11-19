@@ -150,7 +150,16 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
   const press = !folds ? undefined : pct >= 92 ? "soon" : pct >= 75 ? "near" : undefined;
   const shown = parts().map(([k, label, why]) => ({ k, label, why, n: partTokens(ctx, k) })).filter((p) => p.n > 0);
   const files = ctx.project_memory_files ?? [];
-  const sum = shown.reduce((a, p) => a + p.n, 0) || 1;
+  // One denominator for the header and the legend. The classes are priced piece
+  // by piece, the gauge may prefer the provider's own count, and the two are
+  // different sums — so the classes are scaled onto the figure the header
+  // names, and whatever they do not account for is its own row. Drawn against
+  // the classes' sum instead, a bar at 8% of the window sat above a legend
+  // adding to 100% of something else.
+  const sum = shown.reduce((a, p) => a + p.n, 0);
+  const scale = sum > 0 ? Math.min(1, used / sum) : 0;
+  const share = (n: number) => (used > 0 ? (n * scale) / used : 0);
+  const unmeasured = Math.max(0, used - sum);
 
   // A relay's window is one number somebody typed for every model it forwards,
   // so the denominator is a guess as often as a fact — and this is the only
@@ -196,7 +205,7 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
         onBlur={() => setOpen(false)}
       >
         {shown.map((p) => (
-          <i key={p.k} data-p={p.k} style={{ width: `${(p.n / sum) * pct}%` }} />
+          <i key={p.k} data-p={p.k} style={{ width: `${share(p.n) * pct}%` }} />
         ))}
       </div>
       {press && (
@@ -240,7 +249,7 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
             <div className="r" key={p.k} title={p.why}>
               <i data-p={p.k} />
               <span className="t">{p.label}</span>
-              <em>{percent(p.n / sum)}</em>
+              <em>{percent(share(p.n))}</em>
               {p.k === "memory" && files && files.length > 0 ? (
                 <button
                   type="button"
@@ -257,6 +266,14 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
               )}
             </div>
           ))}
+          {unmeasured > 0 && (
+            <div className="r" title={t("panels.what_the_prompt_costs_outside")}>
+              <i data-p="overhead" />
+              <span className="t">{t("panels.unclassified")}</span>
+              <em>{percent(share(unmeasured))}</em>
+              <b>{tokens(unmeasured)}</b>
+            </div>
+          )}
         </div>
       )}
       {legend && listed === "memory" && files.length > 0 && (
@@ -281,9 +298,17 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
               <i data-p={p.k} />
               <span className="t">{p.label}</span>
               <span className="v">{tokens(p.n)}</span>
-              <span className="p">{percent(p.n / sum)}</span>
+              <span className="p">{percent(share(p.n))}</span>
             </div>
           ))}
+          {unmeasured > 0 && (
+            <div className="row" title={t("panels.what_the_prompt_costs_outside")}>
+              <i data-p="overhead" />
+              <span className="t">{t("panels.unclassified")}</span>
+              <span className="v">{tokens(unmeasured)}</span>
+              <span className="p">{percent(share(unmeasured))}</span>
+            </div>
+          )}
           {files.length > 0 && (
             <>
               <div className="hd sub"><span>{t("panels.project_memory_files")}</span></div>

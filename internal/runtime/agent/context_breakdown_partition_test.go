@@ -112,3 +112,30 @@ func TestFoldDigestIsNotCountedAsAModelReply(t *testing.T) {
 		t.Fatalf("the digest must move to the system side, not into the user class: before=%+v after=%+v", before, after)
 	}
 }
+
+// The gauge may prefer the provider's own count while the classes are priced
+// piece by piece, so the two are different sums. The breakdown has to publish
+// both and the gap between them rather than leave a panel to invent a
+// relationship between a bar and a legend that do not add up.
+func TestBreakdownNamesBothAccountsAndTheirGap(t *testing.T) {
+	a, _ := newAnchorAgent(t)
+	sendWithUsage(t, a, &provider.Usage{PromptTokens: 60_000})
+
+	b := a.ContextBreakdown()
+	sum := b.System + b.Tools + b.ProjectMemory + b.User + b.Reply + b.Output
+	if sum == 0 {
+		t.Fatalf("no class reported tokens: %+v", b)
+	}
+	if sum != b.Prompt {
+		t.Fatalf("classes sum to %d but the breakdown reports %d", sum, b.Prompt)
+	}
+	if b.Budget <= 0 || b.Budget != b.Total {
+		t.Fatalf("the panel has no denominator of its own: total=%d budget=%d", b.Total, b.Budget)
+	}
+	if b.Overhead != max(0, b.Total-b.Prompt) {
+		t.Fatalf("overhead %d does not describe the gap between %d and %d", b.Overhead, b.Total, b.Prompt)
+	}
+	if b.Total > b.Prompt && b.Overhead == 0 {
+		t.Fatal("a total above the classes reported no overhead")
+	}
+}

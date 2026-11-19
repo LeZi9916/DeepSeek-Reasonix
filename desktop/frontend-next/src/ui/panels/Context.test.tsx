@@ -148,3 +148,39 @@ describe("usage is one number and the ceilings are two questions", () => {
     expect(html).toContain("8%");    // of the window
   });
 });
+
+// The legend's rows and the header percentage answer the same question about the
+// same prompt. When the classes were priced at a different rate from the gauge,
+// the rows added to 100% of one sum while the header named a share of another,
+// and the panel offered no way to see which.
+describe("the legend shares the header's denominator", () => {
+  const rows = (html: string) =>
+    [...html.matchAll(/class="r"[^>]*title="[^"]*">\s*<i[^>]*><\/i>\s*<span class="t">([^<]*)<\/span>\s*<em>(\d+)%<\/em>/g)]
+      .map((m) => ({ label: m[1], share: Number(m[2]) }));
+
+  it("adds the classes and the unmeasured remainder to the usage figure", () => {
+    // 60k of classes against an 82k prompt the provider counted: the classes
+    // account for 73%, and the rest is named rather than dropped.
+    const html = draw(wide());
+    const parts = rows(html);
+    expect(parts.length).toBeGreaterThan(0);
+    const total = parts.reduce((a, p) => a + p.share, 0);
+    expect(total).toBeGreaterThanOrEqual(99);
+    expect(total).toBeLessThanOrEqual(101);
+  });
+
+  it("names what the classes do not account for", () => {
+    const html = draw(wide({
+      used: 100_000,
+      system: 10_000, tools: 10_000, user: 10_000, reply: 10_000, output: 10_000,
+    }));
+    expect(html).toContain("未计入");
+    // 50k of classes against a 100k prompt: exactly half is unaccounted.
+    expect(rows(html).find((p) => p.label === "未计入")?.share).toBe(50);
+  });
+
+  it("shows no remainder when the classes already add up", () => {
+    const html = draw(wide({ used: 82_000 }));
+    expect(rows(html).find((p) => p.label === "未计入")).toBeUndefined();
+  });
+});
