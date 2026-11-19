@@ -12,6 +12,14 @@ var errRuntimeGone = errors.New("no such runtime")
 // Close retires a runtime: the conversation is persisted, the assembly torn
 // down, and the session file released for another window to open.
 func (h *Hub) Close(id string) error {
+	return h.close(id, false)
+}
+
+// close retires one runtime. Detached close is for a process that is exiting
+// because its parent went away: the conversation is snapshotted and written,
+// but a background job's grace window is left to its own cancellation rather
+// than waited out, so the process can be replaced promptly.
+func (h *Hub) close(id string, detached bool) error {
 	h.mu.Lock()
 	rt := h.runtimes[id]
 	if rt == nil {
@@ -47,7 +55,11 @@ func (h *Hub) Close(id string) error {
 	if err := rt.Server.Controller().Snapshot(); err != nil {
 		slog.Warn("serve: snapshot before closing runtime", "id", id, "err", err)
 	}
-	rt.Server.Controller().Close()
+	if detached {
+		rt.Server.Controller().CloseAfterDestroy()
+	} else {
+		rt.Server.Controller().Close()
+	}
 	if rt.leases != nil {
 		rt.leases.Release()
 	}
@@ -56,9 +68,22 @@ func (h *Hub) Close(id string) error {
 
 // Shutdown closes every runtime, newest first.
 func (h *Hub) Shutdown() {
+	h.shutdown(false)
+}
+
+// ShutdownDetached closes every runtime for a process whose parent has gone.
+// The transcript of each pane is written before its controller is released, but
+// a background job is not waited out: the window that asked for the exit is
+// gone, and an installer replacing this build gives it seconds, not the job
+// teardown's grace.
+func (h *Hub) ShutdownDetached() {
+	h.shutdown(true)
+}
+
+func (h *Hub) shutdown(detached bool) {
 	defer h.closeLegacyListings()
 	for _, view := range h.List() {
-		if err := h.Close(view.ID); err != nil {
+		if err := h.close(view.ID, detached); err != nil {
 			slog.Warn("serve: close runtime", "id", view.ID, "err", err)
 		}
 	}

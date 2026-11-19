@@ -21,6 +21,7 @@ import (
 	"reasonix/internal/ext/modhost"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -232,11 +233,16 @@ func run(lease io.Reader, handshakeTo, logs io.Writer, page string, shell shellI
 	phases := newStartupPhases(logs, time.Now)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	// A host whose parent went away is being replaced, not wound down by a
+	// person, and the installer that asked gets seconds rather than the grace a
+	// running background job would otherwise be granted.
+	var orphaned atomic.Bool
 	if lease != nil {
 		// The parent's end of the pipe closing is the parent going away, exit
 		// or crash alike. Nothing else says that on all three platforms.
 		go func() {
 			_, _ = io.Copy(io.Discard, lease)
+			orphaned.Store(true)
 			stop()
 		}()
 	}
@@ -258,7 +264,13 @@ func run(lease io.Reader, handshakeTo, logs io.Writer, page string, shell shellI
 	}
 	// After the socket has drained, never before: a pane torn down under a live
 	// request answers it with a half-closed kernel.
-	defer hub.Shutdown()
+	defer func() {
+		if orphaned.Load() {
+			hub.ShutdownDetached()
+			return
+		}
+		hub.Shutdown()
+	}()
 	startScheduleTicker(ctx, lease != nil, hub, logs)
 
 	bound, err := bind(hub.Handler())
