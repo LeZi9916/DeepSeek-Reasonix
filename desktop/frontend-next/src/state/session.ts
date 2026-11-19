@@ -6,7 +6,7 @@ import { foldExtension } from "./extension";
 import { surfaceHistory } from "../ui/surface/call";
 import type { CostCoverage, Tool, WireEvent } from "../port/wire";
 import { noteTool, type Executions } from "./executions";
-import { estimateTokens, sample } from "../port/tokens";
+import { estimateTokens } from "../port/tokens";
 import type { HistoryMessage } from "../port/port";
 import { plural, t } from "../i18n";
 import { currentStep, stepDone, stepLabel } from "./session_types";
@@ -30,6 +30,7 @@ import { foldStall } from "./stall";
 import { nameQueued, QUEUE_HELD, withoutPendingRow } from "./queued";
 import { capToolOutput } from "./outputcap";
 import { dropTool, foldProgress, foldTool, isSubagentProgress, mergeReads, notePhase, noteRan } from "./fold";
+import { newArgTokens, streamed } from "./arrivals";
 import { rebuild } from "./rebuild";
 export { chipLabel };
 export { quoteAmount };
@@ -173,8 +174,8 @@ const holdsWait = new Set<string>([
 export function reduce(s: SessionState, ev: SessionEvent): SessionState {
   const next = foldStall(apply(measureInteractions(s, ev), ev), ev);
   if (next.items === s.items) return next;
-  const streamed = ev.kind === "text" || ev.kind === "reasoning";
-  const bumped = streamed ? next : { ...next, revision: next.revision + 1 };
+  const isStream = ev.kind === "text" || ev.kind === "reasoning";
+  const bumped = isStream ? next : { ...next, revision: next.revision + 1 };
   return { ...bumped, ...entering(s, bumped, ev) };
 }
 
@@ -384,8 +385,7 @@ function apply(s: SessionState, ev: SessionEvent): SessionState {
       return {
         ...s,
         doing: "composer.thinking",
-        outWindow: sample(s.outWindow, estimateTokens(ev.text ?? ""), Date.now()),
-        outLive: s.outLive + estimateTokens(ev.text ?? ""),
+        ...streamed(s, estimateTokens(ev.text ?? "")),
         items: appendText(s.items, ev.text ?? "", "reasoning", ev.source, ev.modelRef || s.turnModel),
       };
 
@@ -393,8 +393,7 @@ function apply(s: SessionState, ev: SessionEvent): SessionState {
       return {
         ...s,
         doing: "composer.answering",
-        outWindow: sample(s.outWindow, estimateTokens(ev.text ?? ""), Date.now()),
-        outLive: s.outLive + estimateTokens(ev.text ?? ""),
+        ...streamed(s, estimateTokens(ev.text ?? "")),
         items: appendText(s.items, ev.text ?? "", "text", ev.source, ev.modelRef || s.turnModel),
       };
 
@@ -403,7 +402,7 @@ function apply(s: SessionState, ev: SessionEvent): SessionState {
 
     case "tool_dispatch":
       return ev.tool
-        ? { ...s, doing: ev.tool.name, executions: noteTool(s.executions, ev.tool, false), items: foldTool(ev.tool.parentId ? s.items : ev.tool.partial ? stopThought(s.items) : sealSay(s.items), ev.tool, true) }
+        ? { ...s, doing: ev.tool.name, executions: noteTool(s.executions, ev.tool, false), items: foldTool(ev.tool.parentId ? s.items : ev.tool.partial ? stopThought(s.items) : sealSay(s.items), ev.tool, true), ...streamed(s, newArgTokens(s.items, ev.tool)) }
         : s;
 
     case "tool_progress":

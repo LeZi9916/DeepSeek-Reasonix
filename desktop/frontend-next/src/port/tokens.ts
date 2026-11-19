@@ -8,6 +8,13 @@ export function estimateTokens(s: string): number {
   return Math.ceil(narrow / 4) + wide;
 }
 
+// Streamed tool arguments arrive as a character count, with nothing to split by
+// script. JSON keys, paths and code are overwhelmingly ASCII, so the narrow
+// side of the rule above is the estimate this can honestly make.
+export function estimateChars(n: number): number {
+  return Math.ceil(n / 4);
+}
+
 export interface Sample {
   t: number;
   n: number;
