@@ -532,6 +532,7 @@ export const ACTIONS: UIAction[] = [
   { id: "permissions.rule-level", kind: "kernel-mutation", target: "none", proof: "authority-effect" },
   { id: "sandbox.workspace-root", kind: "kernel-mutation", target: "none", proof: "authority-effect" },
   { id: "context.largest", kind: "view", target: "none", proof: "interaction" },
+  { id: "context.memory-files", kind: "view", target: "none", proof: "interaction" },
   { id: "compaction.confirm", kind: "view", target: "none", proof: "interaction" },
   { id: "compaction.now", kind: "kernel-mutation", target: "none", proof: "interaction" },
   { id: "panel.move", kind: "kernel-mutation", target: "none", proof: "authority-effect" },

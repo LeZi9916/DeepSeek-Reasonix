@@ -64,6 +64,7 @@
 .chrome-context-card:not(.studio-overview-card) > section { padding: 10px 14px 12px; margin-top: 8px; border-top: 1px solid var(--hair); }
 .chrome-context-card [data-part="sys"] { background: var(--muted); }
 .chrome-context-card [data-part="tool"] { background: var(--net); }
+.chrome-context-card [data-part="memory"] { background: var(--cat-6); }
 .chrome-context-card [data-part="user"] { background: color-mix(in srgb, var(--net) 60%, transparent); }
 .chrome-context-card [data-part="reply"] { background: color-mix(in srgb, var(--net) 35%, transparent); }
 .chrome-context-card [data-part="output"] { background: color-mix(in srgb, var(--net) 20%, transparent); }

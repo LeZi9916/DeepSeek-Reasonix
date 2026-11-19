@@ -11,6 +11,7 @@ afterEach(cleanup);
 const breakdown = (over: Partial<ContextBreakdown> = {}): ContextBreakdown => ({
   used: 40_000, window: 1_000_000, compact_at: 160_000, boundary: "capacity", capacity_at: 800_000,
   system: 5_000, tools: 6_000, user: 2_000, reply: 3_000, output: 24_000,
+  project_memory: 0,
   largest: [
     { class: "output", tool: "read_file", tokens: 12_000 },
     { class: "output", tool: "grep", tokens: 8_000, active: true },
@@ -49,6 +50,8 @@ it("keeps one class open at a time", async () => {
   expect(document.querySelector(".chrome-context-items")).toBeNull();
 });
 
+// Project memory is absent from this fixture, so the card draws five classes:
+// a class nobody loaded has no row to give a figure to.
 it("offers no list for a class with no holders named, nor at all from a kernel that names none", () => {
   render(card(breakdown()));
   expect(toggle("reply")).toBeNull();

@@ -431,7 +431,7 @@ body { background: var(--page) !important; }
 .chrome-context-bar > i { min-width: 2px; height: 100%; }
 .chrome-context-card [data-part="sys"] { background: #68a7b7; }
 .chrome-context-card [data-part="tool"] { background: #8d9be0; }
-.chrome-context-card [data-part="user"] { background: #d0d2cc; }
+.chrome-context-card [data-part="memory"] { background: var(--cat-6); }.chrome-context-card [data-part="user"] { background: #d0d2cc; }
 .chrome-context-card [data-part="reply"] { background: #79a78a; }
 .chrome-context-card [data-part="output"] { background: #7d817a; }
 .chrome-context-parts { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 12px; }

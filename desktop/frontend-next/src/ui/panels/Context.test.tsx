@@ -9,6 +9,7 @@ const wide = (over: Partial<ContextBreakdown> = {}): ContextBreakdown => ({
   used: 82_000, window: 1_000_000, compact_at: 160_000,
   boundary: "capacity", capacity_at: 800_000,
   system: 20_000, tools: 12_000, user: 10_000, reply: 20_000, output: 20_000,
+  project_memory: 0,
   ...over,
 });
 

@@ -6,6 +6,7 @@ import type { AgentPort, ContextBreakdown } from "../../port/port";
 import { pct as percent, tokens } from "../../i18n/format";
 import { pinToViewport } from "../place";
 import { Row } from "./kit";
+import { StudioIcon } from "../StudioIcon";
 import { CompactNow, type CompactAction } from "../CompactNow";
 
 // The order is the order they arrive in a prompt, so the bar reads the way the
@@ -16,15 +17,18 @@ import { CompactNow, type CompactAction } from "../CompactNow";
 // and a module body runs before it — so a table built here froze five labels in
 // the source language and never followed the interface into English again. The
 // literals stay inside t() so the catalogue scanner still sees them.
-// The five message classes, named rather than "some key of the breakdown":
+// The message classes, named rather than "some key of the breakdown":
 // the type also carries the two ceilings and the boundary's name, and none of
-// those is a slice of the bar.
-type Part = "system" | "tools" | "user" | "reply" | "output";
+// those is a slice of the bar. Project memory is its own class because it
+// arrives inside user turns; a reader who found it only there would count it as
+// their own message and have nothing to edit.
+type Part = "system" | "tools" | "memory" | "user" | "reply" | "output";
 
 function parts(): [Part, string, string][] {
   return [
     ["system", t("common.system_prompt"), t("panels.base_instructions_memory_the_skill")],
     ["tools", t("common.tool_definitions"), t("panels.the_tool_list_sent_to")],
+    ["memory", t("panels.project_memory"), t("panels.the_workspace_rules_files_it")],
     ["user", t("common.what_you_said"), t("panels.your_side_of_this_session")],
     ["reply", t("common.model_replies"), t("panels.what_the_model_has_said")],
     ["output", t("common.tool_output"), t("panels.what_commands_reads_and_searches")],
@@ -35,6 +39,13 @@ function parts(): [Part, string, string][] {
 // Gap between the bar and the bubble. It lives here rather than in CSS because
 // a fixed bubble is placed by measurement, so no rule owns the offset any more.
 const GAP = 9;
+
+// partTokens reads one class off the breakdown. The panel's own name for the
+// class is shorter than the wire's, and keeping the mapping in one place is what
+// stops a renamed field from silently reading as zero.
+function partTokens(ctx: ContextBreakdown, k: Part): number {
+  return k === "memory" ? ctx.project_memory || 0 : ctx[k] || 0;
+}
 
 // The metrics rail scrolls, and a scroller clips: an absolutely positioned
 // bubble lost its left edge to the middle pane as soon as the rail was dragged
@@ -77,6 +88,8 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
   // rail mounts, and a guard above them made that render ask for hooks the
   // previous one never did.
   const [open, setOpen] = useState(false);
+  // One class open at a time, and only project memory has anything under it.
+  const [listed, setListed] = useState<Part | null>(null);
   // The two ceilings are edited in the same column, so opening one closes the
   // other: side by side they would be two boxes of numbers with no way to tell
   // which figure each answers for.
@@ -135,7 +148,8 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
   // is not under. Neither is a fault — maintenance is routine — so they read
   // as accent, never as warn or error.
   const press = !folds ? undefined : pct >= 92 ? "soon" : pct >= 75 ? "near" : undefined;
-  const shown = parts().map(([k, label, why]) => ({ k, label, why, n: ctx[k] || 0 })).filter((p) => p.n > 0);
+  const shown = parts().map(([k, label, why]) => ({ k, label, why, n: partTokens(ctx, k) })).filter((p) => p.n > 0);
+  const files = ctx.project_memory_files ?? [];
   const sum = shown.reduce((a, p) => a + p.n, 0) || 1;
 
   // A relay's window is one number somebody typed for every model it forwards,
@@ -227,10 +241,34 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
               <i data-p={p.k} />
               <span className="t">{p.label}</span>
               <em>{percent(p.n / sum)}</em>
-              <b>{tokens(p.n)}</b>
+              {p.k === "memory" && files && files.length > 0 ? (
+                <button
+                  type="button"
+                  className="ctxfiles-toggle"
+                  data-action="context.memory-files"
+                  aria-expanded={listed === "memory"}
+                  aria-label={t("panels.show_the_loaded_memory_files")}
+                  onClick={() => setListed(listed === "memory" ? null : "memory")}
+                >
+                  {tokens(p.n)}<StudioIcon name="chevron" />
+                </button>
+              ) : (
+                <b>{tokens(p.n)}</b>
+              )}
             </div>
           ))}
         </div>
+      )}
+      {legend && listed === "memory" && files.length > 0 && (
+        <ul className="ctxfiles" aria-label={t("panels.project_memory_files")}>
+          {files.map((f) => (
+            <li key={f.path} title={f.path}>
+              <span className="p">{f.path}</span>
+              <em>{f.scope}</em>
+              <b>{tokens(f.tokens)}</b>
+            </li>
+          ))}
+        </ul>
       )}
       {open && !legend && (
         <div className="ctxpop" role="tooltip" ref={place(bar)}>
@@ -246,6 +284,17 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
               <span className="p">{percent(p.n / sum)}</span>
             </div>
           ))}
+          {files.length > 0 && (
+            <>
+              <div className="hd sub"><span>{t("panels.project_memory_files")}</span></div>
+              {files.map((f) => (
+                <div className="row sub" key={f.path} title={f.path}>
+                  <span className="t">{f.path}</span>
+                  <span className="v">{tokens(f.tokens)}</span>
+                </div>
+              ))}
+            </>
+          )}
           <p className="foot">{t("panels.an_estimate_measured_the_same")}</p>
         </div>
       )}

@@ -95,6 +95,11 @@ function bounds(window: number) {
 const CONTEXT: ContextBreakdown = {
   used: 24800, window: 128000, ...bounds(128000),
   system: 5200, tools: 7400, user: 1800, reply: 3100, output: 7300,
+  project_memory: 2600,
+  project_memory_files: [
+    { path: "REASONIX.md", scope: "project", tokens: 1900 },
+    { path: "AGENTS.md", scope: "project", tokens: 700 },
+  ],
   largest: [
     { class: "output", tool: "read_file", tokens: 3900 },
     { class: "output", tool: "grep", tokens: 2100, active: true },

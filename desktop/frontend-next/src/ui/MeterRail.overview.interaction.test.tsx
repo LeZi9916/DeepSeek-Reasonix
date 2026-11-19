@@ -24,7 +24,7 @@ const usage: SessionUsage = {
   ],
 };
 
-const context = { used: 42_000, window: 128_000, system: 3000, tools: 9000, user: 6000, reply: 12000, output: 12000, compact_at: 96_000, boundary: "window", capacity_at: 128_000 } as ContextBreakdown;
+const context = { used: 42_000, window: 128_000, system: 3000, tools: 9000, user: 6000, reply: 12000, output: 12000, project_memory: 0, compact_at: 96_000, boundary: "window", capacity_at: 128_000 } as ContextBreakdown;
 
 function rail(over: { usage?: SessionUsage; quote?: CostQuote; hideAmounts?: boolean; ctx?: ContextBreakdown | null } = {}) {
   return render(

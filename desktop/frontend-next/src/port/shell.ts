@@ -7,6 +7,11 @@ export interface ContextBreakdown {
   window: number;
   system: number;
   tools: number;
+  // The workspace's standing instructions, measured apart from what you typed:
+  // they ride the turn but are not your message. files names the documents
+  // behind the figure, in precedence order.
+  project_memory: number;
+  project_memory_files?: ContextMemoryFile[];
   user: number;
   reply: number;
   output: number;
@@ -16,6 +21,15 @@ export interface ContextBreakdown {
   // The largest single messages of each class, largest first; sizes and the
   // producing tool, never text. Absent when the session holds none.
   largest?: ContextHolder[];
+}
+
+// One standing-instruction document the host loaded into the turn. path is the
+// file's own name as the reader would open it; tokens is that document's share
+// of project_memory.
+export interface ContextMemoryFile {
+  path: string;
+  scope: string;
+  tokens: number;
 }
 
 // One of the messages a class is made of. class is the kernel's own name for

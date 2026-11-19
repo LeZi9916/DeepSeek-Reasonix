@@ -4858,6 +4858,7 @@
   .ctxbar > i:first-child { border-radius: var(--r-md) var(--r-xs) var(--r-xs) var(--r-md) }
   .ctxbar > i:last-of-type { border-radius: var(--r-xs) var(--r-md) var(--r-md) var(--r-xs) }
   .ctxbar > i[data-p="system"] { background: var(--cat-1) }
+  .ctxbar > i[data-p="memory"] { background: var(--cat-6) }
   .ctxbar > i[data-p="tools"]  { background: var(--cat-2) }
   .ctxbar > i[data-p="user"]   { background: var(--cat-3) }
   .ctxbar > i[data-p="reply"]  { background: var(--cat-4) }
@@ -4907,12 +4908,28 @@
   .ctxlg .r { display: flex; align-items: center; gap: 8px; font: var(--w-reg) var(--fs-ui) var(--ui); color: var(--muted) }
   .ctxlg .r i { width: 8px; height: 8px; border-radius: 2px; flex: none }
   .ctxlg .r i[data-p="system"] { background: var(--cat-1) }
+  .ctxlg .r i[data-p="memory"] { background: var(--cat-6) }
   .ctxlg .r i[data-p="tools"]  { background: var(--cat-2) }
   .ctxlg .r i[data-p="user"]   { background: var(--cat-3) }
   .ctxlg .r i[data-p="reply"]  { background: var(--cat-4) }
   .ctxlg .r i[data-p="output"] { background: var(--cat-5) }
   .ctxlg .r em { font: var(--w-reg) var(--fs-micro) var(--mono); font-style: normal; color: var(--ghost) }
   .ctxlg .r b { margin-left: auto; font: var(--w-med) var(--fs-meta) var(--mono); color: var(--text) }
+  .ctxlg .r .ctxfiles-toggle {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 3px; padding: 0 5px;
+    border: 1px solid var(--border); border-radius: 999px; background: transparent; cursor: pointer;
+    color: var(--muted); font: var(--w-med) var(--fs-meta)/1.5 var(--mono);
+  }
+  .ctxlg .r .ctxfiles-toggle .studio-icon { width: 12px; height: 12px; transition: transform var(--t-line) }
+  .ctxlg .r .ctxfiles-toggle[aria-expanded="true"] { color: var(--text); background: var(--overlay) }
+  .ctxlg .r .ctxfiles-toggle[aria-expanded="true"] .studio-icon { transform: rotate(90deg) }
+  .ctxlg .r .ctxfiles-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px }
+
+  .ctxfiles { list-style: none; margin: 4px 0 0; padding: 0 0 0 8px; border-left: 1px solid var(--border); display: grid; gap: 3px }
+  .ctxfiles li { min-width: 0; display: flex; align-items: baseline; gap: 8px; font: var(--w-reg) var(--fs-micro)/1.5 var(--ui); color: var(--muted) }
+  .ctxfiles li .p { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left }
+  .ctxfiles li em { font-style: normal; color: var(--ghost) }
+  .ctxfiles li b { font: var(--w-med) var(--fs-micro)/1.5 var(--mono); color: var(--text) }
 
   .side .scroll .mtop .amt { font-size: var(--fs-lead) }
   .side .scroll > *:first-child .mtop .amt { font-size: var(--fs-display) }
@@ -4944,6 +4961,7 @@
   .ctxpop .row { display: flex; align-items: center; gap: 7px; font: var(--w-reg) var(--fs-meta) var(--ui); color: var(--muted) }
   .ctxpop .row > i { width: 7px; height: 7px; border-radius: var(--r-sm); flex: none }
   .ctxpop .row > i[data-p="system"] { background: var(--cat-1) }
+  .ctxpop .row > i[data-p="memory"] { background: var(--cat-6) }
   .ctxpop .row > i[data-p="tools"]  { background: var(--cat-2) }
   .ctxpop .row > i[data-p="user"]   { background: var(--cat-3) }
   .ctxpop .row > i[data-p="reply"]  { background: var(--cat-4) }
@@ -4952,6 +4970,9 @@
   .ctxpop .row .v { font: var(--w-reg) var(--fs-meta) var(--mono); color: var(--text); font-variant-numeric: tabular-nums }
   .ctxpop .row .p { width: 30px; text-align: right; font: var(--w-reg) var(--fs-micro) var(--mono); color: var(--ghost) }
   .ctxpop .foot { margin: 3px 0 0; font: var(--w-reg) var(--fs-micro)/1.5 var(--ui); color: var(--ghost) }
+  .ctxpop .hd.sub { margin-top: 2px; font: var(--w-med) var(--fs-micro) var(--ui); color: var(--muted) }
+  .ctxpop .row.sub { padding-left: 14px; color: var(--ghost) }
+  .ctxpop .row.sub .t { font-size: var(--fs-micro) }
 
   .storage .vol { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px }
   .storage .vol .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px }

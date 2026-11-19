@@ -21,7 +21,8 @@ const metrics = (over: Partial<Metrics> = {}): Metrics =>
 
 const ctx = (used: number): ContextBreakdown =>
   ({ used, window: 1_000_000, compact_at: 160_000, boundary: "capacity", capacity_at: 800_000,
-     system: 20_000, tools: 12_000, user: 10_000, reply: 20_000, output: 20_000 });
+     system: 20_000, tools: 12_000, user: 10_000, reply: 20_000, output: 20_000,
+     project_memory: 0 });
 
 // Every distinct rendering of a metric, in order. An update that eases from its
 // old reading to its new one shows up here as the readings in between.
