@@ -283,7 +283,13 @@ func (t *httpTransport) doOAuth(ctx context.Context, body []byte, refreshed bool
 	return t.doOAuth(ctx, body, true, modern)
 }
 
+// captureSession keeps a session only from an accepted answer: mcp-for-unity
+// issues one on the 400 it returns to the pre-handshake probe, and adopting it
+// sends the next initialize to a session no request opened.
 func (t *httpTransport) captureSession(resp *http.Response) {
+	if resp.StatusCode/100 != 2 {
+		return
+	}
 	if sid := resp.Header.Get("Mcp-Session-Id"); sid != "" {
 		t.mu.Lock()
 		t.session.id = sid

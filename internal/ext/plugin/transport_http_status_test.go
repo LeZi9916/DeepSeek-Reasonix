@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -97,5 +98,61 @@ func TestA404ToASessionRequestIsExpiryWhateverTheBody(t *testing.T) {
 	}
 	if transport.sessionID() != "" {
 		t.Fatal("the expired session id was kept")
+	}
+}
+
+// mcp-for-unity answers the pre-handshake probe with 400 and a fresh
+// Mcp-Session-Id. Adopting it pointed the legacy initialize that followed at a
+// session no request opened, and that initialize came back 404.
+func TestAFailedAnswerDoesNotIssueASession(t *testing.T) {
+	const probed = "issued-by-the-refused-probe"
+	var initialized bool
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			ID     *int   `json:"id"`
+			Method string `json:"method"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		w.Header().Set("Content-Type", "application/json")
+		if req.Method == "server/discover" {
+			w.Header().Set("Mcp-Session-Id", probed)
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"server-error","error":{"code":-32600,"message":"Missing session ID"}}`))
+			return
+		}
+		if got := r.Header.Get("Mcp-Session-Id"); got == probed {
+			w.WriteHeader(http.StatusNotFound)
+			_, _ = w.Write([]byte(`{"jsonrpc":"2.0","id":"server-error","error":{"code":-32600,"message":"Session not found"}}`))
+			return
+		}
+		switch req.Method {
+		case "initialize":
+			initialized = true
+			w.Header().Set("Mcp-Session-Id", "real-session")
+		case "tools/list":
+			w.Header().Set("Mcp-Session-Id", "real-session")
+		}
+		if req.ID == nil {
+			w.WriteHeader(http.StatusAccepted)
+			return
+		}
+		result := map[string]any{}
+		if req.Method == "initialize" {
+			result = map[string]any{"protocolVersion": protocolVersion, "capabilities": map[string]any{"tools": map[string]any{}}}
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"jsonrpc": "2.0", "id": *req.ID, "result": result})
+	}))
+	defer srv.Close()
+
+	host, tools, err := StartAll(context.Background(), []Spec{{Name: "unity", Type: "http", URL: srv.URL}})
+	if err != nil {
+		t.Fatalf("a session id in a refused probe blocked the handshake: %v", err)
+	}
+	defer host.Close()
+	if !initialized {
+		t.Error("the fallback never reached initialize")
+	}
+	if len(tools) != 0 {
+		t.Errorf("tools = %d, want none from a server that lists none", len(tools))
 	}
 }
