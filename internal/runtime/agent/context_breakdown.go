@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"math"
 	"strings"
 
 	"reasonix/internal/contract/event"
@@ -190,9 +191,9 @@ func messageClass(role provider.Role) string {
 	return ""
 }
 
-// classTokens estimates one slice of the request. The schemas ride their own
-// call because they are not messages at all, and on a small transcript they are
-// the largest single item in the prompt.
+// classTokens estimates one slice of the request at the cold rate, from its own
+// bytes. The session's calibration is learned from a whole request, so applying
+// it here moved every class whenever the conversation's text mix moved.
 func (a *contextWindow) classTokens(msgs []provider.Message, schemas bool) int {
 	req := provider.Request{MaxTokens: a.maxOutputTokens, Temperature: provider.OptionalTemperature(a.temperature)}
 	if len(msgs) > 0 {
@@ -208,7 +209,15 @@ func (a *contextWindow) classTokens(msgs []provider.Message, schemas bool) int {
 	if len(req.Messages) == 0 && len(req.Tools) == 0 {
 		return 0
 	}
-	return a.estimatedRequestTokens(req)
+	return fixedTokens(a.requestCalibrationShape(req))
+}
+
+// fixedTokens prices a shape at the cold rate from its own bytes.
+func fixedTokens(shape requestCalibrationShape) int {
+	if shape.requestChars <= 0 && shape.imageTokens <= 0 {
+		return 0
+	}
+	return int(math.Ceil(float64(shape.requestChars)*fallbackTokPerChar)) + int(shape.imageTokens)
 }
 
 func messagesWithRole(msgs []provider.Message, role provider.Role) []provider.Message {
