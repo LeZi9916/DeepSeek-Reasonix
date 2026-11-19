@@ -5,8 +5,10 @@ import (
 	"strconv"
 	"strings"
 
+	"reasonix/internal/base/tokencount"
 	"reasonix/internal/contract/event"
 	"reasonix/internal/runtime/agent"
+	"reasonix/internal/state/memory"
 )
 
 // ContextReport renders the current context state as a one-line summary plus
@@ -27,13 +29,42 @@ func (c *Controller) reportContext() {
 }
 
 // ContextBreakdown says where the prompt's tokens went. The gauge answers how
-// full the window is; this answers what is filling it, which is the half a user
-// can act on.
+// full the window is; this answers what is filling it. The documents behind the
+// project-memory class are named here rather than in the agent: the loaded set
+// is this controller's snapshot, and the agent only measures the rendered block.
 func (c *Controller) ContextBreakdown() agent.ContextBreakdown {
 	if c.executor == nil {
 		return agent.ContextBreakdown{}
 	}
-	return c.executor.ContextBreakdown()
+	out := c.executor.ContextBreakdown()
+	out.ProjectMemoryFiles = projectMemoryFiles(c.memory.current())
+	return out
+}
+
+// projectMemoryFiles reports the standing-instruction documents loaded for this
+// session, in the precedence order the resolver produced. Sizes are estimated
+// with the same estimator the session prompt uses, so a file's share of the
+// class adds up rather than being a second opinion.
+func projectMemoryFiles(set *memory.Set) []agent.ContextMemoryFile {
+	if set == nil || len(set.Docs) == 0 {
+		return nil
+	}
+	out := make([]agent.ContextMemoryFile, 0, len(set.Docs))
+	for _, doc := range set.Docs {
+		body := strings.TrimSpace(doc.Body)
+		if body == "" {
+			continue
+		}
+		out = append(out, agent.ContextMemoryFile{
+			Path:   doc.Path,
+			Scope:  string(doc.Scope),
+			Tokens: tokencount.Text(body),
+		})
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 // runSessionVerb runs a session mutation off the dispatch path and reports the

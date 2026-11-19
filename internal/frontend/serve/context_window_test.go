@@ -197,3 +197,38 @@ func TestContextEndpointNamesTheLargestHoldersWithoutTheirText(t *testing.T) {
 		t.Fatalf("the response carries message text: %s", raw)
 	}
 }
+
+// The workspace's rules arrive inside the user turn, so the endpoint has to say
+// which class they landed in and which files fed it. Text stays out, for the
+// same reason it does above.
+func TestContextEndpointSeparatesProjectMemoryFromTheUserTurn(t *testing.T) {
+	sess := sessionstore.NewSession("system")
+	executor := agent.New(nil, nil, sess, agent.Options{ContextWindow: 128000}, event.Discard)
+	sess.Add(provider.Message{Role: provider.RoleUser, Content: "<project-instructions>\n" + strings.Repeat("R", 6000) + "\n</project-instructions>\n\nfix the parser"})
+	bc := NewBroadcaster()
+	ctrl := control.New(control.Options{Runner: executor, Executor: executor, Sink: bc})
+	srv := httptest.NewServer(operatorHandler(New(ctrl, bc, config.ServeConfig{})))
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/context")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	raw := new(strings.Builder)
+	var body contextView
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body.ProjectMemory <= 0 {
+		t.Fatalf("project_memory = %d, want the block the turn carried", body.ProjectMemory)
+	}
+	if body.User <= 0 || body.User >= body.ProjectMemory {
+		t.Fatalf("user = %d against project_memory = %d, want the typed remainder counted apart", body.User, body.ProjectMemory)
+	}
+	encoded, _ := json.Marshal(body)
+	raw.Write(encoded)
+	if strings.Contains(raw.String(), strings.Repeat("R", 50)) || strings.Contains(raw.String(), "fix the parser") {
+		t.Fatalf("the response carries message text: %s", raw.String()[:200])
+	}
+}

@@ -2,6 +2,7 @@ package agent
 
 import (
 	"reasonix/internal/state/sessionstore"
+	"strings"
 	"testing"
 
 	"reasonix/internal/contract/provider"
@@ -29,12 +30,33 @@ func TestContextBreakdownSeparatesWhatFillsTheWindow(t *testing.T) {
 	}
 }
 
-// An empty class costs nothing to report and must not be guessed at.
-func TestContextBreakdownReportsZeroForClassesWithNoMessages(t *testing.T) {
+// Only the user class is split. A version that regrouped every message would
+// report the system prompt and the tool results as what the person typed.
+func TestContextBreakdownKeepsOtherClassesOutOfTheUserFigure(t *testing.T) {
+	sess := sessionstore.NewSession("你是一个助手")
+	a := New(nil, nil, sess, Options{ContextWindow: 128000}, nil)
+	sess.Add(provider.Message{Role: provider.RoleUser, Content: "把这个仓库跑一遍测试"})
+	sess.Add(provider.Message{Role: provider.RoleTool, Content: string(make([]byte, 4000))})
+
+	b := a.ContextBreakdown()
+	if b.Output <= b.User {
+		t.Fatalf("user = %d, output = %d: the tool result was counted as what the person typed", b.User, b.Output)
+	}
+	if b.User > 100 {
+		t.Fatalf("user = %d for a one-line prompt: another class leaked into it", b.User)
+	}
+}
+
+// A session with no turns reports nothing for the classes a turn fills, and the
+// system prompt stays in its own class.
+func TestContextBreakdownReportsNoUserFigureBeforeAnyTurn(t *testing.T) {
 	a := New(nil, nil, sessionstore.NewSession("你是一个助手"), Options{ContextWindow: 128000}, nil)
 	b := a.ContextBreakdown()
 	if b.User != 0 || b.Reply != 0 || b.Output != 0 {
 		t.Fatalf("a fresh session has no turns yet: %+v", b)
+	}
+	if b.System == 0 {
+		t.Fatalf("the system prompt belongs to its own class, not the user's: %+v", b)
 	}
 }
 
@@ -111,5 +133,51 @@ func TestContextBreakdownKeepsAClassToItsFiveLargestHolders(t *testing.T) {
 	}
 	if n != 5 {
 		t.Fatalf("user holders = %d, want the five largest of nine", n)
+	}
+}
+
+// The workspace's rules arrive inside the user turn, so a role split counts them
+// as what the person typed. A reader looking at that figure has nothing to edit;
+// the class of its own is what makes the file it came from actionable.
+func TestContextBreakdownMovesProjectMemoryOutOfTheUserClass(t *testing.T) {
+	sess := sessionstore.NewSession("sys")
+	a := New(nil, nil, sess, Options{ContextWindow: 128000}, nil)
+	typed := strings.Repeat("u", 2000)
+	rules := strings.Repeat("r", 8000)
+	sess.Add(provider.Message{Role: provider.RoleUser, Content: "<project-instructions>\n" + rules + "\n</project-instructions>\n\n" + typed})
+
+	b := a.ContextBreakdown()
+	if b.ProjectMemory <= 0 {
+		t.Fatalf("project memory reported %d tokens for an 8KB block: %+v", b.ProjectMemory, b)
+	}
+	if b.ProjectMemory <= b.User {
+		t.Fatalf("the block is four times the typed text but reports smaller: memory=%d user=%d", b.ProjectMemory, b.User)
+	}
+	// The block is still the same turn: what is measured must not vanish, or the
+	// classes stop adding up to the prompt the gauge counts.
+	if b.ProjectMemory+b.User <= b.ProjectMemory {
+		t.Fatalf("the user class contributed nothing after the split: %+v", b)
+	}
+}
+
+// A tag the person typed is their own prose. Splitting on it would move their
+// words into a class that names a file they never wrote.
+func TestContextBreakdownLeavesATagInTypedTextAlone(t *testing.T) {
+	sess := sessionstore.NewSession("sys")
+	a := New(nil, nil, sess, Options{ContextWindow: 128000}, nil)
+	sess.Add(provider.Message{Role: provider.RoleUser, Content: "why is <project-instructions> shaped like that?"})
+
+	if b := a.ContextBreakdown(); b.ProjectMemory != 0 {
+		t.Fatalf("typed prose was counted as project memory: %+v", b)
+	}
+}
+
+// A session with no rules has no class to draw, and a zero figure must not be
+// mistaken for a block that arrived empty.
+func TestContextBreakdownReportsNoProjectMemoryWithoutRules(t *testing.T) {
+	a := New(nil, nil, sessionstore.NewSession("sys"), Options{ContextWindow: 128000}, nil)
+	b := a.ContextBreakdown()
+	if b.ProjectMemory != 0 || len(b.ProjectMemoryFiles) != 0 {
+		t.Fatalf("a session with no instructions reported memory: %+v", b)
 	}
 }

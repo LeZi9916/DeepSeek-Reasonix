@@ -1,11 +1,16 @@
 package control
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"reasonix/internal/base/testenv"
 	"reasonix/internal/contract/event"
 	"reasonix/internal/runtime/agent"
+	"reasonix/internal/state/memory"
+	"reasonix/internal/state/sessionstore"
 )
 
 // "70% full" does not tell the user whether that is close to anything, so the
@@ -65,5 +70,39 @@ func TestContextCommandNamesItsReport(t *testing.T) {
 	e := <-events
 	if e.Kind != event.Notice || e.Code != event.NoticeCodeContextReport || e.Text == "" {
 		t.Fatalf("event = %+v, want the context report notice", e)
+	}
+}
+
+// The breakdown names the block, and the documents behind it are this
+// controller's snapshot — the agent measures what the request carries and knows
+// nothing about where it came from.
+func TestContextBreakdownNamesTheLoadedInstructionFiles(t *testing.T) {
+	root := testenv.TempDir(t)
+	bodies := map[string]string{
+		"AGENTS.md": "# Rules\n\nPrefer table tests.\n",
+		"CLAUDE.md": "# Claude\n\nAnswer in English.\n",
+	}
+	for name, body := range bodies {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	set := memory.Load(memory.Options{CWD: root})
+
+	executor := agent.New(nil, nil, sessionstore.NewSession("system"), agent.Options{ContextWindow: 128000}, event.Discard)
+	c := New(Options{Executor: executor, Memory: set})
+	files := c.ContextBreakdown().ProjectMemoryFiles
+	if len(files) != 2 {
+		t.Fatalf("files = %+v, want both loaded documents", files)
+	}
+	seen := map[string]bool{}
+	for _, f := range files {
+		if f.Path == "" || f.Scope == "" || f.Tokens <= 0 {
+			t.Fatalf("a document without an identity or a cost: %+v", f)
+		}
+		seen[filepath.Base(f.Path)] = true
+	}
+	if !seen["AGENTS.md"] || !seen["CLAUDE.md"] {
+		t.Fatalf("files = %+v, want both conventions named", files)
 	}
 }

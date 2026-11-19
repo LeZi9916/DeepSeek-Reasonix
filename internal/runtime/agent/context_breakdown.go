@@ -1,9 +1,16 @@
 package agent
 
 import (
+	"strings"
+
 	"reasonix/internal/contract/event"
 	"reasonix/internal/contract/provider"
 )
+
+// projectInstructionsTag is the transient block the host prepends to a turn for
+// the workspace's standing instructions. It is spelled here because the
+// breakdown must recognise the block on its own; control owns the renderer.
+const projectInstructionsTag = "project-instructions"
 
 // ContextBreakdown says where the prompt's tokens went. "How full" is only
 // actionable once you know what is filling it — a memory file, a tool
@@ -13,11 +20,18 @@ import (
 type ContextBreakdown struct {
 	System int `json:"system"` // system prompt: base instructions, memory, skills
 	Tools  int `json:"tools"`  // tool schemas the provider is sent
-	User   int `json:"user"`   // what the user typed
-	Reply  int `json:"reply"`  // what the model said
-	Output int `json:"output"` // what tools returned
-	Total  int `json:"total"`
-	Window int `json:"window"`
+	// ProjectMemory is the standing-instruction block the host prepends to the
+	// turn (<project-instructions>), measured apart from User because a reader
+	// who sees it only as part of their own message cannot tell what to edit.
+	ProjectMemory int `json:"projectMemory"`
+	// ProjectMemoryFiles is that block's own breakdown, one entry per loaded
+	// document in precedence order. Nil when nothing is loaded.
+	ProjectMemoryFiles []ContextMemoryFile `json:"projectMemoryFiles,omitempty"`
+	User               int                 `json:"user"`   // what the user typed
+	Reply              int                 `json:"reply"`  // what the model said
+	Output             int                 `json:"output"` // what tools returned
+	Total              int                 `json:"total"`
+	Window             int                 `json:"window"`
 	// CompactAt is the lower of the two configured bounds, which is where this
 	// session actually folds: a gauge drawn against the window instead can look
 	// nearly empty at the moment maintenance happens.
@@ -32,6 +46,17 @@ type ContextBreakdown struct {
 	// Largest is each message class's biggest single holders, largest first: the
 	// totals above say a class is heavy, this says which message made it so.
 	Largest []ContextHolder `json:"largest,omitempty"`
+}
+
+// ContextMemoryFile is one standing-instruction document the host loaded into
+// the turn: where it came from and what it costs. Path is the reader's own
+// spelling — the user's file or a workspace-relative one — never a rendering
+// detail of the block, and Body is absent: the panel opens files where they
+// live, not in a JSON response.
+type ContextMemoryFile struct {
+	Path   string `json:"path"`
+	Scope  string `json:"scope"`
+	Tokens int    `json:"tokens"`
 }
 
 // ContextHolder is one message among a class's largest. Class is the
@@ -53,6 +78,11 @@ func (a *Agent) ContextBreakdown() ContextBreakdown {
 		return ContextBreakdown{}
 	}
 	visible := a.window().modelVisibleMessages()
+	// Measured first: estimating a slice of visible clears the creation stamps
+	// that mark the running turn.
+	largest := a.window().largestMessages(visible)
+	memory, typed := splitProjectMemory(visible)
+
 	out := ContextBreakdown{
 		Total:      a.ContextUsedTokens(),
 		Window:     a.ContextWindow(),
@@ -62,18 +92,74 @@ func (a *Agent) ContextBreakdown() ContextBreakdown {
 		Tools:      a.window().classTokens(nil, true),
 	}
 	for _, class := range []struct {
-		role provider.Role
+		msgs []provider.Message
 		to   *int
 	}{
-		{provider.RoleSystem, &out.System},
-		{provider.RoleUser, &out.User},
-		{provider.RoleAssistant, &out.Reply},
-		{provider.RoleTool, &out.Output},
+		{messagesWithRole(visible, provider.RoleSystem), &out.System},
+		{typed, &out.User},
+		{messagesWithRole(visible, provider.RoleAssistant), &out.Reply},
+		{messagesWithRole(visible, provider.RoleTool), &out.Output},
 	} {
-		*class.to = a.window().classTokens(messagesWithRole(visible, class.role), false)
+		*class.to = a.window().classTokens(class.msgs, false)
 	}
-	out.Largest = holdersByClass(a.window().largestMessages(visible))
+	out.ProjectMemory = a.window().classTokens(memory, false)
+	out.Largest = holdersByClass(largest)
 	return out
+}
+
+// splitProjectMemory separates the workspace's standing instructions from the
+// text a person typed, so the block has a class of its own. The two results
+// partition the same messages, so the classes still add up to the prompt the
+// gauge counts; a tag inside someone's own prose stays theirs, because only the
+// leading chain the host writes is walked.
+func splitProjectMemory(visible []provider.Message) (memory, typed []provider.Message) {
+	for _, m := range visible {
+		if m.Role != provider.RoleUser {
+			continue
+		}
+		// Local-only records and fold digests carry no host block, but they are
+		// still part of what the user class measures.
+		if !carriesStandingState(m) {
+			typed = append(typed, m)
+			continue
+		}
+		block, rest := splitLeadingBlock(m, projectInstructionsTag)
+		if block.Content != "" {
+			memory = append(memory, block)
+		}
+		if rest.Content != "" {
+			typed = append(typed, rest)
+		}
+	}
+	return memory, typed
+}
+
+// splitLeadingBlock divides one message into the leading transient blocks of
+// tag and everything else. A message carrying neither is returned as rest.
+func splitLeadingBlock(m provider.Message, tag string) (block, rest provider.Message) {
+	content := m.Content
+	var got, kept strings.Builder
+	for {
+		gotTag, _, end, ok := leadingTransientBlock(content)
+		if !ok {
+			break
+		}
+		if gotTag == tag {
+			got.WriteString(content[:end])
+		} else {
+			kept.WriteString(content[:end])
+		}
+		content = content[end:]
+	}
+	kept.WriteString(content)
+	block, rest = m, m
+	// The two halves carry the same tool calls, and a call's arguments are
+	// measured: leaving them on both counts the same bytes twice. They belong to
+	// the half the person's own message became.
+	block.ToolCalls = nil
+	block.Content = got.String()
+	rest.Content = kept.String()
+	return block, rest
 }
 
 // holdersByClass keeps the largest few of each class, in the order the

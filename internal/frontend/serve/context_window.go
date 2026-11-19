@@ -17,9 +17,14 @@ type contextView struct {
 	Window int `json:"window"`
 	System int `json:"system"`
 	Tools  int `json:"tools"`
-	User   int `json:"user"`
-	Reply  int `json:"reply"`
-	Output int `json:"output"`
+	// The workspace's standing instructions, measured apart from what the person
+	// typed: they ride the turn but are not their message. Files names the
+	// documents behind the figure, in precedence order.
+	ProjectMemory      int                         `json:"project_memory"`
+	ProjectMemoryFiles []agent.ContextMemoryFile   `json:"project_memory_files,omitempty"`
+	User               int                         `json:"user"`
+	Reply              int                         `json:"reply"`
+	Output             int                         `json:"output"`
 	// Where maintenance actually happens, which is the lower of the two bounds
 	// and not the window: drawn against the window, a 1M session reads 16% full
 	// at the moment it folds.
@@ -39,6 +44,7 @@ func (s *Server) contextView() contextView {
 	return contextView{
 		Used: used, Window: window,
 		System: b.System, Tools: b.Tools, User: b.User, Reply: b.Reply, Output: b.Output,
+		ProjectMemory: b.ProjectMemory, ProjectMemoryFiles: b.ProjectMemoryFiles,
 		CompactAt: b.CompactAt, Boundary: b.Boundary, CapacityAt: b.CapacityAt, Largest: b.Largest,
 	}
 }
