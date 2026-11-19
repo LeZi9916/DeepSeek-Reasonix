@@ -74,6 +74,8 @@ type ContextHolder struct {
 const largestHoldersPerClass = 5
 
 // ContextBreakdown measures the visible request one message class at a time.
+// A fold digest is what the folded history became, not something the model
+// said, so it is measured with the system side rather than as a reply.
 func (a *Agent) ContextBreakdown() ContextBreakdown {
 	if a == nil {
 		return ContextBreakdown{}
@@ -83,6 +85,7 @@ func (a *Agent) ContextBreakdown() ContextBreakdown {
 	// that mark the running turn.
 	largest := a.window().largestMessages(visible)
 	memory, typed := splitProjectMemory(visible)
+	system, replies := splitFoldDigests(visible)
 
 	out := ContextBreakdown{
 		Total:      a.ContextUsedTokens(),
@@ -96,9 +99,9 @@ func (a *Agent) ContextBreakdown() ContextBreakdown {
 		msgs []provider.Message
 		to   *int
 	}{
-		{messagesWithRole(visible, provider.RoleSystem), &out.System},
+		{system, &out.System},
 		{typed, &out.User},
-		{messagesWithRole(visible, provider.RoleAssistant), &out.Reply},
+		{replies, &out.Reply},
 		{messagesWithRole(visible, provider.RoleTool), &out.Output},
 	} {
 		*class.to = a.window().classTokens(class.msgs, false)
@@ -106,6 +109,21 @@ func (a *Agent) ContextBreakdown() ContextBreakdown {
 	out.ProjectMemory = a.window().classTokens(memory, false)
 	out.Largest = holdersByClass(largest)
 	return out
+}
+
+// splitFoldDigests routes a compaction digest to the system side. The split is
+// on the message the fold installed, never on who has the role: a digest rides
+// a user turn, and left there it read as what the person typed.
+func splitFoldDigests(visible []provider.Message) (system, replies []provider.Message) {
+	for _, m := range visible {
+		switch {
+		case m.Role == provider.RoleSystem || isCompactionSummary(m):
+			system = append(system, m)
+		case m.Role == provider.RoleAssistant:
+			replies = append(replies, m)
+		}
+	}
+	return system, replies
 }
 
 // splitProjectMemory separates the workspace's standing instructions from the
@@ -118,8 +136,13 @@ func splitProjectMemory(visible []provider.Message) (memory, typed []provider.Me
 		if m.Role != provider.RoleUser {
 			continue
 		}
-		// Local-only records and fold digests carry no host block, but they are
-		// still part of what the user class measures.
+		// A fold digest rides a user turn but is not what the person typed; it
+		// is measured with the system side.
+		if isCompactionSummary(m) {
+			continue
+		}
+		// Local-only records carry no host block, but they are still part of
+		// what the user class measures.
 		if !carriesStandingState(m) {
 			typed = append(typed, m)
 			continue

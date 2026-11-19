@@ -90,3 +90,25 @@ func TestSystemPromptDoesNotMoveAsTheConversationGrows(t *testing.T) {
 		t.Fatalf("system figure moved from %d to %d as the conversation grew", before, got)
 	}
 }
+
+// A compaction digest is what the whole folded history became. Told only by its
+// role it was counted as a model reply — a class named "what the model said"
+// that a long session then reads as the model's own prose.
+func TestFoldDigestIsNotCountedAsAModelReply(t *testing.T) {
+	sess := sessionstore.NewSession("sys")
+	a := New(nil, nil, sess, Options{ContextWindow: 200_000}, nil)
+	sess.Add(provider.Message{Role: provider.RoleUser, Content: "short question"})
+	sess.Add(provider.Message{Role: provider.RoleAssistant, Content: "short answer"})
+	before := a.ContextBreakdown()
+
+	sess.Add(provider.Message{Role: provider.RoleUser, Content: SummaryTagOpen + strings.Repeat("a folded conversation, condensed. ", 500) + SummaryTagClose})
+	after := a.ContextBreakdown()
+	if after.Reply-before.Reply > 200 {
+		t.Fatalf("reply grew by %d tokens: the fold digest was counted as the model's own words", after.Reply-before.Reply)
+	}
+	// Nothing is lost either: the digest is a real part of the prompt, so it is
+	// measured somewhere rather than dropped from the legend.
+	if after.System <= before.System || after.User != before.User {
+		t.Fatalf("the digest must move to the system side, not into the user class: before=%+v after=%+v", before, after)
+	}
+}
