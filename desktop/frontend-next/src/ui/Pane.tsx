@@ -402,7 +402,20 @@ function PaneView({ port, hub, rt, title, active, visible, sideHost, side, onFoc
   const roundTrips = s.metrics.hit + s.metrics.miss;
   useEffect(() => {
     if (!ready && !roundTrips && !folds) return;
-    port.context().then(setCtx).catch(() => setCtx(null));
+    // Only the newest read may land: this effect re-runs on every pulse and
+    // round trip, so a superseded answer arriving late — or failing — must not
+    // take away the figure a newer one already settled. A failed read leaves
+    // the last known one up; the next round trip asks again.
+    let current = true;
+    port
+      .context()
+      .then((next) => {
+        if (current) setCtx(next);
+      })
+      .catch(() => {});
+    return () => {
+      current = false;
+    };
   }, [ready, port, roundTrips, folds, status?.sessionPath, running, pulse]);
 
   // Workspace preparation can move an empty pane before its first turn mints
