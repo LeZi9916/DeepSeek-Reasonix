@@ -624,6 +624,11 @@ export class SsePort extends SseTerminal implements AgentPort {
   compaction() {
     return this.get<CompactionSettings>("/compaction");
   }
+  // post0 because the refusal carries a code: "saved, applies after this turn"
+  // and "that fraction folds nowhere" send the reader to different places.
+  setCompactRatio(ratio: number) {
+    return this.post0<CompactionSettings>("/compaction/ratio", { ratio });
+  }
   setGoal(text: string) {
     return this.post("/goal", { goal: text });
   }

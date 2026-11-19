@@ -788,5 +788,9 @@ export interface AgentPort extends RunningWorkPort, MemoryHoldPort, WorkspacePre
   // "" turns the session's model mode off.
   setModelMode(mode: string): Promise<void>;
   compaction(): Promise<CompactionSettings>;
+  // Moves the automatic fold threshold as a share of the model window. Written
+  // to the user file and rebuilt into the runtime, so it lands on this session
+  // at the next turn; the answer carries the trigger the session now folds at.
+  setCompactRatio(ratio: number): Promise<CompactionSettings>;
   setGoal(text: string): Promise<void>;
 }

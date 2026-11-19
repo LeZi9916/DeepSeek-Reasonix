@@ -322,6 +322,7 @@ type RuntimeSettings interface {
 	ToolSettings() ToolSettings
 	SaveToolDisabled(name string, disabled bool) error
 	CompactionSettings() CompactionSettings
+	SaveCompactRatio(ratio float64) error
 	DisplayCurrencySettings() DisplayCurrencySettings
 	SaveDisplayCurrency(mode string) error
 	ChangedFilesSettings() ChangedFilesSettings

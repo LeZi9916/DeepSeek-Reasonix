@@ -535,6 +535,8 @@ export const ACTIONS: UIAction[] = [
   { id: "context.memory-files", kind: "view", target: "none", proof: "interaction" },
   { id: "compaction.confirm", kind: "view", target: "none", proof: "interaction" },
   { id: "compaction.now", kind: "kernel-mutation", target: "none", proof: "interaction" },
+  { id: "compaction.ratio-preview", kind: "view", target: "none", proof: "interaction" },
+  { id: "compaction.ratio", kind: "kernel-mutation", target: "none", proof: "authority-effect" },
   { id: "panel.move", kind: "kernel-mutation", target: "none", proof: "authority-effect" },
   { id: "panel.delegate-placement", kind: "kernel-mutation", target: "none", proof: "authority-effect" },
   { id: "context.window-tokens", kind: "kernel-mutation", target: "none", proof: "authority-effect" },

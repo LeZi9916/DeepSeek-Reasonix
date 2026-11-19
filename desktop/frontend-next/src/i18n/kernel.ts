@@ -21,7 +21,7 @@ export const WORKSPACE_FILE_MISSING = "workspace.file_missing";
 // A paired device answers this for every account route, votes included.
 export const ACCOUNT_SIGNIN_DISABLED = "account.signin_disabled";
 // The write landed and only applying it to the open conversation did not.
-export const SAVED_NOT_APPLIED: readonly string[] = ["provider.saved_while_running", "provider.saved_model_unlisted", "runtime.rebuild_failed", "runtime.saved_while_running", "context.window_after_this_turn"];
+export const SAVED_NOT_APPLIED: readonly string[] = ["provider.saved_while_running", "provider.saved_model_unlisted", "runtime.rebuild_failed", "runtime.saved_while_running", "context.window_after_this_turn", "compaction.saved_while_running"];
 
 /** Whether a refused save had already written the setting: it holds, but the running session has not taken it. */
 export const savedNotApplied = (e: unknown): boolean => e instanceof HttpError && SAVED_NOT_APPLIED.includes(e.reason?.code ?? "");
@@ -558,6 +558,9 @@ const SAID: Record<string, string> = {
   "permissions.rejected": "kernel.that_permission_was_not_saved",
   "sandbox.rejected": "kernel.the_sandbox_settings_were_not",
   "compaction.rejected": "kernel.the_compaction_threshold_was_not",
+  "compaction.save_failed": "kernel.the_compaction_threshold_was_not",
+  "compaction.ratio_out_of_range": "kernel.the_compaction_ratio_must_be",
+  "compaction.saved_while_running": "kernel.the_fold_threshold_is_saved_it",
   "browser_tools.save_failed": "kernel.the_built_in_browser_setting",
   "browser_tools.no_enabled": "kernel.the_request_did_not_say_3",
   "subagent_claims.editing_disabled": "kernel.this_server_does_not_open_6",

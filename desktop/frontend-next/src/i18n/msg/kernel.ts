@@ -423,6 +423,8 @@ export const KERNEL: Messages = {
   "kernel.the_community_market_refused_the": { zh: "社区市场拒绝了这次提交：{detail}", en: "The community market refused the submission: {detail}" },
   "kernel.the_compaction_failed_for_a": { zh: "压缩失败，原因未归类；详情见日志", en: "The compaction failed for a reason the host did not classify; see the log" },
   "kernel.the_compaction_threshold_was_not": { zh: "压缩阈值未能保存：{detail}", en: "The compaction threshold was not saved: {detail}" },
+  "kernel.the_fold_threshold_is_saved_it": { zh: "自动整理阈值已保存，将在本轮结束后生效", en: "The fold threshold is saved; it applies once the running work finishes" },
+  "kernel.the_compaction_ratio_must_be": { zh: "自动整理阈值须大于 0% 且小于 100%，请换一个比例", en: "The automatic fold threshold must be above 0% and below 100%; choose another share" },
   "kernel.the_compaction_was_cancelled": { zh: "压缩被取消了", en: "The compaction was cancelled" },
   "kernel.the_companion_background_program_of": { zh: "扩展 {ext} 的配套后台程序没有运行，该扩展本次（在 {point}）已被跳过；到「工具与集成」里查看并启动它，或停用该扩展", en: "The companion background program of extension {ext} is not running, so the extension was skipped this time (at {point}). Open Tools and integrations to check and start it, or disable the extension." },
   "kernel.the_config_file_path_does": { zh: "配置文件 {path} 无法读取，因此本次未保存。到「设置」里可以看到出错的位置并修复", en: "The config file {path} does not parse, so nothing was saved. Open Settings to see where it is broken and repair it" },

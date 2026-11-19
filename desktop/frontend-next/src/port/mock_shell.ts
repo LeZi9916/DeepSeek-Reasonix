@@ -31,6 +31,7 @@ const POWERSHELL: ShellOption = {
 
 export class MockShell extends MockExtensions {
   private ctx: ContextBreakdown = CONTEXT;
+  private ratio = RATIO;
   async context(): Promise<ContextBreakdown> {
     return { ...this.ctx };
   }
@@ -40,18 +41,27 @@ export class MockShell extends MockExtensions {
   // draws a session no kernel can produce.
   async compaction(): Promise<CompactionSettings> {
     return {
-      ratio: RATIO,
+      ratio: this.ratio,
       context_window: this.ctx.window,
       trigger: this.ctx.compact_at,
       path: "~/.reasonix/config.toml",
     };
   }
 
+  // The kernel rebuilds on this, so the trigger moves with the share; a fixture
+  // that kept the old fold point would let a panel pass while showing a number
+  // no kernel would produce.
+  async setCompactRatio(ratio: number): Promise<CompactionSettings> {
+    this.ratio = ratio;
+    this.ctx = { ...this.ctx, ...bounds(this.ctx.window, ratio) };
+    return this.compaction();
+  }
+
   // The kernel rebuilds on this and answers with the fresh gauge; here the
   // window is simply the one that was declared, which is what the panel needs
   // to be developed against a source that reports none.
   async setContextWindow(window: number): Promise<ContextBreakdown> {
-    this.ctx = { ...this.ctx, window, ...bounds(window) };
+    this.ctx = { ...this.ctx, window, ...bounds(window, this.ratio) };
     return { ...this.ctx };
   }
 
@@ -87,8 +97,8 @@ export class MockShell extends MockExtensions {
 // 要让人看见的那种情况。
 const RATIO = 0.9;
 
-function bounds(window: number) {
-  const capacity = Math.round(window * RATIO);
+function bounds(window: number, ratio = RATIO) {
+  const capacity = Math.round(window * ratio);
   return { compact_at: capacity, capacity_at: capacity, boundary: "capacity" };
 }
 

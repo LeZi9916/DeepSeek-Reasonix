@@ -94,6 +94,8 @@ export const CHAT: Messages = {
   "chat.compact_context": { zh: "压缩上下文", en: "Compact context" },
   "chat.compaction_brief": { zh: "压缩归档", en: "Compaction archive" },
   "chat.compaction_did_not_complete": { zh: "压缩未完成", en: "Compaction did not complete" },
+  "chat.compact_ratio_control": { zh: "自动整理阈值", en: "Automatic fold threshold" },
+  "chat.compact_ratio_control_hint": { zh: "占模型窗口的比例：调低会更早整理、更省上下文，调高会保留更多原文。", en: "A share of the model window: lower folds sooner and frees more, higher keeps more of the conversation verbatim." },
   "chat.compacts_at_p_of_the": { zh: "模型窗口的 {p}% 自动整理。中转站未提供容量时使用 160k，可在上下文面板改为实际值。", en: "Compacts at {p}% of the model window. Gateways without capacity metadata use 160k; set the actual value in the context panel." },
   "chat.compare_choose": { zh: "对比与选择", en: "Compare & choose" },
   "chat.compare_details": { zh: "属性对比", en: "Compare details" },

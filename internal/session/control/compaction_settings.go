@@ -16,6 +16,20 @@ type CompactionSettings struct {
 	Path    string `json:"path"`
 }
 
+// SaveCompactRatio writes the automatic fold threshold as a fraction of the
+// window. The user file holds it because the trigger is one [agent] key every
+// session on this machine reads, and a project file must not pin it.
+func (c *Controller) SaveCompactRatio(ratio float64) error {
+	unlock := config.LockUserConfigEdits()
+	defer unlock()
+	path := config.UserConfigPath()
+	cfg := config.LoadForEdit(path)
+	if err := cfg.SetCompactRatio(ratio); err != nil {
+		return err
+	}
+	return cfg.SaveTo(path)
+}
+
 // CompactionSettings reports the fold bounds for this session.
 func (c *Controller) CompactionSettings() CompactionSettings {
 	path := config.UserConfigPath()
