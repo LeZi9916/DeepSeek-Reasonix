@@ -372,6 +372,42 @@ async function grab(page, props) {
   return page.evaluate(capture(), { props, defaults: CSS_DEFAULTS });
 }
 
+// A contrast tier moves only the four ink tokens: tokens.css declares
+// --text/--muted/--faint/--ghost under each of soft, normal and strong, for both
+// schemes. Capturing a whole page per tier would triple the baseline to record
+// four values, so the tiers are read on their own.
+async function grabContrast(page) {
+  return page.evaluate(() => {
+    const root = document.documentElement;
+    const ink = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+    const rgba = (css) => {
+      ink.clearRect(0, 0, 1, 1);
+      ink.fillStyle = "#000";
+      ink.fillStyle = css;
+      ink.fillRect(0, 0, 1, 1);
+      const [r, g, b, a] = ink.getImageData(0, 0, 1, 1).data;
+      return [r, g, b, a / 255];
+    };
+    const normalise = (value) => {
+      if (!value || !CSS.supports("color", value)) return value;
+      const [r, g, b, a] = rgba(value);
+      return a >= 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${Math.round(a * 1000) / 1000})`;
+    };
+
+    const INK = ["--text", "--muted", "--faint", "--ghost"];
+    const before = root.getAttribute("data-contrast");
+    const tiers = {};
+    for (const tier of ["soft", "normal", "strong"]) {
+      root.setAttribute("data-contrast", tier);
+      const style = getComputedStyle(root);
+      tiers[tier] = Object.fromEntries(INK.map((name) => [name, normalise(style.getPropertyValue(name).trim())]));
+    }
+    if (before === null) root.removeAttribute("data-contrast");
+    else root.setAttribute("data-contrast", before);
+    return tiers;
+  });
+}
+
 async function openSettings(page) {
   await page.locator('[data-action="chrome.settings"]').first().click();
   // The sheet mounts on a later commit than the click returns on, so waiting a
@@ -384,6 +420,7 @@ const main = async () => {
   const browser = await chromium.launch({ channel: process.env.PERF_CHANNEL ?? "chrome" });
 
   const domains = {};
+  const contrast = {};
 
   // A fresh context per scheme: switching colorScheme on a loaded page leaves
   // the previous scheme's styles resolving for a frame or two, which is enough
@@ -401,6 +438,7 @@ const main = async () => {
     await page.goto(`${BASE}?pref=zh&ws=2&sess=6&turns=2`, { waitUntil: "domcontentloaded" });
     await settle(page);
     domains[`conversation/${scheme}`] = await grab(page, STYLE_PROPS);
+    contrast[scheme] = await grabContrast(page);
 
     // The settings sheet, one capture per section.
     await openSettings(page);
@@ -427,6 +465,12 @@ const main = async () => {
     await writeFile(join(OUT, file), JSON.stringify(domain) + "\n", "utf8");
     index.domains.push({ name, file, nodes: domain.nodes.length, styles: domain.styles.length });
   }
+
+  // The contrast tiers are their own file: four ink tokens per tier per scheme,
+  // not a page, and folding them into a domain would have said the page changed
+  // when only the ink did.
+  await writeFile(join(OUT, "contrast.json"), JSON.stringify(contrast) + "\n", "utf8");
+
   await writeFile(join(OUT, "index.json"), JSON.stringify(index, null, 2) + "\n", "utf8");
 
   const count = Object.keys(domains).length;

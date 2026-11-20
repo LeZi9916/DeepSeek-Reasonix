@@ -1,0 +1,122 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctl="using:Reasonix.Studio.Controls">
+
+  <!--
+    The skeleton's control themes. Every colour and size is read from the token
+    dictionary the reference frontend's custom properties were rendered into, so
+    the shell's vocabulary and the stylesheet's are the same set of names rather
+    than two lists that happen to agree today.
+  -->
+  <Styles.Resources>
+    <ControlTheme x:Key="{x:Type ctl:StudioRail}" TargetType="ctl:StudioRail">
+      <Setter Property="Width" Value="{DynamicResource RailW}" />
+      <Setter Property="Background" Value="{DynamicResource PageBrush}" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}"
+                  Padding="10,12,10,0"
+                  BorderBrush="{DynamicResource BorderBrush}"
+                  BorderThickness="0,0,1,0">
+            <ContentPresenter Content="{TemplateBinding Content}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type ctl:StudioChrome}" TargetType="ctl:StudioChrome">
+      <Setter Property="Height" Value="48" />
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" Padding="20,0,20,0">
+            <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type ctl:StudioPane}" TargetType="ctl:StudioPane">
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}">
+            <ContentPresenter Content="{TemplateBinding Content}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type ctl:StudioTranscript}" TargetType="ctl:StudioTranscript">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <ContentPresenter Content="{TemplateBinding Content}" />
+          </ScrollViewer>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type ctl:StudioComposer}" TargetType="ctl:StudioComposer">
+      <Setter Property="Width" Value="760" />
+      <Setter Property="Height" Value="128" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{DynamicResource SurfaceBrush}"
+                  BorderBrush="{DynamicResource BorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="{DynamicResource RLg}">
+            <ContentPresenter Content="{TemplateBinding Content}" Margin="12" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type ctl:StudioSidePanel}" TargetType="ctl:StudioSidePanel">
+      <Setter Property="Width" Value="{DynamicResource SideW}" />
+      <Setter Property="Background" Value="{DynamicResource PageBrush}" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{DynamicResource BorderBrush}"
+                  BorderThickness="1,0,0,0">
+            <ContentPresenter Content="{TemplateBinding Content}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type ctl:StudioCrumb}" TargetType="ctl:StudioCrumb">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+  </Styles.Resources>
+
+  <!-- Applying the theme by type is what lets a page write <ctl:StudioRail/> and
+       get the documented width, rather than restating it at each call site. -->
+  <Style Selector="ctl|StudioRail">
+    <Setter Property="Theme" Value="{StaticResource {x:Type ctl:StudioRail}}" />
+  </Style>
+  <Style Selector="ctl|StudioChrome">
+    <Setter Property="Theme" Value="{StaticResource {x:Type ctl:StudioChrome}}" />
+  </Style>
+  <Style Selector="ctl|StudioPane">
+    <Setter Property="Theme" Value="{StaticResource {x:Type ctl:StudioPane}}" />
+  </Style>
+  <Style Selector="ctl|StudioTranscript">
+    <Setter Property="Theme" Value="{StaticResource {x:Type ctl:StudioTranscript}}" />
+  </Style>
+  <Style Selector="ctl|StudioComposer">
+    <Setter Property="Theme" Value="{StaticResource {x:Type ctl:StudioComposer}}" />
+  </Style>
+  <Style Selector="ctl|StudioSidePanel">
+    <Setter Property="Theme" Value="{StaticResource {x:Type ctl:StudioSidePanel}}" />
+  </Style>
+  <Style Selector="ctl|StudioCrumb">
+    <Setter Property="Theme" Value="{StaticResource {x:Type ctl:StudioCrumb}}" />
+  </Style>
+
+</Styles>
