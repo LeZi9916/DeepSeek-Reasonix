@@ -19,14 +19,23 @@ export function ContextSummaryCard({ context, mcp, percent, onManage, compact: a
   const active = mcp.filter((entry) => entry.enabled);
   const ready = active.filter((entry) => entry.state === "ready");
   const tools = ready.reduce((sum, entry) => sum + (entry.tools || 0), 0);
-  const parts = context ? [
+  // A class nothing was measured for draws no row, as in the rail's legend: a
+  // zero figure beside a label reads as a quantity the session holds.
+  const parts = (context ? [
     [t("common.system_prompt"), context.system, "sys"],
     [t("common.tool_definitions"), context.tools, "tool"],
     [t("panels.project_memory"), context.project_memory || 0, "memory"],
     [t("common.what_you_said"), context.user, "user"],
     [t("common.model_replies"), context.reply, "reply"],
+    [t("panels.folded_history"), context.digest || 0, "digest"],
     [t("common.tool_output"), context.output, "output"],
-  ] as const : [];
+  ] as const : []).filter(([, value]) => value > 0);
+  // The card answers the same question as the rail's legend, so it uses the same
+  // ceiling: the fold point, or the window when maintenance is retired. A bar
+  // scaled to what is used leaves the reader unable to see how much is left.
+  const ceiling = context ? (context.compact_at > 0 && context.compact_at <= context.window ? context.compact_at : context.window) : 0;
+  const idle = context && ceiling > 0 ? Math.max(0, ceiling - context.used) : 0;
+  const shareOf = (n: number) => (ceiling > 0 ? Math.min(100, (n / ceiling) * 100) : 0);
   const memoryFiles = context?.project_memory_files ?? [];
   const holdersOf = (key: string) => (context?.largest ?? []).filter((h) => h.class === key);
   // Project memory is not a message class: what it opens to is the documents the
@@ -41,7 +50,7 @@ export function ContextSummaryCard({ context, mcp, percent, onManage, compact: a
       {context ? (
         <>
           <div className="chrome-context-total"><span>{t("common.used")} <b>{compact(context.used)}</b></span><span>{t("common.model_capacity")} <b>{compact(context.window)}</b>{context.compact_at > 0 && <> · {t("composer.auto_compacts_at", { n: compact(context.compact_at) })}</>}</span></div>
-          <div className="chrome-context-bar">{parts.map(([label, value, key]) => <i key={key} data-part={key} title={`${label} ${compact(value)}`} style={{ width: `${context.used ? Math.max(1, (value / context.used) * 100) : 0}%` }} />)}</div>
+          <div className="chrome-context-bar">{parts.map(([label, value, key]) => <i key={key} data-part={key} title={`${label} ${compact(value)}`} style={{ width: `${Math.max(1, shareOf(value))}%` }} />)}{idle > 0 && <i data-part="idle" title={`${t("panels.idle")} ${compact(idle)}`} style={{ width: `${shareOf(idle)}%` }} />}</div>
           <div className="chrome-context-parts">{parts.map(([label, value, key]) => (
             <div key={key}>
               <i data-part={key} /><span>{label}</span>
@@ -51,7 +60,13 @@ export function ContextSummaryCard({ context, mcp, percent, onManage, compact: a
                   ? <button type="button" className="chrome-context-more" data-action="context.largest" data-value={key} aria-expanded={listed === key} aria-label={t("composer.show_the_largest_items_in", { name: label })} onClick={() => setListed(listed === key ? null : key)}>{compact(value)}<StudioIcon name="chevron" /></button>
                   : <b>{compact(value)}</b>}
             </div>
-          ))}</div>
+          ))}
+            {idle > 0 && (
+              <div>
+                <i data-part="idle" /><span>{t("panels.idle")}</span>
+                <b>{compact(idle)}</b>
+              </div>
+            )}</div>
           {!opened && parts.some(([, , key]) => opens(key)) && <p className="chrome-context-hint">{t("composer.open_a_class_for_its_largest")}</p>}
           {opened && !openLargest && (
             <ul className="chrome-context-items" aria-labelledby="chrome-context-items-title">

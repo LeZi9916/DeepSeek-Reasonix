@@ -59,7 +59,9 @@ it("offers no list for a class with no holders named, nor at all from a kernel t
   cleanup();
   render(card(breakdown({ largest: undefined })));
   expect(document.querySelector('[data-action="context.largest"]')).toBeNull();
-  expect(document.querySelectorAll(".chrome-context-parts b")).toHaveLength(5);
+  // Five classes with a figure, plus the idle row; each is plain text because
+  // none of them can open without holders to name.
+  expect(document.querySelectorAll(".chrome-context-parts b")).toHaveLength(6);
 });
 
 it("says where the window folds on its own, beside the capacity", () => {
@@ -72,4 +74,32 @@ it("says where the window folds on its own, beside the capacity", () => {
 it("says nothing about a fold the kernel has no threshold for", () => {
   render(card(breakdown({ compact_at: 0 })));
   expect(document.querySelector(".chrome-context-total")!.textContent).not.toContain("自动压缩");
+});
+
+// The card answers the same question as the rail's legend, so it has to name the
+// same rows: what is taken, what the fold left behind, and how much is left.
+// It listed six classes and no remainder, so a session at 25% of its fold point
+// showed rows summing to the whole bar.
+it("names the folded history and the capacity still idle", () => {
+  render(card(breakdown({ digest: 8_000 })));
+
+  const rows = [...document.querySelectorAll(".chrome-context-parts > div")].map((row) => row.textContent ?? "");
+  expect(rows.some((r) => r.includes("折叠历史") && r.includes("8K"))).toBe(true);
+  // 160k fold point less 40k used is 120k.
+  expect(rows.some((r) => r.includes("空闲") && r.includes("120K"))).toBe(true);
+});
+
+it("scales the bar against the fold point, so the idle slice is visible", () => {
+  render(card(breakdown()));
+  const slices = [...document.querySelectorAll<HTMLElement>(".chrome-context-bar > i")];
+  const idle = slices.find((i) => i.dataset.part === "idle");
+  expect(idle).toBeTruthy();
+  // 120k of a 160k ceiling.
+  expect(Number.parseFloat(idle!.style.width)).toBeCloseTo(75, 0);
+});
+
+it("shows no idle row once the capacity is spent", () => {
+  render(card(breakdown({ used: 160_000 })));
+  const rows = [...document.querySelectorAll(".chrome-context-parts > div")].map((row) => row.textContent ?? "");
+  expect(rows.some((r) => r.includes("空闲"))).toBe(false);
 });
