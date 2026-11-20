@@ -28,6 +28,7 @@ const (
 	exceptionalMinSavingsRatio = 0.25 // when fixed prefix alone exceeds 50%, require at least this savings
 	minCompactMessages         = 2    // skip compaction below this many compactable messages
 	fallbackTokPerChar         = 0.25 // ~4 chars/token, used before any usage is available to calibrate
+	fallbackTokPerCJKRune      = 0.6  // one han rune is three bytes but well under one token
 	protocolReserveTokens      = 256  // provider framing and control fields not represented by message estimates
 )
 

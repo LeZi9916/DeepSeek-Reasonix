@@ -246,9 +246,10 @@ func (a *contextWindow) calibratedPromptTokens(shape requestCalibrationShape) (i
 
 // estimatedPromptTokens sizes the provider-visible messages in real tokens —
 // the only unit comparable against the context window. Same-session usage
-// calibrates it; before that the wire character count carries the ~4 chars per
-// token shape. estimateMessagesTokens counts characters and is for internal
-// planning budgets only; against the window it would compact 4x early.
+// calibrates it; before that every string is priced by its script, because a
+// CJK character is three bytes and one token while Latin runs four bytes to the
+// token. estimateMessagesTokens counts characters and is for internal planning
+// budgets only; against the window it would compact 4x early.
 func (a *contextWindow) estimatedPromptTokens(msgs []provider.Message) int {
 	return a.estimatedShapeTokens(a.requestCalibrationShape(provider.Request{Messages: msgs}))
 }
@@ -264,7 +265,7 @@ func (a *contextWindow) estimatedShapeTokens(shape requestCalibrationShape) int 
 	if calibrated, ok := a.calibratedPromptTokens(shape); ok {
 		return calibrated + int(shape.imageTokens)
 	}
-	return int(float64(shape.requestChars)*fallbackTokPerChar) + int(shape.imageTokens)
+	return fixedTokens(shape)
 }
 
 func isCJKRune(r rune) bool {

@@ -146,11 +146,16 @@ func splitFoldDigests(visible []provider.Message) (system, replies, digests []pr
 	return system, replies, digests
 }
 
-// splitProjectMemory separates the workspace's standing instructions from the
-// text a person typed, so the block has a class of its own. The two results
-// partition the same messages, so the classes still add up to the prompt the
-// gauge counts; a tag inside someone's own prose stays theirs, because only the
-// leading chain the host writes is walked.
+// splitProjectMemory separates what the host wrote from what the person typed.
+// Every block the host prepends to a user turn belongs to the first: the
+// workspace's rules, the date, the skill catalogue, the execution policy. They
+// ride a turn the person sent, and measured with it they read as their own
+// words — a nine-character question beside a long catalogue reported the
+// catalogue as theirs.
+//
+// The two results partition the same messages, so the classes still add up to
+// the prompt the gauge counts. A tag inside someone's own prose stays theirs,
+// because only the leading chain the host writes is walked.
 func splitProjectMemory(visible []provider.Message) (memory, typed []provider.Message) {
 	for _, m := range visible {
 		if m.Role != provider.RoleUser {
@@ -167,7 +172,7 @@ func splitProjectMemory(visible []provider.Message) (memory, typed []provider.Me
 			typed = append(typed, m)
 			continue
 		}
-		block, rest := splitLeadingBlock(m, projectInstructionsTag)
+		block, rest := splitLeadingBlock(m, "")
 		if block.Content != "" {
 			memory = append(memory, block)
 		}
@@ -179,7 +184,9 @@ func splitProjectMemory(visible []provider.Message) (memory, typed []provider.Me
 }
 
 // splitLeadingBlock divides one message into the leading transient blocks of
-// tag and everything else. A message carrying neither is returned as rest.
+// tag and everything else. An empty tag matches every transient block, which is
+// what the host-written class wants: a block it starts prepending tomorrow then
+// needs no second edit here. A message carrying neither is returned as rest.
 func splitLeadingBlock(m provider.Message, tag string) (block, rest provider.Message) {
 	content := m.Content
 	var got, kept strings.Builder
@@ -188,7 +195,7 @@ func splitLeadingBlock(m provider.Message, tag string) (block, rest provider.Mes
 		if !ok {
 			break
 		}
-		if gotTag == tag {
+		if tag == "" || gotTag == tag {
 			got.WriteString(content[:end])
 		} else {
 			kept.WriteString(content[:end])
@@ -255,12 +262,22 @@ func (a *contextWindow) classTokens(msgs []provider.Message, schemas bool) int {
 	return fixedTokens(a.requestCalibrationShape(req))
 }
 
-// fixedTokens prices a shape at the cold rate from its own bytes.
+// fixedTokens prices a shape from its own text, splitting it the way the
+// provider's tokenizer does: Latin near four bytes per token, a han rune near
+// two thirds of one. Charging every byte the Latin rate undercounts a Chinese
+// conversation by a third, because one character is three bytes and less than
+// one token.
 func fixedTokens(shape requestCalibrationShape) int {
 	if shape.requestChars <= 0 && shape.imageTokens <= 0 {
 		return 0
 	}
-	return int(math.Ceil(float64(shape.requestChars)*fallbackTokPerChar)) + int(shape.imageTokens)
+	narrow := shape.requestChars - shape.cjkBytes
+	if narrow < 0 {
+		narrow = 0
+	}
+	return int(math.Ceil(float64(narrow)*fallbackTokPerChar)) +
+		int(math.Ceil(float64(shape.cjkRunes)*fallbackTokPerCJKRune)) +
+		int(shape.imageTokens)
 }
 
 func messagesWithRole(msgs []provider.Message, role provider.Role) []provider.Message {
