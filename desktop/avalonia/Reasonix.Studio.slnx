@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Reasonix.Studio.Contracts/Reasonix.Studio.Contracts.csproj" />
+    <Project Path="src/Reasonix.Studio.Kernel/Reasonix.Studio.Kernel.csproj" />
+    <Project Path="src/Reasonix.Studio.State/Reasonix.Studio.State.csproj" />
+    <Project Path="src/Reasonix.Studio.Controls/Reasonix.Studio.Controls.csproj" />
+    <Project Path="src/Reasonix.Studio.Pages/Reasonix.Studio.Pages.csproj" />
+    <Project Path="src/Reasonix.Studio.Shell/Reasonix.Studio.Shell.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Reasonix.Studio.Baseline/Reasonix.Studio.Baseline.csproj" />
+  </Folder>
+</Solution>

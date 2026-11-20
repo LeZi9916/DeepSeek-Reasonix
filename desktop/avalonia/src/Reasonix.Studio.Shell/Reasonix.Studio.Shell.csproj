@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Reasonix.Studio.Shell</RootNamespace>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reasonix.Studio.Contracts\Reasonix.Studio.Contracts.csproj" />
+    <ProjectReference Include="..\Reasonix.Studio.Kernel\Reasonix.Studio.Kernel.csproj" />
+    <ProjectReference Include="..\Reasonix.Studio.State\Reasonix.Studio.State.csproj" />
+    <ProjectReference Include="..\Reasonix.Studio.Controls\Reasonix.Studio.Controls.csproj" />
+    <ProjectReference Include="..\Reasonix.Studio.Pages\Reasonix.Studio.Pages.csproj" />
+  </ItemGroup>
+
+</Project>

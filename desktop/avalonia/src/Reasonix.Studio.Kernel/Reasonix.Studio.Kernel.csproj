@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Reasonix.Studio.Kernel</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reasonix.Studio.Contracts\Reasonix.Studio.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

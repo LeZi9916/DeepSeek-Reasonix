@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Reasonix.Studio.Pages</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reasonix.Studio.Contracts\Reasonix.Studio.Contracts.csproj" />
+    <ProjectReference Include="..\Reasonix.Studio.Controls\Reasonix.Studio.Controls.csproj" />
+    <ProjectReference Include="..\Reasonix.Studio.State\Reasonix.Studio.State.csproj" />
+  </ItemGroup>
+
+</Project>
