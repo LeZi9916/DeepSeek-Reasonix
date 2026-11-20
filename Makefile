@@ -9,7 +9,7 @@ GOEXE := $(shell go env GOEXE)
 # One pin for the Makefile and the CI lint job; see .github/workflows/ci.yml.
 GOLANGCI_VERSION := $(shell cat .golangci-version)
 
-.PHONY: build vet fmt lint lint-go lint-install lint-cross lint-update coverage-gate coverage-gate-update pricecheck acp-conformance check test studio-test sdk-test sdk-test-race hooks cross clean studio studio-dotnet studio-dotnet-test studio-geometry wiregen-check
+.PHONY: build vet fmt lint lint-go lint-install lint-cross lint-update coverage-gate coverage-gate-update pricecheck acp-conformance check test studio-test sdk-test sdk-test-race hooks cross clean studio studio-dotnet studio-dotnet-test studio-geometry studio-messages studio-messages-check wiregen-check
 
 build:
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/reasonix$(GOEXE) ./cmd/reasonix
@@ -114,6 +114,16 @@ studio-dotnet-test:
 # cases, and so CI cites one command rather than a filter someone retypes.
 studio-geometry: studio-dotnet
 	dotnet test desktop/avalonia/Reasonix.Studio.slnx -c Debug --no-build --filter "FullyQualifiedName~GeometryGateTests|FullyQualifiedName~GeometryCoverageTests|FullyQualifiedName~CoverageAuditTests|FullyQualifiedName~UncomparableAuditTests"
+
+# The interface's wording lives in the reference frontend's own tables. The
+# shell's copies are generated from them, so this check is what notices an edit
+# on either side that nobody propagated: a key added there and not here, or a
+# phrase changed in one place only.
+studio-messages:
+	node desktop/avalonia/tools/render-messages.mjs
+
+studio-messages-check:
+	node desktop/avalonia/tools/render-messages.mjs -check
 
 # The shell's wire records are generated from the kernel's Go structs, so a
 # source edit without a regeneration leaves a contract the shell reads a field

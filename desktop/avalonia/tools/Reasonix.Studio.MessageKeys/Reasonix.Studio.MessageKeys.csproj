@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    A source generator, not an assembly the shell references: it runs inside the
+    compiler and writes the message-key constants from the tables the renderer
+    already produced. The shared build settings in Directory.Build.props are for
+    code that ships, and every one of them is wrong here — this project targets
+    netstandard2.0 because that is what a Roslyn component must target, and it
+    has no documentation gate because its only public members are the generator
+    itself.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors></WarningsAsErrors>
+    <AnalysisLevel>none</AnalysisLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- The shared analysers are for shipped code; a generator is compiled by the
+       SDK's own Roslyn and held to the rules below by its cases instead. -->
+  <ItemGroup>
+    <PackageReference Remove="Microsoft.CodeAnalysis.NetAnalyzers" />
+    <PackageReference Remove="StyleCop.Analyzers" />
+  </ItemGroup>
+
+</Project>

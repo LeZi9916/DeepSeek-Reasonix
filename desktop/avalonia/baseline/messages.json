@@ -1,0 +1,32 @@
+{
+ "capturedFrom": "desktop/frontend-next/src/i18n/msg",
+ "files": 24,
+ "count": 5191,
+ "digest": "0xb93cd817",
+ "areas": {
+  "about": 101,
+  "app": 143,
+  "chat": 549,
+  "common": 225,
+  "composer": 312,
+  "data": 158,
+  "ext": 445,
+  "feedback": 248,
+  "kernel": 845,
+  "look": 102,
+  "memory": 73,
+  "models": 255,
+  "onboarding": 53,
+  "panels": 179,
+  "persona": 137,
+  "plan": 44,
+  "remote": 247,
+  "safety": 128,
+  "session": 227,
+  "settings": 255,
+  "subagent": 57,
+  "terminal": 25,
+  "usage": 158,
+  "workbench": 225
+ }
+}

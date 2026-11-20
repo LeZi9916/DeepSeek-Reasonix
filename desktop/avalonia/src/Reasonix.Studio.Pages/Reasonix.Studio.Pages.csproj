@@ -14,4 +14,38 @@
     <ProjectReference Include="..\Reasonix.Studio.State\Reasonix.Studio.State.csproj" />
   </ItemGroup>
 
+  <!--
+    The message keys are derived from the rendered tables, so a key that leaves
+    the table stops compiling at every call site that names it. The generator is
+    an analyzer, not a reference: it runs inside the compiler and ships nowhere.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\tools\Reasonix.Studio.MessageKeys\Reasonix.Studio.MessageKeys.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!--
+    The generator reads the tables as files rather than re-parsing this project's
+    syntax. `AdditionalFiles` is MSBuild's own statement of "this is data the
+    build reads", which is what keeps the generator from guessing at a path.
+  -->
+  <ItemGroup>
+    <AdditionalFiles Include="I18n/*.g.cs" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Generated sources are not this project's own code: a warning raised
+         inside one is a defect in the generator, and it should be fixed there
+         rather than suppressed at every call site that consumes it. -->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
+
+  <!-- The message cases compare the constants against the tables they came from,
+       so the test assembly reads the generated tables rather than a copy. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Reasonix.Studio.Baseline.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -278,6 +278,17 @@ jobs:
       - name: geometry
         run: dotnet test Reasonix.Studio.slnx -c Release --no-build --filter "FullyQualifiedName~GeometryGateTests|FullyQualifiedName~GeometryCoverageTests|FullyQualifiedName~CoverageAuditTests|FullyQualifiedName~UncomparableAuditTests"
 
+      # The interface's wording is read from the reference frontend's own tables,
+      # and the C# copies are generated from them. This is what notices an edit on
+      # either side nobody propagated: a phrase changed here only, or a key added
+      # there and never rendered.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24"
+
+      - name: messages
+        run: node tools/render-messages.mjs -check
+
   # What a hosted page does over the relay, end to end: the production bundle,
   # the real Studio host and kernel, a real Chromium; only the accounts API and
   # the relay are stand-ins (tools/relayfake). Event-transport changes are
