@@ -110,6 +110,7 @@ func (c *Controller) snapshotWithDurability(markActivity, forceRewrite, shutdown
 	modelRef := c.modelRef
 	c.mu.Unlock()
 	c.writeSessionUsageRecord(path)
+	c.writeSessionPromptUsage(path)
 	if c.executor == nil {
 		return false, nil
 	}

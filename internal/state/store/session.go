@@ -84,6 +84,17 @@ func SessionContext(sessionPath string) string {
 	return sessionStem(sessionPath) + ".context.json"
 }
 
+// SessionPromptUsage is the last provider-reported prompt size and the tokenizer
+// ratio learned from it (<id>.prompt-usage.json). A resumed session reads it to
+// open on the figure its previous process closed on instead of the cold estimate.
+func SessionPromptUsage(sessionPath string) string {
+	sessionPath = strings.TrimSpace(sessionPath)
+	if sessionPath == "" {
+		return ""
+	}
+	return sessionStem(sessionPath) + ".prompt-usage.json"
+}
+
 // sessionStem strips the .jsonl suffix so a sidecar sits beside the session as
 // <id>.<kind> rather than <id>.jsonl.<kind>.
 func sessionStem(sessionPath string) string {
@@ -372,6 +383,7 @@ func SessionSidecarFiles(sessionPath string) []string {
 		SessionConflictLog(sessionPath),
 		SessionRecoveryState(sessionPath),
 		SessionContext(sessionPath),
+		SessionPromptUsage(sessionPath),
 	}
 }
 

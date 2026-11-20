@@ -60,6 +60,18 @@ func (c *Controller) snapshot(markActivity, forceRewrite, shutdownRecovery bool)
 	return err
 }
 
+// writeSessionPromptUsage persists the provider-reported prompt size and the
+// tokenizer ratio the gauge learned, so a restarted session opens on the figure
+// the previous process closed on. It rides the same save point as the transcript
+// so the path and the session cannot disagree about which one was written; a
+// failed record is telemetry, not a failed save.
+func (c *Controller) writeSessionPromptUsage(path string) {
+	if c.executor == nil || path == "" {
+		return
+	}
+	c.executor.SavePromptUsageState(path)
+}
+
 // writeSessionUsageRecord persists the session's token accounting beside the
 // transcript. It rides the session's own persistence point so the record names
 // the session the transcript was written for and cannot drift onto another; a

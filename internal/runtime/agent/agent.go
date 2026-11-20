@@ -566,6 +566,9 @@ func (a *Agent) Session() *sessionstore.Session {
 // so the model picks up exactly where it left off. Callers serialise it against a
 // running turn (it only fires while idle); sessMu guards the pointer swap itself.
 func (a *Agent) SetSession(s *sessionstore.Session) {
+	// The replaced conversation's provider count and tokenizer ratio go to the
+	// transcript it belongs to before reset drops them.
+	a.window().savePromptUsageState(a.window().sessionPath())
 	a.sess.reset(s)
 	a.replayTouchedPaths(s)
 	// The replaced conversation's task is over, but the ledger and the bill

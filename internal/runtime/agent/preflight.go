@@ -190,6 +190,7 @@ func (a *Agent) LoadProjectionSidecar(sessionPath string) {
 }
 
 func (a *contextWindow) loadProjectionSidecar(sessionPath string) {
+	a.loadPromptUsageState(sessionPath)
 	a.sess.win.compactionMu.Lock()
 	a.sess.path = sessionPath
 	a.sess.win.compactionState = sessionstore.CompactionState{}
