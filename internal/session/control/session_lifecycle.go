@@ -91,6 +91,8 @@ func (c *Controller) NewSession() error {
 	c.extensionSessionEvent(extension.PointSessionEnd, dispatch.PhaseEnd, oldPath)
 	// Hold snapshotMu across the swap so an in-flight save cannot pair the old
 	// path with the fresh session (or the fresh path with the old session).
+	c.swapMu.Lock()
+	defer c.swapMu.Unlock()
 	c.snapshotMu.Lock()
 	if c.sessionDir != "" {
 		c.mu.Lock()
@@ -173,6 +175,8 @@ func (c *Controller) ClearSession() error {
 	// Hold snapshotMu from artifact removal through the swap: a save slipping
 	// in between would resurrect the just-removed transcript, and one that
 	// overlapped the swap could pair the old path with the fresh session.
+	c.swapMu.Lock()
+	defer c.swapMu.Unlock()
 	c.snapshotMu.Lock()
 	destroy := c.BeginDestroySession(oldPath)
 	if !destroy.Async {
@@ -246,6 +250,8 @@ func (c *Controller) hasUnfinishedSessionJobs(sessionPath string) bool {
 func (c *Controller) Branch(name string) (string, error) {
 	path, err := c.branchAt(nil, name, func(sess *sessionstore.Session, newPath string) {
 		// See snapshotMu: the swap must not interleave with an in-flight save.
+		c.swapMu.Lock()
+		defer c.swapMu.Unlock()
 		c.snapshotMu.Lock()
 		if c.executor.Session().WriteAuthorityRequired() {
 			sess.RequireWriteAuthority()
@@ -318,6 +324,8 @@ func (c *Controller) SwitchBranch(ref string) (sessionstore.BranchInfo, error) {
 		return sessionstore.BranchInfo{}, c.rewindFail(err)
 	}
 	// See snapshotMu: the swap must not interleave with an in-flight save.
+	c.swapMu.Lock()
+	defer c.swapMu.Unlock()
 	c.snapshotMu.Lock()
 	if c.executor != nil {
 		c.executor.SetSession(loaded)
@@ -348,6 +356,8 @@ func (c *Controller) resume(s *sessionstore.Session, path string, announceColdRe
 	// recoverInterruptedTurn and maybeColdResumePrune snapshot on their own,
 	// so they stay outside the locked section (snapshotMu is not reentrant).
 	prevPath := c.SessionPath()
+	c.swapMu.Lock()
+	defer c.swapMu.Unlock()
 	c.snapshotMu.Lock()
 	if c.executor != nil {
 		c.executor.SetSession(s)
@@ -399,6 +409,8 @@ func (c *Controller) SetFreshSessionPath(p string) {
 
 func (c *Controller) setSessionPath(p string, fresh bool) {
 	// See snapshotMu: the swap must not interleave with an in-flight save.
+	c.swapMu.Lock()
+	defer c.swapMu.Unlock()
 	c.snapshotMu.Lock()
 	c.mu.Lock()
 	c.sessionPath = p

@@ -33,6 +33,8 @@ func (c *Controller) reportContext() {
 // project-memory class are named here rather than in the agent: the loaded set
 // is this controller's snapshot, and the agent only measures the rendered block.
 func (c *Controller) ContextBreakdown() agent.ContextBreakdown {
+	c.swapMu.RLock()
+	defer c.swapMu.RUnlock()
 	if c.executor == nil {
 		return agent.ContextBreakdown{}
 	}

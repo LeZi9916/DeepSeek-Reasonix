@@ -194,6 +194,12 @@ type Controller struct {
 	// Not reentrant — never call snapshot (or anything that snapshots, such as
 	// recoverInterruptedTurn or maybeColdResumePrune) while holding it.
 	snapshotMu sync.Mutex
+	// swapMu is the read side of the same window snapshotMu closes for writers:
+	// a session swap clears the fold and then adopts the new one, and a gauge
+	// read landing between those two steps describes the whole pre-fold log.
+	// Readers take it shared so they wait for the swap to finish rather than
+	// report a context that never existed.
+	swapMu sync.RWMutex
 	// grantsMu orders sidecar writes of session grants; the grants are read after
 	// it is held, so the write that runs last carries the latest answers.
 	grantsMu sync.Mutex
@@ -982,6 +988,8 @@ func (c *Controller) SessionDir() string { return c.sessionDir }
 // measures it, so the gauge and the trigger can never disagree. Both zero means
 // no data yet — a gauge hides itself.
 func (c *Controller) ContextSnapshot() (int, int) {
+	c.swapMu.RLock()
+	defer c.swapMu.RUnlock()
 	if c.executor == nil {
 		return 0, 0
 	}
