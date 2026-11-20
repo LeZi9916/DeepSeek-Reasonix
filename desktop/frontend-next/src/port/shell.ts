@@ -15,6 +15,8 @@ export interface ContextBreakdown {
   user: number;
   reply: number;
   output: number;
+  // The folded history a prior compaction became; absent on older kernels.
+  digest?: number;
   compact_at: number;
   boundary: string;
   capacity_at: number;

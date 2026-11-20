@@ -106,10 +106,17 @@ func TestFoldDigestIsNotCountedAsAModelReply(t *testing.T) {
 	if after.Reply-before.Reply > 200 {
 		t.Fatalf("reply grew by %d tokens: the fold digest was counted as the model's own words", after.Reply-before.Reply)
 	}
-	// Nothing is lost either: the digest is a real part of the prompt, so it is
-	// measured somewhere rather than dropped from the legend.
-	if after.System <= before.System || after.User != before.User {
-		t.Fatalf("the digest must move to the system side, not into the user class: before=%+v after=%+v", before, after)
+	// The digest is a real part of the prompt, so it is measured — in a class of
+	// its own. It is neither the instructions the host sends every round nor the
+	// person's own words, and it grows with the conversation.
+	if after.Digest <= 0 {
+		t.Fatalf("the digest was not measured at all: before=%+v after=%+v", before, after)
+	}
+	if after.System != before.System || after.User != before.User {
+		t.Fatalf("the digest leaked into a fixed class: before=%+v after=%+v", before, after)
+	}
+	if after.Prompt != before.Prompt+after.Digest {
+		t.Fatalf("the classes no longer add up: before=%d after=%d digest=%d", before.Prompt, after.Prompt, after.Digest)
 	}
 }
 

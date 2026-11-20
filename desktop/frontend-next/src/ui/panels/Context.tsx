@@ -22,7 +22,7 @@ import { CompactNow, type CompactAction } from "../CompactNow";
 // those is a slice of the bar. Project memory is its own class because it
 // arrives inside user turns; a reader who found it only there would count it as
 // their own message and have nothing to edit.
-type Part = "system" | "tools" | "memory" | "user" | "reply" | "output";
+type Part = "system" | "tools" | "memory" | "user" | "reply" | "digest" | "output";
 
 function parts(): [Part, string, string][] {
   return [
@@ -31,6 +31,7 @@ function parts(): [Part, string, string][] {
     ["memory", t("panels.project_memory"), t("panels.the_workspace_rules_files_it")],
     ["user", t("common.what_you_said"), t("panels.your_side_of_this_session")],
     ["reply", t("common.model_replies"), t("panels.what_the_model_has_said")],
+    ["digest", t("panels.folded_history"), t("panels.what_earlier_compaction_folded")],
     ["output", t("common.tool_output"), t("panels.what_commands_reads_and_searches")],
   ];
 }

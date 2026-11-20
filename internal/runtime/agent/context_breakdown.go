@@ -31,6 +31,10 @@ type ContextBreakdown struct {
 	User               int                 `json:"user"`   // what the user typed
 	Reply              int                 `json:"reply"`  // what the model said
 	Output             int                 `json:"output"` // what tools returned
+	// Digest is the folded history a prior compaction became: neither what the
+	// person typed nor what the model said, and the part that grows with the
+	// conversation rather than staying fixed like the instructions.
+	Digest int `json:"digest"`
 	// Prompt is the sum of the classes above, priced piece by piece.
 	Prompt int `json:"prompt"`
 	// Budget is the fold trigger's reading of Total; the panel scales onto it.
@@ -93,7 +97,7 @@ func (a *Agent) ContextBreakdown() ContextBreakdown {
 	// that mark the running turn.
 	largest := a.window().largestMessages(visible)
 	memory, typed := splitProjectMemory(visible)
-	system, replies := splitFoldDigests(visible)
+	system, replies, digests := splitFoldDigests(visible)
 
 	out := ContextBreakdown{
 		Total:      a.ContextUsedTokens(),
@@ -115,27 +119,31 @@ func (a *Agent) ContextBreakdown() ContextBreakdown {
 		*class.to = a.window().classTokens(class.msgs, false)
 	}
 	out.ProjectMemory = a.window().classTokens(memory, false)
+	out.Digest = a.window().classTokens(digests, false)
 	out.Largest = holdersByClass(largest)
-	out.Prompt = out.System + out.Tools + out.ProjectMemory + out.User + out.Reply + out.Output
+	out.Prompt = out.System + out.Tools + out.ProjectMemory + out.User + out.Reply + out.Output + out.Digest
 	out.Total = a.ContextUsedTokens()
 	out.Budget = a.window().contextUsedTokens()
 	out.Overhead = max(0, out.Total-out.Prompt)
 	return out
 }
 
-// splitFoldDigests routes a compaction digest to the system side. The split is
-// on the message the fold installed, never on who has the role: a digest rides
-// a user turn, and left there it read as what the person typed.
-func splitFoldDigests(visible []provider.Message) (system, replies []provider.Message) {
+// splitFoldDigests separates the three role-shaped classes, with a digest in a
+// class of its own. The split is on the message the fold installed, never on who
+// has the role: a digest rides a user turn, and left there it read as what the
+// person typed.
+func splitFoldDigests(visible []provider.Message) (system, replies, digests []provider.Message) {
 	for _, m := range visible {
 		switch {
-		case m.Role == provider.RoleSystem || isCompactionSummary(m):
+		case isCompactionSummary(m):
+			digests = append(digests, m)
+		case m.Role == provider.RoleSystem:
 			system = append(system, m)
 		case m.Role == provider.RoleAssistant:
 			replies = append(replies, m)
 		}
 	}
-	return system, replies
+	return system, replies, digests
 }
 
 // splitProjectMemory separates the workspace's standing instructions from the

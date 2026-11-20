@@ -25,6 +25,9 @@ type contextView struct {
 	User               int                       `json:"user"`
 	Reply              int                       `json:"reply"`
 	Output             int                       `json:"output"`
+	// The folded history a prior compaction became, apart from both what the
+	// person typed and the instructions every round carries.
+	Digest int `json:"digest"`
 	// Where maintenance actually happens, which is the lower of the two bounds
 	// and not the window: drawn against the window, a 1M session reads 16% full
 	// at the moment it folds.
@@ -47,7 +50,7 @@ func (s *Server) contextView() contextView {
 	b := s.ctl().ContextBreakdown()
 	return contextView{
 		Used: used, Window: window,
-		System: b.System, Tools: b.Tools, User: b.User, Reply: b.Reply, Output: b.Output,
+		System: b.System, Tools: b.Tools, User: b.User, Reply: b.Reply, Output: b.Output, Digest: b.Digest,
 		ProjectMemory: b.ProjectMemory, ProjectMemoryFiles: b.ProjectMemoryFiles,
 		CompactAt: b.CompactAt, Boundary: b.Boundary, CapacityAt: b.CapacityAt, Largest: b.Largest,
 		Overhead: b.Overhead,
