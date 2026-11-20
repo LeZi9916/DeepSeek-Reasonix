@@ -241,6 +241,37 @@ jobs:
             desktop/frontend-next/perf/shots/thought-clock-*.png
           retention-days: 7
 
+  # The C# shell. A separate solution from the SPA and from the Go kernel, so
+  # neither `go test` nor pnpm reaches it: this job is the only place its build,
+  # its documentation gate and its geometry baseline run.
+  shell-dotnet:
+    name: shell (dotnet)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: desktop/avalonia
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # The solution targets net10.0; the SDK is pinned rather than floating so a
+      # preview SDK landing on the runner cannot change what the analyzers see.
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: restore
+        run: dotnet restore Reasonix.Studio.slnx
+
+      # Warnings are errors here, so this is also the XML documentation gate and
+      # the .editorconfig format gate: a member without documentation, or a
+      # statement sharing its line with its header, fails the build.
+      - name: build
+        run: dotnet build Reasonix.Studio.slnx -c Release --no-restore
+
+      - name: test
+        run: dotnet test Reasonix.Studio.slnx -c Release --no-build
+
   # What a hosted page does over the relay, end to end: the production bundle,
   # the real Studio host and kernel, a real Chromium; only the accounts API and
   # the relay are stand-ins (tools/relayfake). Event-transport changes are

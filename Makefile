@@ -9,7 +9,7 @@ GOEXE := $(shell go env GOEXE)
 # One pin for the Makefile and the CI lint job; see .github/workflows/ci.yml.
 GOLANGCI_VERSION := $(shell cat .golangci-version)
 
-.PHONY: build vet fmt lint lint-go lint-install lint-cross lint-update coverage-gate coverage-gate-update pricecheck acp-conformance check test studio-test sdk-test sdk-test-race hooks cross clean studio
+.PHONY: build vet fmt lint lint-go lint-install lint-cross lint-update coverage-gate coverage-gate-update pricecheck acp-conformance check test studio-test sdk-test sdk-test-race hooks cross clean studio studio-dotnet studio-dotnet-test wiregen-check
 
 build:
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/reasonix$(GOEXE) ./cmd/reasonix
@@ -97,6 +97,22 @@ acp-conformance: build
 # The shell is a nested module, so the root `test` target never reaches it.
 studio-test:
 	cd desktop && go test ./...
+
+# The C# shell is a separate solution, so neither `go test` nor `make lint`
+# reaches it either. These two targets are what a local run and CI both call, so
+# the build flags and the test filter are written once.
+studio-dotnet:
+	dotnet build desktop/avalonia/Reasonix.Studio.slnx -c Debug
+
+studio-dotnet-test:
+	dotnet test desktop/avalonia/Reasonix.Studio.slnx -c Debug --no-build
+
+# The shell's wire records are generated from the kernel's Go structs, so a
+# source edit without a regeneration leaves a contract the shell reads a field
+# short. This is the cheap half of the check; repolint runs the same comparison
+# over fields rather than bytes.
+wiregen-check:
+	go run ./tools/wiregen -check
 
 sdk-test:
 	cd sdk/go && go test ./...
