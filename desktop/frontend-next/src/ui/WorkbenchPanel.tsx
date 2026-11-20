@@ -77,6 +77,7 @@ export function WorkbenchPanel({
   revealChanges = 0,
   revealFiles = 0,
   toggleFiles = 0,
+  initialFiles = false,
   onCloseManual,
   onDismiss,
   onSurfaces,
@@ -117,6 +118,9 @@ export function WorkbenchPanel({
   revealFiles?: number;
   /** A press on the Files button: opens the explorer, or folds it when it is the open one. */
   toggleFiles?: number;
+  /** Opens the explorer with the first paint, for a window asked for the
+   *  workbench by name: the tree is part of that page, not a press before it. */
+  initialFiles?: boolean;
   onCloseManual: () => void;
   // Closes the workbench itself, whichever way it was opened.
   onDismiss?: () => void;
@@ -137,7 +141,7 @@ export function WorkbenchPanel({
   const [files, setFiles] = useState<string[]>([]),
     [directories, setDirectories] = useState<string[]>([]),
     [openFiles, setOpenFiles] = useState<string[]>([]);
-  const [showFiles, setShowFiles] = useState(false);
+  const [showFiles, setShowFiles] = useState(initialFiles);
   const [launcher, setLauncher] = useState(false);
   const newTab = useRef<HTMLButtonElement>(null);
   const toggleLauncher = () => { supersede(); setLauncher((open) => !open); };

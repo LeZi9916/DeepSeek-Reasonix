@@ -34,9 +34,15 @@ export function usePaneViewOf(id: string): PaneView {
 /** The pane's view and the one way to change it. The pane that mounts last
  *  owns the id: when a key change mounts the new instance before the old one's
  *  cleanup runs, the old cleanup finds it is no longer the owner and leaves the
- *  entry alone. */
-export function usePaneView(id: string): [PaneView, (to: PaneView) => void] {
+ *  entry alone.
+ *
+ *  `initial` opens the pane on that view instead of the conversation. It is
+ *  read once, at mount: a later render passing another value must not move a
+ *  pane the person has since navigated, which is the difference between an
+ *  opening position and a command. */
+export function usePaneView(id: string, initial?: PaneView): [PaneView, (to: PaneView) => void] {
   const owner = useRef<symbol>(Symbol(id));
+  const opening = useRef<PaneView>(initial ?? "flow");
   const view = useSyncExternalStore<PaneView>(
     subscribe,
     () => {
@@ -47,7 +53,7 @@ export function usePaneView(id: string): [PaneView, (to: PaneView) => void] {
   );
   useLayoutEffect(() => {
     const me = owner.current;
-    entries.set(id, { owner: me, view: "flow" });
+    entries.set(id, { owner: me, view: opening.current });
     emit();
     return () => {
       if (entries.get(id)?.owner !== me) return;

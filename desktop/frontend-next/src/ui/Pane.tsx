@@ -103,14 +103,25 @@ const totalsOf = (st: SessionStatus) => ({
   incompleteReason: st.sessionCostQuote?.incompleteReason,
 });
 
-function PaneView({ port, hub, rt, title, active, visible, sideHost, side, onFocus, onReport, onSessionChanged, onTurnDone, pulse, findPulse, findTogglePulse = 0, filesPulse = 0, terminalPulse = 0, viewRequest, sessionRef, onSettings, onFeedback, onOpenSession, needsProject, onOpenProject, onKeepHere, connect, theme, dockW, dockMax, onDockW, manualBrowser = false, onManualBrowser, alert, failure }: PaneProps) {
+function PaneView({ port, hub, rt, title, active, visible, sideHost, side, onFocus, onReport, onSessionChanged, onTurnDone, pulse, findPulse, findTogglePulse = 0, filesPulse = 0, terminalPulse = 0, viewRequest, initialView, initialFile, sessionRef, onSettings, onFeedback, onOpenSession, needsProject, onOpenProject, onKeepHere, connect, theme, dockW, dockMax, onDockW, manualBrowser = false, onManualBrowser, alert, failure }: PaneProps) {
   const [s, dispatch] = useReducer(reduce, initialState);
   const [traj, trajDispatch] = useReducer(reduceTraj, initialTraj);
   const [sessionRead, setSessionRead] = useState<SessionRead>({ kind: "pending" });
   const status = sessionRead.kind === "settled" ? sessionRead.status : null;
   const ready = sessionRead.kind === "settled";
   const workspace = useWorkspaceInfo(port, status?.workspaceRoot || status?.cwd || rt.root, ready);
-  const [tab, showView] = useShowView(rt.id, onManualBrowser);
+  const [tab, showView] = useShowView(rt.id, onManualBrowser, initialView);
+  // A window asked for the workbench by name opens one file with it: the
+  // launcher is the same page whatever the workspace holds, and a capture of it
+  // says nothing about the editor, the tab strip or the tree.
+  const [seedFile, setSeedFile] = useState<string | undefined>(initialFile);
+  // Read once, like the seeded file: the explorer opens with the page, and a
+  // later render of this pane must not reopen a tree the reader folded.
+  const [initialFiles] = useState(initialFile !== undefined);
+  const seedRequest = useMemo(
+    () => (seedFile ? { path: seedFile, consumed: () => setSeedFile(undefined) } : undefined),
+    [seedFile],
+  );
   const [sideAsk, setSideAsk] = useState(false);
   const [worktreeTarget, setWorktreeTarget] = useState<HTMLDivElement | null>(null);
   const [worktreePhase, setWorktreePhase] = useState<string | null>(null);
@@ -614,7 +625,7 @@ function PaneView({ port, hub, rt, title, active, visible, sideHost, side, onFoc
           <WorkbenchPanel
             port={port}
             hub={hub}
-            fileRequest={conversationFiles.request}
+            fileRequest={conversationFiles.request ?? seedRequest}
             agentRequest={agentRuns.request}
             tabs={pages}
             fullMode={docked ? { full: browserSize.size === "full", onToggle: browserSize.toggleFull } : undefined}
@@ -623,7 +634,7 @@ function PaneView({ port, hub, rt, title, active, visible, sideHost, side, onFoc
             onSurfaces={setSurfaces}
             onActiveFile={onActiveFile}
             scheme={theme === "light" ? "light" : "dark"}
-            changes={tree?.changes ?? []} onTreeChanged={refreshTree} revealChanges={revealChanges} revealFiles={revealFiles} toggleFiles={toggleFiles} terminalRequest={terminalPulse}
+            changes={tree?.changes ?? []} onTreeChanged={refreshTree} revealChanges={revealChanges} revealFiles={revealFiles} toggleFiles={toggleFiles} initialFiles={initialFiles} terminalRequest={terminalPulse}
             running={running}
             wrote={counts.wrote}
             remote={!!rt.host}

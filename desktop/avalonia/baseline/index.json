@@ -8,70 +8,106 @@
       "styles": 297
     },
     {
+      "name": "analysis/light",
+      "file": "analysis.light.json",
+      "nodes": 296,
+      "styles": 176
+    },
+    {
+      "name": "workbench/light",
+      "file": "workbench.light.json",
+      "nodes": 614,
+      "styles": 364
+    },
+    {
+      "name": "onboarding/light",
+      "file": "onboarding.light.json",
+      "nodes": 29,
+      "styles": 26
+    },
+    {
       "name": "settings-common/light",
       "file": "settings-common.light.json",
-      "nodes": 636,
-      "styles": 393
+      "nodes": 153,
+      "styles": 95
     },
     {
       "name": "settings-model/light",
       "file": "settings-model.light.json",
-      "nodes": 812,
-      "styles": 492
+      "nodes": 329,
+      "styles": 194
     },
     {
       "name": "settings-session/light",
       "file": "settings-session.light.json",
-      "nodes": 761,
-      "styles": 482
+      "nodes": 278,
+      "styles": 184
     },
     {
       "name": "settings-tools/light",
       "file": "settings-tools.light.json",
-      "nodes": 837,
-      "styles": 498
+      "nodes": 354,
+      "styles": 200
     },
     {
       "name": "settings-ext/light",
       "file": "settings-ext.light.json",
-      "nodes": 802,
-      "styles": 469
+      "nodes": 319,
+      "styles": 172
     },
     {
       "name": "settings-display/light",
       "file": "settings-display.light.json",
-      "nodes": 650,
-      "styles": 383
+      "nodes": 167,
+      "styles": 85
     },
     {
       "name": "settings-controls/light",
       "file": "settings-controls.light.json",
-      "nodes": 751,
-      "styles": 424
+      "nodes": 268,
+      "styles": 126
     },
     {
       "name": "settings-appearance/light",
       "file": "settings-appearance.light.json",
-      "nodes": 728,
-      "styles": 445
+      "nodes": 245,
+      "styles": 147
     },
     {
       "name": "settings-storage/light",
       "file": "settings-storage.light.json",
-      "nodes": 973,
-      "styles": 590
+      "nodes": 490,
+      "styles": 292
     },
     {
       "name": "settings-network/light",
       "file": "settings-network.light.json",
-      "nodes": 684,
-      "styles": 428
+      "nodes": 201,
+      "styles": 131
     },
     {
       "name": "settings-account/light",
       "file": "settings-account.light.json",
-      "nodes": 673,
-      "styles": 417
+      "nodes": 190,
+      "styles": 119
+    },
+    {
+      "name": "settings-advanced/light",
+      "file": "settings-advanced.light.json",
+      "nodes": 60,
+      "styles": 30
+    },
+    {
+      "name": "settings-session-persona/light",
+      "file": "settings-session-persona.light.json",
+      "nodes": 275,
+      "styles": 185
+    },
+    {
+      "name": "settings-ext-market/light",
+      "file": "settings-ext-market.light.json",
+      "nodes": 163,
+      "styles": 92
     },
     {
       "name": "conversation/dark",
@@ -80,70 +116,112 @@
       "styles": 296
     },
     {
+      "name": "analysis/dark",
+      "file": "analysis.dark.json",
+      "nodes": 296,
+      "styles": 175
+    },
+    {
+      "name": "workbench/dark",
+      "file": "workbench.dark.json",
+      "nodes": 614,
+      "styles": 363
+    },
+    {
+      "name": "onboarding/dark",
+      "file": "onboarding.dark.json",
+      "nodes": 29,
+      "styles": 26
+    },
+    {
       "name": "settings-common/dark",
       "file": "settings-common.dark.json",
-      "nodes": 636,
-      "styles": 392
+      "nodes": 153,
+      "styles": 95
     },
     {
       "name": "settings-model/dark",
       "file": "settings-model.dark.json",
-      "nodes": 812,
-      "styles": 491
+      "nodes": 329,
+      "styles": 194
     },
     {
       "name": "settings-session/dark",
       "file": "settings-session.dark.json",
-      "nodes": 761,
-      "styles": 481
+      "nodes": 278,
+      "styles": 184
     },
     {
       "name": "settings-tools/dark",
       "file": "settings-tools.dark.json",
-      "nodes": 837,
-      "styles": 497
+      "nodes": 354,
+      "styles": 200
     },
     {
       "name": "settings-ext/dark",
       "file": "settings-ext.dark.json",
-      "nodes": 802,
-      "styles": 468
+      "nodes": 319,
+      "styles": 172
     },
     {
       "name": "settings-display/dark",
       "file": "settings-display.dark.json",
-      "nodes": 650,
-      "styles": 382
+      "nodes": 167,
+      "styles": 85
     },
     {
       "name": "settings-controls/dark",
       "file": "settings-controls.dark.json",
-      "nodes": 751,
-      "styles": 423
+      "nodes": 268,
+      "styles": 126
     },
     {
       "name": "settings-appearance/dark",
       "file": "settings-appearance.dark.json",
-      "nodes": 728,
-      "styles": 447
+      "nodes": 245,
+      "styles": 150
     },
     {
       "name": "settings-storage/dark",
       "file": "settings-storage.dark.json",
-      "nodes": 973,
-      "styles": 589
+      "nodes": 490,
+      "styles": 292
     },
     {
       "name": "settings-network/dark",
       "file": "settings-network.dark.json",
-      "nodes": 684,
-      "styles": 427
+      "nodes": 201,
+      "styles": 131
     },
     {
       "name": "settings-account/dark",
       "file": "settings-account.dark.json",
-      "nodes": 673,
-      "styles": 416
+      "nodes": 190,
+      "styles": 119
+    },
+    {
+      "name": "settings-advanced/dark",
+      "file": "settings-advanced.dark.json",
+      "nodes": 60,
+      "styles": 30
+    },
+    {
+      "name": "settings-session-persona/dark",
+      "file": "settings-session-persona.dark.json",
+      "nodes": 275,
+      "styles": 185
+    },
+    {
+      "name": "settings-ext-market/dark",
+      "file": "settings-ext-market.dark.json",
+      "nodes": 163,
+      "styles": 92
     }
-  ]
+  ],
+  "pages": 18,
+  "totals": {
+    "domains": 36,
+    "nodes": 9826,
+    "styles": 5830
+  }
 }

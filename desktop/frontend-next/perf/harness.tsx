@@ -7,6 +7,7 @@ import { pushToast } from "../src/state/toasts";
 import { apply as applyPack } from "../src/ui/theme";
 import { mount as mountEditor } from "./syntax-mount";
 import { App } from "../src/ui/App";
+import { parseScreen, type Screen } from "../src/ui/screen";
 import { MockHub } from "../src/port/mock_hub";
 import { MockPort } from "../src/port/mock";
 import { fromHistory } from "../src/state/session";
@@ -61,6 +62,27 @@ function benchPack(): ThemePack | null {
 
 class BenchPort extends MockPort {
   private driverRunning: boolean | undefined;
+
+  // ?screen=analysis needs a run to look at, and the replay is the only source
+  // the analysis view draws from: a scripted turn with one model round, one
+  // tool and its usage is what a finished run actually looks like on the wire.
+  async trajectory() {
+    if (query.get("screen") !== "analysis") return super.trajectory();
+    const tool = { id: "call-1", name: "read_file", resolvedName: "read_file", readOnly: true, args: "{\"path\":\"README.md\"}" };
+    return {
+      availability: "complete" as const,
+      events: [
+        { kind: "turn_started", text: "第 1 个问题，麻烦看一下这个文件。" },
+        { kind: "stream_attempt", streamAttempt: { id: "a1", action: "begin", attempt: 1, max: 3 } },
+        { kind: "stream_attempt", streamAttempt: { id: "a1", action: "commit", firstTokenMs: 640 } },
+        { kind: "tool_dispatch", tool },
+        { kind: "tool_result", tool: { ...tool, durationMs: 820, output: "README.md 的正文。\n".repeat(12) } },
+        { kind: "usage", usage: { promptTokens: 12840, completionTokens: 912, totalTokens: 13752, cacheHitTokens: 11200, cacheMissTokens: 1640, sessionCacheHitTokens: 11200, sessionCacheMissTokens: 1640, source: "executor", attemptId: "a1" } },
+        { kind: "turn_done", workDurationMs: 7460, workStartedAt: Date.now() - 7460 },
+      ],
+    } as unknown as import("../src/port/wire").TrajectoryRead;
+  }
+
   async providerHealthSettings() {
     return query.has("modelhealth") ? { enabled: true } : super.providerHealthSettings();
   }
@@ -465,7 +487,9 @@ const WORKSPACES = Number(query.get("ws") ?? 0);
 // ?pref= 是「内核记着的语言」。真机上它来自 config；这里由地址给，好让
 // 一次验证能把两侧摆成同一个值——否则 adopt 会认为本地缓存过期。
 const PREF = query.get("pref");
-const ONBOARDING = query.has("onboarding");
+// ?onboarding opens the first-run gate. ?screen=onboarding is the same page by
+// name, so a capture does not have to know the older flag.
+const ONBOARDING = query.has("onboarding") || query.get("screen") === "onboarding";
 const SESSIONS = Number(query.get("sess") ?? 0);
 const ROW_TITLES = ["rx home目录里有没有 obsidian 的笔记仓库，帮我整理一下", "obsidian 插件同步方案怎么选", "查一下 studio 最近一次发布改了什么", "阅读一下最近的提交记录并总结"];
 // ?turns= is how long the conversation being opened already is.
@@ -569,8 +593,23 @@ bootLang();
 trackWidth();
 
 const hub = new BenchHub();
+// The page a capture asked for, parsed once. A value this cannot read is
+// drawn as the reason it was refused: falling back to the conversation would
+// record another page's boxes under this page's name.
+let screen: Screen;
+try {
+  screen = parseScreen(query.get("screen"));
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  createRoot(document.getElementById("root")!).render(
+    <pre id="screen-refused" style={{ padding: 24, font: "13px/1.5 ui-monospace, monospace", color: "#b3261e", whiteSpace: "pre-wrap" }}>
+      {message}
+    </pre>,
+  );
+  throw error;
+}
 // No StrictMode: its double render is the thing under measurement here.
-createRoot(document.getElementById("root")!).render(<App hub={hub} />);
+createRoot(document.getElementById("root")!).render(<App hub={hub} screen={screen} />);
 
 declare global {
   interface Window {

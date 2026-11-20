@@ -68,6 +68,7 @@ import { useNewConversation } from "./useNewConversation";
 import { markSettled } from "../boot/gate";
 import type { PaneView } from "../state/paneview";
 import { usePaneSessionRefs } from "./usePaneSessionRefs";
+import { opensWorkbench, seedFileOf, settingsOf, viewOf, type Screen } from "./screen";
 
 // Start fetching the settings chunk with the shell instead of waiting for the
 // first click. It remains a separate chunk (and keeps its failure boundary),
@@ -103,7 +104,7 @@ const NO_REPORT: PaneReport = {
 // the chrome, the settings sheet and the theme are the window's, while every
 // conversation — its transcript, metrics and event stream — lives in the Pane
 // that owns it. That split is what lets two sessions run side by side.
-export function App({ hub }: { hub: HubPort }) {
+export function App({ hub, screen }: { hub: HubPort; screen?: Screen }) {
   const sessionTabs = useSyncExternalStore(onShowsSessionTabsChange, showsSessionTabs, showsSessionTabs);
   const [runtimes, setRuntimes] = useState<RuntimeView[]>([]);
   const [panesRead, setPanesRead] = useState(false);
@@ -136,11 +137,14 @@ export function App({ hub }: { hub: HubPort }) {
   const [error, setError] = useState("");
   const [renaming, setRenaming] = useState<{ path: string; title: string } | null>(null);
   // false = closed, true = open at its last section, a string = open there.
-  const [settings, setSettings] = useState<string | boolean>(false);
+  // A window asked for a page by name opens on it: the same string a click
+  // produces, so the named page and the clicked one are one path through the
+  // sheet rather than two.
+  const [settings, setSettings] = useState<string | boolean>(() => settingsOf(screen ?? { kind: "conversation" }));
   const find = useFindAsk(settings, setSettings);
   const [feedback, setFeedback] = useState<FeedbackTab | null>(null);
   const [feedbackUnread, setFeedbackUnread] = useState(0);
-  const [browser, setBrowser] = useState(false);
+  const [browser, setBrowser] = useState(() => opensWorkbench(screen ?? { kind: "conversation" }));
   const [setup, setSetup] = useState<ProviderSetup | null | undefined>(undefined);
   // undefined until asked; false means the opening sequence is still owed.
   const [welcomed, setWelcomed] = useState<boolean | undefined>(undefined);
@@ -699,6 +703,8 @@ export function App({ hub }: { hub: HubPort }) {
                   filesPulse={filesRequests[rt.id] ?? 0}
                   terminalPulse={terminalRequests[rt.id] ?? 0}
                   viewRequest={viewRequests[rt.id]}
+                  initialView={rt.id === active ? (viewOf(screen ?? { kind: "conversation" }) ?? undefined) : undefined}
+                  initialFile={rt.id === active ? seedFileOf(screen ?? { kind: "conversation" }) : undefined}
                   sessionRef={sessionRefs[rt.id]}
                   alert={rt.id === active && !errorBar ? note : undefined}
                   failure={rt.id === active ? errorBar : undefined}

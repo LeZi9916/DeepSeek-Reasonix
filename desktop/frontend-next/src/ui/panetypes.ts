@@ -58,6 +58,12 @@ export interface PaneProps {
   filesPulse?: number;
   terminalPulse?: number;
   viewRequest?: { to: PaneView; n: number };
+  /** The view a pane opens on, when the window was asked for one page by name.
+   *  Read once at mount: after that the pane's own navigation owns it. */
+  initialView?: PaneView;
+  /** A file the pane opens in its workbench at mount, for a window asked for
+   *  the workbench by name. Opened once; the panel's own tabs own it after. */
+  initialFile?: string;
   sessionRef?: { n: number; id: string; title: string };
   onSettings: (section?: string) => void;
   // Opens the feedback form; a notice in this pane can be reported from where it appeared.

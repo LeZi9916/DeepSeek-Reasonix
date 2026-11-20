@@ -22,18 +22,36 @@ const BASE = process.env.PERF_URL ?? "http://localhost:4399/perf.html";
 // The domains are named here rather than discovered: a page that stops being
 // captured has to be a deletion someone made, never a selector that quietly
 // matched nothing.
-const SETTINGS_SECTIONS = [
-  "common",
-  "model",
-  "session",
-  "tools",
-  "ext",
-  "display",
-  "controls",
-  "appearance",
-  "storage",
-  "network",
-  "account",
+//
+// Each entry names the address a capture opens and the element that proves the
+// page arrived. Both are checked after the capture: a page whose address no
+// longer opens, or opens onto something else, fails the run instead of
+// recording a smaller baseline under this page's name.
+//
+// A folded settings section is reachable only through its home page, and most
+// of those anchors merely scroll the home page — the same boxes at another
+// offset, which would freeze one page twice. Only the two that replace the
+// page's content are listed on their own, and each was measured before it was
+// written down:
+//   - session:persona hides the composition picker and draws the persona block
+//   - ext:market draws the market tab instead of the installed list
+//
+// `root` is where a capture starts. A sheet is captured from `.prefs` down,
+// not from `body`, because the conversation behind it is still mounted and
+// still streaming: two captures of one settings page differed by 30px on 110
+// nodes because the background transcript had moved, and none of those nodes
+// belonged to the page under test. The window's own frame (rail, chrome) is
+// covered by the conversation domain, which is the page that really draws it.
+const DOMAINS = [
+  { name: "conversation", screen: "conversation", proofs: [".pane .compose"] },
+  { name: "analysis", screen: "analysis", proofs: [".run-analysis"] },
+  { name: "workbench", screen: "workbench", proofs: ["section.workbench .workbench-tabs"] },
+  { name: "onboarding", screen: "onboarding", proofs: [".onb"] },
+  ...["common", "model", "session", "tools", "ext", "display", "controls", "appearance", "storage", "network", "account", "advanced"].map(
+    (section) => ({ name: `settings-${section}`, screen: `settings:${section}`, proofs: [`.prefs .prefs-main[data-sec=${section}]`], root: ".prefs" }),
+  ),
+  { name: "settings-session-persona", screen: "settings:session:persona", proofs: ['.prefs [data-setting="persona"]'], absent: ['.prefs [data-setting="composition-picker"]'], root: ".prefs" },
+  { name: "settings-ext-market", screen: "settings:ext:market", proofs: ['.prefs [data-setting="market"]'], root: ".prefs" },
 ];
 
 const STYLE_PROPS = [
@@ -172,8 +190,14 @@ const round = (n) => Math.round(n * 100) / 100;
 
 const capture = () =>
   // Everything below runs inside the page, where the layout is real.
-  ({ props, defaults }) => {
+  ({ props, defaults, root: rootSelector }) => {
     const rounder = (n) => Math.round(n * 100) / 100;
+    // A sheet is captured from its own element down: the conversation behind
+    // it is still mounted and still streaming, and its boxes must not enter a
+    // baseline that is about the sheet. The shell's frame is captured by the
+    // page that really draws it (the conversation), not by every overlay.
+    const start = rootSelector ? document.querySelector(rootSelector) : document.body;
+    if (!start) throw new Error(`capture root ${rootSelector} not found`);
     const named = (el) => {
       const cls = el.getAttribute("class");
       if (cls && cls.trim().length > 0) return true;
@@ -229,7 +253,7 @@ const capture = () =>
       styleIndex.set(key, at);
       return at;
     };
-    for (const el of document.body.querySelectorAll("*")) {
+    for (const el of start.querySelectorAll("*")) {
       if (!named(el)) continue;
       const rect = el.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) continue;
@@ -368,8 +392,8 @@ async function settle(page) {
   await page.evaluate(() => window.scrollTo(0, 0));
 }
 
-async function grab(page, props) {
-  return page.evaluate(capture(), { props, defaults: CSS_DEFAULTS });
+async function grab(page, props, root) {
+  return page.evaluate(capture(), { props, defaults: CSS_DEFAULTS, root });
 }
 
 // A contrast tier moves only the four ink tokens: tokens.css declares
@@ -408,11 +432,38 @@ async function grabContrast(page) {
   });
 }
 
-async function openSettings(page) {
-  await page.locator('[data-action="chrome.settings"]').first().click();
-  // The sheet mounts on a later commit than the click returns on, so waiting a
-  // fixed time raced it and captured the conversation twice.
-  await page.locator(".prefs-nav").first().waitFor({ state: "visible" });
+// The page a capture opens, as a query string. The harness parses `screen`
+// once and draws that page on its first paint, so the capture measures the
+// page rather than whatever a click left behind.
+function addressOf(screen) {
+  const base = `${BASE}?pref=zh&ws=2&sess=6&turns=2`;
+  return screen === "conversation" ? base : `${base}&screen=${encodeURIComponent(screen)}`;
+}
+
+// Checks the page a domain names actually arrived. A page that stopped opening
+// still photographs something — the previous page, a refused screen, an empty
+// shell — and recording that under this domain's name is the failure this
+// check exists to turn into a red run.
+async function proveArrived(page, domain) {
+  const refused = await page.locator("#screen-refused").count();
+  if (refused > 0) {
+    const why = (await page.locator("#screen-refused").innerText()).trim();
+    throw new Error(`refused: ${why}`);
+  }
+
+  for (const selector of domain.proofs) {
+    if ((await page.locator(selector).count()) === 0) {
+      throw new Error(`did not arrive: no ${selector}`);
+    }
+  }
+
+  // A folded block is only a page of its own when its home page's default
+  // block is gone; without this, the capture would freeze the home page twice.
+  for (const selector of domain.absent ?? []) {
+    if ((await page.locator(selector).count()) > 0) {
+      throw new Error(`still showing ${selector}, so this is the home page`);
+    }
+  }
 }
 
 const main = async () => {
@@ -421,50 +472,78 @@ const main = async () => {
 
   const domains = {};
   const contrast = {};
+  const failures = [];
 
-  // A fresh context per scheme: switching colorScheme on a loaded page leaves
-  // the previous scheme's styles resolving for a frame or two, which is enough
-  // to capture a different height under a byte-identical name. The scheme is
-  // set when the context is created instead.
+  // A fresh context per capture. Two reasons, and both were measured:
+  //  - switching colorScheme on a loaded page leaves the previous scheme's
+  //    styles resolving for a frame or two;
+  //  - localStorage outlives a page inside one context, so the workbench
+  //    capture's "recently opened" row reappeared on every settings page
+  //    captured after it and added three nodes to each.
+  // A context per domain also means a scheme's pages cannot leak into each
+  // other through anything else the app remembers.
   for (const scheme of ["light", "dark"]) {
-    const context = await browser.newContext({
-      viewport: { width: 1440, height: 900 },
-      deviceScaleFactor: 1,
-      colorScheme: scheme,
-    });
-    const page = await context.newPage();
+    for (const domain of DOMAINS) {
+      const context = await browser.newContext({
+        viewport: { width: 1440, height: 900 },
+        deviceScaleFactor: 1,
+        colorScheme: scheme,
+      });
 
-    // The conversation page: rail, sidebar, transcript, composer.
-    await page.goto(`${BASE}?pref=zh&ws=2&sess=6&turns=2`, { waitUntil: "domcontentloaded" });
-    await settle(page);
-    domains[`conversation/${scheme}`] = await grab(page, STYLE_PROPS);
-    contrast[scheme] = await grabContrast(page);
+      const page = await context.newPage();
+      try {
+        await page.goto(addressOf(domain.screen), { waitUntil: "domcontentloaded" });
+        await settle(page);
+        await proveArrived(page, domain);
+        domains[`${domain.name}/${scheme}`] = await grab(page, STYLE_PROPS, domain.root);
 
-    // The settings sheet, one capture per section.
-    await openSettings(page);
-    for (const section of SETTINGS_SECTIONS) {
-      const button = page.locator(`.prefs-nav [data-value="${section}"]`);
-      if ((await button.count()) === 0) continue;
-      await button.first().click();
-      await settle(page);
-      domains[`settings-${section}/${scheme}`] = await grab(page, STYLE_PROPS);
+        // The contrast tiers are one axis of the token set, not of any page, so
+        // they are read once per scheme from the page that is already open.
+        if (domain.name === "conversation") contrast[scheme] = await grabContrast(page);
+      } catch (error) {
+        failures.push(`${domain.name}/${scheme}: ${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        await page.close();
+        await context.close();
+      }
     }
-
-    await context.close();
   }
 
   await browser.close();
+
+  // Nothing is written for a half-read baseline: a directory holding some
+  // pages at a new capture and others at an old one compares two trees that
+  // never existed together, and every difference it reports is about the
+  // capture rather than about the shell.
+  if (failures.length > 0) {
+    for (const failure of failures) console.error(`failed ${failure}`);
+    console.error(`${failures.length} of ${DOMAINS.length * 2} captures failed; nothing written`);
+    process.exit(1);
+  }
 
   // One file per domain, written compactly: the baseline is read by a gate, not
   // by a person, and pretty-printing it spent a third of its bytes on
   // indentation. Splitting it keeps a review of one domain's drift down to one
   // file, and keeps the whole baseline out of a single diff nobody can read.
+  const pages = new Set();
+  let nodes = 0;
+  let styles = 0;
   const index = { capturedFrom: "desktop/frontend-next (React)", domains: [] };
   for (const [name, domain] of Object.entries(domains)) {
     const file = `${name.replace(/\//g, ".")}.json`;
     await writeFile(join(OUT, file), JSON.stringify(domain) + "\n", "utf8");
     index.domains.push({ name, file, nodes: domain.nodes.length, styles: domain.styles.length });
+    pages.add(name.slice(0, name.lastIndexOf("/")));
+    nodes += domain.nodes.length;
+    styles += domain.styles.length;
   }
+
+  // The totals ride the index so a reader — and the commit message that says
+  // how much was frozen — can state the size without walking thirty-six files.
+  // `pages` counts a page once and `domains` counts it per scheme, so the two
+  // numbers answer different questions rather than one being a typo.
+  index.pages = pages.size;
+  index.totals = { domains: index.domains.length, nodes, styles };
 
   // The contrast tiers are their own file: four ink tokens per tier per scheme,
   // not a page, and folding them into a domain would have said the page changed
@@ -474,8 +553,7 @@ const main = async () => {
   await writeFile(join(OUT, "index.json"), JSON.stringify(index, null, 2) + "\n", "utf8");
 
   const count = Object.keys(domains).length;
-  const nodes = Object.values(domains).reduce((n, d) => n + d.nodes.length, 0);
-  console.log(`captured ${count} domains, ${nodes} nodes -> ${OUT}`);
+  console.log(`captured ${count} domains over ${index.pages} pages, ${nodes} nodes, ${styles} styles -> ${OUT}`);
 };
 
 await main();
