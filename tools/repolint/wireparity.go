@@ -460,7 +460,11 @@ func (w *wireScan) findings(root string) []Finding {
 		}
 		raw, err := os.ReadFile(filepath.Join(root, m.tsFile))
 		if err != nil {
-			return nil
+			// A mirror file that cannot be read is reported rather than skipped:
+			// returning early here once made the whole rule answer "nothing to
+			// say" for a side nobody had looked at.
+			return []Finding{{m.tsFile, 1, ruleWireParity,
+				fmt.Sprintf("a mirrored contract cannot be read: %v", err), 1}}
 		}
 		bodies[m.tsFile] = string(raw)
 	}
@@ -473,11 +477,13 @@ func (w *wireScan) findings(root string) []Finding {
 		}
 		raw, err := os.ReadFile(filepath.Join(root, m.readerFile))
 		if err != nil {
-			return nil
+			return []Finding{{m.readerFile, 1, ruleWireParity,
+				fmt.Sprintf("a partial mirror cannot be read: %v", err), 1}}
 		}
 		bodies[m.readerFile] = string(raw)
 	}
 	out := append(wireParityFindings(mirroredWireTypes, w.fields, bodies), readParityFindings(readMirrors, w.fields)...)
+	out = append(out, wiregenParityFindings(root, mirroredWireTypes, w.fields)...)
 	out = append(out, partialWireFindings(partialWireMirrors, w.fields, bodies)...)
 	return append(out, wireConstantFindings(root, mirroredWireConstants)...)
 }
