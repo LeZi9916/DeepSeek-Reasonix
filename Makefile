@@ -118,12 +118,16 @@ studio-geometry: studio-dotnet
 # The interface's wording lives in the reference frontend's own tables. The
 # shell's copies are generated from them, so this check is what notices an edit
 # on either side that nobody propagated: a key added there and not here, or a
-# phrase changed in one place only.
+# phrase changed in one place only. The refusal map is generated from the same
+# frontend for the same reason: it is the frontend that decides which sentence a
+# kernel code is said as.
 studio-messages:
 	node desktop/avalonia/tools/render-messages.mjs
+	node desktop/avalonia/tools/render-refusals.mjs
 
 studio-messages-check:
 	node desktop/avalonia/tools/render-messages.mjs -check
+	node desktop/avalonia/tools/render-refusals.mjs -check
 
 # The shell's wire records are generated from the kernel's Go structs, so a
 # source edit without a regeneration leaves a contract the shell reads a field

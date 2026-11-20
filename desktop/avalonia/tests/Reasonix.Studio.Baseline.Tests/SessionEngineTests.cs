@@ -1,4 +1,5 @@
 using Reasonix.Studio.Contracts.Events;
+using Reasonix.Studio.Contracts.Queue;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Kernel.Events;
 using Reasonix.Studio.Kernel.Session;
@@ -149,6 +150,86 @@ public sealed class SessionEngineTests
     }
 
     /// <summary>
+    /// Checks that a switch the kernel refused leaves the conversation that was
+    /// already open on screen.
+    /// </summary>
+    /// <returns>A task that completes when the case has run.</returns>
+    /// <remarks>
+    /// A 409 from <c>/resume</c> means a turn owns that session. Publishing a
+    /// fresh state before knowing the switch landed would blank the rows the
+    /// person is reading for a conversation that never opened.
+    /// </remarks>
+    [Fact]
+    public async Task ARefusedSwitchKeepsTheConversation()
+    {
+        var refusal = new KernelRefusal("/resume", 409, null, "a turn is running on that conversation");
+        var client = new FakeClient { Refuse = refusal };
+        var engine = Engine(
+            client,
+            new FakeTransport("{\"kind\":\"text\",\"text\":\"still here\",\"seq\":1}"));
+
+        await engine.StartAsync();
+
+        var thrown = await Assert.ThrowsAsync<KernelRefusal>(() => engine.ResumeAsync("/sessions/other.jsonl"));
+
+        Assert.Equal(409, thrown.Status);
+        Assert.Equal("a turn is running on that conversation", thrown.Detail);
+        Assert.Equal("still here", Assert.Single(engine.State.Items.OfType<SayItem>()).Text);
+    }
+
+    /// <summary>
+    /// Checks that a session with no messages still publishes, so a listener can
+    /// tell an empty conversation from one whose history has not arrived.
+    /// </summary>
+    /// <returns>A task that completes when the case has run.</returns>
+    /// <remarks>
+    /// Before this, the empty read returned without a word. A window that had
+    /// switched sessions kept the previous conversation's rows, because nothing
+    /// told it the new one holds none.
+    /// </remarks>
+    [Fact]
+    public async Task AnEmptyHistoryStillPublishes()
+    {
+        var engine = Engine(new FakeClient(), new FakeTransport());
+        var published = new List<SessionState>();
+        engine.Changed += state => published.Add(state);
+
+        await engine.LoadHistoryAsync();
+
+        var state = Assert.Single(published);
+        Assert.Empty(state.Items);
+        Assert.Empty(engine.State.Items);
+        Assert.Equal(0, state.EnteredThrough);
+    }
+
+    /// <summary>
+    /// Checks that an empty read replaces the rows a previous read left, which is
+    /// what a switch into an empty conversation has to do.
+    /// </summary>
+    /// <returns>A task that completes when the case has run.</returns>
+    [Fact]
+    public async Task AnEmptyHistoryClearsTheRowsAReadLeftBehind()
+    {
+        var client = new FakeClient
+        {
+            Messages = new[]
+            {
+                new HistoryMessage { Role = "user", Content = "older conversation", MsgIndex = 0 },
+            },
+        };
+        var engine = Engine(client, new FakeTransport());
+
+        await engine.LoadHistoryAsync();
+        Assert.Single(engine.State.Items);
+
+        client.Messages = Array.Empty<HistoryMessage>();
+        await engine.LoadHistoryAsync();
+
+        Assert.Empty(engine.State.Items);
+        Assert.Equal(0, engine.State.EnteredThrough);
+    }
+
+    /// <summary>
     /// Builds an engine over the two fakes.
     /// </summary>
     /// <param name="client">The reads to use.</param>
@@ -188,6 +269,102 @@ public sealed class SessionEngineTests
         /// </summary>
         public List<string> Resumed { get; } = new List<string>();
 
+        /// <summary>
+        /// Gets or sets the refusal a switch answers with, or null when it lands.
+        /// </summary>
+        public Exception? Refuse
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// Gets the lines this client was asked to queue, with the intent each carried.
+        /// </summary>
+        public List<SubmitRequest> Queued { get; } = new List<SubmitRequest>();
+
+        /// <summary>
+        /// Gets or sets the queue this client answers with.
+        /// </summary>
+        public QueueSnapshot Queue
+        {
+            get; set;
+        } = new QueueSnapshot();
+
+        /// <summary>
+        /// Gets or sets the text one queued entry answers with.
+        /// </summary>
+        public string QueuedText
+        {
+            get; set;
+        } = string.Empty;
+
+        /// <summary>
+        /// Gets the entries this client was asked to withdraw.
+        /// </summary>
+        public List<string> Withdrawn { get; } = new List<string>();
+
+        /// <summary>
+        /// Gets the entries this client was asked to move, with their new position.
+        /// </summary>
+        public List<(string Id, int To)> Moved { get; } = new List<(string, int)>();
+
+        /// <summary>
+        /// Gets the pause states this client was asked for, in order.
+        /// </summary>
+        public List<bool> Pauses { get; } = new List<bool>();
+
+        /// <summary>
+        /// Gets how many times the running turn was asked to stop.
+        /// </summary>
+        public int Cancelled
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets or sets the tree this client answers with.
+        /// </summary>
+        public IReadOnlyList<Reasonix.Studio.Contracts.Tree.TreeWorkspace> Tree
+        {
+            get; set;
+        } = Array.Empty<Reasonix.Studio.Contracts.Tree.TreeWorkspace>();
+
+        /// <summary>
+        /// Gets the window the last tree read asked for, or null for the default.
+        /// </summary>
+        public Reasonix.Studio.Contracts.Tree.TreeWindow? LastTreeWindow
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the pins this client was asked to set, with the value each carried.
+        /// </summary>
+        public List<(string Path, bool Pinned)> Pins { get; } = new List<(string, bool)>();
+
+        /// <summary>
+        /// Gets the archives this client was asked to set, with the value each carried.
+        /// </summary>
+        public List<(string Path, bool Archived)> ArchivedRows { get; } = new List<(string, bool)>();
+
+        /// <summary>
+        /// Gets the conversations this client was asked to mark seen.
+        /// </summary>
+        public List<string> Viewed { get; } = new List<string>();
+
+        /// <summary>
+        /// Gets how many times the window asked for a conversation with nothing in it.
+        /// </summary>
+        public int NewSessions
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Gets the transcripts a tail copy was asked for.
+        /// </summary>
+        public List<string> Tails { get; } = new List<string>();
+
         /// <inheritdoc/>
         public Task<SessionStatus?> StatusAsync(CancellationToken cancellationToken = default)
         {
@@ -221,9 +398,114 @@ public sealed class SessionEngineTests
         }
 
         /// <inheritdoc/>
+        public Task<IReadOnlyList<Reasonix.Studio.Contracts.Tree.TreeWorkspace>> TreeAsync(
+            Reasonix.Studio.Contracts.Tree.TreeWindow? window = null,
+            CancellationToken cancellationToken = default)
+        {
+            LastTreeWindow = window;
+            return Task.FromResult(Tree);
+        }
+
+        /// <inheritdoc/>
+        public Task PinSessionAsync(string path, bool pinned, CancellationToken cancellationToken = default)
+        {
+            Pins.Add((path, pinned));
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public Task ArchiveSessionAsync(string path, bool archived, CancellationToken cancellationToken = default)
+        {
+            ArchivedRows.Add((path, archived));
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public Task MarkSessionViewedAsync(string path, CancellationToken cancellationToken = default)
+        {
+            Viewed.Add(path);
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
         public Task ResumeAsync(string path, CancellationToken cancellationToken = default)
         {
             Resumed.Add(path);
+            return Refuse is null ? Task.CompletedTask : Task.FromException(Refuse);
+        }
+
+        /// <inheritdoc/>
+        public Task NewSessionAsync(CancellationToken cancellationToken = default)
+        {
+            NewSessions++;
+            return Refuse is null ? Task.CompletedTask : Task.FromException(Refuse);
+        }
+
+        /// <inheritdoc/>
+        public Task<SessionTail> TailAsync(string path, CancellationToken cancellationToken = default)
+        {
+            Tails.Add(path);
+            return Task.FromResult(new SessionTail { Path = path + "-tail", Dropped = 12 });
+        }
+
+        /// <inheritdoc/>
+        public Task<ToolOutputPage> ToolOutputAsync(string callId, int offset = 0, int limit = 64 * 1024, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new ToolOutputPage { CallId = callId });
+        }
+
+        /// <inheritdoc/>
+        public Task<QueueSnapshot> QueueAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Queue);
+        }
+
+        /// <inheritdoc/>
+        public Task<InboxReceipt> EnqueueAsync(SubmitRequest request, CancellationToken cancellationToken = default)
+        {
+            Queued.Add(request);
+            return Refuse is null
+                ? Task.FromResult(new InboxReceipt { ItemId = "item-" + Queued.Count.ToString(System.Globalization.CultureInfo.InvariantCulture) })
+                : Task.FromException<InboxReceipt>(Refuse);
+        }
+
+        /// <inheritdoc/>
+        public Task<QueueEntry> ReadQueuedAsync(string id, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new QueueEntry { Envelope = new PromptEnvelope { DisplayText = QueuedText } });
+        }
+
+        /// <inheritdoc/>
+        public Task CancelQueuedAsync(string id, CancellationToken cancellationToken = default)
+        {
+            Withdrawn.Add(id);
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public Task MoveQueuedAsync(string id, int toIndex, CancellationToken cancellationToken = default)
+        {
+            Moved.Add((id, toIndex));
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public Task RetryQueuedAsync(string id, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public Task SetQueuePausedAsync(bool paused, CancellationToken cancellationToken = default)
+        {
+            Pauses.Add(paused);
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public Task CancelTurnAsync(CancellationToken cancellationToken = default)
+        {
+            Cancelled++;
             return Task.CompletedTask;
         }
     }

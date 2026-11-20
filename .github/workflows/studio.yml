@@ -287,7 +287,9 @@ jobs:
           node-version: "24"
 
       - name: messages
-        run: node tools/render-messages.mjs -check
+        run: |
+          node tools/render-messages.mjs -check
+          node tools/render-refusals.mjs -check
 
   # What a hosted page does over the relay, end to end: the production bundle,
   # the real Studio host and kernel, a real Chromium; only the accounts API and

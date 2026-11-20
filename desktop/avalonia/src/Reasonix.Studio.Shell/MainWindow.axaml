@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ctl="using:Reasonix.Studio.Controls"
         xmlns:pages="using:Reasonix.Studio.Pages"
+        xmlns:rail="using:Reasonix.Studio.Pages.Rail"
         x:Class="Reasonix.Studio.Shell.MainWindow"
         Title="Reasonix Studio"
         Width="1440"
@@ -16,10 +17,11 @@
   -->
   <Grid ColumnDefinitions="264,*">
     <ctl:StudioRail Grid.Column="0">
-      <StackPanel Spacing="4">
-        <TextBlock Text="DeepSeek-Reasonix" FontSize="13" FontWeight="SemiBold" />
-        <TextBlock Text="新会话" FontSize="13" Opacity="0.7" />
-      </StackPanel>
+      <!-- The projects and the conversations under them. The rows carry no
+           declared identity: the baseline records this region's rows as work the
+           shell has not drawn yet, and a control that both claims that record
+           and is counted against it fails the coverage gate. -->
+      <rail:ProjectRail Name="Projects" />
     </ctl:StudioRail>
 
     <Grid Grid.Column="1" RowDefinitions="48,*">
@@ -46,47 +48,76 @@
 
             <!-- The composer's box is the baseline's 760 x 128, centred on the
                  pane and 35 above its bottom edge: both numbers come from the
-                 captured conversation rather than from a preference. -->
-            <ctl:StudioComposer Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,35">
-              <!-- The composer's three bands are the captured ones: a 30-high
-                   status line, a 52-high input band holding a 42-high box, and a
-                   46-high toolbar with the 32 round send button 8 from the edge. -->
-              <Grid RowDefinitions="30,52,46">
-                <TextBox Name="Composer"
-                         Grid.Row="1"
-                         AcceptsReturn="True"
-                         TextWrapping="Wrap"
-                         PlaceholderText="写点什么…"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         CornerRadius="0"
-                         Padding="0"
-                         FontSize="14"
-                         Foreground="{DynamicResource TextBrush}"
-                         VerticalContentAlignment="Top"
-                         Height="42"
-                         Margin="16,10,16,0"
-                         AutomationProperties.AutomationId="role:combobox" />
-                <Button Name="Send"
-                        Grid.Row="2"
-                        Content="发送"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Width="32"
-                        Height="32"
-                        Margin="0,6,8,0"
-                        FontSize="13"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource FaintBrush}"
-                        Background="{DynamicResource OverlayBrush}"
-                        BorderThickness="0"
-                        CornerRadius="16"
-                        Padding="0"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center"
-                        AutomationProperties.AutomationId="action:session.send" />
-              </Grid>
-            </ctl:StudioComposer>
+                 captured conversation rather than from a preference. The queue
+                 strip sits above it and takes no room while empty, which is the
+                 state the baseline measured. -->
+            <StackPanel Grid.Row="1"
+                        Width="{DynamicResource Column}"
+                        HorizontalAlignment="Center"
+                        Spacing="8">
+              <!-- Lines the kernel holds but has not dispatched. Filled from the
+                   queue read back after every inbox change; empty means hidden. -->
+              <StackPanel Name="QueueStrip" Spacing="4" IsVisible="False" />
+
+              <!-- The 35 kept beside the box it belongs to: the gate measured
+                   this margin on the composer itself. -->
+              <ctl:StudioComposer HorizontalAlignment="Stretch" Margin="0,0,0,35">
+                <!-- The composer's three bands are the captured ones: a 30-high
+                     status line, a 52-high input band holding a 42-high box, and a
+                     46-high toolbar with the 32 round send button 8 from the edge. -->
+                <Grid RowDefinitions="30,52,46">
+                  <!-- What the next press does, and how full the context window
+                       was. Neither carries an identity: the baseline never
+                       measured them, so they must not claim one. -->
+                  <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="16,0,16,0">
+                    <TextBlock Name="ComposerHint"
+                               FontSize="11"
+                               Opacity="0.55"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Name="MeterText"
+                               Grid.Column="1"
+                               FontSize="11"
+                               Opacity="0.55"
+                               VerticalAlignment="Center"
+                               Text="—" />
+                  </Grid>
+                  <TextBox Name="Composer"
+                           Grid.Row="1"
+                           AcceptsReturn="True"
+                           TextWrapping="Wrap"
+                           PlaceholderText="写点什么…"
+                           Background="Transparent"
+                           BorderThickness="0"
+                           CornerRadius="0"
+                           Padding="0"
+                           FontSize="14"
+                           Foreground="{DynamicResource TextBrush}"
+                           VerticalContentAlignment="Top"
+                           Height="42"
+                           Margin="16,10,16,0"
+                           AutomationProperties.AutomationId="role:combobox" />
+                  <Button Name="Send"
+                          Grid.Row="2"
+                          Content="发送"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Top"
+                          Width="32"
+                          Height="32"
+                          Margin="0,6,8,0"
+                          FontSize="13"
+                          FontWeight="SemiBold"
+                          Foreground="{DynamicResource FaintBrush}"
+                          Background="{DynamicResource OverlayBrush}"
+                          BorderThickness="0"
+                          CornerRadius="16"
+                          Padding="0"
+                          HorizontalContentAlignment="Center"
+                          VerticalContentAlignment="Center"
+                          AutomationProperties.AutomationId="action:session.send" />
+                </Grid>
+              </ctl:StudioComposer>
+            </StackPanel>
           </Grid>
 
           <!-- The captured conversation has this column folded, so the skeleton

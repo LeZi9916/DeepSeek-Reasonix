@@ -1,4 +1,6 @@
 using Reasonix.Studio.Contracts.Events;
+using Reasonix.Studio.Contracts.Queue;
+using Reasonix.Studio.Contracts.Tree;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Kernel.Events;
 using Reasonix.Studio.State;
@@ -30,6 +32,16 @@ namespace Reasonix.Studio.Kernel.Session;
 /// </remarks>
 public sealed class SessionEngine : IAsyncDisposable
 {
+    /// <summary>
+    /// How many bytes one page of a call's output carries.
+    /// </summary>
+    private const int FullOutputPageBytes = 64 * 1024;
+
+    /// <summary>
+    /// How many pages a card will read back before the rest stays in the kernel.
+    /// </summary>
+    private const int FullOutputPages = 64;
+
     /// <summary>
     /// Reads status and history, and submits lines.
     /// </summary>
@@ -65,6 +77,21 @@ public sealed class SessionEngine : IAsyncDisposable
     /// caller supplied them and owns them.
     /// </summary>
     private readonly Func<ValueTask>? _release;
+
+    /// <summary>
+    /// The kernel's authority, which is the machine half of a draft's key.
+    /// </summary>
+    private readonly string _host;
+
+    /// <summary>
+    /// The tree's own stream, or null when the caller supplied the reads.
+    /// </summary>
+    /// <remarks>
+    /// The tree changes on the hub, outside any one conversation: a pin, an
+    /// archive, a save from another window. Its stream carries those notices and
+    /// nothing else, so it is read separately from the conversation's.
+    /// </remarks>
+    private readonly SseEventTransport? _tree;
 
     /// <summary>
     /// The state as it stands.
@@ -107,11 +134,14 @@ public sealed class SessionEngine : IAsyncDisposable
         _client = new KernelClient(http);
         var transport = new SseEventTransport(kernel.Origin.ToString(), http);
         _transport = transport;
+        _host = kernel.Origin.GetLeftPart(UriPartial.Authority);
+        _tree = new SseEventTransport(kernel.Origin.ToString(), "/tree/events", "/tree/events/replay", http);
         _subscription = new EventSubscription(transport, Fold, ReportGap);
         _release = () =>
         {
-            // The transport closes the client's connections; the kernel then stops.
+            // The transports close the client's connections; the kernel then stops.
             transport.Dispose();
+            _tree.Dispose();
             kernel.Dispose();
             return ValueTask.CompletedTask;
         };
@@ -130,6 +160,8 @@ public sealed class SessionEngine : IAsyncDisposable
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+        _host = string.Empty;
+        _tree = null;
         _subscription = new EventSubscription(transport, Fold, ReportGap);
         _release = null;
     }
@@ -142,6 +174,36 @@ public sealed class SessionEngine : IAsyncDisposable
     /// where it may draw, and doing it here would decide that for every view.
     /// </remarks>
     public event Action<SessionState>? Changed;
+
+    /// <summary>
+    /// Raised when the kernel says its queue moved.
+    /// </summary>
+    /// <remarks>
+    /// The frame carries no content — one authority answers every client — so a
+    /// listener re-reads the queue rather than patching what it had. Raised on
+    /// the stream's loop for the same reason <see cref="Changed"/> is.
+    /// </remarks>
+    public event Action? QueueChanged;
+
+    /// <summary>
+    /// Raised when the kernel says the sidebar's tree moved.
+    /// </summary>
+    /// <remarks>
+    /// A pin, an archive, a rename or a save from another window reaches this
+    /// window as this notice. It carries no content — the tree is read back — so a
+    /// listener re-reads it rather than patching what it had.
+    /// </remarks>
+    public event Action? TreeChanged;
+
+    /// <summary>
+    /// Gets the authority of the kernel this conversation reads, or empty when
+    /// the caller supplied its own reads.
+    /// </summary>
+    /// <remarks>
+    /// It is the machine half of a draft's key: two windows on two kernels keep
+    /// their unsent lines apart even when both opened the same workspace.
+    /// </remarks>
+    public string Host => _host;
 
     /// <summary>
     /// Gets the state as it stands.
@@ -178,15 +240,17 @@ public sealed class SessionEngine : IAsyncDisposable
     /// </summary>
     /// <param name="cancellationToken">Cancels the read.</param>
     /// <returns>A task that completes once the history is folded.</returns>
+    /// <remarks>
+    /// A conversation with nothing in it still publishes. A listener told only
+    /// about non-empty histories cannot tell "this session is empty" from "the
+    /// read has not finished", and keeps drawing the rows of whatever it showed
+    /// before the switch.
+    /// </remarks>
     public async Task LoadHistoryAsync(CancellationToken cancellationToken = default)
     {
         var messages = await _client.HistoryAsync(cancellationToken).ConfigureAwait(false);
-        if (messages.Count == 0)
-        {
-            return;
-        }
 
-        var items = new List<TranscriptItem>();
+        var items = new List<TranscriptItem>(messages.Count);
         foreach (var message in messages)
         {
             switch (message.Role)
@@ -230,8 +294,15 @@ public sealed class SessionEngine : IAsyncDisposable
     /// Attaches the live stream and keeps it open until the conversation closes.
     /// </summary>
     /// <returns>A task that completes when the stream ends.</returns>
+    /// <remarks>
+    /// The tree's stream runs beside the conversation's: the two are separate
+    /// endpoints, and a window that stopped reading the tree when the conversation
+    /// went quiet would miss a pin made in another window.
+    /// </remarks>
     public async Task StartAsync()
     {
+        var tree = _tree is null ? Task.CompletedTask : WatchTreeAsync(_tree);
+
         try
         {
             await foreach (var frame in _transport.StreamAsync(() => _subscription.Position, _closing.Token)
@@ -244,6 +315,8 @@ public sealed class SessionEngine : IAsyncDisposable
         {
             // Closing is the outcome asked for.
         }
+
+        await tree.ConfigureAwait(false);
     }
 
     /// <summary>
@@ -261,6 +334,97 @@ public sealed class SessionEngine : IAsyncDisposable
         }
 
         return _client.SubmitAsync(new SubmitRequest(line, line), cancellationToken);
+    }
+
+    /// <summary>
+    /// Sends one typed line, telling the kernel what it becomes.
+    /// </summary>
+    /// <param name="line">The line the person typed.</param>
+    /// <param name="steer">Whether the line is guidance for the running turn.</param>
+    /// <param name="cancellationToken">Cancels the send.</param>
+    /// <returns>The receipt naming the durable entry the line became.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="line"/> is null.</exception>
+    /// <remarks>
+    /// Both paths go through the inbox, which is what a steer is: an entry that
+    /// the kernel hands to the running turn at its next tool boundary, or queues
+    /// as a follow-up when the turn ended first. The receipt is returned so the
+    /// row this window drew can be joined to that entry.
+    /// </remarks>
+    public Task<InboxReceipt> SendAsync(string line, bool steer, CancellationToken cancellationToken = default)
+    {
+        if (line is null)
+        {
+            throw new ArgumentNullException(nameof(line));
+        }
+
+        var intent = steer ? SubmitRequest.IntentSteer : SubmitRequest.IntentFollowUp;
+        return _client.EnqueueAsync(new SubmitRequest(line, line, intent), cancellationToken);
+    }
+
+    /// <summary>
+    /// Reads the session's queue as the kernel holds it.
+    /// </summary>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>Every waiting entry, with the pause and both limits.</returns>
+    public Task<QueueSnapshot> QueueAsync(CancellationToken cancellationToken = default)
+    {
+        return _client.QueueAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Takes one queued line back, returning its text.
+    /// </summary>
+    /// <param name="id">The entry the queue listed.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>The text the entry carried, ready to be put back in the composer.</returns>
+    /// <remarks>
+    /// The read comes before the cancel: once the entry is gone nothing else holds
+    /// the text, and a line that cannot be read stays queued rather than lost.
+    /// </remarks>
+    public async Task<string> WithdrawAsync(string id, CancellationToken cancellationToken = default)
+    {
+        var entry = await _client.ReadQueuedAsync(id, cancellationToken).ConfigureAwait(false);
+        await _client.CancelQueuedAsync(id, cancellationToken).ConfigureAwait(false);
+        return entry.Envelope.Readable;
+    }
+
+    /// <summary>
+    /// Moves one queued line to the head and stops the turn holding the session.
+    /// </summary>
+    /// <param name="id">The entry to send now.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>A task that completes once the kernel has both accepted.</returns>
+    /// <remarks>
+    /// The move is what makes it next; the cancel is what makes "now" possible.
+    /// Both are asked of the kernel, in that order, because a stop without the
+    /// move would let whatever was ahead go first.
+    /// </remarks>
+    public async Task SendNowAsync(string id, CancellationToken cancellationToken = default)
+    {
+        await _client.MoveQueuedAsync(id, 0, cancellationToken).ConfigureAwait(false);
+        await _client.CancelTurnAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Holds the queue, or lets it dispatch again.
+    /// </summary>
+    /// <param name="paused">True to hold dispatch, false to release it.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>A task that completes once the kernel recorded the state.</returns>
+    public Task SetQueuePausedAsync(bool paused, CancellationToken cancellationToken = default)
+    {
+        return _client.SetQueuePausedAsync(paused, cancellationToken);
+    }
+
+    /// <summary>
+    /// Asks the kernel to retry a blocked entry.
+    /// </summary>
+    /// <param name="id">The entry to retry.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>A task that completes once the kernel accepted the retry.</returns>
+    public Task RetryQueuedAsync(string id, CancellationToken cancellationToken = default)
+    {
+        return _client.RetryQueuedAsync(id, cancellationToken);
     }
 
     /// <summary>
@@ -293,6 +457,54 @@ public sealed class SessionEngine : IAsyncDisposable
     }
 
     /// <summary>
+    /// Reads the sidebar's tree: every project and the conversations under it.
+    /// </summary>
+    /// <param name="window">The page to ask for, or null for the default window.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>The projects, as the kernel orders them.</returns>
+    public Task<IReadOnlyList<TreeWorkspace>> TreeAsync(
+        TreeWindow? window = null,
+        CancellationToken cancellationToken = default)
+    {
+        return _client.TreeAsync(window, cancellationToken);
+    }
+
+    /// <summary>
+    /// Pins or unpins one conversation.
+    /// </summary>
+    /// <param name="path">The transcript's path, as the tree listed it.</param>
+    /// <param name="pinned">True to pin, false to unpin.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>A task that completes once the kernel recorded the pin.</returns>
+    public Task PinSessionAsync(string path, bool pinned, CancellationToken cancellationToken = default)
+    {
+        return _client.PinSessionAsync(path, pinned, cancellationToken);
+    }
+
+    /// <summary>
+    /// Archives or unarchives one conversation.
+    /// </summary>
+    /// <param name="path">The transcript's path, as the tree listed it.</param>
+    /// <param name="archived">True to archive, false to bring it back.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>A task that completes once the kernel recorded the change.</returns>
+    public Task ArchiveSessionAsync(string path, bool archived, CancellationToken cancellationToken = default)
+    {
+        return _client.ArchiveSessionAsync(path, archived, cancellationToken);
+    }
+
+    /// <summary>
+    /// Marks one conversation seen, which clears its unread dot.
+    /// </summary>
+    /// <param name="path">The transcript's path, as the tree listed it.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>A task that completes once the kernel recorded the moment.</returns>
+    public Task MarkSessionViewedAsync(string path, CancellationToken cancellationToken = default)
+    {
+        return _client.MarkSessionViewedAsync(path, cancellationToken);
+    }
+
+    /// <summary>
     /// Opens a conversation the session directory holds and re-reads its transcript.
     /// </summary>
     /// <param name="path">The transcript's path, as the listing reported it.</param>
@@ -308,6 +520,77 @@ public sealed class SessionEngine : IAsyncDisposable
         await _client.ResumeAsync(path, cancellationToken).ConfigureAwait(false);
         Publish(new SessionState());
         await LoadHistoryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Starts a conversation with nothing in it and opens on the empty page.
+    /// </summary>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>A task that completes once the new session is on screen.</returns>
+    /// <remarks>
+    /// The same replacement as a switch, for the same reason: the rows belong to
+    /// the conversation that was open, and a stream still folding frames for it
+    /// would otherwise land under the new one's (empty) page.
+    /// </remarks>
+    public async Task NewSessionAsync(CancellationToken cancellationToken = default)
+    {
+        await _client.NewSessionAsync(cancellationToken).ConfigureAwait(false);
+        Publish(new SessionState());
+        await LoadHistoryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Copies the most recent part of a conversation into a new transcript.
+    /// </summary>
+    /// <param name="path">The transcript whose history is past the read limit.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>The new transcript and how much of the original it left behind.</returns>
+    /// <remarks>
+    /// This does not open the copy: the caller decides when, because the offer it
+    /// answers is a question the person may decline.
+    /// </remarks>
+    public Task<SessionTail> TailAsync(string path, CancellationToken cancellationToken = default)
+    {
+        return _client.TailAsync(path, cancellationToken);
+    }
+
+    /// <summary>
+    /// Reads a call's whole output back from the kernel, a page at a time.
+    /// </summary>
+    /// <param name="callId">The call to read.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>The output the kernel holds, as far as it could be read.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="callId"/> is empty.</exception>
+    /// <remarks>
+    /// A card whose middle the page let go of asks for this. The pages are read in
+    /// turn and joined here, because the card is where the text is kept: nothing
+    /// else holds a second copy of an output the kernel already has.
+    ///
+    /// The walk stops at <see cref="FullOutputPages"/> pages. Four megabytes is
+    /// more than a person reads in a card, and past it the rest stays in the
+    /// kernel rather than being pulled into memory that will never be drawn.
+    /// </remarks>
+    public async Task<string> ReadFullOutputAsync(string callId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(callId))
+        {
+            throw new ArgumentException("a call's output is read by the id the kernel named", nameof(callId));
+        }
+
+        var text = new System.Text.StringBuilder();
+        var offset = 0;
+        for (var page = 0; page < FullOutputPages; page++)
+        {
+            var window = await _client.ToolOutputAsync(callId, offset, FullOutputPageBytes, cancellationToken).ConfigureAwait(false);
+            text.Append(window.Text);
+            offset = window.Offset + System.Text.Encoding.UTF8.GetByteCount(window.Text);
+            if (!window.Truncated)
+            {
+                break;
+            }
+        }
+
+        return text.ToString();
     }
 
     /// <summary>
@@ -360,6 +643,13 @@ public sealed class SessionEngine : IAsyncDisposable
         }
 
         Changed?.Invoke(next);
+
+        // The queue frame says only that the queue moved; whoever draws it asks
+        // the kernel what it holds now.
+        if (frame.Kind == "inbox_changed")
+        {
+            QueueChanged?.Invoke();
+        }
     }
 
     /// <summary>
@@ -386,5 +676,46 @@ public sealed class SessionEngine : IAsyncDisposable
         }
 
         Changed?.Invoke(state);
+    }
+
+    /// <summary>
+    /// Reads the tree's own stream and reports each change it announces.
+    /// </summary>
+    /// <param name="transport">The tree's transport.</param>
+    /// <returns>A task that completes when the stream ends.</returns>
+    /// <remarks>
+    /// A failure here is not the conversation's: the sidebar simply stops
+    /// hearing about changes until the window opens again, and the transcript
+    /// keeps streaming.
+    /// </remarks>
+    private async Task WatchTreeAsync(SseEventTransport transport)
+    {
+        try
+        {
+            await foreach (var frame in transport.StreamAsync(() => null, _closing.Token).ConfigureAwait(false))
+            {
+                if (frame.Kind != "notice" || frame.Payload.ValueKind != System.Text.Json.JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                if (!frame.Payload.TryGetProperty("code", out var code)
+                    || code.ValueKind != System.Text.Json.JsonValueKind.String
+                    || code.GetString() != "session_tree_changed")
+                {
+                    continue;
+                }
+
+                TreeChanged?.Invoke();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Closing is the outcome asked for.
+        }
+        catch (Exception)
+        {
+            // The tree's stream is its own concern; the conversation keeps going.
+        }
     }
 }

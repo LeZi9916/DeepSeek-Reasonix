@@ -37,4 +37,18 @@ public sealed record ToolItem : TranscriptItem
     {
         get; init;
     }
+
+    /// <summary>
+    /// Gets how many characters of a finished call's middle the page let go of.
+    /// </summary>
+    /// <remarks>
+    /// Distinct from <see cref="Omitted"/>: this one was dropped after the call
+    /// settled, from between its two kept ends, and the card offers to read the
+    /// whole thing back from the kernel. Omitted is what a running call's progress
+    /// stream overran.
+    /// </remarks>
+    public int Hidden
+    {
+        get; init;
+    }
 }

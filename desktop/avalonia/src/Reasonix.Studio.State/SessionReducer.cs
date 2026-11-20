@@ -39,6 +39,22 @@ public sealed class SessionReducer
     private const int ToolOutputTail = 64 * 1024;
 
     /// <summary>
+    /// The calls whose consecutive settled rows fold into one reads row.
+    /// </summary>
+    /// <remarks>
+    /// A lone search keeps its own row, because an excerpt list says more than a
+    /// count would. This is the reference frontend's own set, and it exists so
+    /// four reads in a row read as one thing the turn did rather than four.
+    /// </remarks>
+    private static readonly HashSet<string> s_lookupTools = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "read_file",
+        "grep",
+        "glob",
+        "ls",
+    };
+
+    /// <summary>
     /// Mints row identities.
     /// </summary>
     private readonly IdSequence _ids;
@@ -328,6 +344,233 @@ public sealed class SessionReducer
     }
 
     /// <summary>
+    /// Appends one row to the transcript.
+    /// </summary>
+    /// <param name="items">The transcript so far.</param>
+    /// <param name="item">The row to add.</param>
+    /// <returns>A transcript holding the new row after the old ones.</returns>
+    private static IReadOnlyList<TranscriptItem> Append(IReadOnlyList<TranscriptItem> items, TranscriptItem item)
+    {
+        return new List<TranscriptItem>(items) { item };
+    }
+
+    /// <summary>
+    /// Reports whether a call is a lookup whose settled row folds into a reads row.
+    /// </summary>
+    /// <param name="item">The row to read.</param>
+    /// <returns>True for a settled lookup that spawned no children of its own.</returns>
+    /// <remarks>
+    /// A lone search keeps its own row: an excerpt list says more than a count
+    /// would. This only says which calls can join a run.
+    /// </remarks>
+    private static bool IsLookup(TranscriptItem? item)
+    {
+        return item is ToolItem tool
+            && !tool.Running
+            && tool.Children.Count == 0
+            && s_lookupTools.Contains(tool.Call.Name);
+    }
+
+    /// <summary>
+    /// Folds a settled lookup into the reads row above it.
+    /// </summary>
+    /// <param name="items">The transcript, whose last row is the call just added.</param>
+    /// <returns>
+    /// The transcript with the run shortened, or the same list when there was
+    /// nothing to join.
+    /// </returns>
+    private static IReadOnlyList<TranscriptItem> FoldReads(IReadOnlyList<TranscriptItem> items)
+    {
+        if (items.Count < 2 || items[items.Count - 1] is not ToolItem last || !IsLookup(last))
+        {
+            return items;
+        }
+
+        var previous = items[items.Count - 2];
+        if (previous is ReadsItem run)
+        {
+            var merged = new List<Tool>(run.Tools) { last.Call };
+            var folded = new List<TranscriptItem>(items);
+            folded[folded.Count - 2] = run with
+            {
+                Tools = merged,
+            };
+            folded.RemoveAt(folded.Count - 1);
+            return folded;
+        }
+
+        if (IsLookup(previous) && previous is ToolItem before
+            && (last.Call.Name == "read_file" || before.Call.Name == "read_file"))
+        {
+            var reads = new List<TranscriptItem>(items);
+            reads[reads.Count - 2] = new ReadsItem
+            {
+                Id = before.Id,
+                Tools = new[] { before.Call, last.Call },
+            };
+            reads.RemoveAt(reads.Count - 1);
+            return reads;
+        }
+
+        return items;
+    }
+
+    /// <summary>
+    /// Reads what a <c>remember</c> call saved from its own arguments.
+    /// </summary>
+    /// <param name="tool">The settled call.</param>
+    /// <returns>The fact, or null when the call saved nothing this can read.</returns>
+    /// <remarks>
+    /// The card reads the arguments rather than the textual receipt: the
+    /// arguments carry what was saved and how it will be recalled.
+    /// </remarks>
+    private static RememberedFact? RememberOf(Tool tool)
+    {
+        if (!string.IsNullOrEmpty(tool.Err) || string.IsNullOrEmpty(tool.Args))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(tool.Args);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            string Text(string name)
+            {
+                return document.RootElement.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+                    ? (value.GetString() ?? string.Empty).Trim()
+                    : string.Empty;
+            }
+
+            var name = Text("name");
+            var description = Text("description");
+            if (name.Length == 0 && description.Length == 0)
+            {
+                return null;
+            }
+
+            var title = Text("title");
+            return new RememberedFact
+            {
+                Name = name,
+                Title = title.Length > 0 ? title : name,
+                Description = description,
+                Scope = Default(Text("scope"), "project"),
+                Activation = Default(Text("activation"), "relevant"),
+                Body = Text("body"),
+            };
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        static string Default(string value, string fallback)
+        {
+            return value.Length > 0 ? value : fallback;
+        }
+    }
+
+    /// <summary>
+    /// Extends the open fold's summary with one streamed chunk.
+    /// </summary>
+    /// <param name="items">The transcript so far.</param>
+    /// <param name="text">The chunk, or null when the attempt so far was discarded.</param>
+    /// <returns>The transcript with the fold's summary extended.</returns>
+    private static IReadOnlyList<TranscriptItem> FoldCompactionProgress(IReadOnlyList<TranscriptItem> items, string? text)
+    {
+        for (var i = items.Count - 1; i >= 0; i--)
+        {
+            if (items[i] is not CompactionItem fold || fold.Done)
+            {
+                continue;
+            }
+
+            var summary = string.IsNullOrEmpty(text) ? string.Empty : fold.Compaction.Summary + text;
+            var updated = new List<TranscriptItem>(items)
+            {
+                [i] = fold with { Compaction = fold.Compaction with { Summary = summary } },
+            };
+            return updated;
+        }
+
+        return items;
+    }
+
+    /// <summary>
+    /// Marks the open fold finished with what the kernel reported.
+    /// </summary>
+    /// <param name="items">The transcript so far.</param>
+    /// <param name="compaction">The kernel's final report, or null when it sent none.</param>
+    /// <returns>The transcript with the fold settled where it landed.</returns>
+    private static IReadOnlyList<TranscriptItem> SettleCompaction(IReadOnlyList<TranscriptItem> items, Compaction? compaction)
+    {
+        for (var i = items.Count - 1; i >= 0; i--)
+        {
+            if (items[i] is not CompactionItem fold)
+            {
+                continue;
+            }
+
+            var updated = new List<TranscriptItem>(items)
+            {
+                [i] = new CompactionItem
+                {
+                    Id = fold.Id,
+                    Compaction = compaction ?? fold.Compaction,
+                    Done = true,
+                },
+            };
+            return updated;
+        }
+
+        return items;
+    }
+
+    /// <summary>
+    /// Removes the row a call drew, keeping everything around it in place.
+    /// </summary>
+    /// <param name="items">The transcript so far.</param>
+    /// <param name="id">The call the row belongs to.</param>
+    /// <returns>The transcript without that row, or the same list when it had none.</returns>
+    private static IReadOnlyList<TranscriptItem> DropTool(IReadOnlyList<TranscriptItem> items, string id)
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            return items;
+        }
+
+        for (var i = 0; i < items.Count; i++)
+        {
+            if (items[i] is not ToolItem tool || tool.Call.ID != id)
+            {
+                continue;
+            }
+
+            var kept = new List<TranscriptItem>(items);
+            kept.RemoveAt(i);
+            return kept;
+        }
+
+        return items;
+    }
+
+    /// <summary>
+    /// Reports whether two surfaces are the same one republished.
+    /// </summary>
+    /// <param name="left">The surface already on screen.</param>
+    /// <param name="right">The surface the frame carries.</param>
+    /// <returns>True when both name one plugin's one surface.</returns>
+    private static bool SameSurface(ExtensionSurface left, ExtensionSurface right)
+    {
+        return left.PluginID == right.PluginID && left.SurfaceID == right.SurfaceID;
+    }
+
+    /// <summary>
     /// Applies one decoded frame.
     /// </summary>
     /// <param name="state">The state before the frame.</param>
@@ -374,6 +617,7 @@ public sealed class SessionReducer
                     : state with
                     {
                         OutLive = 0,
+                        ContextUsed = ContextFill.Of(payload.Usage.ContextPromptTokens, payload.Usage.PromptTokens),
                         Metrics = FoldUsage(state.Metrics, payload.Usage),
                     };
 
@@ -389,14 +633,68 @@ public sealed class SessionReducer
                     : state with
                     {
                         Doing = "app.waiting_for_approval",
-                        Items = new List<TranscriptItem>(state.Items)
+                        Items = Append(state.Items, new ApprovalItem
                         {
-                            new ApprovalItem
-                            {
-                                Id = _ids.Next(),
-                                Approval = payload.Approval,
-                            },
-                        },
+                            Id = _ids.Next(),
+                            Approval = payload.Approval,
+                        }),
+                    };
+
+            case "ask_request":
+                return payload.Ask is null
+                    ? state
+                    : state with
+                    {
+                        Doing = "app.waiting_for_your_answer",
+                        Items = Append(state.Items, new AskItem
+                        {
+                            Id = _ids.Next(),
+                            Ask = payload.Ask,
+                        }),
+                    };
+
+            case "guardian_assessment":
+                return payload.Guardian is null
+                    ? state
+                    : state with
+                    {
+                        Items = Append(state.Items, new GuardianItem
+                        {
+                            Id = _ids.Next(),
+                            Assessment = payload.Guardian,
+                        }),
+                    };
+
+            case "compaction_started":
+                return state with
+                {
+                    Items = Append(state.Items, new CompactionItem
+                    {
+                        Id = _ids.Next(),
+                        Compaction = payload.Compaction ?? new Compaction(),
+                        Done = false,
+                    }),
+                };
+
+            case "compaction_progress":
+                return state with
+                {
+                    Items = FoldCompactionProgress(state.Items, payload.Text),
+                };
+
+            case "compaction_done":
+                return state with
+                {
+                    Items = SettleCompaction(state.Items, payload.Compaction),
+                };
+
+            case "extension_surface":
+            case "extension_status":
+                return payload.Extension is null
+                    ? state
+                    : state with
+                    {
+                        Items = FoldExtension(state.Items, payload.Extension),
                     };
 
             case "turn_done":
@@ -453,11 +751,81 @@ public sealed class SessionReducer
         // again here. A sub-agent's call does not, because the parent turn was
         // never the thing waiting on it.
         var handedBack = string.IsNullOrEmpty(payload.Tool.ParentID) && state.Running;
+
+        // A failed remember is an ordinary failed tool call; only a save that
+        // actually landed is worth a card of its own. The call's row is replaced
+        // rather than left above the card: the card says everything the row would
+        // and more.
+        var fact = string.IsNullOrEmpty(payload.Tool.Err) && payload.Tool.Name == "remember"
+            ? RememberOf(payload.Tool)
+            : null;
+
+        var settled = FoldTool(state.Items, payload.Tool, running: false);
+        var items = fact is null
+            ? FoldReads(settled)
+            : Append(DropTool(settled, payload.Tool.ID), new RememberItem
+            {
+                Id = _ids.Next(),
+                Fact = fact,
+            });
+
         return state with
         {
             Doing = handedBack ? WaitingModel : state.Doing,
-            Items = FoldTool(state.Items, payload.Tool, running: false),
+            Items = items,
         };
+    }
+
+    /// <summary>
+    /// Folds a published surface into the card it belongs to.
+    /// </summary>
+    /// <param name="items">The transcript so far.</param>
+    /// <param name="surface">The surface the extension published.</param>
+    /// <returns>The transcript with the surface's card moved or removed.</returns>
+    /// <remarks>
+    /// A surface is addressed by plugin and surface id, so a re-publish moves the
+    /// card where the first one landed instead of piling up one per tick. A frame
+    /// with no code is the extension taking its card away: it is removed rather
+    /// than replaced with an empty one.
+    /// </remarks>
+    private IReadOnlyList<TranscriptItem> FoldExtension(IReadOnlyList<TranscriptItem> items, ExtensionSurface surface)
+    {
+        var at = -1;
+        for (var i = 0; i < items.Count; i++)
+        {
+            if (items[i] is ExtensionItem existing && SameSurface(existing.Surface, surface))
+            {
+                at = i;
+                break;
+            }
+        }
+
+        if (string.IsNullOrEmpty(surface.Code))
+        {
+            if (at < 0)
+            {
+                return items;
+            }
+
+            var gone = new List<TranscriptItem>(items);
+            gone.RemoveAt(at);
+            return gone;
+        }
+
+        var updated = at < 0
+            ? new ExtensionItem { Id = _ids.Next(), Surface = surface }
+            : new ExtensionItem { Id = ((ExtensionItem)items[at]).Id, Surface = surface };
+
+        if (at < 0)
+        {
+            return Append(items, updated);
+        }
+
+        var moved = new List<TranscriptItem>(items)
+        {
+            [at] = updated,
+        };
+        return moved;
     }
 
     /// <summary>
@@ -506,13 +874,28 @@ public sealed class SessionReducer
             ? Array.Empty<PlanStep>()
             : state.Plan;
 
+        var items = _text.Seal(state.Items, all: true, ThoughtCutFor(payload));
+
+        // The kernel's own figure, not this screen's clock: a local one would
+        // disagree with a reload. Under half a second it rounds to nothing worth
+        // a line, so no row is made at all.
+        if (payload.WorkDurationMs >= 500)
+        {
+            items = Append(items, new WorkedItem
+            {
+                Id = _ids.Next(),
+                Milliseconds = payload.WorkDurationMs,
+                StartedAt = payload.WorkStartedAt > 0 ? payload.WorkStartedAt : null,
+            });
+        }
+
         return state with
         {
             Running = false,
             Terminal = TerminalOf(payload),
             Doing = DoingAfter(payload),
             Plan = plan,
-            Items = _text.Seal(state.Items, all: true, ThoughtCutFor(payload)),
+            Items = items,
         };
     }
 
@@ -692,6 +1075,12 @@ public sealed class SessionReducer
     /// <returns>The transcript with the call folded in.</returns>
     private IReadOnlyList<TranscriptItem> FoldTool(IReadOnlyList<TranscriptItem> items, Tool tool, bool running)
     {
+        // A finished call's output is bounded once, where it settles: a running
+        // call keeps growing, and capping it mid-stream would drop the text the
+        // next progress frame is about to extend.
+        var capped = running ? new CappedOutput(tool, 0) : ToolOutputCap.Apply(tool);
+        tool = capped.Output;
+
         // A sub-agent's calls carry parentId; they belong inside the task that
         // spawned them, not as siblings in the main flow.
         if (!string.IsNullOrEmpty(tool.ParentID))
@@ -719,6 +1108,7 @@ public sealed class SessionReducer
                         Call = Merge(existing.Call, tool),
                         Running = running,
                         Omitted = running ? existing.Omitted : null,
+                        Hidden = running ? existing.Hidden : capped.Hidden,
                     },
                 };
                 return merged;
@@ -732,6 +1122,7 @@ public sealed class SessionReducer
                 Id = _ids.Next(),
                 Call = tool,
                 Running = running,
+                Hidden = capped.Hidden,
             },
         };
         return appended;

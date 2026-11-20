@@ -2,8 +2,11 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Reasonix.Studio.Contracts.Refusal;
 using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages;
+using Reasonix.Studio.Pages.Composer;
+using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Session;
 using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
@@ -71,8 +74,18 @@ public sealed partial class MainWindow : Window
 
         Send.Click += OnSend;
         Composer.KeyDown += OnComposerKey;
+        Composer.TextChanged += OnComposerTextChanged;
         Conversation.Answered += OnAnswered;
+        Projects.Opened += OnProjectOpened;
+        Projects.Pinned += OnProjectPinned;
+        Projects.Archived += OnProjectArchived;
+        Projects.MarkedViewed += OnProjectViewed;
+        Projects.NewRequested += OnNewRequested;
         Closed += OnClosed;
+
+        // The status line says what the next press does before anything is
+        // typed, so it is filled in from the shortcut rather than left blank.
+        ComposerHint.Text = SendKey.Hint(_shortcut, running: false, Language);
 
         if (connectOnOpen)
         {
@@ -110,6 +123,12 @@ public sealed partial class MainWindow : Window
 
         _engine = launch.Engine;
         _engine!.Changed += OnChanged;
+        _engine.QueueChanged += OnQueueChanged;
+        _engine.TreeChanged += OnTreeChanged;
+
+        // A card whose middle the page let go of asks for the whole output
+        // through this; the engine is what knows how to walk the kernel's pages.
+        Conversation.ReadFullOutput = callId => _engine.ReadFullOutputAsync(callId, _closing.Token);
 
         try
         {
@@ -120,15 +139,24 @@ public sealed partial class MainWindow : Window
             if (status is not null)
             {
                 CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? "新会话" : status.Label;
-                ContextReadout.Text = status.Window > 0
-                    ? string.Create(
-                        CultureInfo.InvariantCulture,
-                        $"{status.Used:N0} / {status.Window:N0}")
-                    : status.Used.ToString("N0", CultureInfo.InvariantCulture);
+                ContextReadout.Text = ContextMeter.Readout(status.Used, status.Window, Conversation.Language);
+
+                // The draft and the meter both need what only the status carries:
+                // the transcript the draft belongs to, and the window to draw
+                // usage against.
+                AdoptComposer(status);
+                AdoptSessionPath(status.SessionPath);
             }
 
             await _engine.LoadHistoryAsync(_closing.Token).ConfigureAwait(true);
             Conversation.Show(_engine.State);
+            ShowComposerState(_engine.State);
+
+            // A line another window already queued is on screen before anything
+            // moves; the stream then says when to read it again. The tree is the
+            // same kind of read: the column shows what the kernel holds now.
+            await LoadQueueAsync().ConfigureAwait(true);
+            await LoadTreeAsync().ConfigureAwait(true);
 
             // The stream is awaited last and never returns: it is the window's life.
             await _engine.StartAsync().ConfigureAwait(true);
@@ -139,7 +167,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception error)
         {
-            ShowProblem(error.Message);
+            ShowRefusal(error);
         }
     }
 
@@ -150,10 +178,15 @@ public sealed partial class MainWindow : Window
     /// <param name="e">The event arguments.</param>
     private async void OnClosed(object? sender, EventArgs e)
     {
+        // The line on screen is the person's last unsent words; it is written
+        // before the window tears anything down.
+        SaveDraft();
+
         await _closing.CancelAsync().ConfigureAwait(true);
         if (_engine is not null)
         {
             _engine.Changed -= OnChanged;
+            _engine.QueueChanged -= OnQueueChanged;
             await _engine.DisposeAsync().ConfigureAwait(true);
             _engine = null;
         }
@@ -173,7 +206,24 @@ public sealed partial class MainWindow : Window
     /// </remarks>
     private void OnChanged(SessionState state)
     {
-        Dispatcher.UIThread.Post(() => Conversation.Show(state));
+        Dispatcher.UIThread.Post(() =>
+        {
+            Conversation.Show(state);
+            ShowComposerState(state);
+        });
+    }
+
+    /// <summary>
+    /// Reads the queue again because the kernel said it moved.
+    /// </summary>
+    /// <remarks>
+    /// The frame carries no content, so the answer is the kernel's own snapshot
+    /// read back: that is also what puts another window's lines, and the CLI's,
+    /// in front of this one.
+    /// </remarks>
+    private void OnQueueChanged()
+    {
+        PostQueueRefresh();
     }
 
     /// <summary>
@@ -201,7 +251,7 @@ public sealed partial class MainWindow : Window
         {
             // A verdict the kernel would not take leaves the card open, which is
             // the truthful state: nothing was decided.
-            ShowProblem(error.Message);
+            ShowRefusal(error);
         }
     }
 
@@ -216,13 +266,18 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Sends on Enter, and leaves Shift+Enter to start a new line.
+    /// Sends on the key this machine chose, and leaves the other Enter to start a
+    /// new line.
     /// </summary>
     /// <param name="sender">The composer.</param>
     /// <param name="e">The key event.</param>
     private async void OnComposerKey(object? sender, KeyEventArgs e)
     {
-        if (e.Key != Key.Enter || e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        var enter = e.Key == Key.Enter;
+        var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        var control = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
+
+        if (!SendKey.SendsOnKey(enter, shift, control, _shortcut))
         {
             return;
         }
@@ -232,9 +287,24 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Sends the composer's line as a turn, once the line has something in it.
+    /// Keeps the line being written, so a switch or a relaunch finds it again.
+    /// </summary>
+    /// <param name="sender">The composer.</param>
+    /// <param name="e">The text change.</param>
+    private void OnComposerTextChanged(object? sender, TextChangedEventArgs e)
+    {
+        SaveDraft();
+    }
+
+    /// <summary>
+    /// Sends the composer's line, as guidance or as a queued turn.
     /// </summary>
     /// <returns>A task that completes once the line was accepted or refused.</returns>
+    /// <remarks>
+    /// While a turn runs the line is guidance: it slips into that turn at its
+    /// next tool boundary instead of starting a second one. Nothing running means
+    /// a follow-up, which the kernel dispatches as the next turn.
+    /// </remarks>
     private async Task SubmitAsync()
     {
         if (_engine is null)
@@ -255,10 +325,13 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        var steer = Conversation.State.Running;
         try
         {
             Composer.Text = string.Empty;
-            await _engine.SubmitAsync(line, _closing.Token).ConfigureAwait(true);
+            DraftStore.Write(_drafts, _draftKey, string.Empty);
+            await _engine.SendAsync(line, steer, _closing.Token).ConfigureAwait(true);
+            await RefreshQueueAsync().ConfigureAwait(true);
         }
         catch (OperationCanceledException)
         {
@@ -269,7 +342,9 @@ public sealed partial class MainWindow : Window
             // The line is put back rather than lost: a refused send holds the
             // person's own words, and dropping them is the worse failure.
             Composer.Text = line;
-            ShowProblem(error.Message);
+            Composer.CaretIndex = Composer.Text?.Length ?? 0;
+            SaveDraft();
+            ShowRefusal(error);
         }
         finally
         {
@@ -296,5 +371,22 @@ public sealed partial class MainWindow : Window
                 },
             },
         });
+    }
+
+    /// <summary>
+    /// Shows why an action was refused, in the identity that refusal carried.
+    /// </summary>
+    /// <param name="error">The failure, which may be a coded refusal.</param>
+    /// <remarks>
+    /// A refusal crosses with a status and a dotted code; <see cref="RefusalText"/>
+    /// turns that into the sentence this window reads. Anything else — a bad
+    /// argument, a socket that went away — has no code to look up, so its own
+    /// message is what there is.
+    /// </remarks>
+    private void ShowRefusal(Exception error)
+    {
+        ShowProblem(error is IRefusal refusal
+            ? RefusalText.Say(refusal.Reason, refusal.Status, refusal.Detail, Conversation.Language)
+            : error.Message);
     }
 }

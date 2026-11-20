@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
 using System;
@@ -21,7 +22,7 @@ namespace Reasonix.Studio.Pages;
 /// text in place, because rebuilding the list on every streamed chunk would drop the
 /// reader's scroll position hundreds of times per answer.
 /// </remarks>
-public sealed class SessionPage : UserControl
+public sealed partial class SessionPage : UserControl
 {
     /// <summary>
     /// The column every row is drawn in.
@@ -38,6 +39,28 @@ public sealed class SessionPage : UserControl
     /// extend the last one instead of rebuilding the list.
     /// </summary>
     private readonly List<Control> _drawn = new List<Control>();
+
+    /// <summary>
+    /// Holds the reader's own choice for the activity group, or null while the
+    /// fold policy still decides.
+    /// </summary>
+    /// <remarks>
+    /// One group per page: the reference frontend keeps one answer for the
+    /// activity fold, and a per-group answer would leave a long turn with some
+    /// groups open and others closed for no reason the reader could name.
+    /// </remarks>
+    private bool? _opened;
+
+    /// <summary>
+    /// Whether the reader has opened the turn's work line, when the setting folds
+    /// it.
+    /// </summary>
+    /// <remarks>
+    /// A closed fold is drawn hidden rather than left out: find, copy and a
+    /// jump-to-row all reach into the body, and building it again on every open
+    /// would throw away what was already drawn.
+    /// </remarks>
+    private bool _workOpen;
 
     /// <summary>
     /// The state the page is showing.
@@ -80,6 +103,46 @@ public sealed class SessionPage : UserControl
     /// Gets the state the page is showing.
     /// </summary>
     public SessionState State => _state;
+
+    /// <summary>
+    /// Gets or sets the language the page's own labels are drawn in.
+    /// </summary>
+    /// <remarks>
+    /// The kernel's words are drawn as it wrote them; only the labels this page
+    /// adds — "read 3 files", "done · 1m 5s" — are translated here.
+    /// </remarks>
+    public InterfaceLanguage Language
+    {
+        get; set;
+    } = InterfaceLanguage.Zh;
+
+    /// <summary>
+    /// Gets or sets the last row the reader is known to have seen.
+    /// </summary>
+    /// <remarks>
+    /// The kernel keeps the unread mark, not where the reader stopped reading, so
+    /// the window remembers that itself. Null means nothing is known and no
+    /// marker is drawn: a line at a guessed place would claim the reader had seen
+    /// something they had not.
+    /// </remarks>
+    public string? SeenThrough
+    {
+        get; set;
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether a turn's intermediate work starts
+    /// folded under one line.
+    /// </summary>
+    /// <remarks>
+    /// It is the kernel's <c>ui.fold_turn_work</c> setting, and it starts off,
+    /// which is also the kernel's default. The body is drawn either way, so
+    /// opening the line does not rebuild what was already there.
+    /// </remarks>
+    public bool FoldsTurnWork
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Shows one state.
@@ -221,17 +284,248 @@ public sealed class SessionPage : UserControl
                 return ApprovalCardOf(approval);
 
             case ToolItem tool:
-                return new SelectableTextBlock
-                {
-                    Text = tool.Call.Name + (tool.Running ? " …" : string.Empty),
-                    FontSize = 12,
-                    Opacity = 0.55,
-                    FontFamily = new FontFamily("Consolas, monospace"),
-                };
+                return ToolRow(tool);
+
+            case ReadsItem reads:
+                return Meta(MessageCatalog.Get(
+                    "chat.read_n_files",
+                    Language,
+                    ("n", Format.Count(reads.Tools.Count, Language))));
+
+            case GuardianItem guardian:
+                return Meta(MessageCatalog.Get(
+                    "chat.guardian_review",
+                    Language) + " · " + guardian.Assessment.Tool + " · " + guardian.Assessment.Outcome);
+
+            case AskItem ask:
+                return Card(AskBody(ask), Brush("OverlayBrush"));
+
+            case CompactionItem fold:
+                return Card(CompactionBody(fold), Brush("RaisedBrush"));
+
+            case RememberItem remember:
+                return Card(RememberBody(remember.Fact), Brush("RaisedBrush"));
+
+            case WorkedItem worked:
+                return Meta(MessageCatalog.Get(
+                    "chat.done_in_t",
+                    Language,
+                    ("t", Format.Elapsed(worked.Milliseconds))));
+
+            case ExtensionItem extension:
+                return Card(ExtensionBody(extension), Brush("RaisedBrush"));
 
             default:
                 return new SelectableTextBlock { Text = string.Empty };
         }
+    }
+
+    /// <summary>
+    /// Draws a line of greyed-out detail, which is what the kernel's side remarks
+    /// look like.
+    /// </summary>
+    /// <param name="text">What the line says.</param>
+    /// <returns>The text control for it.</returns>
+    private Control Meta(string text)
+    {
+        return new SelectableTextBlock
+        {
+            Text = text,
+            FontSize = 12,
+            Opacity = 0.6,
+            TextWrapping = TextWrapping.Wrap,
+        };
+    }
+
+    /// <summary>
+    /// Draws a card around a body.
+    /// </summary>
+    /// <param name="body">What the card holds.</param>
+    /// <param name="background">The card's fill, or null to inherit.</param>
+    /// <returns>The bordered card.</returns>
+    private Control Card(Control body, IBrush? background)
+    {
+        return new Border
+        {
+            Background = background,
+            CornerRadius = new CornerRadius(10),
+            Padding = new Thickness(12, 10, 12, 10),
+            Child = body,
+        };
+    }
+
+    /// <summary>
+    /// Draws the question waiting on the person.
+    /// </summary>
+    /// <param name="item">The open question.</param>
+    /// <returns>The card's body: a heading, then each question it asks.</returns>
+    private Control AskBody(AskItem item)
+    {
+        var body = new StackPanel { Spacing = 6 };
+        body.Children.Add(new SelectableTextBlock
+        {
+            Text = MessageCatalog.Get("chat.ask_user", Language),
+            FontSize = 12,
+            Opacity = 0.6,
+        });
+
+        foreach (var question in item.Ask.Questions)
+        {
+            body.Children.Add(new SelectableTextBlock
+            {
+                Text = string.IsNullOrEmpty(question.Header) ? question.Prompt : question.Header,
+                FontSize = 13,
+                FontWeight = FontWeight.SemiBold,
+                TextWrapping = TextWrapping.Wrap,
+            });
+
+            if (!string.IsNullOrEmpty(question.Prompt) && !string.IsNullOrEmpty(question.Header))
+            {
+                body.Children.Add(new SelectableTextBlock
+                {
+                    Text = question.Prompt,
+                    FontSize = 12,
+                    Opacity = 0.75,
+                    TextWrapping = TextWrapping.Wrap,
+                });
+            }
+
+            if (question.Options.Count > 0)
+            {
+                body.Children.Add(new SelectableTextBlock
+                {
+                    Text = string.Join("  ·  ", question.Options.Select(option => option.Label)),
+                    FontSize = 12,
+                    Opacity = 0.7,
+                    TextWrapping = TextWrapping.Wrap,
+                });
+            }
+        }
+
+        if (item.Answered is { Count: > 0 } answers)
+        {
+            body.Children.Add(new SelectableTextBlock
+            {
+                Text = string.Join("  ·  ", answers.Select(answer => string.Join(", ", answer))),
+                FontSize = 12,
+                Opacity = 0.55,
+            });
+        }
+
+        return body;
+    }
+
+    /// <summary>
+    /// Draws a fold: its heading, and the summary as far as it has been written.
+    /// </summary>
+    /// <param name="item">The fold.</param>
+    /// <returns>The card's body.</returns>
+    private Control CompactionBody(CompactionItem item)
+    {
+        var body = new StackPanel { Spacing = 6 };
+        body.Children.Add(new SelectableTextBlock
+        {
+            Text = MessageCatalog.Get("chat.compaction_brief", Language),
+            FontSize = 13,
+            FontWeight = FontWeight.SemiBold,
+        });
+
+        if (!item.Done)
+        {
+            body.Children.Add(new SelectableTextBlock
+            {
+                Text = MessageCatalog.Get("chat.folding_into_a_digest", Language),
+                FontSize = 12,
+                Opacity = 0.7,
+            });
+        }
+
+        if (!string.IsNullOrEmpty(item.Compaction.Summary))
+        {
+            body.Children.Add(new SelectableTextBlock
+            {
+                Text = item.Compaction.Summary,
+                FontSize = 12,
+                Opacity = 0.75,
+                TextWrapping = TextWrapping.Wrap,
+                MaxHeight = 160,
+            });
+        }
+
+        return body;
+    }
+
+    /// <summary>
+    /// Draws a saved fact: what it is called and what it says.
+    /// </summary>
+    /// <param name="fact">The saved fact.</param>
+    /// <returns>The card's body.</returns>
+    private Control RememberBody(RememberedFact fact)
+    {
+        var body = new StackPanel { Spacing = 4 };
+        body.Children.Add(new SelectableTextBlock
+        {
+            Text = MessageCatalog.Get("data.memory", Language) + " · " + fact.Title,
+            FontSize = 13,
+            FontWeight = FontWeight.SemiBold,
+            TextWrapping = TextWrapping.Wrap,
+        });
+
+        if (!string.IsNullOrEmpty(fact.Description))
+        {
+            body.Children.Add(new SelectableTextBlock
+            {
+                Text = fact.Description,
+                FontSize = 12,
+                Opacity = 0.75,
+                TextWrapping = TextWrapping.Wrap,
+            });
+        }
+
+        return body;
+    }
+
+    /// <summary>
+    /// Draws a surface an extension published.
+    /// </summary>
+    /// <param name="item">The surface.</param>
+    /// <returns>The card's body: the plugin's name, its status, and any card text.</returns>
+    private Control ExtensionBody(ExtensionItem item)
+    {
+        var body = new StackPanel { Spacing = 4 };
+        body.Children.Add(new SelectableTextBlock
+        {
+            Text = MessageCatalog.Get(
+                "chat.extension_id",
+                Language,
+                ("id", string.IsNullOrEmpty(item.Surface.PluginID) ? item.Surface.SurfaceID : item.Surface.PluginID)),
+            FontSize = 12,
+            Opacity = 0.6,
+        });
+
+        if (!string.IsNullOrEmpty(item.Surface.Status?.Label))
+        {
+            body.Children.Add(new SelectableTextBlock
+            {
+                Text = item.Surface.Status.Label,
+                FontSize = 13,
+                FontWeight = FontWeight.SemiBold,
+                TextWrapping = TextWrapping.Wrap,
+            });
+        }
+
+        if (!string.IsNullOrEmpty(item.Surface.Status?.Detail))
+        {
+            body.Children.Add(new SelectableTextBlock
+            {
+                Text = item.Surface.Status.Detail,
+                FontSize = 12,
+                Opacity = 0.75,
+                TextWrapping = TextWrapping.Wrap,
+            });
+        }
+
+        return body;
     }
 
     /// <summary>
@@ -353,12 +647,7 @@ public sealed class SessionPage : UserControl
             return;
         }
 
-        foreach (var item in items)
-        {
-            var control = RowOf(item);
-            _drawn.Add(control);
-            _rows.Children.Add(control);
-        }
+        DrawRows(items);
 
         _scroll.Offset = held;
     }

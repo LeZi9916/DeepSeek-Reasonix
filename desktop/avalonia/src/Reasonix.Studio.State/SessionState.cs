@@ -85,6 +85,18 @@ public sealed record SessionState
     }
 
     /// <summary>
+    /// Gets how many context tokens the last request carried.
+    /// </summary>
+    /// <remarks>
+    /// The window itself is the kernel's, read with the status; this is the half
+    /// that moves during the conversation, so a meter draws both.
+    /// </remarks>
+    public long ContextUsed
+    {
+        get; init;
+    }
+
+    /// <summary>
     /// Gets the model the running turn was started on.
     /// </summary>
     /// <remarks>

@@ -1,4 +1,5 @@
 using Reasonix.Studio.Contracts.Events;
+using Reasonix.Studio.Kernel.Client;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -55,6 +56,16 @@ public sealed class SseEventTransport : IEventTransport
     private readonly HttpClient _http;
 
     /// <summary>
+    /// The path the live stream is served from.
+    /// </summary>
+    private readonly string _streamPath;
+
+    /// <summary>
+    /// The path the bounded replay log is read from.
+    /// </summary>
+    private readonly string _replayPath;
+
+    /// <summary>
     /// The kernel's address, without a trailing slash.
     /// </summary>
     private readonly string _base;
@@ -66,6 +77,28 @@ public sealed class SseEventTransport : IEventTransport
     /// <param name="http">The client to read through, or null to create one.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="baseAddress"/> is null.</exception>
     public SseEventTransport(string baseAddress, HttpClient? http = null)
+        : this(baseAddress, s_streamPath, s_replayPath, http)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SseEventTransport"/> class
+    /// over another of the kernel's streams.
+    /// </summary>
+    /// <param name="baseAddress">The kernel's origin, such as <c>http://127.0.0.1:7411</c>.</param>
+    /// <param name="streamPath">The live stream's path, such as <c>/tree/events</c>.</param>
+    /// <param name="replayPath">The bounded replay log's path.</param>
+    /// <param name="http">The client to read through, or null to create one.</param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="baseAddress"/>, <paramref name="streamPath"/> or
+    /// <paramref name="replayPath"/> is null.
+    /// </exception>
+    /// <remarks>
+    /// The kernel serves more than one stream — the conversation's and the tree's
+    /// — and they share every rule this transport keeps: the cursor, the replay,
+    /// and the silence threshold. Only the two paths differ.
+    /// </remarks>
+    public SseEventTransport(string baseAddress, string streamPath, string replayPath, HttpClient? http = null)
     {
         if (baseAddress is null)
         {
@@ -73,6 +106,8 @@ public sealed class SseEventTransport : IEventTransport
         }
 
         _base = baseAddress.TrimEnd('/');
+        _streamPath = streamPath ?? throw new ArgumentNullException(nameof(streamPath));
+        _replayPath = replayPath ?? throw new ArgumentNullException(nameof(replayPath));
         _http = http ?? new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
     }
 
@@ -84,7 +119,7 @@ public sealed class SseEventTransport : IEventTransport
         while (!cancellationToken.IsCancellationRequested)
         {
             var after = cursor();
-            var url = after is { } seq ? $"{_base}{s_streamPath}?lastEventId={seq}" : $"{_base}{s_streamPath}";
+            var url = after is { } seq ? $"{_base}{_streamPath}?lastEventId={seq}" : $"{_base}{_streamPath}";
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Accept.ParseAdd("text/event-stream");
@@ -92,7 +127,13 @@ public sealed class SseEventTransport : IEventTransport
             using var response = await _http
                 .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                 .ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                // The stream's own refusal is the same refusal as any read's: a
+                // 403 here is this launch's credential, not a broken socket, and
+                // the caller has to be able to tell that apart.
+                throw await KernelRefusal.FromAsync(response, cancellationToken).ConfigureAwait(false);
+            }
 
             await using var body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             using var reader = new StreamReader(body, Encoding.UTF8);
@@ -165,9 +206,12 @@ public sealed class SseEventTransport : IEventTransport
     /// <inheritdoc/>
     public async Task<ReplayResult> ReplayAsync(long after, CancellationToken cancellationToken)
     {
-        var url = $"{_base}{s_replayPath}?lastEventId={after}";
+        var url = $"{_base}{_replayPath}?lastEventId={after}";
         using var response = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw await KernelRefusal.FromAsync(response, cancellationToken).ConfigureAwait(false);
+        }
 
         await using var body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
         using var document = await JsonDocument.ParseAsync(body, default, cancellationToken).ConfigureAwait(false);

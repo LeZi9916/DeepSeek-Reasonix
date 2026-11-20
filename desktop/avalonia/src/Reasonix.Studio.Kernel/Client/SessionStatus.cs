@@ -38,6 +38,16 @@ public sealed record SessionStatus
     public string WorkspaceRoot { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets the transcript the session writes to.
+    /// </summary>
+    /// <remarks>
+    /// A draft is kept per conversation, and this is the half of that key only
+    /// the kernel knows: two conversations in one workspace differ by this path.
+    /// </remarks>
+    [JsonPropertyName("sessionPath")]
+    public string SessionPath { get; init; } = string.Empty;
+
+    /// <summary>
     /// Gets the model the composer is set to.
     /// </summary>
     [JsonPropertyName("modelRef")]
