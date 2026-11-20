@@ -12,10 +12,14 @@
     <ControlTheme x:Key="{x:Type ctl:StudioRail}" TargetType="ctl:StudioRail">
       <Setter Property="Width" Value="{DynamicResource RailW}" />
       <Setter Property="Background" Value="{DynamicResource PageBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Padding" Value="0" />
       <Setter Property="Template">
         <ControlTemplate>
           <Border Background="{TemplateBinding Background}"
-                  Padding="10,12,10,0"
+                  Padding="{TemplateBinding Padding}"
                   BorderBrush="{DynamicResource BorderBrush}"
                   BorderThickness="0,0,1,0">
             <ContentPresenter Content="{TemplateBinding Content}" />
@@ -27,9 +31,13 @@
     <ControlTheme x:Key="{x:Type ctl:StudioChrome}" TargetType="ctl:StudioChrome">
       <Setter Property="Height" Value="48" />
       <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Padding" Value="20,0,12,0" />
       <Setter Property="Template">
         <ControlTemplate>
-          <Border Background="{TemplateBinding Background}" Padding="20,0,20,0">
+          <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
             <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" />
           </Border>
         </ControlTemplate>
@@ -38,6 +46,9 @@
 
     <ControlTheme x:Key="{x:Type ctl:StudioPane}" TargetType="ctl:StudioPane">
       <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Template">
         <ControlTemplate>
           <Border Background="{TemplateBinding Background}">
@@ -58,15 +69,21 @@
     </ControlTheme>
 
     <ControlTheme x:Key="{x:Type ctl:StudioComposer}" TargetType="ctl:StudioComposer">
-      <Setter Property="Width" Value="760" />
+      <Setter Property="Width" Value="{DynamicResource Column}" />
       <Setter Property="Height" Value="128" />
+      <Setter Property="Background" Value="{DynamicResource ComposeSurfaceBrush}" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="{DynamicResource RLg}" />
       <Setter Property="Template">
         <ControlTemplate>
-          <Border Background="{DynamicResource SurfaceBrush}"
-                  BorderBrush="{DynamicResource BorderBrush}"
-                  BorderThickness="1"
-                  CornerRadius="{DynamicResource RLg}">
-            <ContentPresenter Content="{TemplateBinding Content}" Margin="12" />
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{TemplateBinding CornerRadius}">
+            <!-- No padding here: the composer's own bands place the input box
+                 and the send button, and a margin on the presenter would push
+                 both inward by a second inset the baseline never had. -->
+            <ContentPresenter Content="{TemplateBinding Content}" />
           </Border>
         </ControlTemplate>
       </Setter>
@@ -87,6 +104,9 @@
     </ControlTheme>
 
     <ControlTheme x:Key="{x:Type ctl:StudioCrumb}" TargetType="ctl:StudioCrumb">
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Template">
         <ControlTemplate>
           <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" />

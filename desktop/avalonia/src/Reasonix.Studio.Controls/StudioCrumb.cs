@@ -1,3 +1,4 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
 
 namespace Reasonix.Studio.Controls;
@@ -8,4 +9,15 @@ namespace Reasonix.Studio.Controls;
 /// </summary>
 public class StudioCrumb : ContentControl
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StudioCrumb"/> class.
+    /// </summary>
+    /// <remarks>
+    /// The automation id is the identity the captured baseline recorded for the
+    /// crumb (<c>class:crumb</c>).
+    /// </remarks>
+    public StudioCrumb()
+    {
+        AutomationProperties.SetAutomationId(this, "class:crumb");
+    }
 }

@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
@@ -51,8 +52,8 @@ public sealed class SessionPage : UserControl
         _rows = new StackPanel
         {
             Orientation = Orientation.Vertical,
-            Spacing = 10,
-            Margin = new Thickness(0, 4, 0, 8),
+            Spacing = 0,
+            Margin = new Thickness(0),
         };
 
         _scroll = new ScrollViewer
@@ -144,48 +145,93 @@ public sealed class SessionPage : UserControl
     /// </summary>
     /// <param name="item">The row to draw.</param>
     /// <returns>The control that stands for it.</returns>
+    /// <remarks>
+    /// Every row is one <c>class:call</c> box around its body, and the two kinds
+    /// whose body is prose carry <c>class:txt</c> — the two identities the
+    /// captured conversation uses for a row and for its text. They are the same
+    /// strings the geometry gate compares by, so the page's structure is what the
+    /// reference frontend drew rather than a second tree that merely looks alike.
+    ///
+    /// A row sits 8 below the one before it, which is the gap the capture
+    /// recorded between consecutive rows; the first row has nothing above it, so
+    /// it carries none.
+    /// </remarks>
     private Control RowOf(TranscriptItem item)
     {
-        return item switch
+        var body = BodyOf(item);
+        var row = new Border
         {
-            UserItem user => new Border
-            {
-                Background = Brush("RaisedBrush"),
-                CornerRadius = new CornerRadius(10),
-                Padding = new Thickness(12, 8, 12, 8),
-                HorizontalAlignment = HorizontalAlignment.Right,
-                MaxWidth = 620,
-                Child = new SelectableTextBlock
+            Child = body,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Margin = new Thickness(0, _drawn.Count == 0 ? 0 : 8, 0, 0),
+        };
+
+        AutomationProperties.SetAutomationId(row, "class:call");
+        return row;
+    }
+
+    /// <summary>
+    /// Draws the body of one row.
+    /// </summary>
+    /// <param name="item">The row to draw.</param>
+    /// <returns>The control holding what this row says.</returns>
+    private Control BodyOf(TranscriptItem item)
+    {
+        switch (item)
+        {
+            case UserItem user:
+                var own = new SelectableTextBlock
                 {
                     Text = user.Text,
                     FontSize = 13,
                     TextWrapping = TextWrapping.Wrap,
-                },
-            },
-            SayItem say => new SelectableTextBlock
-            {
-                Text = say.Text,
-                FontSize = 13,
-                TextWrapping = TextWrapping.Wrap,
-                Opacity = say.Done ? 1 : 0.9,
-            },
-            NoticeItem notice => new SelectableTextBlock
-            {
-                Text = notice.Text,
-                FontSize = 12,
-                Opacity = 0.7,
-                Foreground = NoticeInk(notice.Level),
-            },
-            ApprovalItem approval => ApprovalCardOf(approval),
-            ToolItem tool => new SelectableTextBlock
-            {
-                Text = tool.Call.Name + (tool.Running ? " …" : string.Empty),
-                FontSize = 12,
-                Opacity = 0.55,
-                FontFamily = new FontFamily("Consolas, monospace"),
-            },
-            _ => new SelectableTextBlock { Text = string.Empty },
-        };
+                };
+                AutomationProperties.SetAutomationId(own, "class:txt");
+                return new Border
+                {
+                    Background = Brush("RaisedBrush"),
+                    CornerRadius = new CornerRadius(10),
+                    Padding = new Thickness(12, 8, 12, 8),
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    MaxWidth = 620,
+                    Child = own,
+                };
+
+            case SayItem say:
+                var answer = new SelectableTextBlock
+                {
+                    Text = say.Text,
+                    FontSize = 13,
+                    TextWrapping = TextWrapping.Wrap,
+                    Opacity = say.Done ? 1 : 0.9,
+                };
+                AutomationProperties.SetAutomationId(answer, "class:txt");
+                return answer;
+
+            case NoticeItem notice:
+                return new SelectableTextBlock
+                {
+                    Text = notice.Text,
+                    FontSize = 12,
+                    Opacity = 0.7,
+                    Foreground = NoticeInk(notice.Level),
+                };
+
+            case ApprovalItem approval:
+                return ApprovalCardOf(approval);
+
+            case ToolItem tool:
+                return new SelectableTextBlock
+                {
+                    Text = tool.Call.Name + (tool.Running ? " …" : string.Empty),
+                    FontSize = 12,
+                    Opacity = 0.55,
+                    FontFamily = new FontFamily("Consolas, monospace"),
+                };
+
+            default:
+                return new SelectableTextBlock { Text = string.Empty };
+        }
     }
 
     /// <summary>

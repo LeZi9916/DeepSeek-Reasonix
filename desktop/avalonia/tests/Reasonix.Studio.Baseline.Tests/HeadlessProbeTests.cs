@@ -18,6 +18,7 @@ namespace Reasonix.Studio.Baseline.Tests;
 /// in the test process at all; a gate built on an assumption it cannot make would
 /// otherwise report zero observations and call that agreement.
 /// </remarks>
+[Collection(HeadlessCollection.Name)]
 public sealed class HeadlessProbeTests
 {
     /// <summary>

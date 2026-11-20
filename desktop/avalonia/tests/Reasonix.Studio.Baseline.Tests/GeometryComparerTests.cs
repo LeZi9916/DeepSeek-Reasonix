@@ -143,7 +143,13 @@ public sealed class GeometryComparerTests
 
         foreach (var file in Directory.GetFiles(directory, "*.json"))
         {
-            if (Path.GetFileName(file) == "index.json")
+            // Three files in this directory are not domains: the index names them,
+            // and the gate records which differences are known and which keys the
+            // shell already claims. A sweep that read them as pages would report
+            // the index as a parse failure rather than as a file it was never
+            // meant to open.
+            var name = Path.GetFileName(file);
+            if (name is "index.json" or "gate-debt.json" or "gate-covered.json")
             {
                 continue;
             }

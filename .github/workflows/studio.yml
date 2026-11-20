@@ -272,6 +272,12 @@ jobs:
       - name: test
         run: dotnet test Reasonix.Studio.slnx -c Release --no-build
 
+      # The same command `make studio-geometry` runs. The cases are part of the
+      # step above as well; this one names them so a red run says which subject
+      # failed — the geometry baseline, rather than the whole shell.
+      - name: geometry
+        run: dotnet test Reasonix.Studio.slnx -c Release --no-build --filter "FullyQualifiedName~GeometryGateTests|FullyQualifiedName~GeometryCoverageTests|FullyQualifiedName~CoverageAuditTests|FullyQualifiedName~UncomparableAuditTests"
+
   # What a hosted page does over the relay, end to end: the production bundle,
   # the real Studio host and kernel, a real Chromium; only the accounts API and
   # the relay are stand-ins (tools/relayfake). Event-transport changes are

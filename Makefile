@@ -9,7 +9,7 @@ GOEXE := $(shell go env GOEXE)
 # One pin for the Makefile and the CI lint job; see .github/workflows/ci.yml.
 GOLANGCI_VERSION := $(shell cat .golangci-version)
 
-.PHONY: build vet fmt lint lint-go lint-install lint-cross lint-update coverage-gate coverage-gate-update pricecheck acp-conformance check test studio-test sdk-test sdk-test-race hooks cross clean studio studio-dotnet studio-dotnet-test wiregen-check
+.PHONY: build vet fmt lint lint-go lint-install lint-cross lint-update coverage-gate coverage-gate-update pricecheck acp-conformance check test studio-test sdk-test sdk-test-race hooks cross clean studio studio-dotnet studio-dotnet-test studio-geometry wiregen-check
 
 build:
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/reasonix$(GOEXE) ./cmd/reasonix
@@ -106,6 +106,14 @@ studio-dotnet:
 
 studio-dotnet-test:
 	dotnet test desktop/avalonia/Reasonix.Studio.slnx -c Debug --no-build
+
+# The geometry gate alone: renders the real window against the captured
+# conversation and holds it there. It runs inside the test project, so the
+# solution has to be built first; this target exists so a change to the shell
+# can be checked against the baseline without running the suite's live-kernel
+# cases, and so CI cites one command rather than a filter someone retypes.
+studio-geometry: studio-dotnet
+	dotnet test desktop/avalonia/Reasonix.Studio.slnx -c Debug --no-build --filter "FullyQualifiedName~GeometryGateTests|FullyQualifiedName~GeometryCoverageTests|FullyQualifiedName~CoverageAuditTests|FullyQualifiedName~UncomparableAuditTests"
 
 # The shell's wire records are generated from the kernel's Go structs, so a
 # source edit without a regeneration leaves a contract the shell reads a field

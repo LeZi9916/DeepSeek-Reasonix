@@ -93,6 +93,32 @@ public sealed class GeometryComparerOptions
     };
 
     /// <summary>
+    /// Gets the properties that are not compared, each with the reason it cannot
+    /// be.
+    /// </summary>
+    /// <remarks>
+    /// The one place a difference is excused, so every entry names what the
+    /// browser reports and what takes its place here. Only properties in
+    /// <see cref="Properties"/> belong: an entry for one that is never compared
+    /// would widen the list without widening the gate.
+    /// </remarks>
+    public IReadOnlyDictionary<string, string> Uncomparable
+    {
+        get;
+    } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["display"] = "The panel type names the layout here; CSS names it with a display value.",
+        ["fontFamily"] = "Font stacks differ per platform; glyph fallback is an allowed difference.",
+        ["lineHeight"] = "A line box follows the font's own metrics here rather than a length.",
+        ["gap"] = "Spacing is StackPanel.Spacing, not a container property.",
+        ["rowGap"] = "Spacing is StackPanel.Spacing, not a container property.",
+        ["columnGap"] = "Spacing is StackPanel.Spacing, not a container property.",
+        ["zIndex"] = "Stacking is panel order and overlay layers, not a per-element integer.",
+        ["marginLeft"] = "A browser offsets a column with margin; here a Grid column carries the width.",
+        ["marginRight"] = "A browser offsets a column with margin; here a Grid column carries the width.",
+    };
+
+    /// <summary>
     /// Gets the value each property takes when neither side sets it, so a
     /// property the baseline omits is still compared.
     /// </summary>

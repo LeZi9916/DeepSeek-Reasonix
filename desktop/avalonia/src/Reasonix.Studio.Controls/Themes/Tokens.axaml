@@ -8,730 +8,1024 @@
   <!-- token accent -->
   <Color x:Key="Accent">#252725</Color>
   <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}" />
+  <x:String x:Key="token:--accent">rgb(37, 39, 37)</x:String>
   <!-- token accent-fg -->
   <Color x:Key="AccentFg">#FFFFFF</Color>
   <SolidColorBrush x:Key="AccentFgBrush" Color="{StaticResource AccentFg}" />
+  <x:String x:Key="token:--accent-fg">rgb(255, 255, 255)</x:String>
   <!-- token accent-ink -->
   <Color x:Key="AccentInk">#252725</Color>
   <SolidColorBrush x:Key="AccentInkBrush" Color="{StaticResource AccentInk}" />
+  <x:String x:Key="token:--accent-ink">rgb(37, 39, 37)</x:String>
   <!-- token accent-wash -->
   <Color x:Key="AccentWash">#E4E5E0</Color>
   <SolidColorBrush x:Key="AccentWashBrush" Color="{StaticResource AccentWash}" />
+  <x:String x:Key="token:--accent-wash">rgb(228, 229, 224)</x:String>
   <!-- token activity-scale -->
   <x:Double x:Key="ActivityScale">1</x:Double>
+  <x:String x:Key="token:--activity-scale">1</x:String>
   <!-- token add -->
   <Color x:Key="Add">#2B7A4B</Color>
   <SolidColorBrush x:Key="AddBrush" Color="{StaticResource Add}" />
+  <x:String x:Key="token:--add">rgb(43, 122, 75)</x:String>
   <!-- token agent-1 -->
   <Color x:Key="Agent1">#7C5CD6</Color>
   <SolidColorBrush x:Key="Agent1Brush" Color="{StaticResource Agent1}" />
+  <x:String x:Key="token:--agent-1">rgb(124, 92, 214)</x:String>
   <!-- token agent-2 -->
   <Color x:Key="Agent2">#2F9E6E</Color>
   <SolidColorBrush x:Key="Agent2Brush" Color="{StaticResource Agent2}" />
+  <x:String x:Key="token:--agent-2">rgb(47, 158, 110)</x:String>
   <!-- token agent-3 -->
   <Color x:Key="Agent3">#C27A1D</Color>
   <SolidColorBrush x:Key="Agent3Brush" Color="{StaticResource Agent3}" />
+  <x:String x:Key="token:--agent-3">rgb(194, 122, 29)</x:String>
   <!-- token border -->
   <Color x:Key="Border">#D6D7D1</Color>
   <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource Border}" />
+  <x:String x:Key="token:--border">rgb(214, 215, 209)</x:String>
   <!-- token brand -->
   <Color x:Key="Brand">#566AA9</Color>
   <SolidColorBrush x:Key="BrandBrush" Color="{StaticResource Brand}" />
+  <x:String x:Key="token:--brand">rgb(86, 106, 169)</x:String>
   <!-- token brand-wash -->
   <Color x:Key="BrandWash">#EEF1FA</Color>
   <SolidColorBrush x:Key="BrandWashBrush" Color="{StaticResource BrandWash}" />
+  <x:String x:Key="token:--brand-wash">rgb(238, 241, 250)</x:String>
   <!-- token call-gap -->
   <x:Double x:Key="CallGap">14</x:Double>
+  <x:String x:Key="token:--call-gap">14px</x:String>
   <!-- token call-sym -->
   <x:Double x:Key="CallSym">28</x:Double>
+  <x:String x:Key="token:--call-sym">28px</x:String>
   <!-- token cat-1 -->
   <Color x:Key="Cat1">#2A78D6</Color>
   <SolidColorBrush x:Key="Cat1Brush" Color="{StaticResource Cat1}" />
+  <x:String x:Key="token:--cat-1">rgb(42, 120, 214)</x:String>
   <!-- token cat-2 -->
   <Color x:Key="Cat2">#EB6834</Color>
   <SolidColorBrush x:Key="Cat2Brush" Color="{StaticResource Cat2}" />
+  <x:String x:Key="token:--cat-2">rgb(235, 104, 52)</x:String>
   <!-- token cat-3 -->
   <Color x:Key="Cat3">#1BAF7A</Color>
   <SolidColorBrush x:Key="Cat3Brush" Color="{StaticResource Cat3}" />
+  <x:String x:Key="token:--cat-3">rgb(27, 175, 122)</x:String>
   <!-- token cat-4 -->
   <Color x:Key="Cat4">#EDA100</Color>
   <SolidColorBrush x:Key="Cat4Brush" Color="{StaticResource Cat4}" />
+  <x:String x:Key="token:--cat-4">rgb(237, 161, 0)</x:String>
   <!-- token cat-5 -->
   <Color x:Key="Cat5">#E87BA4</Color>
   <SolidColorBrush x:Key="Cat5Brush" Color="{StaticResource Cat5}" />
+  <x:String x:Key="token:--cat-5">rgb(232, 123, 164)</x:String>
   <!-- token cat-6 -->
   <Color x:Key="Cat6">#7C5CD6</Color>
   <SolidColorBrush x:Key="Cat6Brush" Color="{StaticResource Cat6}" />
+  <x:String x:Key="token:--cat-6">rgb(124, 92, 214)</x:String>
   <!-- token chev -->
   <x:String x:Key="Chev">url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5'/%3E%3C/svg%3E&quot;)</x:String>
+  <x:String x:Key="token:--chev">url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5'/%3E%3C/svg%3E&quot;)</x:String>
   <!-- token close-h -->
   <x:Double x:Key="CloseH">26</x:Double>
+  <x:String x:Key="token:--close-h">26px</x:String>
   <!-- token column -->
   <x:Double x:Key="Column">760</x:Double>
+  <x:String x:Key="token:--column">760px</x:String>
   <!-- token compose-shadow -->
   <x:String x:Key="ComposeShadow">0 3px 12px #191e1912</x:String>
+  <x:String x:Key="token:--compose-shadow">0 3px 12px #191e1912</x:String>
   <!-- token compose-surface -->
   <Color x:Key="ComposeSurface">#FFFFFF</Color>
   <SolidColorBrush x:Key="ComposeSurfaceBrush" Color="{StaticResource ComposeSurface}" />
+  <x:String x:Key="token:--compose-surface">rgb(255, 255, 255)</x:String>
   <!-- token compose-sweep -->
   <x:String x:Key="ComposeSweep">0deg</x:String>
+  <x:String x:Key="token:--compose-sweep">0deg</x:String>
   <!-- token default-accent -->
   <Color x:Key="DefaultAccent">#252725</Color>
   <SolidColorBrush x:Key="DefaultAccentBrush" Color="{StaticResource DefaultAccent}" />
+  <x:String x:Key="token:--default-accent">rgb(37, 39, 37)</x:String>
   <!-- token default-border -->
   <Color x:Key="DefaultBorder">#D6D7D1</Color>
   <SolidColorBrush x:Key="DefaultBorderBrush" Color="{StaticResource DefaultBorder}" />
+  <x:String x:Key="token:--default-border">rgb(214, 215, 209)</x:String>
   <!-- token default-dim -->
   <Color x:Key="DefaultDim">#5E625C</Color>
   <SolidColorBrush x:Key="DefaultDimBrush" Color="{StaticResource DefaultDim}" />
+  <x:String x:Key="token:--default-dim">rgb(94, 98, 92)</x:String>
   <!-- token default-page -->
   <Color x:Key="DefaultPage">#F0F0ED</Color>
   <SolidColorBrush x:Key="DefaultPageBrush" Color="{StaticResource DefaultPage}" />
+  <x:String x:Key="token:--default-page">rgb(240, 240, 237)</x:String>
   <!-- token default-panel -->
   <Color x:Key="DefaultPanel">#FFFFFF</Color>
   <SolidColorBrush x:Key="DefaultPanelBrush" Color="{StaticResource DefaultPanel}" />
+  <x:String x:Key="token:--default-panel">rgb(255, 255, 255)</x:String>
   <!-- token default-surface -->
   <Color x:Key="DefaultSurface">#FAFAF8</Color>
   <SolidColorBrush x:Key="DefaultSurfaceBrush" Color="{StaticResource DefaultSurface}" />
+  <x:String x:Key="token:--default-surface">rgb(250, 250, 248)</x:String>
   <!-- token default-text -->
   <Color x:Key="DefaultText">#292B29</Color>
   <SolidColorBrush x:Key="DefaultTextBrush" Color="{StaticResource DefaultText}" />
+  <x:String x:Key="token:--default-text">rgb(41, 43, 41)</x:String>
   <!-- token del -->
   <Color x:Key="Del">#BC3D34</Color>
   <SolidColorBrush x:Key="DelBrush" Color="{StaticResource Del}" />
+  <x:String x:Key="token:--del">rgb(188, 61, 52)</x:String>
   <!-- token deleg -->
   <Color x:Key="Deleg">#007282</Color>
   <SolidColorBrush x:Key="DelegBrush" Color="{StaticResource Deleg}" />
+  <x:String x:Key="token:--deleg">rgb(0, 114, 130)</x:String>
   <!-- token deleg-wash -->
   <Color x:Key="DelegWash">#DFF2F5</Color>
   <SolidColorBrush x:Key="DelegWashBrush" Color="{StaticResource DelegWash}" />
+  <x:String x:Key="token:--deleg-wash">rgb(223, 242, 245)</x:String>
   <!-- token doc -->
   <x:String x:Key="Doc">min(100%, 760px)</x:String>
+  <x:String x:Key="token:--doc">min(100%, 760px)</x:String>
   <!-- token dock-left-min -->
   <x:Double x:Key="DockLeftMin">236</x:Double>
+  <x:String x:Key="token:--dock-left-min">236px</x:String>
   <!-- token dock-open -->
   <x:Double x:Key="DockOpen">520</x:Double>
+  <x:String x:Key="token:--dock-open">520px</x:String>
   <!-- token dock-w -->
   <x:Double x:Key="DockW">520</x:Double>
+  <x:String x:Key="token:--dock-w">520px</x:String>
   <!-- token ease -->
   <x:String x:Key="Ease">cubic-bezier(.2, .72, .2, 1)</x:String>
+  <x:String x:Key="token:--ease">cubic-bezier(.2, .72, .2, 1)</x:String>
   <!-- token ease-in -->
   <x:String x:Key="EaseIn">cubic-bezier(.55, 0, 1, .45)</x:String>
+  <x:String x:Key="token:--ease-in">cubic-bezier(.55, 0, 1, .45)</x:String>
   <!-- token ease-out -->
   <x:String x:Key="EaseOut">cubic-bezier(.16, 1, .3, 1)</x:String>
+  <x:String x:Key="token:--ease-out">cubic-bezier(.16, 1, .3, 1)</x:String>
   <!-- token ease-spring -->
   <x:String x:Key="EaseSpring">linear(0, .006, .025 2.8%, .101 6.1%, .539 18.9%, .721 25.3%, .849 31.5%, .937 38.1%, .968 41.8%, .991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 84.2%, 1)</x:String>
+  <x:String x:Key="token:--ease-spring">linear(0, .006, .025 2.8%, .101 6.1%, .539 18.9%, .721 25.3%, .849 31.5%, .937 38.1%, .968 41.8%, .991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 84.2%, 1)</x:String>
   <!-- token err -->
   <Color x:Key="Err">#BC3D34</Color>
   <SolidColorBrush x:Key="ErrBrush" Color="{StaticResource Err}" />
+  <x:String x:Key="token:--err">rgb(188, 61, 52)</x:String>
   <!-- token err-fg -->
   <Color x:Key="ErrFg">#FFFFFF</Color>
   <SolidColorBrush x:Key="ErrFgBrush" Color="{StaticResource ErrFg}" />
+  <x:String x:Key="token:--err-fg">rgb(255, 255, 255)</x:String>
   <!-- token err-ink -->
   <Color x:Key="ErrInk">#AF362E</Color>
   <SolidColorBrush x:Key="ErrInkBrush" Color="{StaticResource ErrInk}" />
+  <x:String x:Key="token:--err-ink">rgb(175, 54, 46)</x:String>
   <!-- token face-code -->
   <Color x:Key="FaceCode">#F9F7F3</Color>
   <SolidColorBrush x:Key="FaceCodeBrush" Color="{StaticResource FaceCode}" />
+  <x:String x:Key="token:--face-code">rgb(249, 247, 243)</x:String>
   <!-- token face-sunk -->
   <Color x:Key="FaceSunk">#F1EEE8</Color>
   <SolidColorBrush x:Key="FaceSunkBrush" Color="{StaticResource FaceSunk}" />
+  <x:String x:Key="token:--face-sunk">rgb(241, 238, 232)</x:String>
   <!-- token faint -->
   <Color x:Key="Faint">#666A63</Color>
   <SolidColorBrush x:Key="FaintBrush" Color="{StaticResource Faint}" />
+  <x:String x:Key="token:--faint">rgb(102, 106, 99)</x:String>
   <!-- token float -->
   <Color x:Key="Float">#FFFFFF</Color>
   <SolidColorBrush x:Key="FloatBrush" Color="{StaticResource Float}" />
+  <x:String x:Key="token:--float">rgb(255, 255, 255)</x:String>
   <!-- token float-hi -->
   <Color x:Key="FloatHi">#F1F1ED</Color>
   <SolidColorBrush x:Key="FloatHiBrush" Color="{StaticResource FloatHi}" />
+  <x:String x:Key="token:--float-hi">rgb(241, 241, 237)</x:String>
   <!-- token focus -->
   <Color x:Key="Focus">#68736D</Color>
   <SolidColorBrush x:Key="FocusBrush" Color="{StaticResource Focus}" />
+  <x:String x:Key="token:--focus">rgb(104, 115, 109)</x:String>
   <!-- token fs-display -->
   <x:Double x:Key="FsDisplay">22</x:Double>
+  <x:String x:Key="token:--fs-display">22px</x:String>
   <!-- token fs-lead -->
   <x:Double x:Key="FsLead">14</x:Double>
+  <x:String x:Key="token:--fs-lead">14px</x:String>
   <!-- token fs-meta -->
   <x:Double x:Key="FsMeta">12</x:Double>
+  <x:String x:Key="token:--fs-meta">12px</x:String>
   <!-- token fs-micro -->
   <x:Double x:Key="FsMicro">11</x:Double>
+  <x:String x:Key="token:--fs-micro">11px</x:String>
   <!-- token fs-title -->
   <x:Double x:Key="FsTitle">17</x:Double>
+  <x:String x:Key="token:--fs-title">17px</x:String>
   <!-- token fs-ui -->
   <x:Double x:Key="FsUi">13</x:Double>
+  <x:String x:Key="token:--fs-ui">13px</x:String>
   <!-- token ghost -->
   <Color x:Key="Ghost">#666A63</Color>
   <SolidColorBrush x:Key="GhostBrush" Color="{StaticResource Ghost}" />
+  <x:String x:Key="token:--ghost">rgb(102, 106, 99)</x:String>
   <!-- token grain -->
   <x:String x:Key="Grain">url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E&quot;)</x:String>
+  <x:String x:Key="token:--grain">url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E&quot;)</x:String>
   <!-- token grain-a -->
   <x:Double x:Key="GrainA">0.026</x:Double>
+  <x:String x:Key="token:--grain-a">0.026</x:String>
   <!-- token hair -->
   <Color x:Key="Hair">#E2E3DE</Color>
   <SolidColorBrush x:Key="HairBrush" Color="{StaticResource Hair}" />
+  <x:String x:Key="token:--hair">rgb(226, 227, 222)</x:String>
   <!-- token halo -->
   <Color x:Key="Halo">#566AA9</Color>
   <SolidColorBrush x:Key="HaloBrush" Color="{StaticResource Halo}" />
+  <x:String x:Key="token:--halo">rgb(86, 106, 169)</x:String>
   <!-- token io-down -->
   <Color x:Key="IoDown">#E87BA4</Color>
   <SolidColorBrush x:Key="IoDownBrush" Color="{StaticResource IoDown}" />
+  <x:String x:Key="token:--io-down">rgb(232, 123, 164)</x:String>
   <!-- token io-up -->
   <Color x:Key="IoUp">#2A78D6</Color>
   <SolidColorBrush x:Key="IoUpBrush" Color="{StaticResource IoUp}" />
+  <x:String x:Key="token:--io-up">rgb(42, 120, 214)</x:String>
   <!-- token label-agent -->
   <Color x:Key="LabelAgent">#007282</Color>
   <SolidColorBrush x:Key="LabelAgentBrush" Color="{StaticResource LabelAgent}" />
+  <x:String x:Key="token:--label-agent">rgb(0, 114, 130)</x:String>
   <!-- token label-agent-wash -->
   <Color x:Key="LabelAgentWash">#DFF2F5</Color>
   <SolidColorBrush x:Key="LabelAgentWashBrush" Color="{StaticResource LabelAgentWash}" />
+  <x:String x:Key="token:--label-agent-wash">rgb(223, 242, 245)</x:String>
   <!-- token link -->
   <Color x:Key="Link">#566AA9</Color>
   <SolidColorBrush x:Key="LinkBrush" Color="{StaticResource Link}" />
+  <x:String x:Key="token:--link">rgb(86, 106, 169)</x:String>
   <!-- token lit -->
   <x:String x:Key="Lit">inset 0 1px 0 #ffffff0e</x:String>
+  <x:String x:Key="token:--lit">inset 0 1px 0 #ffffff0e</x:String>
   <!-- token m-card -->
   <x:String x:Key="MCard">.18s cubic-bezier(.16, 1, .3, 1)</x:String>
+  <x:String x:Key="token:--m-card">.18s cubic-bezier(.16, 1, .3, 1)</x:String>
   <!-- token m-exit -->
   <x:String x:Key="MExit">.12s cubic-bezier(.55, 0, 1, .45)</x:String>
+  <x:String x:Key="token:--m-exit">.12s cubic-bezier(.55, 0, 1, .45)</x:String>
   <!-- token m-line -->
   <x:String x:Key="MLine">.12s cubic-bezier(.16, 1, .3, 1)</x:String>
+  <x:String x:Key="token:--m-line">.12s cubic-bezier(.16, 1, .3, 1)</x:String>
   <!-- token m-panel -->
   <x:String x:Key="MPanel">.26s cubic-bezier(.16, 1, .3, 1)</x:String>
+  <x:String x:Key="token:--m-panel">.26s cubic-bezier(.16, 1, .3, 1)</x:String>
   <!-- token m-step -->
   <sys:TimeSpan x:Key="MStep">0:0:0.036</sys:TimeSpan>
+  <x:String x:Key="token:--m-step">36ms</x:String>
   <!-- token mono -->
   <x:String x:Key="Mono">&quot;IBM Plex Mono var&quot;, &quot;Noto Studio&quot;, &quot;Noto Studio Full&quot;, Consolas, monospace</x:String>
+  <x:String x:Key="token:--mono">&quot;IBM Plex Mono var&quot;, &quot;Noto Studio&quot;, &quot;Noto Studio Full&quot;, Consolas, monospace</x:String>
   <!-- token muted -->
   <Color x:Key="Muted">#5E625C</Color>
   <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource Muted}" />
+  <x:String x:Key="token:--muted">rgb(94, 98, 92)</x:String>
   <!-- token nav-open -->
   <x:Double x:Key="NavOpen">48</x:Double>
+  <x:String x:Key="token:--nav-open">48px</x:String>
   <!-- token nav-w -->
   <x:Double x:Key="NavW">0</x:Double>
+  <x:String x:Key="token:--nav-w">0px</x:String>
   <!-- token net -->
   <Color x:Key="Net">#566AA9</Color>
   <SolidColorBrush x:Key="NetBrush" Color="{StaticResource Net}" />
+  <x:String x:Key="token:--net">rgb(86, 106, 169)</x:String>
   <!-- token net-ink -->
   <Color x:Key="NetInk">#2B46A1</Color>
   <SolidColorBrush x:Key="NetInkBrush" Color="{StaticResource NetInk}" />
+  <x:String x:Key="token:--net-ink">rgb(43, 70, 161)</x:String>
   <!-- token net-wash -->
   <Color x:Key="NetWash">#EEF1FA</Color>
   <SolidColorBrush x:Key="NetWashBrush" Color="{StaticResource NetWash}" />
+  <x:String x:Key="token:--net-wash">rgb(238, 241, 250)</x:String>
   <!-- token ok -->
   <Color x:Key="Ok">#2B7A4B</Color>
   <SolidColorBrush x:Key="OkBrush" Color="{StaticResource Ok}" />
+  <x:String x:Key="token:--ok">rgb(43, 122, 75)</x:String>
   <!-- token ok-ink -->
   <Color x:Key="OkInk">#286F44</Color>
   <SolidColorBrush x:Key="OkInkBrush" Color="{StaticResource OkInk}" />
+  <x:String x:Key="token:--ok-ink">rgb(40, 111, 68)</x:String>
   <!-- token overlay -->
   <Color x:Key="Overlay">#E9E9E5</Color>
   <SolidColorBrush x:Key="OverlayBrush" Color="{StaticResource Overlay}" />
+  <x:String x:Key="token:--overlay">rgb(233, 233, 229)</x:String>
   <!-- token p -->
   <x:Double x:Key="P">0</x:Double>
+  <x:String x:Key="token:--p">0px</x:String>
   <!-- token page -->
   <Color x:Key="Page">#F0F0ED</Color>
   <SolidColorBrush x:Key="PageBrush" Color="{StaticResource Page}" />
+  <x:String x:Key="token:--page">rgb(240, 240, 237)</x:String>
   <!-- token pane-gutter -->
   <x:Double x:Key="PaneGutter">12</x:Double>
+  <x:String x:Key="token:--pane-gutter">12px</x:String>
   <!-- token press -->
   <x:String x:Key="Press">translateY(1px) scale(.985)</x:String>
+  <x:String x:Key="token:--press">translateY(1px) scale(.985)</x:String>
   <!-- token press-wash -->
   <Color x:Key="PressWash">#2A2A2A12</Color>
   <SolidColorBrush x:Key="PressWashBrush" Color="{StaticResource PressWash}" />
+  <x:String x:Key="token:--press-wash">rgba(42, 42, 42, 0.071)</x:String>
   <!-- token r-lg -->
   <CornerRadius x:Key="RLg">15</CornerRadius>
+  <x:String x:Key="token:--r-lg">15px</x:String>
   <!-- token r-md -->
   <CornerRadius x:Key="RMd">10</CornerRadius>
+  <x:String x:Key="token:--r-md">10px</x:String>
   <!-- token r-pill -->
   <CornerRadius x:Key="RPill">999</CornerRadius>
+  <x:String x:Key="token:--r-pill">999px</x:String>
   <!-- token r-sm -->
   <CornerRadius x:Key="RSm">7</CornerRadius>
+  <x:String x:Key="token:--r-sm">7px</x:String>
   <!-- token r-xs -->
   <CornerRadius x:Key="RXs">5</CornerRadius>
+  <x:String x:Key="token:--r-xs">5px</x:String>
   <!-- token rail-open -->
   <x:Double x:Key="RailOpen">264</x:Double>
+  <x:String x:Key="token:--rail-open">264px</x:String>
   <!-- token rail-w -->
   <x:Double x:Key="RailW">264</x:Double>
+  <x:String x:Key="token:--rail-w">264px</x:String>
   <!-- token raised -->
   <Color x:Key="Raised">#FFFFFF</Color>
   <SolidColorBrush x:Key="RaisedBrush" Color="{StaticResource Raised}" />
+  <x:String x:Key="token:--raised">rgb(255, 255, 255)</x:String>
   <!-- token read -->
   <x:Double x:Key="Read">14</x:Double>
+  <x:String x:Key="token:--read">14px</x:String>
   <!-- token read-scale -->
   <x:Double x:Key="ReadScale">1</x:Double>
+  <x:String x:Key="token:--read-scale">1</x:String>
   <!-- token reading-surface -->
   <Color x:Key="ReadingSurface">#FAFAF8</Color>
   <SolidColorBrush x:Key="ReadingSurfaceBrush" Color="{StaticResource ReadingSurface}" />
+  <x:String x:Key="token:--reading-surface">rgb(250, 250, 248)</x:String>
   <!-- token shade -->
   <Color x:Key="Shade">#000000</Color>
   <SolidColorBrush x:Key="ShadeBrush" Color="{StaticResource Shade}" />
+  <x:String x:Key="token:--shade">rgb(0, 0, 0)</x:String>
   <!-- token shadow-float -->
   <x:String x:Key="ShadowFloat">inset 0 1px 0 #ffffffe6, 0 16px 40px -14px #171e2d33, 0 4px 12px -8px #171e2d24</x:String>
+  <x:String x:Key="token:--shadow-float">inset 0 1px 0 #ffffffe6, 0 16px 40px -14px #171e2d33, 0 4px 12px -8px #171e2d24</x:String>
   <!-- token side-open -->
   <x:Double x:Key="SideOpen">316</x:Double>
+  <x:String x:Key="token:--side-open">316px</x:String>
   <!-- token side-w -->
   <x:Double x:Key="SideW">316</x:Double>
+  <x:String x:Key="token:--side-w">316px</x:String>
   <!-- token sp-1 -->
   <x:Double x:Key="Sp1">2</x:Double>
+  <x:String x:Key="token:--sp-1">2px</x:String>
   <!-- token sp-2 -->
   <x:Double x:Key="Sp2">4</x:Double>
+  <x:String x:Key="token:--sp-2">4px</x:String>
   <!-- token sp-3 -->
   <x:Double x:Key="Sp3">6</x:Double>
+  <x:String x:Key="token:--sp-3">6px</x:String>
   <!-- token sp-4 -->
   <x:Double x:Key="Sp4">8</x:Double>
+  <x:String x:Key="token:--sp-4">8px</x:String>
   <!-- token sp-5 -->
   <x:Double x:Key="Sp5">10</x:Double>
+  <x:String x:Key="token:--sp-5">10px</x:String>
   <!-- token sp-6 -->
   <x:Double x:Key="Sp6">12</x:Double>
+  <x:String x:Key="token:--sp-6">12px</x:String>
   <!-- token sp-7 -->
   <x:Double x:Key="Sp7">16</x:Double>
+  <x:String x:Key="token:--sp-7">16px</x:String>
   <!-- token sp-8 -->
   <x:Double x:Key="Sp8">24</x:Double>
+  <x:String x:Key="token:--sp-8">24px</x:String>
   <!-- token srail-w -->
   <x:Double x:Key="SrailW">54</x:Double>
+  <x:String x:Key="token:--srail-w">54px</x:String>
   <!-- token studio-grid -->
   <Color x:Key="StudioGrid">#465D8B0B</Color>
   <SolidColorBrush x:Key="StudioGridBrush" Color="{StaticResource StudioGrid}" />
+  <x:String x:Key="token:--studio-grid">rgba(70, 93, 139, 0.043)</x:String>
   <!-- token studio-light-primary -->
   <Color x:Key="StudioLightPrimary">#6380D524</Color>
   <SolidColorBrush x:Key="StudioLightPrimaryBrush" Color="{StaticResource StudioLightPrimary}" />
+  <x:String x:Key="token:--studio-light-primary">rgba(99, 128, 213, 0.141)</x:String>
   <!-- token studio-light-secondary -->
   <Color x:Key="StudioLightSecondary">#5EA19413</Color>
   <SolidColorBrush x:Key="StudioLightSecondaryBrush" Color="{StaticResource StudioLightSecondary}" />
+  <x:String x:Key="token:--studio-light-secondary">rgba(94, 161, 148, 0.075)</x:String>
   <!-- token studio-light-warm -->
   <Color x:Key="StudioLightWarm">#DD99550F</Color>
   <SolidColorBrush x:Key="StudioLightWarmBrush" Color="{StaticResource StudioLightWarm}" />
+  <x:String x:Key="token:--studio-light-warm">rgba(221, 153, 85, 0.059)</x:String>
   <!-- token sunk -->
   <x:String x:Key="Sunk">inset 0 1px 2px #00000029</x:String>
+  <x:String x:Key="token:--sunk">inset 0 1px 2px #00000029</x:String>
   <!-- token surface -->
   <Color x:Key="Surface">#FAFAF8</Color>
   <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}" />
+  <x:String x:Key="token:--surface">rgb(250, 250, 248)</x:String>
   <!-- token syn-fn -->
   <Color x:Key="SynFn">#1657A1</Color>
   <SolidColorBrush x:Key="SynFnBrush" Color="{StaticResource SynFn}" />
+  <x:String x:Key="token:--syn-fn">rgb(22, 87, 161)</x:String>
   <!-- token syn-key -->
   <Color x:Key="SynKey">#703D9F</Color>
   <SolidColorBrush x:Key="SynKeyBrush" Color="{StaticResource SynKey}" />
+  <x:String x:Key="token:--syn-key">rgb(112, 61, 159)</x:String>
   <!-- token syn-num -->
   <Color x:Key="SynNum">#964D00</Color>
   <SolidColorBrush x:Key="SynNumBrush" Color="{StaticResource SynNum}" />
+  <x:String x:Key="token:--syn-num">rgb(150, 77, 0)</x:String>
   <!-- token syn-str -->
   <Color x:Key="SynStr">#1E6534</Color>
   <SolidColorBrush x:Key="SynStrBrush" Color="{StaticResource SynStr}" />
+  <x:String x:Key="token:--syn-str">rgb(30, 101, 52)</x:String>
   <!-- token t-card -->
   <sys:TimeSpan x:Key="TCard">0:0:0.180</sys:TimeSpan>
+  <x:String x:Key="token:--t-card">.18s</x:String>
   <!-- token t-line -->
   <sys:TimeSpan x:Key="TLine">0:0:0.120</sys:TimeSpan>
+  <x:String x:Key="token:--t-line">.12s</x:String>
   <!-- token t-live -->
   <sys:TimeSpan x:Key="TLive">0:0:0.600</sys:TimeSpan>
+  <x:String x:Key="token:--t-live">.6s</x:String>
   <!-- token t-panel -->
   <sys:TimeSpan x:Key="TPanel">0:0:0.260</sys:TimeSpan>
+  <x:String x:Key="token:--t-panel">.26s</x:String>
   <!-- token t-press -->
   <sys:TimeSpan x:Key="TPress">0:0:0.060</sys:TimeSpan>
+  <x:String x:Key="token:--t-press">60ms</x:String>
   <!-- token text -->
   <Color x:Key="Text">#292B29</Color>
   <SolidColorBrush x:Key="TextBrush" Color="{StaticResource Text}" />
+  <x:String x:Key="token:--text">rgb(41, 43, 41)</x:String>
   <!-- token tip-delay -->
   <sys:TimeSpan x:Key="TipDelay">0:0:0.300</sys:TimeSpan>
+  <x:String x:Key="token:--tip-delay">.3s</x:String>
   <!-- token track-cap -->
   <x:Double x:Key="TrackCap">1.68</x:Double>
+  <x:String x:Key="token:--track-cap">1.68px</x:String>
   <!-- token track-display -->
   <x:String x:Key="TrackDisplay">-.006em</x:String>
+  <x:String x:Key="token:--track-display">-.006em</x:String>
   <!-- token track-lead -->
   <x:Double x:Key="TrackLead">0.84</x:Double>
+  <x:String x:Key="token:--track-lead">0.84px</x:String>
   <!-- token track-tight -->
   <x:String x:Key="TrackTight">-.02em</x:String>
+  <x:String x:Key="token:--track-tight">-.02em</x:String>
   <!-- token ui -->
   <x:String x:Key="Ui">&quot;Inter Studio&quot;, &quot;Noto Studio&quot;, &quot;Noto Studio Full&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei UI&quot;, system-ui, sans-serif</x:String>
+  <x:String x:Key="token:--ui">&quot;Inter Studio&quot;, &quot;Noto Studio&quot;, &quot;Noto Studio Full&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei UI&quot;, system-ui, sans-serif</x:String>
   <!-- token w-med -->
   <x:Double x:Key="WMed">1</x:Double>
+  <x:String x:Key="token:--w-med">1</x:String>
   <!-- token w-read -->
   <x:Double x:Key="WRead">1</x:Double>
+  <x:String x:Key="token:--w-read">1</x:String>
   <!-- token w-reg -->
   <x:Double x:Key="WReg">1</x:Double>
+  <x:String x:Key="token:--w-reg">1</x:String>
   <!-- token w-semi -->
   <x:Double x:Key="WSemi">1</x:Double>
+  <x:String x:Key="token:--w-semi">1</x:String>
   <!-- token warn -->
   <Color x:Key="Warn">#B16039</Color>
   <SolidColorBrush x:Key="WarnBrush" Color="{StaticResource Warn}" />
+  <x:String x:Key="token:--warn">rgb(177, 96, 57)</x:String>
   <!-- token warn-ink -->
   <Color x:Key="WarnInk">#9C4C23</Color>
   <SolidColorBrush x:Key="WarnInkBrush" Color="{StaticResource WarnInk}" />
+  <x:String x:Key="token:--warn-ink">rgb(156, 76, 35)</x:String>
   <!-- token wide -->
   <x:String x:Key="Wide">min(100%, 1120px)</x:String>
+  <x:String x:Key="token:--wide">min(100%, 1120px)</x:String>
   <!-- token win-ar -->
   <x:Double x:Key="WinAr">1</x:Double>
+  <x:String x:Key="token:--win-ar">1</x:String>
   <!-- token y-card -->
   <x:Double x:Key="YCard">11</x:Double>
+  <x:String x:Key="token:--y-card">11px</x:String>
   <!-- token y-close -->
   <x:Double x:Key="YClose">4</x:Double>
+  <x:String x:Key="token:--y-close">4px</x:String>
   <!-- token y-line -->
   <x:Double x:Key="YLine">5</x:Double>
+  <x:String x:Key="token:--y-line">5px</x:String>
   <!-- token y-panel -->
   <x:Double x:Key="YPanel">17</x:Double>
+  <x:String x:Key="token:--y-panel">17px</x:String>
   <!-- token y-say -->
   <x:Double x:Key="YSay">21</x:Double>
+  <x:String x:Key="token:--y-say">21px</x:String>
     </ResourceDictionary>
     <ResourceDictionary x:Key="Dark">
   <!-- 145 tokens captured from the reference frontend (dark). -->
   <!-- token accent -->
   <Color x:Key="Accent">#D8D9D4</Color>
   <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}" />
+  <x:String x:Key="token:--accent">rgb(216, 217, 212)</x:String>
   <!-- token accent-fg -->
   <Color x:Key="AccentFg">#171817</Color>
   <SolidColorBrush x:Key="AccentFgBrush" Color="{StaticResource AccentFg}" />
+  <x:String x:Key="token:--accent-fg">rgb(23, 24, 23)</x:String>
   <!-- token accent-ink -->
   <Color x:Key="AccentInk">#E7E8E3</Color>
   <SolidColorBrush x:Key="AccentInkBrush" Color="{StaticResource AccentInk}" />
+  <x:String x:Key="token:--accent-ink">rgb(231, 232, 227)</x:String>
   <!-- token accent-wash -->
   <Color x:Key="AccentWash">#292A27</Color>
   <SolidColorBrush x:Key="AccentWashBrush" Color="{StaticResource AccentWash}" />
+  <x:String x:Key="token:--accent-wash">rgb(41, 42, 39)</x:String>
   <!-- token activity-scale -->
   <x:Double x:Key="ActivityScale">1</x:Double>
+  <x:String x:Key="token:--activity-scale">1</x:String>
   <!-- token add -->
   <Color x:Key="Add">#5BB67F</Color>
   <SolidColorBrush x:Key="AddBrush" Color="{StaticResource Add}" />
+  <x:String x:Key="token:--add">rgb(91, 182, 127)</x:String>
   <!-- token agent-1 -->
   <Color x:Key="Agent1">#7C5CD6</Color>
   <SolidColorBrush x:Key="Agent1Brush" Color="{StaticResource Agent1}" />
+  <x:String x:Key="token:--agent-1">rgb(124, 92, 214)</x:String>
   <!-- token agent-2 -->
   <Color x:Key="Agent2">#2F9E6E</Color>
   <SolidColorBrush x:Key="Agent2Brush" Color="{StaticResource Agent2}" />
+  <x:String x:Key="token:--agent-2">rgb(47, 158, 110)</x:String>
   <!-- token agent-3 -->
   <Color x:Key="Agent3">#C27A1D</Color>
   <SolidColorBrush x:Key="Agent3Brush" Color="{StaticResource Agent3}" />
+  <x:String x:Key="token:--agent-3">rgb(194, 122, 29)</x:String>
   <!-- token border -->
   <Color x:Key="Border">#30322E</Color>
   <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource Border}" />
+  <x:String x:Key="token:--border">rgb(48, 50, 46)</x:String>
   <!-- token brand -->
   <Color x:Key="Brand">#8FA5E8</Color>
   <SolidColorBrush x:Key="BrandBrush" Color="{StaticResource Brand}" />
+  <x:String x:Key="token:--brand">rgb(143, 165, 232)</x:String>
   <!-- token brand-wash -->
   <Color x:Key="BrandWash">#202635</Color>
   <SolidColorBrush x:Key="BrandWashBrush" Color="{StaticResource BrandWash}" />
+  <x:String x:Key="token:--brand-wash">rgb(32, 38, 53)</x:String>
   <!-- token call-gap -->
   <x:Double x:Key="CallGap">14</x:Double>
+  <x:String x:Key="token:--call-gap">14px</x:String>
   <!-- token call-sym -->
   <x:Double x:Key="CallSym">28</x:Double>
+  <x:String x:Key="token:--call-sym">28px</x:String>
   <!-- token cat-1 -->
   <Color x:Key="Cat1">#3987E5</Color>
   <SolidColorBrush x:Key="Cat1Brush" Color="{StaticResource Cat1}" />
+  <x:String x:Key="token:--cat-1">rgb(57, 135, 229)</x:String>
   <!-- token cat-2 -->
   <Color x:Key="Cat2">#D95926</Color>
   <SolidColorBrush x:Key="Cat2Brush" Color="{StaticResource Cat2}" />
+  <x:String x:Key="token:--cat-2">rgb(217, 89, 38)</x:String>
   <!-- token cat-3 -->
   <Color x:Key="Cat3">#199E70</Color>
   <SolidColorBrush x:Key="Cat3Brush" Color="{StaticResource Cat3}" />
+  <x:String x:Key="token:--cat-3">rgb(25, 158, 112)</x:String>
   <!-- token cat-4 -->
   <Color x:Key="Cat4">#C98500</Color>
   <SolidColorBrush x:Key="Cat4Brush" Color="{StaticResource Cat4}" />
+  <x:String x:Key="token:--cat-4">rgb(201, 133, 0)</x:String>
   <!-- token cat-5 -->
   <Color x:Key="Cat5">#D55181</Color>
   <SolidColorBrush x:Key="Cat5Brush" Color="{StaticResource Cat5}" />
+  <x:String x:Key="token:--cat-5">rgb(213, 81, 129)</x:String>
   <!-- token cat-6 -->
   <Color x:Key="Cat6">#9A7CEC</Color>
   <SolidColorBrush x:Key="Cat6Brush" Color="{StaticResource Cat6}" />
+  <x:String x:Key="token:--cat-6">rgb(154, 124, 236)</x:String>
   <!-- token chev -->
   <x:String x:Key="Chev">url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5'/%3E%3C/svg%3E&quot;)</x:String>
+  <x:String x:Key="token:--chev">url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5'/%3E%3C/svg%3E&quot;)</x:String>
   <!-- token close-h -->
   <x:Double x:Key="CloseH">26</x:Double>
+  <x:String x:Key="token:--close-h">26px</x:String>
   <!-- token column -->
   <x:Double x:Key="Column">760</x:Double>
+  <x:String x:Key="token:--column">760px</x:String>
   <!-- token compose-sweep -->
   <x:String x:Key="ComposeSweep">0deg</x:String>
+  <x:String x:Key="token:--compose-sweep">0deg</x:String>
   <!-- token default-accent -->
   <Color x:Key="DefaultAccent">#D8D9D4</Color>
   <SolidColorBrush x:Key="DefaultAccentBrush" Color="{StaticResource DefaultAccent}" />
+  <x:String x:Key="token:--default-accent">rgb(216, 217, 212)</x:String>
   <!-- token default-border -->
   <Color x:Key="DefaultBorder">#30322E</Color>
   <SolidColorBrush x:Key="DefaultBorderBrush" Color="{StaticResource DefaultBorder}" />
+  <x:String x:Key="token:--default-border">rgb(48, 50, 46)</x:String>
   <!-- token default-dim -->
   <Color x:Key="DefaultDim">#B4B7B0</Color>
   <SolidColorBrush x:Key="DefaultDimBrush" Color="{StaticResource DefaultDim}" />
+  <x:String x:Key="token:--default-dim">rgb(180, 183, 176)</x:String>
   <!-- token default-page -->
   <Color x:Key="DefaultPage">#151615</Color>
   <SolidColorBrush x:Key="DefaultPageBrush" Color="{StaticResource DefaultPage}" />
+  <x:String x:Key="token:--default-page">rgb(21, 22, 21)</x:String>
   <!-- token default-panel -->
   <Color x:Key="DefaultPanel">#1D1E1C</Color>
   <SolidColorBrush x:Key="DefaultPanelBrush" Color="{StaticResource DefaultPanel}" />
+  <x:String x:Key="token:--default-panel">rgb(29, 30, 28)</x:String>
   <!-- token default-surface -->
   <Color x:Key="DefaultSurface">#181918</Color>
   <SolidColorBrush x:Key="DefaultSurfaceBrush" Color="{StaticResource DefaultSurface}" />
+  <x:String x:Key="token:--default-surface">rgb(24, 25, 24)</x:String>
   <!-- token default-text -->
   <Color x:Key="DefaultText">#E7E8E3</Color>
   <SolidColorBrush x:Key="DefaultTextBrush" Color="{StaticResource DefaultText}" />
+  <x:String x:Key="token:--default-text">rgb(231, 232, 227)</x:String>
   <!-- token del -->
   <Color x:Key="Del">#E16A60</Color>
   <SolidColorBrush x:Key="DelBrush" Color="{StaticResource Del}" />
+  <x:String x:Key="token:--del">rgb(225, 106, 96)</x:String>
   <!-- token deleg -->
   <Color x:Key="Deleg">#32AABC</Color>
   <SolidColorBrush x:Key="DelegBrush" Color="{StaticResource Deleg}" />
+  <x:String x:Key="token:--deleg">rgb(50, 170, 188)</x:String>
   <!-- token deleg-wash -->
   <Color x:Key="DelegWash">#0A1B1E</Color>
   <SolidColorBrush x:Key="DelegWashBrush" Color="{StaticResource DelegWash}" />
+  <x:String x:Key="token:--deleg-wash">rgb(10, 27, 30)</x:String>
   <!-- token doc -->
   <x:String x:Key="Doc">min(100%, 760px)</x:String>
+  <x:String x:Key="token:--doc">min(100%, 760px)</x:String>
   <!-- token dock-left-min -->
   <x:Double x:Key="DockLeftMin">236</x:Double>
+  <x:String x:Key="token:--dock-left-min">236px</x:String>
   <!-- token dock-open -->
   <x:Double x:Key="DockOpen">520</x:Double>
+  <x:String x:Key="token:--dock-open">520px</x:String>
   <!-- token dock-w -->
   <x:Double x:Key="DockW">520</x:Double>
+  <x:String x:Key="token:--dock-w">520px</x:String>
   <!-- token ease -->
   <x:String x:Key="Ease">cubic-bezier(.2, .72, .2, 1)</x:String>
+  <x:String x:Key="token:--ease">cubic-bezier(.2, .72, .2, 1)</x:String>
   <!-- token ease-in -->
   <x:String x:Key="EaseIn">cubic-bezier(.55, 0, 1, .45)</x:String>
+  <x:String x:Key="token:--ease-in">cubic-bezier(.55, 0, 1, .45)</x:String>
   <!-- token ease-out -->
   <x:String x:Key="EaseOut">cubic-bezier(.16, 1, .3, 1)</x:String>
+  <x:String x:Key="token:--ease-out">cubic-bezier(.16, 1, .3, 1)</x:String>
   <!-- token ease-spring -->
   <x:String x:Key="EaseSpring">linear(0, .006, .025 2.8%, .101 6.1%, .539 18.9%, .721 25.3%, .849 31.5%, .937 38.1%, .968 41.8%, .991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 84.2%, 1)</x:String>
+  <x:String x:Key="token:--ease-spring">linear(0, .006, .025 2.8%, .101 6.1%, .539 18.9%, .721 25.3%, .849 31.5%, .937 38.1%, .968 41.8%, .991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 84.2%, 1)</x:String>
   <!-- token err -->
   <Color x:Key="Err">#E16A60</Color>
   <SolidColorBrush x:Key="ErrBrush" Color="{StaticResource Err}" />
+  <x:String x:Key="token:--err">rgb(225, 106, 96)</x:String>
   <!-- token err-fg -->
   <Color x:Key="ErrFg">#1A0604</Color>
   <SolidColorBrush x:Key="ErrFgBrush" Color="{StaticResource ErrFg}" />
+  <x:String x:Key="token:--err-fg">rgb(26, 6, 4)</x:String>
   <!-- token err-ink -->
   <Color x:Key="ErrInk">#F1786D</Color>
   <SolidColorBrush x:Key="ErrInkBrush" Color="{StaticResource ErrInk}" />
+  <x:String x:Key="token:--err-ink">rgb(241, 120, 109)</x:String>
   <!-- token face-code -->
   <Color x:Key="FaceCode">#0A0E15</Color>
   <SolidColorBrush x:Key="FaceCodeBrush" Color="{StaticResource FaceCode}" />
+  <x:String x:Key="token:--face-code">rgb(10, 14, 21)</x:String>
   <!-- token face-sunk -->
   <Color x:Key="FaceSunk">#060A0F</Color>
   <SolidColorBrush x:Key="FaceSunkBrush" Color="{StaticResource FaceSunk}" />
+  <x:String x:Key="token:--face-sunk">rgb(6, 10, 15)</x:String>
   <!-- token faint -->
   <Color x:Key="Faint">#8E9289</Color>
   <SolidColorBrush x:Key="FaintBrush" Color="{StaticResource Faint}" />
+  <x:String x:Key="token:--faint">rgb(142, 146, 137)</x:String>
   <!-- token float -->
   <Color x:Key="Float">#20211F</Color>
   <SolidColorBrush x:Key="FloatBrush" Color="{StaticResource Float}" />
+  <x:String x:Key="token:--float">rgb(32, 33, 31)</x:String>
   <!-- token float-hi -->
   <Color x:Key="FloatHi">#292B28</Color>
   <SolidColorBrush x:Key="FloatHiBrush" Color="{StaticResource FloatHi}" />
+  <x:String x:Key="token:--float-hi">rgb(41, 43, 40)</x:String>
   <!-- token focus -->
   <Color x:Key="Focus">#9CA6A0</Color>
   <SolidColorBrush x:Key="FocusBrush" Color="{StaticResource Focus}" />
+  <x:String x:Key="token:--focus">rgb(156, 166, 160)</x:String>
   <!-- token fs-display -->
   <x:Double x:Key="FsDisplay">22</x:Double>
+  <x:String x:Key="token:--fs-display">22px</x:String>
   <!-- token fs-lead -->
   <x:Double x:Key="FsLead">14</x:Double>
+  <x:String x:Key="token:--fs-lead">14px</x:String>
   <!-- token fs-meta -->
   <x:Double x:Key="FsMeta">12</x:Double>
+  <x:String x:Key="token:--fs-meta">12px</x:String>
   <!-- token fs-micro -->
   <x:Double x:Key="FsMicro">11</x:Double>
+  <x:String x:Key="token:--fs-micro">11px</x:String>
   <!-- token fs-title -->
   <x:Double x:Key="FsTitle">17</x:Double>
+  <x:String x:Key="token:--fs-title">17px</x:String>
   <!-- token fs-ui -->
   <x:Double x:Key="FsUi">13</x:Double>
+  <x:String x:Key="token:--fs-ui">13px</x:String>
   <!-- token ghost -->
   <Color x:Key="Ghost">#8E9289</Color>
   <SolidColorBrush x:Key="GhostBrush" Color="{StaticResource Ghost}" />
+  <x:String x:Key="token:--ghost">rgb(142, 146, 137)</x:String>
   <!-- token grain -->
   <x:String x:Key="Grain">url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E&quot;)</x:String>
+  <x:String x:Key="token:--grain">url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E&quot;)</x:String>
   <!-- token grain-a -->
   <x:Double x:Key="GrainA">0.045</x:Double>
+  <x:String x:Key="token:--grain-a">0.045</x:String>
   <!-- token hair -->
   <Color x:Key="Hair">#272925</Color>
   <SolidColorBrush x:Key="HairBrush" Color="{StaticResource Hair}" />
+  <x:String x:Key="token:--hair">rgb(39, 41, 37)</x:String>
   <!-- token halo -->
   <Color x:Key="Halo">#8FA5E8</Color>
   <SolidColorBrush x:Key="HaloBrush" Color="{StaticResource Halo}" />
+  <x:String x:Key="token:--halo">rgb(143, 165, 232)</x:String>
   <!-- token io-down -->
   <Color x:Key="IoDown">#D55181</Color>
   <SolidColorBrush x:Key="IoDownBrush" Color="{StaticResource IoDown}" />
+  <x:String x:Key="token:--io-down">rgb(213, 81, 129)</x:String>
   <!-- token io-up -->
   <Color x:Key="IoUp">#3987E5</Color>
   <SolidColorBrush x:Key="IoUpBrush" Color="{StaticResource IoUp}" />
+  <x:String x:Key="token:--io-up">rgb(57, 135, 229)</x:String>
   <!-- token label-agent -->
   <Color x:Key="LabelAgent">#32AABC</Color>
   <SolidColorBrush x:Key="LabelAgentBrush" Color="{StaticResource LabelAgent}" />
+  <x:String x:Key="token:--label-agent">rgb(50, 170, 188)</x:String>
   <!-- token label-agent-wash -->
   <Color x:Key="LabelAgentWash">#0A1B1E</Color>
   <SolidColorBrush x:Key="LabelAgentWashBrush" Color="{StaticResource LabelAgentWash}" />
+  <x:String x:Key="token:--label-agent-wash">rgb(10, 27, 30)</x:String>
   <!-- token link -->
   <Color x:Key="Link">#8FA5E8</Color>
   <SolidColorBrush x:Key="LinkBrush" Color="{StaticResource Link}" />
+  <x:String x:Key="token:--link">rgb(143, 165, 232)</x:String>
   <!-- token lit -->
   <x:String x:Key="Lit">inset 0 1px 0 #ffffff0e</x:String>
+  <x:String x:Key="token:--lit">inset 0 1px 0 #ffffff0e</x:String>
   <!-- token m-card -->
   <x:String x:Key="MCard">.18s cubic-bezier(.16, 1, .3, 1)</x:String>
+  <x:String x:Key="token:--m-card">.18s cubic-bezier(.16, 1, .3, 1)</x:String>
   <!-- token m-exit -->
   <x:String x:Key="MExit">.12s cubic-bezier(.55, 0, 1, .45)</x:String>
+  <x:String x:Key="token:--m-exit">.12s cubic-bezier(.55, 0, 1, .45)</x:String>
   <!-- token m-line -->
   <x:String x:Key="MLine">.12s cubic-bezier(.16, 1, .3, 1)</x:String>
+  <x:String x:Key="token:--m-line">.12s cubic-bezier(.16, 1, .3, 1)</x:String>
   <!-- token m-panel -->
   <x:String x:Key="MPanel">.26s cubic-bezier(.16, 1, .3, 1)</x:String>
+  <x:String x:Key="token:--m-panel">.26s cubic-bezier(.16, 1, .3, 1)</x:String>
   <!-- token m-step -->
   <sys:TimeSpan x:Key="MStep">0:0:0.036</sys:TimeSpan>
+  <x:String x:Key="token:--m-step">36ms</x:String>
   <!-- token mono -->
   <x:String x:Key="Mono">&quot;IBM Plex Mono var&quot;, &quot;Noto Studio&quot;, &quot;Noto Studio Full&quot;, Consolas, monospace</x:String>
+  <x:String x:Key="token:--mono">&quot;IBM Plex Mono var&quot;, &quot;Noto Studio&quot;, &quot;Noto Studio Full&quot;, Consolas, monospace</x:String>
   <!-- token muted -->
   <Color x:Key="Muted">#B4B7B0</Color>
   <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource Muted}" />
+  <x:String x:Key="token:--muted">rgb(180, 183, 176)</x:String>
   <!-- token nav-open -->
   <x:Double x:Key="NavOpen">48</x:Double>
+  <x:String x:Key="token:--nav-open">48px</x:String>
   <!-- token nav-w -->
   <x:Double x:Key="NavW">0</x:Double>
+  <x:String x:Key="token:--nav-w">0px</x:String>
   <!-- token net -->
   <Color x:Key="Net">#8FA5E8</Color>
   <SolidColorBrush x:Key="NetBrush" Color="{StaticResource Net}" />
+  <x:String x:Key="token:--net">rgb(143, 165, 232)</x:String>
   <!-- token net-ink -->
   <Color x:Key="NetInk">#8FA5E8</Color>
   <SolidColorBrush x:Key="NetInkBrush" Color="{StaticResource NetInk}" />
+  <x:String x:Key="token:--net-ink">rgb(143, 165, 232)</x:String>
   <!-- token net-wash -->
   <Color x:Key="NetWash">#202635</Color>
   <SolidColorBrush x:Key="NetWashBrush" Color="{StaticResource NetWash}" />
+  <x:String x:Key="token:--net-wash">rgb(32, 38, 53)</x:String>
   <!-- token ok -->
   <Color x:Key="Ok">#5BB67F</Color>
   <SolidColorBrush x:Key="OkBrush" Color="{StaticResource Ok}" />
+  <x:String x:Key="token:--ok">rgb(91, 182, 127)</x:String>
   <!-- token ok-ink -->
   <Color x:Key="OkInk">#5BB67F</Color>
   <SolidColorBrush x:Key="OkInkBrush" Color="{StaticResource OkInk}" />
+  <x:String x:Key="token:--ok-ink">rgb(91, 182, 127)</x:String>
   <!-- token overlay -->
   <Color x:Key="Overlay">#242522</Color>
   <SolidColorBrush x:Key="OverlayBrush" Color="{StaticResource Overlay}" />
+  <x:String x:Key="token:--overlay">rgb(36, 37, 34)</x:String>
   <!-- token p -->
   <x:Double x:Key="P">0</x:Double>
+  <x:String x:Key="token:--p">0px</x:String>
   <!-- token page -->
   <Color x:Key="Page">#151615</Color>
   <SolidColorBrush x:Key="PageBrush" Color="{StaticResource Page}" />
+  <x:String x:Key="token:--page">rgb(21, 22, 21)</x:String>
   <!-- token pane-gutter -->
   <x:Double x:Key="PaneGutter">12</x:Double>
+  <x:String x:Key="token:--pane-gutter">12px</x:String>
   <!-- token press -->
   <x:String x:Key="Press">translateY(1px) scale(.985)</x:String>
+  <x:String x:Key="token:--press">translateY(1px) scale(.985)</x:String>
   <!-- token press-wash -->
   <Color x:Key="PressWash">#E3E3E312</Color>
   <SolidColorBrush x:Key="PressWashBrush" Color="{StaticResource PressWash}" />
+  <x:String x:Key="token:--press-wash">rgba(227, 227, 227, 0.071)</x:String>
   <!-- token r-lg -->
   <CornerRadius x:Key="RLg">15</CornerRadius>
+  <x:String x:Key="token:--r-lg">15px</x:String>
   <!-- token r-md -->
   <CornerRadius x:Key="RMd">10</CornerRadius>
+  <x:String x:Key="token:--r-md">10px</x:String>
   <!-- token r-pill -->
   <CornerRadius x:Key="RPill">999</CornerRadius>
+  <x:String x:Key="token:--r-pill">999px</x:String>
   <!-- token r-sm -->
   <CornerRadius x:Key="RSm">7</CornerRadius>
+  <x:String x:Key="token:--r-sm">7px</x:String>
   <!-- token r-xs -->
   <CornerRadius x:Key="RXs">5</CornerRadius>
+  <x:String x:Key="token:--r-xs">5px</x:String>
   <!-- token rail-open -->
   <x:Double x:Key="RailOpen">264</x:Double>
+  <x:String x:Key="token:--rail-open">264px</x:String>
   <!-- token rail-w -->
   <x:Double x:Key="RailW">264</x:Double>
+  <x:String x:Key="token:--rail-w">264px</x:String>
   <!-- token raised -->
   <Color x:Key="Raised">#1D1E1C</Color>
   <SolidColorBrush x:Key="RaisedBrush" Color="{StaticResource Raised}" />
+  <x:String x:Key="token:--raised">rgb(29, 30, 28)</x:String>
   <!-- token read -->
   <x:Double x:Key="Read">14</x:Double>
+  <x:String x:Key="token:--read">14px</x:String>
   <!-- token read-scale -->
   <x:Double x:Key="ReadScale">1</x:Double>
+  <x:String x:Key="token:--read-scale">1</x:String>
   <!-- token shade -->
   <Color x:Key="Shade">#000000</Color>
   <SolidColorBrush x:Key="ShadeBrush" Color="{StaticResource Shade}" />
+  <x:String x:Key="token:--shade">rgb(0, 0, 0)</x:String>
   <!-- token shadow-float -->
   <x:String x:Key="ShadowFloat">0 0 0 1px #0000006b, 0 18px 48px -18px #000000c2</x:String>
+  <x:String x:Key="token:--shadow-float">0 0 0 1px #0000006b, 0 18px 48px -18px #000000c2</x:String>
   <!-- token side-open -->
   <x:Double x:Key="SideOpen">316</x:Double>
+  <x:String x:Key="token:--side-open">316px</x:String>
   <!-- token side-w -->
   <x:Double x:Key="SideW">316</x:Double>
+  <x:String x:Key="token:--side-w">316px</x:String>
   <!-- token sp-1 -->
   <x:Double x:Key="Sp1">2</x:Double>
+  <x:String x:Key="token:--sp-1">2px</x:String>
   <!-- token sp-2 -->
   <x:Double x:Key="Sp2">4</x:Double>
+  <x:String x:Key="token:--sp-2">4px</x:String>
   <!-- token sp-3 -->
   <x:Double x:Key="Sp3">6</x:Double>
+  <x:String x:Key="token:--sp-3">6px</x:String>
   <!-- token sp-4 -->
   <x:Double x:Key="Sp4">8</x:Double>
+  <x:String x:Key="token:--sp-4">8px</x:String>
   <!-- token sp-5 -->
   <x:Double x:Key="Sp5">10</x:Double>
+  <x:String x:Key="token:--sp-5">10px</x:String>
   <!-- token sp-6 -->
   <x:Double x:Key="Sp6">12</x:Double>
+  <x:String x:Key="token:--sp-6">12px</x:String>
   <!-- token sp-7 -->
   <x:Double x:Key="Sp7">16</x:Double>
+  <x:String x:Key="token:--sp-7">16px</x:String>
   <!-- token sp-8 -->
   <x:Double x:Key="Sp8">24</x:Double>
+  <x:String x:Key="token:--sp-8">24px</x:String>
   <!-- token srail-w -->
   <x:Double x:Key="SrailW">54</x:Double>
+  <x:String x:Key="token:--srail-w">54px</x:String>
   <!-- token studio-grid -->
   <Color x:Key="StudioGrid">#AAAAE309</Color>
   <SolidColorBrush x:Key="StudioGridBrush" Color="{StaticResource StudioGrid}" />
+  <x:String x:Key="token:--studio-grid">rgba(170, 170, 227, 0.035)</x:String>
   <!-- token studio-light-primary -->
   <Color x:Key="StudioLightPrimary">#5974D82E</Color>
   <SolidColorBrush x:Key="StudioLightPrimaryBrush" Color="{StaticResource StudioLightPrimary}" />
+  <x:String x:Key="token:--studio-light-primary">rgba(89, 116, 216, 0.18)</x:String>
   <!-- token studio-light-secondary -->
   <Color x:Key="StudioLightSecondary">#59A69B17</Color>
   <SolidColorBrush x:Key="StudioLightSecondaryBrush" Color="{StaticResource StudioLightSecondary}" />
+  <x:String x:Key="token:--studio-light-secondary">rgba(89, 166, 155, 0.09)</x:String>
   <!-- token studio-light-warm -->
   <Color x:Key="StudioLightWarm">#C8925B0E</Color>
   <SolidColorBrush x:Key="StudioLightWarmBrush" Color="{StaticResource StudioLightWarm}" />
+  <x:String x:Key="token:--studio-light-warm">rgba(200, 146, 91, 0.055)</x:String>
   <!-- token sunk -->
   <x:String x:Key="Sunk">inset 0 1px 2px #00000029</x:String>
+  <x:String x:Key="token:--sunk">inset 0 1px 2px #00000029</x:String>
   <!-- token surface -->
   <Color x:Key="Surface">#181918</Color>
   <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}" />
+  <x:String x:Key="token:--surface">rgb(24, 25, 24)</x:String>
   <!-- token syn-fn -->
   <Color x:Key="SynFn">#81B4F6</Color>
   <SolidColorBrush x:Key="SynFnBrush" Color="{StaticResource SynFn}" />
+  <x:String x:Key="token:--syn-fn">rgb(129, 180, 246)</x:String>
   <!-- token syn-key -->
   <Color x:Key="SynKey">#CAA2F8</Color>
   <SolidColorBrush x:Key="SynKeyBrush" Color="{StaticResource SynKey}" />
+  <x:String x:Key="token:--syn-key">rgb(202, 162, 248)</x:String>
   <!-- token syn-num -->
   <Color x:Key="SynNum">#F1AD79</Color>
   <SolidColorBrush x:Key="SynNumBrush" Color="{StaticResource SynNum}" />
+  <x:String x:Key="token:--syn-num">rgb(241, 173, 121)</x:String>
   <!-- token syn-str -->
   <Color x:Key="SynStr">#85CB94</Color>
   <SolidColorBrush x:Key="SynStrBrush" Color="{StaticResource SynStr}" />
+  <x:String x:Key="token:--syn-str">rgb(133, 203, 148)</x:String>
   <!-- token t-card -->
   <sys:TimeSpan x:Key="TCard">0:0:0.180</sys:TimeSpan>
+  <x:String x:Key="token:--t-card">.18s</x:String>
   <!-- token t-line -->
   <sys:TimeSpan x:Key="TLine">0:0:0.120</sys:TimeSpan>
+  <x:String x:Key="token:--t-line">.12s</x:String>
   <!-- token t-live -->
   <sys:TimeSpan x:Key="TLive">0:0:0.600</sys:TimeSpan>
+  <x:String x:Key="token:--t-live">.6s</x:String>
   <!-- token t-panel -->
   <sys:TimeSpan x:Key="TPanel">0:0:0.260</sys:TimeSpan>
+  <x:String x:Key="token:--t-panel">.26s</x:String>
   <!-- token t-press -->
   <sys:TimeSpan x:Key="TPress">0:0:0.060</sys:TimeSpan>
+  <x:String x:Key="token:--t-press">60ms</x:String>
   <!-- token text -->
   <Color x:Key="Text">#E7E8E3</Color>
   <SolidColorBrush x:Key="TextBrush" Color="{StaticResource Text}" />
+  <x:String x:Key="token:--text">rgb(231, 232, 227)</x:String>
   <!-- token tip-delay -->
   <sys:TimeSpan x:Key="TipDelay">0:0:0.300</sys:TimeSpan>
+  <x:String x:Key="token:--tip-delay">.3s</x:String>
   <!-- token track-cap -->
   <x:Double x:Key="TrackCap">1.68</x:Double>
+  <x:String x:Key="token:--track-cap">1.68px</x:String>
   <!-- token track-display -->
   <x:String x:Key="TrackDisplay">-.006em</x:String>
+  <x:String x:Key="token:--track-display">-.006em</x:String>
   <!-- token track-lead -->
   <x:Double x:Key="TrackLead">0.84</x:Double>
+  <x:String x:Key="token:--track-lead">0.84px</x:String>
   <!-- token track-tight -->
   <x:String x:Key="TrackTight">-.02em</x:String>
+  <x:String x:Key="token:--track-tight">-.02em</x:String>
   <!-- token ui -->
   <x:String x:Key="Ui">&quot;Inter Studio&quot;, &quot;Noto Studio&quot;, &quot;Noto Studio Full&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei UI&quot;, system-ui, sans-serif</x:String>
+  <x:String x:Key="token:--ui">&quot;Inter Studio&quot;, &quot;Noto Studio&quot;, &quot;Noto Studio Full&quot;, &quot;PingFang SC&quot;, &quot;Microsoft YaHei UI&quot;, system-ui, sans-serif</x:String>
   <!-- token w-med -->
   <x:Double x:Key="WMed">1</x:Double>
+  <x:String x:Key="token:--w-med">1</x:String>
   <!-- token w-reg -->
   <x:Double x:Key="WReg">1</x:Double>
+  <x:String x:Key="token:--w-reg">1</x:String>
   <!-- token w-semi -->
   <x:Double x:Key="WSemi">1</x:Double>
+  <x:String x:Key="token:--w-semi">1</x:String>
   <!-- token warn -->
   <Color x:Key="Warn">#F2925E</Color>
   <SolidColorBrush x:Key="WarnBrush" Color="{StaticResource Warn}" />
+  <x:String x:Key="token:--warn">rgb(242, 146, 94)</x:String>
   <!-- token warn-ink -->
   <Color x:Key="WarnInk">#F2925E</Color>
   <SolidColorBrush x:Key="WarnInkBrush" Color="{StaticResource WarnInk}" />
+  <x:String x:Key="token:--warn-ink">rgb(242, 146, 94)</x:String>
   <!-- token wide -->
   <x:String x:Key="Wide">min(100%, 1120px)</x:String>
+  <x:String x:Key="token:--wide">min(100%, 1120px)</x:String>
   <!-- token win-ar -->
   <x:Double x:Key="WinAr">1</x:Double>
+  <x:String x:Key="token:--win-ar">1</x:String>
   <!-- token y-card -->
   <x:Double x:Key="YCard">11</x:Double>
+  <x:String x:Key="token:--y-card">11px</x:String>
   <!-- token y-close -->
   <x:Double x:Key="YClose">4</x:Double>
+  <x:String x:Key="token:--y-close">4px</x:String>
   <!-- token y-line -->
   <x:Double x:Key="YLine">5</x:Double>
+  <x:String x:Key="token:--y-line">5px</x:String>
   <!-- token y-panel -->
   <x:Double x:Key="YPanel">17</x:Double>
+  <x:String x:Key="token:--y-panel">17px</x:String>
   <!-- token y-say -->
   <x:Double x:Key="YSay">21</x:Double>
+  <x:String x:Key="token:--y-say">21px</x:String>
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

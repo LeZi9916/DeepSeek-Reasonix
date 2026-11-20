@@ -1,3 +1,4 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
 
 namespace Reasonix.Studio.Controls;
@@ -12,4 +13,15 @@ namespace Reasonix.Studio.Controls;
 /// </remarks>
 public class StudioChrome : ContentControl
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StudioChrome"/> class.
+    /// </summary>
+    /// <remarks>
+    /// The automation id is the identity the captured baseline recorded for this
+    /// region (<c>class:chrome</c>).
+    /// </remarks>
+    public StudioChrome()
+    {
+        AutomationProperties.SetAutomationId(this, "class:chrome");
+    }
 }

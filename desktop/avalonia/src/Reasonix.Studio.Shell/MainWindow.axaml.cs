@@ -36,6 +36,11 @@ public sealed partial class MainWindow : Window
     private readonly SemaphoreSlim _sending = new SemaphoreSlim(1, 1);
 
     /// <summary>
+    /// Whether opening this window starts a kernel beside it.
+    /// </summary>
+    private readonly bool _connectOnOpen;
+
+    /// <summary>
     /// The conversation, once a kernel answered.
     /// </summary>
     private SessionEngine? _engine;
@@ -44,14 +49,49 @@ public sealed partial class MainWindow : Window
     /// Initializes a new instance of the <see cref="MainWindow"/> class and loads its XAML.
     /// </summary>
     public MainWindow()
+        : this(connectOnOpen: true)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MainWindow"/> class, optionally
+    /// without a kernel.
+    /// </summary>
+    /// <param name="connectOnOpen">
+    /// Whether opening the window starts a kernel. False draws the window on the
+    /// state its caller hands it, which is what the geometry gate needs: a window
+    /// that started a kernel would replace the page under measurement with
+    /// whatever that kernel answered, including the notice that there is none.
+    /// </param>
+    public MainWindow(bool connectOnOpen)
     {
         InitializeComponent();
+
+        _connectOnOpen = connectOnOpen;
 
         Send.Click += OnSend;
         Composer.KeyDown += OnComposerKey;
         Conversation.Answered += OnAnswered;
-        Opened += OnOpened;
         Closed += OnClosed;
+
+        if (connectOnOpen)
+        {
+            Opened += OnOpened;
+        }
+    }
+
+    /// <summary>
+    /// Shows a conversation state without a kernel behind it.
+    /// </summary>
+    /// <param name="state">The state to draw.</param>
+    /// <remarks>
+    /// The geometry gate renders this window with no kernel and hands it the
+    /// conversation that was captured, because a window that started a kernel
+    /// would swap the page under measurement for whatever that kernel answered.
+    /// </remarks>
+    public void ShowState(SessionState state)
+    {
+        Conversation.Show(state);
     }
 
     /// <summary>

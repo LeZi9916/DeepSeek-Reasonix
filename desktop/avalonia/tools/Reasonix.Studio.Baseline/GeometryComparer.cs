@@ -188,6 +188,12 @@ public sealed class GeometryComparer
     /// <param name="expected">The colour the baseline recorded.</param>
     /// <param name="actual">The colour the shell resolved.</param>
     /// <returns>True when both parse to the same red, green and blue channel.</returns>
+    /// <remarks>
+    /// A fully transparent fill has no colour at all: the browser writes
+    /// <c>rgba(0, 0, 0, 0)</c> for a control that never painted, and a shell that
+    /// resolved a transparent white brush painted exactly as little. Comparing
+    /// their channels would call the same absence two different inks.
+    /// </remarks>
     private static bool ColorEquals(string expected, string actual)
     {
         var left = ParseColor(expected);
@@ -195,6 +201,11 @@ public sealed class GeometryComparer
         if (left is null || right is null)
         {
             return false;
+        }
+
+        if (left.Value.A == 0 && right.Value.A == 0)
+        {
+            return true;
         }
 
         return left.Value.R == right.Value.R
@@ -205,9 +216,12 @@ public sealed class GeometryComparer
     /// <summary>
     /// Parses a CSS colour into its channels.
     /// </summary>
-    /// <param name="value">The colour text, as <c>#rgb</c>, <c>#rrggbb</c> or <c>rgb()</c>.</param>
+    /// <param name="value">
+    /// The colour text, as <c>#rgb</c>, <c>#rrggbb</c>, <c>#rrggbbaa</c> or
+    /// <c>rgb()</c>/<c>rgba()</c>.
+    /// </param>
     /// <returns>The channels, or null when the text is in a form this does not read.</returns>
-    private static (int R, int G, int B)? ParseColor(string value)
+    private static (int R, int G, int B, int A)? ParseColor(string value)
     {
         var text = value.Trim();
         var hex = s_hexPattern.Match(text);
@@ -219,13 +233,14 @@ public sealed class GeometryComparer
                 var r = Convert.ToInt32(new string(digits[0], 2), 16);
                 var g = Convert.ToInt32(new string(digits[1], 2), 16);
                 var b = Convert.ToInt32(new string(digits[2], 2), 16);
-                return (r, g, b);
+                return (r, g, b, 255);
             }
 
             var red = Convert.ToInt32(digits.Substring(0, 2), 16);
             var green = Convert.ToInt32(digits.Substring(2, 2), 16);
             var blue = Convert.ToInt32(digits.Substring(4, 2), 16);
-            return (red, green, blue);
+            var alpha = digits.Length == 8 ? Convert.ToInt32(digits.Substring(6, 2), 16) : 255;
+            return (red, green, blue, alpha);
         }
 
         var rgb = s_rgbPattern.Match(text);
@@ -237,7 +252,11 @@ public sealed class GeometryComparer
         var rr = (int)Math.Round(double.Parse(rgb.Groups[1].Value, CultureInfo.InvariantCulture));
         var gg = (int)Math.Round(double.Parse(rgb.Groups[2].Value, CultureInfo.InvariantCulture));
         var bb = (int)Math.Round(double.Parse(rgb.Groups[3].Value, CultureInfo.InvariantCulture));
-        return (rr, gg, bb);
+        var aa = rgb.Groups[4].Success
+            ? (int)Math.Round(double.Parse(rgb.Groups[4].Value.TrimEnd('%'), CultureInfo.InvariantCulture)
+                * (rgb.Groups[4].Value.EndsWith('%') ? 2.55 : 255))
+            : 255;
+        return (rr, gg, bb, aa);
     }
 
     /// <summary>
@@ -354,6 +373,14 @@ public sealed class GeometryComparer
         var want = domain.Styles[node.Style];
         foreach (var property in _options.Properties)
         {
+            // A property the two engines express differently is not compared; the
+            // reason is recorded beside the entry rather than here, so the list
+            // stays the one place a difference is excused.
+            if (_options.Uncomparable.ContainsKey(property))
+            {
+                continue;
+            }
+
             // A property the baseline omits held the browser default, so the
             // replacement must also leave it at its default. Comparing only the
             // recorded keys would let a new explicit value pass unseen.

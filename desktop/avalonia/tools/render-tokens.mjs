@@ -121,6 +121,12 @@ function renderScheme(scheme) {
       }
       lines.push(`  <${r.element} x:Key="${r.key}">${xml(r.value)}</${r.element}>`);
     }
+
+    // The captured value itself, under the name the baseline uses. Typed
+    // resources above are what a control binds to; this is what the geometry
+    // gate compares against, and it has to be the same text the browser
+    // resolved rather than a round-trip through a Color or a Double.
+    lines.push(`  <x:String x:Key="token:${xml(name)}">${xml(value)}</x:String>`);
   }
 
   return lines;

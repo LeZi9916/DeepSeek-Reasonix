@@ -1,0 +1,19 @@
+[
+  "action:session.send#0",
+  "class:call#0",
+  "class:call#1",
+  "class:call#2",
+  "class:call#3",
+  "class:call#4",
+  "class:call#5",
+  "class:chrome#0",
+  "class:compose#0",
+  "class:crumb#0",
+  "class:pane#0",
+  "class:rail#0",
+  "class:txt#0",
+  "class:txt#1",
+  "class:txt#2",
+  "class:txt#3",
+  "role:combobox#0"
+]

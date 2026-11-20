@@ -1,8 +1,11 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
+using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Avalonia.VisualTree;
 using System;
 using System.Collections.Generic;
@@ -106,7 +109,134 @@ public sealed class GeometryExporter
             observed[key] = node;
         }
 
+        ExportTokens(observed);
+
         return observed;
+    }
+
+    /// <summary>
+    /// Copies the captured token values out of the application's resources.
+    /// </summary>
+    /// <param name="observed">The observations to add the tokens to.</param>
+    /// <remarks>
+    /// A token is not an element: it is a value the stylesheet resolved once and
+    /// every element reads. The dictionary holds each one twice — a typed
+    /// resource a control binds to, and the captured text under <c>token:</c>
+    /// — and the comparison is against the text, because a round trip through a
+    /// Color or a Double would answer a question about the type rather than about
+    /// the value the browser resolved.
+    /// </remarks>
+    private static void ExportTokens(Dictionary<string, ObservedNode> observed)
+    {
+        if (Application.Current is not { } app)
+        {
+            return;
+        }
+
+        // The dictionary declares Light and Dark; a headless application reports
+        // Default until a window asks for one, so an unresolved variant reads the
+        // light tier rather than finding nothing.
+        var variant = app.ActualThemeVariant;
+        if (variant == ThemeVariant.Default)
+        {
+            variant = ThemeVariant.Light;
+        }
+
+        foreach (var merged in app.Resources.MergedDictionaries)
+        {
+            if (merged is not ResourceDictionary dictionary)
+            {
+                continue;
+            }
+
+            var source = dictionary.ThemeDictionaries.TryGetValue(variant, out var provider)
+                && provider is ResourceDictionary themed
+                    ? themed
+                    : dictionary;
+
+            foreach (var key in source.Keys)
+            {
+                if (key is not string name
+                    || !name.StartsWith("token:", StringComparison.Ordinal)
+                    || !source.TryGetResource(name, null, out var value)
+                    || value is not string text)
+                {
+                    continue;
+                }
+
+                observed[name] = new ObservedNode { Text = text };
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reads the font family a control resolves, following inheritance.
+    /// </summary>
+    /// <param name="control">The control to read.</param>
+    /// <returns>The family the control draws its text in, or null when it draws none.</returns>
+    private static string? FamilyOf(Control control)
+    {
+        return TextElement.GetFontFamily(control)?.ToString();
+    }
+
+    /// <summary>
+    /// Reads the alignment of the content a control draws.
+    /// </summary>
+    /// <param name="control">The control to read.</param>
+    /// <returns>The CSS spelling of that alignment, or "start" when it has none.</returns>
+    /// <remarks>
+    /// CSS reports one property for both a block's text and a button's label;
+    /// Avalonia splits it into <see cref="TextBlock.TextAlignment"/> and
+    /// <see cref="ContentControl.HorizontalContentAlignment"/>, so this reads
+    /// whichever the control actually has rather than inventing a third value.
+    /// </remarks>
+    private static string AlignOf(Control control)
+    {
+        return control switch
+        {
+            TextBlock text => text.TextAlignment switch
+            {
+                TextAlignment.Center => "center",
+                TextAlignment.Right => "right",
+                TextAlignment.Justify => "justify",
+                _ => "start",
+            },
+            ContentControl content => content.HorizontalContentAlignment switch
+            {
+                HorizontalAlignment.Center => "center",
+                HorizontalAlignment.Right => "right",
+
+                // Stretch is how a control fills its slot, not how its text is
+                // aligned inside it: CSS reports `start` for that, and reading
+                // Stretch as `justify` would name a property neither side set.
+                _ => "start",
+            },
+            _ => "start",
+        };
+    }
+
+    /// <summary>
+    /// Formats a corner radius the way CSS reports a pill or a circle.
+    /// </summary>
+    /// <param name="radius">The radius the control resolves.</param>
+    /// <param name="control">The control the radius belongs to.</param>
+    /// <returns>"50%" when the radius is half the shorter side, otherwise the length.</returns>
+    /// <remarks>
+    /// The reference stylesheet asks for a circle with <c>border-radius: 50%</c>;
+    /// Avalonia takes a length, so the same shape is spelled as half the shorter
+    /// side. Reading the shape rather than the spelling is what lets the two be
+    /// compared at all.
+    /// </remarks>
+    private static string RadiusText(CornerRadius radius, Control control)
+    {
+        var shorter = Math.Min(control.Bounds.Width, control.Bounds.Height);
+        var value = Math.Max(Math.Max(radius.TopLeft, radius.TopRight), Math.Max(radius.BottomRight, radius.BottomLeft));
+        if (shorter > 0 && Math.Abs(value - (shorter / 2)) < 0.5)
+        {
+            return "50%";
+        }
+
+        return Px(radius.TopLeft);
     }
 
     /// <summary>
@@ -169,25 +299,13 @@ public sealed class GeometryExporter
                 return control.IsVisible ? "block" : "none";
 
             case "fontFamily":
-                return control is TemplatedControl templated && templated.FontFamily is { } family
-                    ? family.ToString()
-                    : null;
+                return FamilyOf(control);
 
             case "fontSize":
-                if (control is TemplatedControl sized)
-                {
-                    return Px(sized.FontSize);
-                }
-
-                return null;
+                return Px(TextElement.GetFontSize(control));
 
             case "fontWeight":
-                if (control is TemplatedControl weighted)
-                {
-                    return ((int)weighted.FontWeight).ToString(CultureInfo.InvariantCulture);
-                }
-
-                return null;
+                return ((int)TextElement.GetFontWeight(control)).ToString(CultureInfo.InvariantCulture);
 
             case "lineHeight":
                 if (control is TextBlock lined && lined.LineHeight > 0)
@@ -198,12 +316,21 @@ public sealed class GeometryExporter
                 return "normal";
 
             case "color":
-                if (control is TemplatedControl inked && inked.Foreground is ISolidColorBrush fore)
-                {
-                    return Rgb(fore.Color);
-                }
+                return TextElement.GetForeground(control) is ISolidColorBrush fore ? Rgb(fore.Color) : null;
 
-                return null;
+            case "letterSpacing":
+                // The reference frontend sets it per element; a text control here
+                // carries it as TextBlock.LetterSpacing, and anything else has none.
+                return control is TextBlock spaced
+                    ? Px(spaced.LetterSpacing)
+                    : "normal";
+
+            case "textAlign":
+                // CSS reports the horizontal alignment of the text inside its box.
+                // A button says it with HorizontalContentAlignment, a text block
+                // with TextAlignment; neither is the CSS property, so it is read
+                // from whichever one this control actually has.
+                return AlignOf(control);
 
             case "backgroundColor":
                 if (control is TemplatedControl filled && filled.Background is ISolidColorBrush back)
@@ -268,7 +395,7 @@ public sealed class GeometryExporter
             case "borderTopLeftRadius":
                 if (control is TemplatedControl rounded)
                 {
-                    return Px(rounded.CornerRadius.TopLeft);
+                    return RadiusText(rounded.CornerRadius, control);
                 }
 
                 return null;
