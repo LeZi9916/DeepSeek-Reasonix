@@ -2,7 +2,10 @@
 .gitignore text eol=lf
 .npmrc text eol=lf
 *.astro text eol=lf
+*.axaml text eol=crlf
 *.bat text eol=crlf
+*.cs text eol=crlf
+*.csproj text eol=crlf
 *.css text eol=lf
 *.go text eol=lf
 *.golden text eol=lf
@@ -17,6 +20,8 @@
 *.py text eol=lf
 *.rs text eol=lf
 *.sh text eol=lf
+*.sln text eol=crlf
+*.slnx text eol=crlf
 *.sql text eol=lf
 *.sum text eol=lf
 *.toml text eol=lf

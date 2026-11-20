@@ -26,6 +26,7 @@
 /write_heartbeat
 /catalog-detector
 /tool-surface-cache
+/wiregen
 
 # Go test/build scratch
 *.test
@@ -34,6 +35,11 @@
 coverage.out
 cpu.prof
 mem.prof
+
+# .NET build artifacts (desktop/avalonia)
+bin/
+obj/
+*.user
 
 # Wails desktop artifacts
 /desktop/build/*
