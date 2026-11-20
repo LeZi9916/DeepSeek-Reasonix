@@ -164,9 +164,9 @@ describe("the legend reads each class against the capacity, not against what is 
   // while the bar said the session was a fifth full.
   it("reports each class against the fold point, so the rows sum to the bar", () => {
     const html = draw(wide());
-    const parts = rows(html);
-    expect(parts.length).toBeGreaterThan(0);
-    const total = parts.reduce((a, p) => a + p.share, 0);
+    const taken = rows(html).filter((p) => p.label !== "空闲");
+    expect(taken.length).toBeGreaterThan(0);
+    const total = taken.reduce((a, p) => a + p.share, 0);
     // 82k used of a 160k fold point; each row is rounded on its own, so the
     // sum lands within a point or two of the bar rather than on it exactly.
     expect(total).toBeGreaterThanOrEqual(50);
@@ -192,5 +192,29 @@ describe("the legend reads each class against the capacity, not against what is 
   it("shows no remainder when the classes already add up", () => {
     const html = draw(wide({ used: 82_000 }));
     expect(rows(html).find((p) => p.label === "未计入")).toBeUndefined();
+  });
+
+  // The rows say what is taken; a reader who wants to know how much is left has
+  // to subtract from a ceiling named in another row. Idle is that remainder, in
+  // the same units, so the legend adds up to the whole capacity.
+  it("names the capacity the session has not used yet", () => {
+    const html = draw(wide());
+    const idle = rows(html).find((p) => p.label === "空闲");
+    expect(idle).toBeDefined();
+    // 160k fold point less 82k used is 49%.
+    expect(idle?.share).toBe(49);
+  });
+
+  it("makes the legend add up to the whole capacity, not just to what is used", () => {
+    const html = draw(wide());
+    const total = rows(html).reduce((a, p) => a + p.share, 0);
+    // Each row is rounded on its own, so a point or two of drift is expected.
+    expect(total).toBeGreaterThanOrEqual(98);
+    expect(total).toBeLessThanOrEqual(103);
+  });
+
+  it("shows no idle row once the capacity is spent", () => {
+    const html = draw(wide({ used: 160_000 }));
+    expect(rows(html).find((p) => p.label === "空闲")).toBeUndefined();
   });
 });

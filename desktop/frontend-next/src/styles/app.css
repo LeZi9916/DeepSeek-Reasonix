@@ -4921,6 +4921,7 @@
   .ctxlg .r i[data-p="output"] { background: var(--cat-5) }
   .ctxlg .r i[data-p="digest"] { background: var(--cat-4) }
   .ctxlg .r i[data-p="overhead"] { background: var(--ghost) }
+  .ctxlg .r i[data-p="idle"] { background: transparent; box-shadow: inset 0 0 0 1px var(--border) }
   .ctxlg .r em { font: var(--w-reg) var(--fs-micro) var(--mono); font-style: normal; color: var(--ghost) }
   .ctxlg .r b { margin-left: auto; font: var(--w-med) var(--fs-meta) var(--mono); color: var(--text) }
   .ctxlg .r .ctxfiles-toggle {
@@ -4976,6 +4977,7 @@
   .ctxpop .row > i[data-p="output"] { background: var(--cat-5) }
   .ctxpop .row > i[data-p="digest"] { background: var(--cat-4) }
   .ctxpop .row > i[data-p="overhead"] { background: var(--ghost) }
+  .ctxpop .row > i[data-p="idle"] { background: transparent; box-shadow: inset 0 0 0 1px var(--border) }
   .ctxpop .row .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
   .ctxpop .row .v { font: var(--w-reg) var(--fs-meta) var(--mono); color: var(--text); font-variant-numeric: tabular-nums }
   .ctxpop .row .p { width: 30px; text-align: right; font: var(--w-reg) var(--fs-micro) var(--mono); color: var(--ghost) }

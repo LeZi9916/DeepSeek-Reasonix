@@ -161,6 +161,10 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
   const scale = sum > 0 ? Math.min(1, used / sum) : 0;
   const share = (n: number) => (denom > 0 ? (n * scale) / denom : 0);
   const unmeasured = Math.max(0, used - sum);
+  // What the ceiling still has left. Without it the legend says what is taken
+  // and leaves the reader to subtract from a figure named in another row; with
+  // it the rows add up to the capacity the bar is drawn against.
+  const idle = denom - used;
 
   // A relay's window is one number somebody typed for every model it forwards,
   // so the denominator is a guess as often as a fact — and this is the only
@@ -275,6 +279,14 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
               <b>{tokens(unmeasured)}</b>
             </div>
           )}
+          {idle > 0 && (
+            <div className="r" title={t("panels.room_the_session_has_not_used")}>
+              <i data-p="idle" />
+              <span className="t">{t("panels.idle")}</span>
+              <em>{percent(denom > 0 ? idle / denom : 0)}</em>
+              <b>{tokens(idle)}</b>
+            </div>
+          )}
         </div>
       )}
       {legend && listed === "memory" && files.length > 0 && (
@@ -308,6 +320,14 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
               <span className="t">{t("panels.unclassified")}</span>
               <span className="v">{tokens(unmeasured)}</span>
               <span className="p">{percent(share(unmeasured))}</span>
+            </div>
+          )}
+          {idle > 0 && (
+            <div className="row" title={t("panels.room_the_session_has_not_used")}>
+              <i data-p="idle" />
+              <span className="t">{t("panels.idle")}</span>
+              <span className="v">{tokens(idle)}</span>
+              <span className="p">{percent(denom > 0 ? idle / denom : 0)}</span>
             </div>
           )}
           {files.length > 0 && (
