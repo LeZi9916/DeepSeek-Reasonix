@@ -21,6 +21,6 @@ public sealed record AskOption
     /// Description carries the kernel's "description" value.
     /// </summary>
     [JsonPropertyName("description")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Description { get; init; }
 }

@@ -21,97 +21,97 @@ public sealed record Node
     /// ParentID carries the kernel's "parentId" value.
     /// </summary>
     [JsonPropertyName("parentId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ParentID { get; init; }
 
     /// <summary>
     /// Kind carries the kernel's "kind" value.
     /// </summary>
     [JsonPropertyName("kind")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public NodeKind Kind { get; init; }
 
     /// <summary>
     /// State carries the kernel's "state" value.
     /// </summary>
     [JsonPropertyName("state")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public NodeState State { get; init; }
 
     /// <summary>
     /// Label carries the kernel's "label" value.
     /// </summary>
     [JsonPropertyName("label")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Label { get; init; }
 
     /// <summary>
     /// Profile carries the kernel's "profile" value.
     /// </summary>
     [JsonPropertyName("profile")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Profile { get; init; }
 
     /// <summary>
     /// Model carries the kernel's "model" value.
     /// </summary>
     [JsonPropertyName("model")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Model { get; init; }
 
     /// <summary>
     /// Effort carries the kernel's "effort" value.
     /// </summary>
     [JsonPropertyName("effort")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Effort { get; init; }
 
     /// <summary>
     /// Grant carries the kernel's "grant" value.
     /// </summary>
     [JsonPropertyName("grant")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Grant Grant { get; init; }
 
     /// <summary>
     /// Wait is what held this node out of a slot. Like the stamps it survives the run starting: the state says it is running now, this says what it waited on.
     /// </summary>
     [JsonPropertyName("wait")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public WaitCause Wait { get; init; }
 
     /// <summary>
     /// Ref is the persisted transcript this node's answer reads back from.
     /// </summary>
     [JsonPropertyName("ref")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Ref { get; init; }
 
     /// <summary>
     /// QueuedAt, StartedAt and EndedAt are unix milliseconds, zero while unknown. QueuedAt to StartedAt is slot wait, which only the scheduler can measure.
     /// </summary>
     [JsonPropertyName("queuedAt")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long QueuedAt { get; init; }
 
     /// <summary>
     /// StartedAt carries the kernel's "startedAt" value.
     /// </summary>
     [JsonPropertyName("startedAt")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long StartedAt { get; init; }
 
     /// <summary>
     /// EndedAt carries the kernel's "endedAt" value.
     /// </summary>
     [JsonPropertyName("endedAt")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long EndedAt { get; init; }
 
     /// <summary>
     /// Err carries the kernel's "err" value.
     /// </summary>
     [JsonPropertyName("err")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Err { get; init; }
 }

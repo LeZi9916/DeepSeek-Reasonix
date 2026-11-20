@@ -518,7 +518,10 @@ func emitRecord(name, doc string, fields []renderedField) string {
 		fmt.Fprintf(&b, "    /// <summary>\n    /// %s\n    /// </summary>\n", xmlEscape(summary))
 		fmt.Fprintf(&b, "    [JsonPropertyName(\"%s\")]\n", field.Json)
 		if field.Optional {
-			b.WriteString("    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]\n")
+			// WhenWritingDefault rather than WhenWritingNull: System.Text.Json
+			// refuses the null condition on a value-type member, and `int?` is one.
+			// For a reference type the two conditions are the same test anyway.
+			b.WriteString("    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]\n")
 		}
 		fmt.Fprintf(&b, "    public %s %s { get; init; }\n", field.Clr, field.Name)
 	}

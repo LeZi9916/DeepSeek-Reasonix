@@ -21,41 +21,41 @@ public sealed record Field
     /// Required carries the kernel's "required" value.
     /// </summary>
     [JsonPropertyName("required")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Required { get; init; }
 
     /// <summary>
     /// Default carries the kernel's "default" value.
     /// </summary>
     [JsonPropertyName("default")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public JsonElement Default { get; init; }
 
     /// <summary>
     /// Min carries the kernel's "min" value.
     /// </summary>
     [JsonPropertyName("min")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double? Min { get; init; }
 
     /// <summary>
     /// Max carries the kernel's "max" value.
     /// </summary>
     [JsonPropertyName("max")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double? Max { get; init; }
 
     /// <summary>
     /// MaxLength carries the kernel's "max_length" value.
     /// </summary>
     [JsonPropertyName("max_length")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int MaxLength { get; init; }
 
     /// <summary>
     /// Options carries the kernel's "options" value.
     /// </summary>
     [JsonPropertyName("options")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<Option> Options { get; init; }
 }

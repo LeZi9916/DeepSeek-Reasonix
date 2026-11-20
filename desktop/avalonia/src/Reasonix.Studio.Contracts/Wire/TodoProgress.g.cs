@@ -21,34 +21,34 @@ public sealed record TodoProgress
     /// Steps carries the kernel's "steps" value.
     /// </summary>
     [JsonPropertyName("steps")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Steps { get; init; }
 
     /// <summary>
     /// Completed carries the kernel's "completed" value.
     /// </summary>
     [JsonPropertyName("completed")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Completed { get; init; }
 
     /// <summary>
     /// ContentRevision carries the kernel's "contentRevision" value.
     /// </summary>
     [JsonPropertyName("contentRevision")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ContentRevision { get; init; }
 
     /// <summary>
     /// PlanRevision carries the kernel's "planRevision" value.
     /// </summary>
     [JsonPropertyName("planRevision")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int PlanRevision { get; init; }
 
     /// <summary>
     /// ProgressRevision carries the kernel's "progressRevision" value.
     /// </summary>
     [JsonPropertyName("progressRevision")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ProgressRevision { get; init; }
 }

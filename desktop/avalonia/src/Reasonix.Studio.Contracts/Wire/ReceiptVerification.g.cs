@@ -27,13 +27,13 @@ public sealed record ReceiptVerification
     /// Stale carries the kernel's "stale" value.
     /// </summary>
     [JsonPropertyName("stale")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Stale { get; init; }
 
     /// <summary>
     /// Inconclusive: the shell reported a later stage's status, so this run proves nothing either way. Dropping it renders a hidden verdict as a pass.
     /// </summary>
     [JsonPropertyName("inconclusive")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Inconclusive { get; init; }
 }

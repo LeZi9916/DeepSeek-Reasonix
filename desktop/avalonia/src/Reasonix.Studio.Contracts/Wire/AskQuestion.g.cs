@@ -21,7 +21,7 @@ public sealed record AskQuestion
     /// Header carries the kernel's "header" value.
     /// </summary>
     [JsonPropertyName("header")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Header { get; init; }
 
     /// <summary>
@@ -34,7 +34,7 @@ public sealed record AskQuestion
     /// Reason carries the kernel's "reason" value.
     /// </summary>
     [JsonPropertyName("reason")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Reason { get; init; }
 
     /// <summary>
@@ -47,27 +47,27 @@ public sealed record AskQuestion
     /// Multi carries the kernel's "multi" value.
     /// </summary>
     [JsonPropertyName("multi")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Multi { get; init; }
 
     /// <summary>
     /// Default carries the kernel's "default" value.
     /// </summary>
     [JsonPropertyName("default")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string> Default { get; init; }
 
     /// <summary>
     /// Surface carries the kernel's "surface" value.
     /// </summary>
     [JsonPropertyName("surface")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Spec Surface { get; init; }
 
     /// <summary>
     /// CallID carries the kernel's "callId" value.
     /// </summary>
     [JsonPropertyName("callId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string CallID { get; init; }
 }

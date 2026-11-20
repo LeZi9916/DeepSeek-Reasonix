@@ -15,83 +15,83 @@ public sealed record Compaction
     /// Trigger carries the kernel's "trigger" value.
     /// </summary>
     [JsonPropertyName("trigger")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Trigger { get; init; }
 
     /// <summary>
     /// Messages carries the kernel's "messages" value.
     /// </summary>
     [JsonPropertyName("messages")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Messages { get; init; }
 
     /// <summary>
     /// Summary carries the kernel's "summary" value.
     /// </summary>
     [JsonPropertyName("summary")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Summary { get; init; }
 
     /// <summary>
     /// What the fold cost, and what the digest kept of it.
     /// </summary>
     [JsonPropertyName("sourceTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int SourceTokens { get; init; }
 
     /// <summary>
     /// ProjectionTokens carries the kernel's "projectionTokens" value.
     /// </summary>
     [JsonPropertyName("projectionTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ProjectionTokens { get; init; }
 
     /// <summary>
     /// CoverageRequired carries the kernel's "coverageRequired" value.
     /// </summary>
     [JsonPropertyName("coverageRequired")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int CoverageRequired { get; init; }
 
     /// <summary>
     /// CoverageMissing carries the kernel's "coverageMissing" value.
     /// </summary>
     [JsonPropertyName("coverageMissing")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int CoverageMissing { get; init; }
 
     /// <summary>
     /// The host completed a digest the summarizer left incomplete.
     /// </summary>
     [JsonPropertyName("coverageBackstopped")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool CoverageBackstopped { get; init; }
 
     /// <summary>
     /// Which of the two thresholds sent this fold, and its size. A card without them can only say one was reached, which is what a fold at 16% of a declared window reads as when nothing names the boundary that fired.
     /// </summary>
     [JsonPropertyName("boundary")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Boundary { get; init; }
 
     /// <summary>
     /// TriggerTokens carries the kernel's "triggerTokens" value.
     /// </summary>
     [JsonPropertyName("triggerTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int TriggerTokens { get; init; }
 
     /// <summary>
     /// why a fold installed nothing
     /// </summary>
     [JsonPropertyName("code")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Code { get; init; }
 
     /// <summary>
     /// What the prompt still holds after a fold that left a large share of the window.
     /// </summary>
     [JsonPropertyName("remains")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ContextComposition Remains { get; init; }
 }

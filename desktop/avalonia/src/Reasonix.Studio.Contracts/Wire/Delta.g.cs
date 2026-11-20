@@ -15,13 +15,13 @@ public sealed record Delta
     /// Nodes carries the kernel's "nodes" value.
     /// </summary>
     [JsonPropertyName("nodes")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<Node> Nodes { get; init; }
 
     /// <summary>
     /// Edges carries the kernel's "edges" value.
     /// </summary>
     [JsonPropertyName("edges")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<Edge> Edges { get; init; }
 }

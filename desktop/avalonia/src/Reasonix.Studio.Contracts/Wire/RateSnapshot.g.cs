@@ -45,6 +45,6 @@ public sealed record RateSnapshot
     /// Stale carries the kernel's "stale" value.
     /// </summary>
     [JsonPropertyName("stale")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Stale { get; init; }
 }

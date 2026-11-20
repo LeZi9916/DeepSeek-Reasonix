@@ -57,13 +57,13 @@ public sealed record CompletionSummary
     /// GapKinds carries the kernel's "gap_kinds" value.
     /// </summary>
     [JsonPropertyName("gap_kinds")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string> GapKinds { get; init; }
 
     /// <summary>
     /// CriteriaRewritten names existing tests the turn rewrote or removed.
     /// </summary>
     [JsonPropertyName("criteria_rewritten")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string> CriteriaRewritten { get; init; }
 }

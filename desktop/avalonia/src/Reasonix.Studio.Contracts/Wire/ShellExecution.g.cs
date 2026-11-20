@@ -15,28 +15,28 @@ public sealed record ShellExecution
     /// Kind carries the kernel's "kind" value.
     /// </summary>
     [JsonPropertyName("kind")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Kind { get; init; }
 
     /// <summary>
     /// Shell carries the kernel's "shell" value.
     /// </summary>
     [JsonPropertyName("shell")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Shell { get; init; }
 
     /// <summary>
     /// ShellVersion carries the kernel's "shellVersion" value.
     /// </summary>
     [JsonPropertyName("shellVersion")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ShellVersion { get; init; }
 
     /// <summary>
     /// Platform carries the kernel's "platform" value.
     /// </summary>
     [JsonPropertyName("platform")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Platform { get; init; }
 
     /// <summary>
@@ -49,62 +49,62 @@ public sealed record ShellExecution
     /// State carries the kernel's "state" value.
     /// </summary>
     [JsonPropertyName("state")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string State { get; init; }
 
     /// <summary>
     /// FailurePhase carries the kernel's "failurePhase" value.
     /// </summary>
     [JsonPropertyName("failurePhase")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string FailurePhase { get; init; }
 
     /// <summary>
     /// ExitCode carries the kernel's "exitCode" value.
     /// </summary>
     [JsonPropertyName("exitCode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int? ExitCode { get; init; }
 
     /// <summary>
     /// OutputTail carries the kernel's "outputTail" value.
     /// </summary>
     [JsonPropertyName("outputTail")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string OutputTail { get; init; }
 
     /// <summary>
     /// Subject carries the kernel's "subject" value.
     /// </summary>
     [JsonPropertyName("subject")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Subject { get; init; }
 
     /// <summary>
     /// MutationRisk carries the kernel's "mutationRisk" value.
     /// </summary>
     [JsonPropertyName("mutationRisk")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string MutationRisk { get; init; }
 
     /// <summary>
     /// Verification carries the kernel's "verification" value.
     /// </summary>
     [JsonPropertyName("verification")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Verification { get; init; }
 
     /// <summary>
     /// DurationMs carries the kernel's "durationMs" value.
     /// </summary>
     [JsonPropertyName("durationMs")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long DurationMs { get; init; }
 
     /// <summary>
     /// JobID carries the kernel's "jobId" value.
     /// </summary>
     [JsonPropertyName("jobId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string JobID { get; init; }
 }

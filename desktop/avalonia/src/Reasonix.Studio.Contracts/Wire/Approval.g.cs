@@ -33,62 +33,62 @@ public sealed record Approval
     /// Reason carries the kernel's "reason" value.
     /// </summary>
     [JsonPropertyName("reason")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Reason { get; init; }
 
     /// <summary>
     /// ReasonCode carries the kernel's "reasonCode" value.
     /// </summary>
     [JsonPropertyName("reasonCode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ReasonCode { get; init; }
 
     /// <summary>
     /// Fresh carries the kernel's "fresh" value.
     /// </summary>
     [JsonPropertyName("fresh")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Fresh { get; init; }
 
     /// <summary>
     /// Which answers beyond "once" the host will honour for this call.
     /// </summary>
     [JsonPropertyName("allowsSession")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool AllowsSession { get; init; }
 
     /// <summary>
     /// AllowsPersist carries the kernel's "allowsPersist" value.
     /// </summary>
     [JsonPropertyName("allowsPersist")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool AllowsPersist { get; init; }
 
     /// <summary>
     /// tool | plan | recovery
     /// </summary>
     [JsonPropertyName("kind")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Kind { get; init; }
 
     /// <summary>
     /// Recovery carries the kernel's "recovery" value.
     /// </summary>
     [JsonPropertyName("recovery")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public RecoveryApproval Recovery { get; init; }
 
     /// <summary>
     /// Scope is what approving authorizes beyond the call; Input, the call's arguments, rides only with a scope, since they are what it applies to. A plan's input is the list approving starts, so it rides with the plan.
     /// </summary>
     [JsonPropertyName("scope")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Scope { get; init; }
 
     /// <summary>
     /// Input carries the kernel's "input" value.
     /// </summary>
     [JsonPropertyName("input")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public JsonElement Input { get; init; }
 }

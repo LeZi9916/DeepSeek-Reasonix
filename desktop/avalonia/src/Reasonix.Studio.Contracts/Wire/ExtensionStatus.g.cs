@@ -21,20 +21,20 @@ public sealed record ExtensionStatus
     /// Detail carries the kernel's "detail" value.
     /// </summary>
     [JsonPropertyName("detail")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Detail { get; init; }
 
     /// <summary>
     /// Severity carries the kernel's "severity" value.
     /// </summary>
     [JsonPropertyName("severity")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Severity { get; init; }
 
     /// <summary>
     /// Progress carries the kernel's "progress" value.
     /// </summary>
     [JsonPropertyName("progress")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double? Progress { get; init; }
 }

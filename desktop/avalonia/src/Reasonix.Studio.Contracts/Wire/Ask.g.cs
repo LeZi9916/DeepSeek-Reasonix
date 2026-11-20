@@ -27,13 +27,13 @@ public sealed record Ask
     /// Origin carries the kernel's "origin" value.
     /// </summary>
     [JsonPropertyName("origin")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public AskOrigin Origin { get; init; }
 
     /// <summary>
     /// SkipInMs carries the kernel's "skipInMs" value.
     /// </summary>
     [JsonPropertyName("skipInMs")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long SkipInMs { get; init; }
 }

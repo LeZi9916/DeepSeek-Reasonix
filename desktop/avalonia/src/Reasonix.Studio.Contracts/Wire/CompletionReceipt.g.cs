@@ -21,35 +21,35 @@ public sealed record CompletionReceipt
     /// Changes carries the kernel's "changes" value.
     /// </summary>
     [JsonPropertyName("changes")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<ReceiptChange> Changes { get; init; }
 
     /// <summary>
     /// Verifications carries the kernel's "verifications" value.
     /// </summary>
     [JsonPropertyName("verifications")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<ReceiptVerification> Verifications { get; init; }
 
     /// <summary>
     /// Gaps carries the kernel's "gaps" value.
     /// </summary>
     [JsonPropertyName("gaps")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<ReceiptGap> Gaps { get; init; }
 
     /// <summary>
     /// Risks and Unverified are the turn's declarations, apart from the gaps the host found: a reader that folds them together reads a volunteered caveat as a failure.
     /// </summary>
     [JsonPropertyName("risks")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string> Risks { get; init; }
 
     /// <summary>
     /// Unverified carries the kernel's "unverified" value.
     /// </summary>
     [JsonPropertyName("unverified")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string> Unverified { get; init; }
 
     /// <summary>
@@ -62,6 +62,6 @@ public sealed record CompletionReceipt
     /// Severity is the kernel's grading of what the receipt left unproven ("notice" or "warn"; absent when nothing was), so a frontend that does not draw the card can still say how much it would have said.
     /// </summary>
     [JsonPropertyName("severity")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Severity { get; init; }
 }

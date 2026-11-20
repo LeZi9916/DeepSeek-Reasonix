@@ -21,7 +21,7 @@ public sealed record ContextItem
     /// Tool carries the kernel's "tool" value.
     /// </summary>
     [JsonPropertyName("tool")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Tool { get; init; }
 
     /// <summary>
@@ -34,6 +34,6 @@ public sealed record ContextItem
     /// Active carries the kernel's "active" value.
     /// </summary>
     [JsonPropertyName("active")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Active { get; init; }
 }

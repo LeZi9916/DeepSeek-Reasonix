@@ -27,27 +27,27 @@ public sealed record StreamAttempt
     /// Attempt carries the kernel's "attempt" value.
     /// </summary>
     [JsonPropertyName("attempt")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Attempt { get; init; }
 
     /// <summary>
     /// Max carries the kernel's "max" value.
     /// </summary>
     [JsonPropertyName("max")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Max { get; init; }
 
     /// <summary>
     /// connection_reset | premature_eof | idle_timeout
     /// </summary>
     [JsonPropertyName("reason")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Reason { get; init; }
 
     /// <summary>
     /// FirstTokenMs rides a commit: request sent to first output, host-measured.
     /// </summary>
     [JsonPropertyName("firstTokenMs")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long FirstTokenMs { get; init; }
 }

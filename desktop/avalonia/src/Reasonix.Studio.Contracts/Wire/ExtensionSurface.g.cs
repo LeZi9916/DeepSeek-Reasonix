@@ -15,7 +15,7 @@ public sealed record ExtensionSurface
     /// Code carries the kernel's "code" value.
     /// </summary>
     [JsonPropertyName("code")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Code { get; init; }
 
     /// <summary>
@@ -34,14 +34,14 @@ public sealed record ExtensionSurface
     /// SessionID carries the kernel's "sessionId" value.
     /// </summary>
     [JsonPropertyName("sessionId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string SessionID { get; init; }
 
     /// <summary>
     /// Generation carries the kernel's "generation" value.
     /// </summary>
     [JsonPropertyName("generation")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ulong Generation { get; init; }
 
     /// <summary>
@@ -54,41 +54,41 @@ public sealed record ExtensionSurface
     /// Status carries the kernel's "status" value.
     /// </summary>
     [JsonPropertyName("status")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ExtensionStatus Status { get; init; }
 
     /// <summary>
     /// Card carries the kernel's "card" value.
     /// </summary>
     [JsonPropertyName("card")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ExtensionCard Card { get; init; }
 
     /// <summary>
     /// Form carries the kernel's "form" value.
     /// </summary>
     [JsonPropertyName("form")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ExtensionForm Form { get; init; }
 
     /// <summary>
     /// Notification carries the kernel's "notification" value.
     /// </summary>
     [JsonPropertyName("notification")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ExtensionNotification Notification { get; init; }
 
     /// <summary>
     /// Panel carries the kernel's "panel" value.
     /// </summary>
     [JsonPropertyName("panel")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ExtensionPanel Panel { get; init; }
 
     /// <summary>
     /// View carries the kernel's "view" value.
     /// </summary>
     [JsonPropertyName("view")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ExtensionView View { get; init; }
 }

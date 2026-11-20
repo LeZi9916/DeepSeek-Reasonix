@@ -27,7 +27,7 @@ public sealed record CacheDiagnostics
     /// PrefixChangeReasons carries the kernel's "prefixChangeReasons" value.
     /// </summary>
     [JsonPropertyName("prefixChangeReasons")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string> PrefixChangeReasons { get; init; }
 
     /// <summary>

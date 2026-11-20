@@ -15,14 +15,14 @@ public sealed record ExtensionView
     /// Slot carries the kernel's "slot" value.
     /// </summary>
     [JsonPropertyName("slot")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Slot { get; init; }
 
     /// <summary>
     /// Anchor carries the kernel's "anchor" value.
     /// </summary>
     [JsonPropertyName("anchor")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Anchor { get; init; }
 
     /// <summary>

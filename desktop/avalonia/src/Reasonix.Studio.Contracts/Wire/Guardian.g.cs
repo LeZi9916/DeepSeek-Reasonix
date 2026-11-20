@@ -39,34 +39,34 @@ public sealed record Guardian
     /// RiskLevel carries the kernel's "risk_level" value.
     /// </summary>
     [JsonPropertyName("risk_level")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string RiskLevel { get; init; }
 
     /// <summary>
     /// UserAuthorization carries the kernel's "user_authorization" value.
     /// </summary>
     [JsonPropertyName("user_authorization")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string UserAuthorization { get; init; }
 
     /// <summary>
     /// Rationale carries the kernel's "rationale" value.
     /// </summary>
     [JsonPropertyName("rationale")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Rationale { get; init; }
 
     /// <summary>
     /// DurationMs carries the kernel's "duration_ms" value.
     /// </summary>
     [JsonPropertyName("duration_ms")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long DurationMs { get; init; }
 
     /// <summary>
     /// Usage carries the kernel's "usage" value.
     /// </summary>
     [JsonPropertyName("usage")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Usage Usage { get; init; }
 }

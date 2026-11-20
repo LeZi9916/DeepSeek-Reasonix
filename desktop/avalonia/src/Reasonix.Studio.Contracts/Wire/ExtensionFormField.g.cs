@@ -21,34 +21,34 @@ public sealed record ExtensionFormField
     /// Label carries the kernel's "label" value.
     /// </summary>
     [JsonPropertyName("label")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Label { get; init; }
 
     /// <summary>
     /// Kind carries the kernel's "kind" value.
     /// </summary>
     [JsonPropertyName("kind")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Kind { get; init; }
 
     /// <summary>
     /// Options carries the kernel's "options" value.
     /// </summary>
     [JsonPropertyName("options")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string> Options { get; init; }
 
     /// <summary>
     /// Default carries the kernel's "default" value.
     /// </summary>
     [JsonPropertyName("default")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public JsonElement Default { get; init; }
 
     /// <summary>
     /// Required carries the kernel's "required" value.
     /// </summary>
     [JsonPropertyName("required")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Required { get; init; }
 }

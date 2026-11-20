@@ -21,13 +21,13 @@ public sealed record ExtensionNotification
     /// Body carries the kernel's "body" value.
     /// </summary>
     [JsonPropertyName("body")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Body { get; init; }
 
     /// <summary>
     /// Severity carries the kernel's "severity" value.
     /// </summary>
     [JsonPropertyName("severity")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Severity { get; init; }
 }

@@ -21,6 +21,6 @@ public sealed record ReceiptGap
     /// Detail carries the kernel's "detail" value.
     /// </summary>
     [JsonPropertyName("detail")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Detail { get; init; }
 }

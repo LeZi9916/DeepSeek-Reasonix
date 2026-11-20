@@ -39,6 +39,6 @@ public sealed record ContextComposition
     /// Largest carries the kernel's "largest" value.
     /// </summary>
     [JsonPropertyName("largest")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<ContextItem> Largest { get; init; }
 }

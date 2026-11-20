@@ -15,7 +15,7 @@ public sealed record MemoryCitation
     /// ID carries the kernel's "id" value.
     /// </summary>
     [JsonPropertyName("id")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ID { get; init; }
 
     /// <summary>
@@ -28,27 +28,27 @@ public sealed record MemoryCitation
     /// LineStart carries the kernel's "lineStart" value.
     /// </summary>
     [JsonPropertyName("lineStart")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int LineStart { get; init; }
 
     /// <summary>
     /// LineEnd carries the kernel's "lineEnd" value.
     /// </summary>
     [JsonPropertyName("lineEnd")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int LineEnd { get; init; }
 
     /// <summary>
     /// Note carries the kernel's "note" value.
     /// </summary>
     [JsonPropertyName("note")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Note { get; init; }
 
     /// <summary>
     /// Kind carries the kernel's "kind" value.
     /// </summary>
     [JsonPropertyName("kind")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Kind { get; init; }
 }

@@ -27,7 +27,7 @@ public sealed record Series
     /// Unit carries the kernel's "unit" value.
     /// </summary>
     [JsonPropertyName("unit")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Unit { get; init; }
 
     /// <summary>

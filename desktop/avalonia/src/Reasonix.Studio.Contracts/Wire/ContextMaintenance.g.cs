@@ -15,97 +15,97 @@ public sealed record ContextMaintenance
     /// Status carries the kernel's "status" value.
     /// </summary>
     [JsonPropertyName("status")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Status { get; init; }
 
     /// <summary>
     /// Action carries the kernel's "action" value.
     /// </summary>
     [JsonPropertyName("action")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Action { get; init; }
 
     /// <summary>
     /// Trigger carries the kernel's "trigger" value.
     /// </summary>
     [JsonPropertyName("trigger")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Trigger { get; init; }
 
     /// <summary>
     /// OperationID carries the kernel's "operationId" value.
     /// </summary>
     [JsonPropertyName("operationId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string OperationID { get; init; }
 
     /// <summary>
     /// InputTokens carries the kernel's "inputTokens" value.
     /// </summary>
     [JsonPropertyName("inputTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int InputTokens { get; init; }
 
     /// <summary>
     /// ResultTokens carries the kernel's "resultTokens" value.
     /// </summary>
     [JsonPropertyName("resultTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ResultTokens { get; init; }
 
     /// <summary>
     /// SavedTokens carries the kernel's "savedTokens" value.
     /// </summary>
     [JsonPropertyName("savedTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int SavedTokens { get; init; }
 
     /// <summary>
     /// AffectedToolResults carries the kernel's "affectedToolResults" value.
     /// </summary>
     [JsonPropertyName("affectedToolResults")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int AffectedToolResults { get; init; }
 
     /// <summary>
     /// ProjectionVersion carries the kernel's "projectionVersion" value.
     /// </summary>
     [JsonPropertyName("projectionVersion")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ulong ProjectionVersion { get; init; }
 
     /// <summary>
     /// CacheBreak carries the kernel's "cacheBreak" value.
     /// </summary>
     [JsonPropertyName("cacheBreak")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool CacheBreak { get; init; }
 
     /// <summary>
     /// Reason carries the kernel's "reason" value.
     /// </summary>
     [JsonPropertyName("reason")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Reason { get; init; }
 
     /// <summary>
     /// Code carries the kernel's "code" value.
     /// </summary>
     [JsonPropertyName("code")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Code { get; init; }
 
     /// <summary>
     /// Boundary carries the kernel's "boundary" value.
     /// </summary>
     [JsonPropertyName("boundary")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Boundary { get; init; }
 
     /// <summary>
     /// TriggerTokens carries the kernel's "triggerTokens" value.
     /// </summary>
     [JsonPropertyName("triggerTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int TriggerTokens { get; init; }
 }

@@ -21,69 +21,69 @@ public sealed record SurfaceNode
     /// Value carries the kernel's "value" value.
     /// </summary>
     [JsonPropertyName("value")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Value { get; init; }
 
     /// <summary>
     /// Key carries the kernel's "key" value.
     /// </summary>
     [JsonPropertyName("key")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Key { get; init; }
 
     /// <summary>
     /// Label carries the kernel's "label" value.
     /// </summary>
     [JsonPropertyName("label")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Label { get; init; }
 
     /// <summary>
     /// Tone carries the kernel's "tone" value.
     /// </summary>
     [JsonPropertyName("tone")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Tone { get; init; }
 
     /// <summary>
     /// Progress carries the kernel's "progress" value.
     /// </summary>
     [JsonPropertyName("progress")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double? Progress { get; init; }
 
     /// <summary>
     /// ActionID carries the kernel's "actionId" value.
     /// </summary>
     [JsonPropertyName("actionId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ActionID { get; init; }
 
     /// <summary>
     /// Children carries the kernel's "children" value.
     /// </summary>
     [JsonPropertyName("children")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<SurfaceNode> Children { get; init; }
 
     /// <summary>
     /// Field carries the kernel's "field" value.
     /// </summary>
     [JsonPropertyName("field")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Field Field { get; init; }
 
     /// <summary>
     /// Diff carries the kernel's "diff" value.
     /// </summary>
     [JsonPropertyName("diff")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Diff Diff { get; init; }
 
     /// <summary>
     /// Dataset carries the kernel's "dataset" value.
     /// </summary>
     [JsonPropertyName("dataset")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Dataset Dataset { get; init; }
 }

@@ -39,13 +39,13 @@ public sealed record Valuation
     /// Rate carries the kernel's "rateSnapshot" value.
     /// </summary>
     [JsonPropertyName("rateSnapshot")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public RateSnapshot Rate { get; init; }
 
     /// <summary>
     /// Stale carries the kernel's "stale" value.
     /// </summary>
     [JsonPropertyName("stale")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Stale { get; init; }
 }

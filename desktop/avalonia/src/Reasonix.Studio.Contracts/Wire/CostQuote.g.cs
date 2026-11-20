@@ -21,28 +21,28 @@ public sealed record CostQuote
     /// OriginalTotals is populated for mixed-currency aggregates. Individual quotes and single-currency totals may omit it.
     /// </summary>
     [JsonPropertyName("originalTotals")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<Money> OriginalTotals { get; init; }
 
     /// <summary>
     /// Valuations carries the kernel's "valuations" value.
     /// </summary>
     [JsonPropertyName("valuations")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Dictionary<string, Valuation> Valuations { get; init; }
 
     /// <summary>
     /// Selected carries the kernel's "selected" value.
     /// </summary>
     [JsonPropertyName("selected")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Money Selected { get; init; }
 
     /// <summary>
     /// BillingMode carries the kernel's "billingMode" value.
     /// </summary>
     [JsonPropertyName("billingMode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string BillingMode { get; init; }
 
     /// <summary>
@@ -61,7 +61,7 @@ public sealed record CostQuote
     /// Coverage is the same fact with the states a boolean cannot hold: an aggregate that priced only some of its calls, and one that billed nothing.
     /// </summary>
     [JsonPropertyName("coverage")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Coverage { get; init; }
 
     /// <summary>
@@ -80,69 +80,69 @@ public sealed record CostQuote
     /// DisplayStatus carries the kernel's "displayStatus" value.
     /// </summary>
     [JsonPropertyName("displayStatus")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string DisplayStatus { get; init; }
 
     /// <summary>
     /// AggregateMode carries the kernel's "aggregateMode" value.
     /// </summary>
     [JsonPropertyName("aggregateMode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string AggregateMode { get; init; }
 
     /// <summary>
     /// ModelRef / UsageSource / PricingFingerprint identify the ledger key.
     /// </summary>
     [JsonPropertyName("modelRef")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ModelRef { get; init; }
 
     /// <summary>
     /// UsageSource carries the kernel's "usageSource" value.
     /// </summary>
     [JsonPropertyName("usageSource")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string UsageSource { get; init; }
 
     /// <summary>
     /// PricingFingerprint carries the kernel's "pricingFingerprint" value.
     /// </summary>
     [JsonPropertyName("pricingFingerprint")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string PricingFingerprint { get; init; }
 
     /// <summary>
     /// YYYY-MM-DD of FX used, if any
     /// </summary>
     [JsonPropertyName("rateDate")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string RateDate { get; init; }
 
     /// <summary>
     /// IncompleteReason carries the kernel's "incompleteReason" value.
     /// </summary>
     [JsonPropertyName("incompleteReason")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string IncompleteReason { get; init; }
 
     /// <summary>
     /// LegacyEstimate carries the kernel's "legacyEstimate" value.
     /// </summary>
     [JsonPropertyName("legacyEstimate")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool LegacyEstimate { get; init; }
 
     /// <summary>
     /// CatalogSource carries the kernel's "catalogSource" value.
     /// </summary>
     [JsonPropertyName("catalogSource")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string CatalogSource { get; init; }
 
     /// <summary>
     /// RateBand is set only for a rate confirmed as a vendor's own schedule; an aggregate that includes any call without one carries none.
     /// </summary>
     [JsonPropertyName("rateBand")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string RateBand { get; init; }
 }

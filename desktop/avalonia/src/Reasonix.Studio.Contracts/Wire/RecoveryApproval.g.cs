@@ -15,90 +15,90 @@ public sealed record RecoveryApproval
     /// SourceAgent carries the kernel's "source_agent" value.
     /// </summary>
     [JsonPropertyName("source_agent")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string SourceAgent { get; init; }
 
     /// <summary>
     /// FailedTool carries the kernel's "failed_tool" value.
     /// </summary>
     [JsonPropertyName("failed_tool")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string FailedTool { get; init; }
 
     /// <summary>
     /// FailedSummary carries the kernel's "failed_summary" value.
     /// </summary>
     [JsonPropertyName("failed_summary")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string FailedSummary { get; init; }
 
     /// <summary>
     /// Diagnosis carries the kernel's "diagnosis" value.
     /// </summary>
     [JsonPropertyName("diagnosis")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Diagnosis { get; init; }
 
     /// <summary>
     /// NextTool carries the kernel's "next_tool" value.
     /// </summary>
     [JsonPropertyName("next_tool")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string NextTool { get; init; }
 
     /// <summary>
     /// NextAction carries the kernel's "next_action" value.
     /// </summary>
     [JsonPropertyName("next_action")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string NextAction { get; init; }
 
     /// <summary>
     /// ChangeKind carries the kernel's "change_kind" value.
     /// </summary>
     [JsonPropertyName("change_kind")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ChangeKind { get; init; }
 
     /// <summary>
     /// ChangeRationale carries the kernel's "change_rationale" value.
     /// </summary>
     [JsonPropertyName("change_rationale")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ChangeRationale { get; init; }
 
     /// <summary>
     /// ReviewRationale carries the kernel's "review_rationale" value.
     /// </summary>
     [JsonPropertyName("review_rationale")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ReviewRationale { get; init; }
 
     /// <summary>
     /// PlanBefore carries the kernel's "plan_before" value.
     /// </summary>
     [JsonPropertyName("plan_before")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string PlanBefore { get; init; }
 
     /// <summary>
     /// PlanAfter carries the kernel's "plan_after" value.
     /// </summary>
     [JsonPropertyName("plan_after")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string PlanAfter { get; init; }
 
     /// <summary>
     /// CanGrantTask carries the kernel's "can_grant_task" value.
     /// </summary>
     [JsonPropertyName("can_grant_task")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool CanGrantTask { get; init; }
 
     /// <summary>
     /// TaskGrantScope carries the kernel's "task_grant_scope" value.
     /// </summary>
     [JsonPropertyName("task_grant_scope")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string TaskGrantScope { get; init; }
 }

@@ -15,14 +15,14 @@ public sealed record Tool
     /// Deliveries carries the kernel's "deliveries" value.
     /// </summary>
     [JsonPropertyName("deliveries")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<File> Deliveries { get; init; }
 
     /// <summary>
     /// ID carries the kernel's "id" value.
     /// </summary>
     [JsonPropertyName("id")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ID { get; init; }
 
     /// <summary>
@@ -35,77 +35,77 @@ public sealed record Tool
     /// Args carries the kernel's "args" value.
     /// </summary>
     [JsonPropertyName("args")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Args { get; init; }
 
     /// <summary>
     /// ArgumentNormalization carries the kernel's "argumentNormalization" value.
     /// </summary>
     [JsonPropertyName("argumentNormalization")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ArgumentNormalization ArgumentNormalization { get; init; }
 
     /// <summary>
     /// ResolvedName carries the kernel's "resolvedName" value.
     /// </summary>
     [JsonPropertyName("resolvedName")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ResolvedName { get; init; }
 
     /// <summary>
     /// CapabilityID carries the kernel's "capabilityId" value.
     /// </summary>
     [JsonPropertyName("capabilityId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string CapabilityID { get; init; }
 
     /// <summary>
     /// Output carries the kernel's "output" value.
     /// </summary>
     [JsonPropertyName("output")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Output { get; init; }
 
     /// <summary>
     /// Images the call showed the model, as data URLs.
     /// </summary>
     [JsonPropertyName("images")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string> Images { get; init; }
 
     /// <summary>
     /// Videos the call handed to the model to watch natively; the file's name and size, never its bytes.
     /// </summary>
     [JsonPropertyName("videos")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<VideoShown> Videos { get; init; }
 
     /// <summary>
     /// Err carries the kernel's "err" value.
     /// </summary>
     [JsonPropertyName("err")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Err { get; init; }
 
     /// <summary>
     /// RefusalCode is the host's dotted identity for a refusal. Err is only its wording, and a reader that has to tell one refusal from another cannot use a sentence.
     /// </summary>
     [JsonPropertyName("refusalCode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string RefusalCode { get; init; }
 
     /// <summary>
     /// WorkspaceLease carries the kernel's "workspaceLease" value.
     /// </summary>
     [JsonPropertyName("workspaceLease")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public WorkspaceLease WorkspaceLease { get; init; }
 
     /// <summary>
     /// OutputDiff marks a shell result whose whole output is a unified diff, so a frontend renders it as a diff. Set only when [agent].embedded_diff_detection is on.
     /// </summary>
     [JsonPropertyName("outputDiff")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool OutputDiff { get; init; }
 
     /// <summary>
@@ -118,125 +118,125 @@ public sealed record Tool
     /// Truncated is the compatibility projection of Bound for journals written before it existed; Bound is what a current frontend reads.
     /// </summary>
     [JsonPropertyName("truncated")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Truncated { get; init; }
 
     /// <summary>
     /// Bound carries the kernel's "bound" value.
     /// </summary>
     [JsonPropertyName("bound")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Bound Bound { get; init; }
 
     /// <summary>
     /// DurationMs carries the kernel's "durationMs" value.
     /// </summary>
     [JsonPropertyName("durationMs")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long DurationMs { get; init; }
 
     /// <summary>
     /// RateTokensPerSec is a sub-agent's estimated streaming rate, on its status channel while it reasons or answers. Estimated, never billed.
     /// </summary>
     [JsonPropertyName("rate")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int RateTokensPerSec { get; init; }
 
     /// <summary>
     /// ContextTokens is what this call left in the prompt (args + result), so a card can say which step is eating the window. Estimated, never billed.
     /// </summary>
     [JsonPropertyName("contextTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ContextTokens { get; init; }
 
     /// <summary>
     /// unix ms; zero when the call never ran
     /// </summary>
     [JsonPropertyName("startedAt")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long StartedAt { get; init; }
 
     /// <summary>
     /// EndedAt carries the kernel's "endedAt" value.
     /// </summary>
     [JsonPropertyName("endedAt")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long EndedAt { get; init; }
 
     /// <summary>
     /// Partial carries the kernel's "partial" value.
     /// </summary>
     [JsonPropertyName("partial")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Partial { get; init; }
 
     /// <summary>
     /// ArgChars carries the kernel's "argChars" value.
     /// </summary>
     [JsonPropertyName("argChars")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ArgChars { get; init; }
 
     /// <summary>
     /// Refreshed carries the kernel's "refreshed" value.
     /// </summary>
     [JsonPropertyName("refreshed")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Refreshed { get; init; }
 
     /// <summary>
     /// ParentID carries the kernel's "parentId" value.
     /// </summary>
     [JsonPropertyName("parentId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string ParentID { get; init; }
 
     /// <summary>
     /// Issuer is who initiated the call: model, host, user, provider. A reader folding tool work needs it — nothing else on the frame separates a call the model asked for from one the host minted for it.
     /// </summary>
     [JsonPropertyName("issuer")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Issuer { get; init; }
 
     /// <summary>
     /// host-local stream_attempt id for speculative partials
     /// </summary>
     [JsonPropertyName("attemptId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string AttemptID { get; init; }
 
     /// <summary>
     /// Diff carries the kernel's "diff" value.
     /// </summary>
     [JsonPropertyName("diff")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Diff { get; init; }
 
     /// <summary>
     /// Added carries the kernel's "added" value.
     /// </summary>
     [JsonPropertyName("added")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Added { get; init; }
 
     /// <summary>
     /// Removed carries the kernel's "removed" value.
     /// </summary>
     [JsonPropertyName("removed")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Removed { get; init; }
 
     /// <summary>
     /// Profile carries the kernel's "profile" value.
     /// </summary>
     [JsonPropertyName("profile")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Profile Profile { get; init; }
 
     /// <summary>
     /// Execution carries the kernel's "execution" value.
     /// </summary>
     [JsonPropertyName("execution")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public ShellExecution Execution { get; init; }
 }

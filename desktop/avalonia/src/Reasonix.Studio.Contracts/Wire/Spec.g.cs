@@ -21,7 +21,7 @@ public sealed record Spec
     /// Title carries the kernel's "title" value.
     /// </summary>
     [JsonPropertyName("title")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Title { get; init; }
 
     /// <summary>

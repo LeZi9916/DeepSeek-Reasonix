@@ -21,27 +21,27 @@ public sealed record Bound
     /// Lines carries the kernel's "lines" value.
     /// </summary>
     [JsonPropertyName("lines")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Lines { get; init; }
 
     /// <summary>
     /// Bytes carries the kernel's "bytes" value.
     /// </summary>
     [JsonPropertyName("bytes")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Bytes { get; init; }
 
     /// <summary>
     /// KeptBytes carries the kernel's "keptBytes" value.
     /// </summary>
     [JsonPropertyName("keptBytes")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int KeptBytes { get; init; }
 
     /// <summary>
     /// Path carries the kernel's "path" value.
     /// </summary>
     [JsonPropertyName("path")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Path { get; init; }
 }

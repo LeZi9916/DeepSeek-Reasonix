@@ -27,34 +27,34 @@ public sealed record AskOrigin
     /// Message carries the kernel's "message" value.
     /// </summary>
     [JsonPropertyName("message")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Message { get; init; }
 
     /// <summary>
     /// Note carries the kernel's "note" value.
     /// </summary>
     [JsonPropertyName("note")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Note { get; init; }
 
     /// <summary>
     /// URL carries the kernel's "url" value.
     /// </summary>
     [JsonPropertyName("url")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string URL { get; init; }
 
     /// <summary>
     /// URLHost carries the kernel's "urlHost" value.
     /// </summary>
     [JsonPropertyName("urlHost")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string URLHost { get; init; }
 
     /// <summary>
     /// URLLocal carries the kernel's "urlLocal" value.
     /// </summary>
     [JsonPropertyName("urlLocal")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool URLLocal { get; init; }
 }

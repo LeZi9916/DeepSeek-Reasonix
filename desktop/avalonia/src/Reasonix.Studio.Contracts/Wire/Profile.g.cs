@@ -15,34 +15,34 @@ public sealed record Profile
     /// Name carries the kernel's "name" value.
     /// </summary>
     [JsonPropertyName("name")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Name { get; init; }
 
     /// <summary>
     /// Count carries the kernel's "count" value.
     /// </summary>
     [JsonPropertyName("count")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Count { get; init; }
 
     /// <summary>
     /// Model carries the kernel's "model" value.
     /// </summary>
     [JsonPropertyName("model")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Model { get; init; }
 
     /// <summary>
     /// Effort carries the kernel's "effort" value.
     /// </summary>
     [JsonPropertyName("effort")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Effort { get; init; }
 
     /// <summary>
     /// Label carries the kernel's "label" value.
     /// </summary>
     [JsonPropertyName("label")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Label { get; init; }
 }

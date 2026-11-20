@@ -21,7 +21,7 @@ public sealed record ProgressWatch
     /// Cause carries the kernel's "cause" value.
     /// </summary>
     [JsonPropertyName("cause")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Cause { get; init; }
 
     /// <summary>
@@ -34,34 +34,34 @@ public sealed record ProgressWatch
     /// RoundLimit carries the kernel's "roundLimit" value.
     /// </summary>
     [JsonPropertyName("roundLimit")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int RoundLimit { get; init; }
 
     /// <summary>
     /// PromptTokens carries the kernel's "promptTokens" value.
     /// </summary>
     [JsonPropertyName("promptTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int PromptTokens { get; init; }
 
     /// <summary>
     /// TokenLimit carries the kernel's "tokenLimit" value.
     /// </summary>
     [JsonPropertyName("tokenLimit")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int TokenLimit { get; init; }
 
     /// <summary>
     /// TokenMultiple carries the kernel's "tokenMultiple" value.
     /// </summary>
     [JsonPropertyName("tokenMultiple")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int TokenMultiple { get; init; }
 
     /// <summary>
     /// Pausing carries the kernel's "pausing" value.
     /// </summary>
     [JsonPropertyName("pausing")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Pausing { get; init; }
 }

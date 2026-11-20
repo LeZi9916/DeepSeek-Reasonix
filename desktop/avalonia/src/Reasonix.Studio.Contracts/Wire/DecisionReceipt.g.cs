@@ -27,14 +27,14 @@ public sealed record DecisionReceipt
     /// Tool carries the kernel's "tool" value.
     /// </summary>
     [JsonPropertyName("tool")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Tool { get; init; }
 
     /// <summary>
     /// Subject carries the kernel's "subject" value.
     /// </summary>
     [JsonPropertyName("subject")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Subject { get; init; }
 
     /// <summary>
@@ -47,6 +47,6 @@ public sealed record DecisionReceipt
     /// Via carries the kernel's "via" value.
     /// </summary>
     [JsonPropertyName("via")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Via Via { get; init; }
 }

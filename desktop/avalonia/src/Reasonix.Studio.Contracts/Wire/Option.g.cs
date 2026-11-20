@@ -27,55 +27,55 @@ public sealed record Option
     /// Description carries the kernel's "description" value.
     /// </summary>
     [JsonPropertyName("description")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Description { get; init; }
 
     /// <summary>
     /// Preview carries the kernel's "preview" value.
     /// </summary>
     [JsonPropertyName("preview")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Preview { get; init; }
 
     /// <summary>
     /// Group carries the kernel's "group" value.
     /// </summary>
     [JsonPropertyName("group")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Group { get; init; }
 
     /// <summary>
     /// Location carries the kernel's "location" value.
     /// </summary>
     [JsonPropertyName("location")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Location Location { get; init; }
 
     /// <summary>
     /// Price carries the kernel's "price" value.
     /// </summary>
     [JsonPropertyName("price")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double? Price { get; init; }
 
     /// <summary>
     /// Currency carries the kernel's "currency" value.
     /// </summary>
     [JsonPropertyName("currency")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Currency { get; init; }
 
     /// <summary>
     /// Facts carries the kernel's "facts" value.
     /// </summary>
     [JsonPropertyName("facts")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<Fact> Facts { get; init; }
 
     /// <summary>
     /// Image carries the kernel's "image" value.
     /// </summary>
     [JsonPropertyName("image")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public Image Image { get; init; }
 }

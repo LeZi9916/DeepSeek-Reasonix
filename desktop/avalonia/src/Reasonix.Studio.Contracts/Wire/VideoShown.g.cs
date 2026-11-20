@@ -27,7 +27,7 @@ public sealed record VideoShown
     /// DurationMs carries the kernel's "durationMs" value.
     /// </summary>
     [JsonPropertyName("durationMs")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long DurationMs { get; init; }
 
     /// <summary>

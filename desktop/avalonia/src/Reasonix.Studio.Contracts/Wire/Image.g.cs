@@ -27,6 +27,6 @@ public sealed record Image
     /// Source carries the kernel's "source" value.
     /// </summary>
     [JsonPropertyName("source")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Source { get; init; }
 }

@@ -15,41 +15,41 @@ public sealed record ExtensionCard
     /// Title carries the kernel's "title" value.
     /// </summary>
     [JsonPropertyName("title")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Title { get; init; }
 
     /// <summary>
     /// Markdown carries the kernel's "markdown" value.
     /// </summary>
     [JsonPropertyName("markdown")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Markdown { get; init; }
 
     /// <summary>
     /// Text carries the kernel's "text" value.
     /// </summary>
     [JsonPropertyName("text")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Text { get; init; }
 
     /// <summary>
     /// Fields carries the kernel's "fields" value.
     /// </summary>
     [JsonPropertyName("fields")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<ExtensionKeyValue> Fields { get; init; }
 
     /// <summary>
     /// Progress carries the kernel's "progress" value.
     /// </summary>
     [JsonPropertyName("progress")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double? Progress { get; init; }
 
     /// <summary>
     /// Actions carries the kernel's "actions" value.
     /// </summary>
     [JsonPropertyName("actions")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<ExtensionActionRef> Actions { get; init; }
 }

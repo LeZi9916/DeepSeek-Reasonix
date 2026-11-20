@@ -21,14 +21,14 @@ public sealed record WorkspaceLease
     /// Reported carries the kernel's "reported" value.
     /// </summary>
     [JsonPropertyName("reported")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Reported { get; init; }
 
     /// <summary>
     /// WaitedMs carries the kernel's "waitedMs" value.
     /// </summary>
     [JsonPropertyName("waitedMs")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long WaitedMs { get; init; }
 
     /// <summary>
@@ -47,34 +47,34 @@ public sealed record WorkspaceLease
     /// Holder carries the kernel's "holder" value.
     /// </summary>
     [JsonPropertyName("holder")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Holder { get; init; }
 
     /// <summary>
     /// HolderSessionID carries the kernel's "holderSessionId" value.
     /// </summary>
     [JsonPropertyName("holderSessionId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string HolderSessionID { get; init; }
 
     /// <summary>
     /// Paths carries the kernel's "paths" value.
     /// </summary>
     [JsonPropertyName("paths")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string> Paths { get; init; }
 
     /// <summary>
     /// RequestedPaths carries the kernel's "requestedPaths" value.
     /// </summary>
     [JsonPropertyName("requestedPaths")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<string> RequestedPaths { get; init; }
 
     /// <summary>
     /// Repository carries the kernel's "repository" value.
     /// </summary>
     [JsonPropertyName("repository")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Repository { get; init; }
 }

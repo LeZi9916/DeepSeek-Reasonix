@@ -21,13 +21,13 @@ public sealed record File
     /// Root carries the kernel's "root" value.
     /// </summary>
     [JsonPropertyName("root")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Root { get; init; }
 
     /// <summary>
     /// Description carries the kernel's "description" value.
     /// </summary>
     [JsonPropertyName("description")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Description { get; init; }
 }

@@ -45,35 +45,35 @@ public sealed record Usage
     /// ReasoningTokens carries the kernel's "reasoningTokens" value.
     /// </summary>
     [JsonPropertyName("reasoningTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ReasoningTokens { get; init; }
 
     /// <summary>
     /// Estimated carries the kernel's "estimated" value.
     /// </summary>
     [JsonPropertyName("estimated")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Estimated { get; init; }
 
     /// <summary>
     /// Source carries the kernel's "source" value.
     /// </summary>
     [JsonPropertyName("source")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Source { get; init; }
 
     /// <summary>
     /// the stream attempt that billed these tokens
     /// </summary>
     [JsonPropertyName("attemptId")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string AttemptID { get; init; }
 
     /// <summary>
     /// CacheDiagnostics carries the kernel's "cacheDiagnostics" value.
     /// </summary>
     [JsonPropertyName("cacheDiagnostics")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public CacheDiagnostics CacheDiagnostics { get; init; }
 
     /// <summary>
@@ -92,104 +92,104 @@ public sealed record Usage
     /// Context* fields are the latest single-request shape for gauges/rebind. When omitted, clients fall back to the billable prompt/completion totals.
     /// </summary>
     [JsonPropertyName("contextPromptTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ContextPromptTokens { get; init; }
 
     /// <summary>
     /// ContextCompletionTokens carries the kernel's "contextCompletionTokens" value.
     /// </summary>
     [JsonPropertyName("contextCompletionTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ContextCompletionTokens { get; init; }
 
     /// <summary>
     /// ContextReasoningTokens carries the kernel's "contextReasoningTokens" value.
     /// </summary>
     [JsonPropertyName("contextReasoningTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ContextReasoningTokens { get; init; }
 
     /// <summary>
     /// ContextCacheHitTokens carries the kernel's "contextCacheHitTokens" value.
     /// </summary>
     [JsonPropertyName("contextCacheHitTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ContextCacheHitTokens { get; init; }
 
     /// <summary>
     /// ContextCacheMissTokens carries the kernel's "contextCacheMissTokens" value.
     /// </summary>
     [JsonPropertyName("contextCacheMissTokens")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int ContextCacheMissTokens { get; init; }
 
     /// <summary>
     /// Cost carries the kernel's "cost" value.
     /// </summary>
     [JsonPropertyName("cost")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double Cost { get; init; }
 
     /// <summary>
     /// Currency carries the kernel's "currency" value.
     /// </summary>
     [JsonPropertyName("currency")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string Currency { get; init; }
 
     /// <summary>
     /// CurrencyCode is the ISO code for Cost (preferred over symbol Currency).
     /// </summary>
     [JsonPropertyName("currencyCode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string CurrencyCode { get; init; }
 
     /// <summary>
     /// CostUSD is a compatibility alias for older consumers; it mirrors Cost (selected display valuation) and does not imply USD.
     /// </summary>
     [JsonPropertyName("costUsd")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double CostUSD { get; init; }
 
     /// <summary>
     /// CostQuote is the structured host-side quote. New consumers must prefer it over cost/currency aliases. Never sent to model providers.
     /// </summary>
     [JsonPropertyName("costQuote")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public CostQuote CostQuote { get; init; }
 
     /// <summary>
     /// CostComplete carries the kernel's "costComplete" value.
     /// </summary>
     [JsonPropertyName("costComplete")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool CostComplete { get; init; }
 
     /// <summary>
     /// DisplayComplete carries the kernel's "displayComplete" value.
     /// </summary>
     [JsonPropertyName("displayComplete")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool DisplayComplete { get; init; }
 
     /// <summary>
     /// DisplayStatus carries the kernel's "displayStatus" value.
     /// </summary>
     [JsonPropertyName("displayStatus")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string DisplayStatus { get; init; }
 
     /// <summary>
     /// AggregateMode carries the kernel's "aggregateMode" value.
     /// </summary>
     [JsonPropertyName("aggregateMode")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string AggregateMode { get; init; }
 
     /// <summary>
     /// OriginalTotals carries the kernel's "originalTotals" value.
     /// </summary>
     [JsonPropertyName("originalTotals")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<Money> OriginalTotals { get; init; }
 }
