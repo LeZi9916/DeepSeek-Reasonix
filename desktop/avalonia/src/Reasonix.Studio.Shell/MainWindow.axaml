@@ -1,8 +1,74 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ctl="using:Reasonix.Studio.Controls"
+        xmlns:pages="using:Reasonix.Studio.Pages"
         x:Class="Reasonix.Studio.Shell.MainWindow"
         Title="Reasonix Studio"
-        Width="1280"
-        Height="800">
-  <TextBlock Text="Reasonix Studio" />
+        Width="1440"
+        Height="900"
+        Background="{DynamicResource SurfaceBrush}">
+
+  <!--
+    The skeleton's columns, taken from the baseline: the rail spans the full
+    height at 264, and the page area beside it starts with a 48-high chrome bar.
+    Every box here is one the geometry gate holds, so the numbers come from
+    SkeletonMetrics' own values rather than from new literals.
+  -->
+  <Grid ColumnDefinitions="264,*">
+    <ctl:StudioRail Grid.Column="0">
+      <StackPanel Spacing="4">
+        <TextBlock Text="DeepSeek-Reasonix" FontSize="13" FontWeight="SemiBold" />
+        <TextBlock Text="新会话" FontSize="13" Opacity="0.7" />
+      </StackPanel>
+    </ctl:StudioRail>
+
+    <Grid Grid.Column="1" RowDefinitions="48,*">
+      <ctl:StudioChrome Grid.Row="0">
+        <ctl:StudioCrumb>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Text="DeepSeek-Reasonix" FontSize="13" />
+            <TextBlock Text="/" FontSize="13" Opacity="0.5" />
+            <TextBlock Name="CrumbTitle" Text="新会话" FontSize="13" Opacity="0.7" />
+          </StackPanel>
+        </ctl:StudioCrumb>
+      </ctl:StudioChrome>
+
+      <ctl:StudioPane Grid.Row="1">
+        <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Stretch">
+          <Grid Grid.Column="0" RowDefinitions="*,Auto">
+            <pages:SessionPage Name="Conversation" Grid.Row="0" Margin="24,16,24,8" />
+
+            <!-- The composer's box is the baseline's 760 x 128, centred: the
+                 reading column is narrower than the pane on a wide window. -->
+            <ctl:StudioComposer Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,24">
+              <Grid RowDefinitions="*,Auto" Margin="4">
+                <TextBox Name="Composer"
+                         Grid.Row="0"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         PlaceholderText="写点什么…"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         FontSize="13"
+                         VerticalContentAlignment="Top" />
+                <Button Name="Send"
+                        Grid.Row="1"
+                        Content="发送"
+                        HorizontalAlignment="Right"
+                        FontSize="12"
+                        Padding="12,4" />
+              </Grid>
+            </ctl:StudioComposer>
+          </Grid>
+
+          <ctl:StudioSidePanel Grid.Column="1">
+            <StackPanel Margin="12" Spacing="6">
+              <TextBlock Text="上下文" FontSize="13" Opacity="0.7" />
+              <TextBlock Name="ContextReadout" Text="—" FontSize="12" Opacity="0.55" />
+            </StackPanel>
+          </ctl:StudioSidePanel>
+        </Grid>
+      </ctl:StudioPane>
+    </Grid>
+  </Grid>
 </Window>
