@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Reasonix.Studio.Contracts\Reasonix.Studio.Contracts.csproj" />
+    <ProjectReference Include="..\Reasonix.Studio.State\Reasonix.Studio.State.csproj" />
   </ItemGroup>
 
 </Project>
