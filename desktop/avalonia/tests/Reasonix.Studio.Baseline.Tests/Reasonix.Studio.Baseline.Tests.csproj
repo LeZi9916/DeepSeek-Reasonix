@@ -15,6 +15,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\tools\Reasonix.Studio.Baseline\Reasonix.Studio.Baseline.csproj" />
+    <ProjectReference Include="..\..\src\Reasonix.Studio.Controls\Reasonix.Studio.Controls.csproj" />
+    <ProjectReference Include="..\..\src\Reasonix.Studio.Kernel\Reasonix.Studio.Kernel.csproj" />
+    <ProjectReference Include="..\..\src\Reasonix.Studio.State\Reasonix.Studio.State.csproj" />
+    <ProjectReference Include="..\..\src\Reasonix.Studio.Shell\Reasonix.Studio.Shell.csproj" />
   </ItemGroup>
 
   <!--
