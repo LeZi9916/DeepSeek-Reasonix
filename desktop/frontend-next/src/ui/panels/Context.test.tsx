@@ -153,30 +153,40 @@ describe("usage is one number and the ceilings are two questions", () => {
 // same prompt. When the classes were priced at a different rate from the gauge,
 // the rows added to 100% of one sum while the header named a share of another,
 // and the panel offered no way to see which.
-describe("the legend shares the header's denominator", () => {
+describe("the legend reads each class against the capacity, not against what is used", () => {
   const rows = (html: string) =>
     [...html.matchAll(/class="r"[^>]*title="[^"]*">\s*<i[^>]*><\/i>\s*<span class="t">([^<]*)<\/span>\s*<em>(\d+)%<\/em>/g)]
       .map((m) => ({ label: m[1], share: Number(m[2]) }));
 
-  it("adds the classes and the unmeasured remainder to the usage figure", () => {
-    // 60k of classes against an 82k prompt the provider counted: the classes
-    // account for 73%, and the rest is named rather than dropped.
+  // A row answers "how much of the ceiling does this class take", which is the
+  // same question the bar above it answers. Read against the usage figure it
+  // answered "how much of what I already used", so every row summed to 100%
+  // while the bar said the session was a fifth full.
+  it("reports each class against the fold point, so the rows sum to the bar", () => {
     const html = draw(wide());
     const parts = rows(html);
     expect(parts.length).toBeGreaterThan(0);
     const total = parts.reduce((a, p) => a + p.share, 0);
-    expect(total).toBeGreaterThanOrEqual(99);
-    expect(total).toBeLessThanOrEqual(101);
+    // 82k used of a 160k fold point; each row is rounded on its own, so the
+    // sum lands within a point or two of the bar rather than on it exactly.
+    expect(total).toBeGreaterThanOrEqual(50);
+    expect(total).toBeLessThanOrEqual(54);
   });
 
-  it("names what the classes do not account for", () => {
+  it("gives the system prompt its share of the ceiling, not of the usage", () => {
+    // 20k of a 160k fold point is twelve and a half percent, not a quarter.
+    const html = draw(wide());
+    expect(rows(html).find((p) => p.label === "系统提示")?.share).toBe(13);
+  });
+
+  it("names what the classes do not account for, still against the ceiling", () => {
     const html = draw(wide({
       used: 100_000,
       system: 10_000, tools: 10_000, user: 10_000, reply: 10_000, output: 10_000,
     }));
     expect(html).toContain("未计入");
-    // 50k of classes against a 100k prompt: exactly half is unaccounted.
-    expect(rows(html).find((p) => p.label === "未计入")?.share).toBe(50);
+    // 50k unaccounted of a 160k ceiling is 31%, not the 50% of usage.
+    expect(rows(html).find((p) => p.label === "未计入")?.share).toBe(31);
   });
 
   it("shows no remainder when the classes already add up", () => {

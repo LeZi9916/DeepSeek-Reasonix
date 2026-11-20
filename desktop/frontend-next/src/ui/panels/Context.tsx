@@ -150,15 +150,15 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
   const press = !folds ? undefined : pct >= 92 ? "soon" : pct >= 75 ? "near" : undefined;
   const shown = parts().map(([k, label, why]) => ({ k, label, why, n: partTokens(ctx, k) })).filter((p) => p.n > 0);
   const files = ctx.project_memory_files ?? [];
-  // One denominator for the header and the legend. The classes are priced piece
-  // by piece, the gauge may prefer the provider's own count, and the two are
-  // different sums — so the classes are scaled onto the figure the header
-  // names, and whatever they do not account for is its own row. Drawn against
-  // the classes' sum instead, a bar at 8% of the window sat above a legend
-  // adding to 100% of something else.
+  // A row answers the same question as the bar: how much of the ceiling this
+  // class takes. The classes are priced piece by piece while the gauge may
+  // prefer the provider's own count, so they are scaled onto the usage figure
+  // first; the denominator stays the ceiling, and what the classes do not
+  // account for is its own row. Measured against usage instead, every row would
+  // sum to 100% however empty the session was.
   const sum = shown.reduce((a, p) => a + p.n, 0);
   const scale = sum > 0 ? Math.min(1, used / sum) : 0;
-  const share = (n: number) => (used > 0 ? (n * scale) / used : 0);
+  const share = (n: number) => (denom > 0 ? (n * scale) / denom : 0);
   const unmeasured = Math.max(0, used - sum);
 
   // A relay's window is one number somebody typed for every model it forwards,
@@ -205,7 +205,7 @@ export function Context({ ctx, legend = false, port, onCtx, compact }: {
         onBlur={() => setOpen(false)}
       >
         {shown.map((p) => (
-          <i key={p.k} data-p={p.k} style={{ width: `${share(p.n) * pct}%` }} />
+          <i key={p.k} data-p={p.k} style={{ width: `${share(p.n) * 100}%` }} />
         ))}
       </div>
       {press && (
