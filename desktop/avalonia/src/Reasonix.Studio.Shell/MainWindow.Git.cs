@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using FileEntry = Reasonix.Studio.Shell.Workbench.WorkspaceFileEntry;
 
 namespace Reasonix.Studio.Shell;
 
@@ -184,7 +185,11 @@ public sealed partial class MainWindow
             }
 
             var view = new GitRepositoryView();
-            view.StatusChanged += UpdateGitBadge;
+            view.StatusChanged += () =>
+            {
+                UpdateGitBadge();
+                DrawFileTree();
+            };
             GitRepositories.Children.Add(view);
             view.Fit(WorkspaceBody.Bounds.Height);
             await view.OpenAsync(api, repo, several, engine.IsRemote, Language, ShowGitCanvas, path => OpenEntryAsync(new FileEntry(name.Length == 0 ? path : name + "/" + path, false)), ClaimGitCanvas, AfterGitWrite, DescribeError, token).ConfigureAwait(true);
@@ -210,7 +215,7 @@ public sealed partial class MainWindow
                 RebuildTabs();
             }
 
-            await ListFilesAsync(_directory).ConfigureAwait(true);
+            await ListFilesAsync().ConfigureAwait(true);
         }
     }
 
@@ -230,6 +235,7 @@ public sealed partial class MainWindow
         _fileRead++;
         HideBrowser();
         _openFile = null;
+        SelectWorkspaceFile(null);
         _gitSurface = (title, view);
         if (view.Classes.Contains("git-board"))
         {

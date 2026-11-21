@@ -31,6 +31,7 @@
     <InternalsVisibleTo Include="Reasonix.Studio.WebView.Smoke" />
     <AvaloniaResource Include="Assets/wordmark.png" />
     <AvaloniaResource Include="Assets/DataFonts/*.ttf" />
-    <None Include="../../../frontend-next/public/fonts/NotoSansSC-OFL.txt;../../../frontend-next/public/fonts/IBMPlexMono-OFL.txt" Link="licenses/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <AvaloniaResource Include="Assets/WorkbenchFonts/*.ttf" />
+    <None Include="../../../frontend-next/public/fonts/NotoSansSC-OFL.txt;../../../frontend-next/public/fonts/IBMPlexMono-OFL.txt;../../../frontend-next/public/fonts/Inter-OFL.txt" Link="licenses/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

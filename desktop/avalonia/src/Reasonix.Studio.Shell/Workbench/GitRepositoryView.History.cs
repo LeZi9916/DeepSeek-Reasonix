@@ -63,7 +63,7 @@ public sealed partial class GitRepositoryView
         {
             var id = (string)row.Commit["id"]!;
             var group = new StackPanel();
-            var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), Height = 26 };
+            var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*,Auto,Auto"), ColumnSpacing = 8, Height = 26 };
             var graph = new Canvas { Width = 16 + (12 * Math.Max(0, waiting.Count - 1)), Height = 26 };
             grid.Children.Add(graph);
             var x = 8 + (row.Lane * 12);
@@ -99,37 +99,47 @@ public sealed partial class GitRepositoryView
             pick.HorizontalContentAlignment = HorizontalAlignment.Stretch;
             pick.HorizontalAlignment = HorizontalAlignment.Stretch;
             pick.Height = 26;
-            var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 5 };
-            var hash = Caption(id[..Math.Min(7, id.Length)]);
-            hash.FontSize = 11;
+            var hash = new TextBlock { Text = id[..Math.Min(7, id.Length)] };
+            hash.Classes.Add("git-history-hash");
             hash.VerticalAlignment = VerticalAlignment.Center;
-            heading.Children.Add(hash);
+            Grid.SetColumn(hash, 1);
+            grid.Children.Add(hash);
             var refs = row.Commit["refs"]?.AsArray() ?? [];
             var subject = (string?)row.Commit["subject"] ?? string.Empty;
-            var text = new TextBlock { Text = subject, FontSize = 11, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
-            if (refs.Count > 0)
+            var text = new TextBlock { Text = subject, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+            text.Classes.Add("git-history-subject");
+            Grid.SetColumn(text, 2);
+            grid.Children.Add(text);
+            var labels = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
+            foreach (var reference in refs.Select(n => (string?)n ?? string.Empty))
             {
-                text.Text = string.Join("  ·  ", refs.Select(n => (string?)n));
-                var badge = new Border { CornerRadius = new CornerRadius(8), Padding = new Thickness(5, 1), BorderThickness = new Thickness(1), Child = text, VerticalAlignment = VerticalAlignment.Center };
-                badge.Bind(Border.BorderBrushProperty, badge.GetResourceObservable("MutedBrush"));
-                Grid.SetColumn(badge, 1);
-                heading.Children.Add(badge);
-            }
-            else
-            {
-                Grid.SetColumn(text, 1);
-                heading.Children.Add(text);
+                var branch = !reference.StartsWith("tag: ", StringComparison.Ordinal);
+                var label = new TextBlock { Text = reference, TextTrimming = TextTrimming.CharacterEllipsis, Height = 13.2, LineHeight = 13.2, UseLayoutRounding = false };
+                label.Classes.Add("git-history-ref");
+                label.Classes.Set("branch", branch);
+                var badge = new Border { MaxWidth = 66, CornerRadius = new CornerRadius(12), Padding = new Thickness(6, 2), BorderThickness = new Thickness(1), Child = label, VerticalAlignment = VerticalAlignment.Center };
+                badge.Bind(Border.BorderBrushProperty, badge.GetResourceObservable(branch ? "AccentBrush" : "HairBrush"));
+                ToolTip.SetTip(badge, reference);
+                labels.Children.Add(badge);
             }
 
+            Grid.SetColumn(labels, 3);
+            grid.Children.Add(labels);
+
             ToolTip.SetTip(pick, string.Join(" · ", id, (string?)row.Commit["author"], subject, string.Join(", ", refs.Select(n => (string?)n))));
-            Grid.SetColumn(heading, 1);
-            grid.Children.Add(heading);
             var age = DateTimeOffset.UtcNow - DateTimeOffset.FromUnixTimeSeconds((long?)row.Commit["at"] ?? 0);
-            var time = Caption(age.TotalDays >= 1 ? Text("workbench.history_day", ("n", ((int)age.TotalDays).ToString(CultureInfo.CurrentCulture))) : age.TotalHours >= 1 ? Text("workbench.history_hour", ("n", ((int)age.TotalHours).ToString(CultureInfo.CurrentCulture))) : age.TotalMinutes >= 1 ? Text("workbench.history_min", ("n", ((int)age.TotalMinutes).ToString(CultureInfo.CurrentCulture))) : Text("workbench.history_now"));
+            var time = new TextBlock { Text = age.TotalDays >= 1 ? Text("workbench.history_day", ("n", ((int)age.TotalDays).ToString(CultureInfo.CurrentCulture))) : age.TotalHours >= 1 ? Text("workbench.history_hour", ("n", ((int)age.TotalHours).ToString(CultureInfo.CurrentCulture))) : age.TotalMinutes >= 1 ? Text("workbench.history_min", ("n", ((int)age.TotalMinutes).ToString(CultureInfo.CurrentCulture))) : Text("workbench.history_now") };
+            time.Classes.Add("git-history-time");
             time.VerticalAlignment = VerticalAlignment.Center;
-            Grid.SetColumn(time, 2);
+            Grid.SetColumn(time, 4);
             grid.Children.Add(time);
-            pick.Padding = new Thickness(4, 0, 6, 0);
+            pick.Padding = new Thickness(12, 0);
+            if (refs.Count == 0)
+            {
+                grid.ColumnDefinitions.RemoveAt(3);
+                Grid.SetColumn(time, 3);
+            }
+
             pick.Content = grid;
             AutomationProperties.SetName(pick, id + " " + subject);
             group.Children.Add(pick);
@@ -220,8 +230,8 @@ public sealed partial class GitRepositoryView
     private void ShowBoard()
     {
         CloseReview();
-        _boardReview = new StackPanel { IsVisible = false, Spacing = 6 };
-        _board = new StackPanel { Spacing = 6 };
+        _board ??= new GitChangesView();
+        _boardReview = _board.Review;
         _board.Classes.Add("git-board");
         DrawBoard(_board);
         _show(Text("common.changes"), _board);
@@ -229,14 +239,9 @@ public sealed partial class GitRepositoryView
 
     /// <summary>Rebuilds the board with staged state from the latest read.</summary>
     /// <param name="board">The expanded changes canvas.</param>
-    private void DrawBoard(StackPanel board)
+    private void DrawBoard(GitChangesView board)
     {
-        if (_boardReview?.Parent is Border oldFrame)
-        {
-            oldFrame.Child = null;
-        }
-
-        board.Children.Clear();
+        board.Files.Children.Clear();
         var toolbar = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), MinHeight = 40, Margin = new Thickness(12, 0, 8, 0) };
         var info = new TextBlock { Text = string.Join("  ", Branch.Content, Count.Text, "+" + _changes.Sum(c => (int?)c["insertions"] ?? 0).ToString(CultureInfo.CurrentCulture), "−" + _changes.Sum(c => (int?)c["deletions"] ?? 0).ToString(CultureInfo.CurrentCulture)), FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
         toolbar.Children.Add(info);
@@ -252,29 +257,31 @@ public sealed partial class GitRepositoryView
 
         Grid.SetColumn(actions, 1);
         toolbar.Children.Add(actions);
-        board.Children.Add(toolbar);
-        var reviewFrame = new Border { Child = _boardReview!, Padding = new Thickness(12), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(8) };
-        reviewFrame.Bind(Border.BackgroundProperty, reviewFrame.GetResourceObservable("SurfaceBrush"));
-        reviewFrame.Bind(Border.BorderBrushProperty, reviewFrame.GetResourceObservable("HairBrush"));
-        reviewFrame.Bind(IsVisibleProperty, _boardReview!.GetObservable(IsVisibleProperty));
-        board.Children.Add(reviewFrame);
-        _boardNotice = Caption(Failure.IsVisible ? Failure.Text ?? string.Empty : Outcome.Text ?? string.Empty);
+        foreach (var button in actions.Children.OfType<Button>())
+        {
+            button.Classes.Add("git-board-command");
+        }
+
+        board.Commands.Content = toolbar;
+        _boardNotice = board.Notice;
+        _boardNotice.Text = Failure.IsVisible ? Failure.Text : Outcome.Text;
         _boardNotice.IsVisible = Failure.IsVisible || Outcome.IsVisible;
-        board.Children.Add(_boardNotice);
         if (_changes.Length == 0)
         {
-            board.Children.Add(Caption(Text("workbench.no_changes")));
+            board.Files.Children.Add(Caption(Text("workbench.no_changes")));
         }
 
         foreach (var change in _changes)
         {
             var path = (string)change["path"]!;
-            var section = new StackPanel { Spacing = 4 };
-            var head = new Grid { ColumnDefinitions = new ColumnDefinitions("18,16,*,Auto,Auto"), ColumnSpacing = 6, Height = 34, Margin = new Thickness(8, 0) };
-            var patch = new ContentControl { IsVisible = (string?)change["status"] is not ("A" or "??") };
+            var section = new StackPanel();
+            var head = new Grid { ColumnDefinitions = new ColumnDefinitions("18,14,*,Auto,Auto"), ColumnSpacing = 8, Height = 36, Margin = new Thickness(10, 0, 8, 0) };
+            head.Classes.Add("git-change-item");
+            var patch = new ContentControl { IsVisible = _expanded.TryGetValue(path, out var open) ? open : (string?)change["status"] is not ("A" or "??") };
             var fold = FlatAction(patch.IsVisible ? "⌄" : "›", "workbench.change-fold", async () =>
             {
                 patch.IsVisible = !patch.IsVisible;
+                _expanded[path] = patch.IsVisible;
                 if (patch.IsVisible)
                 {
                     await ReadPatch().ConfigureAwait(true);
@@ -289,19 +296,9 @@ public sealed partial class GitRepositoryView
                 }
             };
             head.Children.Add(fold);
-            var staged = FullyStaged([change]);
-            var stage = FlatAction(staged ? "✓" : (bool?)change["staged"] == true ? "−" : string.Empty, "workbench.stage", () => StageAsync([change]));
-            stage.Width = stage.Height = 16;
-            stage.CornerRadius = new CornerRadius(3);
-            stage.BorderThickness = new Thickness(1);
-            stage.Bind(Button.BorderBrushProperty, stage.GetResourceObservable("BorderBrush"));
-            if (staged)
-            {
-                stage.Bind(Button.BackgroundProperty, stage.GetResourceObservable("AccentBrush"));
-                stage.Bind(Button.ForegroundProperty, stage.GetResourceObservable("AccentFgBrush"));
-            }
-
-            AutomationProperties.SetName(stage, Text("workbench.stage_path", ("path", path)));
+            var stage = StageBox([change], path, "workbench.stage");
+            stage.Width = stage.Height = 14;
+            stage.BorderThickness = new Thickness(1.5);
             Grid.SetColumn(stage, 1);
             head.Children.Add(stage);
             var name = FlatAction(string.Empty, "workbench.change-open", () => _open(path));
@@ -331,12 +328,36 @@ public sealed partial class GitRepositoryView
                     return Task.CompletedTask;
                 });
                 Grid.SetColumn(undo, 4);
+                undo.Classes.Add("git-discard");
                 head.Children.Add(undo);
             }
 
             section.Children.Add(head);
+            if ((string?)change["status"] is "A" or "??" && _changes.Length <= 8)
+            {
+                var peek = FlatAction(Text((string?)change["status"] == "??" ? "workbench.untracked_open_to_see" : "workbench.new_file_open_to_see"), "workbench.change-peek", async () =>
+                {
+                    patch.IsVisible = true;
+                    _expanded[path] = true;
+                    await ReadPatch().ConfigureAwait(true);
+                });
+                peek.HorizontalAlignment = HorizontalAlignment.Stretch;
+                peek.HorizontalContentAlignment = HorizontalAlignment.Left;
+                peek.Padding = new Thickness(54, 8, 12, 8);
+                peek.IsVisible = !patch.IsVisible;
+                peek.Bind(Button.ForegroundProperty, peek.GetResourceObservable("FaintBrush"));
+                patch.PropertyChanged += (_, e) =>
+                {
+                    if (e.Property == IsVisibleProperty)
+                    {
+                        peek.IsVisible = !patch.IsVisible;
+                    }
+                };
+                section.Children.Add(peek);
+            }
+
             section.Children.Add(patch);
-            board.Children.Add(section);
+            board.Files.Children.Add(section);
             if (patch.IsVisible)
             {
                 _ = ReadPatch();
@@ -365,6 +386,15 @@ public sealed partial class GitRepositoryView
                     }
                 }
             }
+        }
+
+        if (_changes.Length > 0)
+        {
+            var hint = Caption(Text("workbench.changes_page_hint"));
+            hint.FontSize = 11;
+            hint.Margin = new Thickness(12, 10);
+            hint.Bind(TextBlock.ForegroundProperty, hint.GetResourceObservable("FaintBrush"));
+            board.Files.Children.Add(hint);
         }
     }
 }

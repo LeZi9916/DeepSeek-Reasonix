@@ -1,9 +1,36 @@
-<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Style Selector="Button.git-tool, Button.git-flat, Button.wb-tab, Button.wb-command, Button#FileMore">
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:workbench="using:Reasonix.Studio.Shell.Workbench">
+  <Styles.Resources>
+    <ControlTheme x:Key="{x:Type workbench:GitStageBox}" TargetType="workbench:GitStageBox">
+      <Setter Property="Width" Value="16"/><Setter Property="Height" Value="16"/><Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Padding" Value="0"/><Setter Property="HorizontalAlignment" Value="Left"/><Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="IsThreeState" Value="True"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="Background" Value="Transparent"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="FocusAdorner"><Template><Border Margin="-3" BorderBrush="{DynamicResource FocusBrush}" BorderThickness="2" CornerRadius="5" IsHitTestVisible="False"/></Template></Setter>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Name="PART_Box" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+          <Grid>
+            <Viewbox Name="PART_Check" Width="11" Height="11" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="False">
+              <Canvas Width="24" Height="24"><Path Data="m20 6-11 11-5-5" Stroke="{TemplateBinding Foreground}" StrokeThickness="3" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+            </Viewbox>
+            <Border Name="PART_Mixed" Width="8" Height="2" CornerRadius="1" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{TemplateBinding Foreground}" IsVisible="False"/>
+          </Grid>
+        </Border>
+      </ControlTemplate></Setter>
+      <Style Selector="^:checked"><Setter Property="Background" Value="{DynamicResource AccentBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentFgBrush}"/></Style>
+      <Style Selector="^:checked /template/ Viewbox#PART_Check"><Setter Property="IsVisible" Value="True"/></Style>
+      <Style Selector="^:indeterminate"><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Style>
+      <Style Selector="^:indeterminate /template/ Border#PART_Mixed"><Setter Property="IsVisible" Value="True"/></Style>
+      <Style Selector="^:pointerover:not(:disabled)"><Setter Property="BorderBrush" Value="{DynamicResource TextBrush}"/></Style>
+      <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.5"/></Style>
+    </ControlTheme>
+  </Styles.Resources>
+  <Style Selector="Button.git-tool, Button.git-flat, Button.wb-tab, Button.wb-tab-close, Button.wb-command, Button#FileMore">
     <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
     <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-    <Setter Property="FontWeight" Value="Normal"/><Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="FontWeight" Value="Medium"/><Setter Property="BorderThickness" Value="0"/>
     <Setter Property="Padding" Value="0"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="FocusAdorner"><Template><Border BorderBrush="{DynamicResource FocusBrush}" BorderThickness="2" CornerRadius="5" IsHitTestVisible="False"/></Template></Setter>
     <Setter Property="Template"><ControlTemplate>
       <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
               CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
@@ -11,13 +38,54 @@
       </Border>
     </ControlTemplate></Setter>
   </Style>
-  <Style Selector="Button.git-tool, Button.wb-command"><Setter Property="Height" Value="24"/><Setter Property="Padding" Value="6,0"/>
+  <Style Selector="Button.git-tool, Button.wb-command"><Setter Property="Height" Value="24"/><Setter Property="Padding" Value="6,0"/><Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Setter Property="CornerRadius" Value="8"/></Style>
   <Style Selector="Button.git-tool.primary"><Setter Property="Background" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentFgBrush}"/></Style>
+  <Style Selector="Button.git-tool.git-board-command"><Setter Property="Height" Value="32"/><Setter Property="Padding" Value="14,0"/><Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="FontWeight" Value="Medium"/><Setter Property="CornerRadius" Value="7"/></Style>
   <Style Selector="Button.git-flat:pointerover, Button.git-tool:pointerover, Button.wb-tab:pointerover, Button#FileMore:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  <Style Selector="Button.git-flat:pressed, Button.git-tool:pressed, Button.wb-tab:pressed"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  <Style Selector="Button.git-tool.primary:pointerover, Button.git-tool.primary:pressed"><Setter Property="Background" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentFgBrush}"/></Style>
   <Style Selector="Button.git-tool:disabled, Button.wb-command:disabled"><Setter Property="Opacity" Value="0.65"/></Style>
   <Style Selector="Button.wb-tab"><Setter Property="CornerRadius" Value="7,7,0,0"/><Setter Property="Padding" Value="8,0"/><Setter Property="Height" Value="34"/></Style>
   <Style Selector="Button.wb-tab.active"><Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
-  <Style Selector="ListBox#WorkspaceFiles ListBoxItem"><Setter Property="MinHeight" Value="26"/><Setter Property="Padding" Value="12,2"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/></Style>
+  <Style Selector="StackPanel.wb-tab-frame"><Setter Property="Height" Value="34"/></Style>
+  <Style Selector="StackPanel.wb-tab-frame.active"><Setter Property="Background" Value="{DynamicResource RaisedBrush}"/></Style>
+  <Style Selector="Button.wb-tab-close"><Setter Property="Width" Value="22"/><Setter Property="Height" Value="22"/><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="CornerRadius" Value="5"/></Style>
+  <Style Selector="Button.wb-tab-close:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  <Style Selector="Button.workspace-file-row">
+    <Setter Property="Height" Value="30"/><Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/>
+    <Setter Property="FontFamily" Value="{DynamicResource WorkbenchMonoFamily}"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="FocusAdorner"><Template><Border BorderBrush="{DynamicResource FocusBrush}" BorderThickness="2" IsHitTestVisible="False"/></Template></Setter>
+    <Setter Property="Template"><ControlTemplate><Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+      <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/>
+    </Border></ControlTemplate></Setter>
+  </Style>
+  <Style Selector="Button.workspace-file-row:pointerover, ListBoxItem:selected Button.workspace-file-row">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="ListBox#WorkspaceFiles ListBoxItem"><Setter Property="Height" Value="30"/><Setter Property="MinHeight" Value="0"/><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0"/><Setter Property="Background" Value="Transparent"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Template"><ControlTemplate><Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+      <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/>
+    </Border></ControlTemplate></Setter>
+  </Style>
   <Style Selector="ListBox#WorkspaceFiles ListBoxItem:selected"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+  <Style Selector="TextBlock.git-path"><Setter Property="FontFamily" Value="{DynamicResource WorkbenchUiFamily}"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Medium"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+  <Style Selector="Button.git-change-name:pointerover TextBlock.git-path"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+  <Style Selector="TextBlock.git-status, TextBlock.git-added, TextBlock.git-removed, TextBlock.git-history-hash, TextBlock.git-history-ref">
+    <Setter Property="FontFamily" Value="{DynamicResource WorkbenchMonoFamily}"/><Setter Property="FontSize" Value="{DynamicResource StudioType11}"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.git-added"><Setter Property="Foreground" Value="{DynamicResource IoUpBrush}"/></Style>
+  <Style Selector="TextBlock.git-removed"><Setter Property="Foreground" Value="{DynamicResource IoDownBrush}"/></Style>
+  <Style Selector="TextBlock.git-folder-count"><Setter Property="FontSize" Value="{DynamicResource StudioType10}"/><Setter Property="FontWeight" Value="Medium"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
+  <Style Selector="TextBlock.git-history-subject"><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+  <Style Selector="TextBlock.git-history-time"><Setter Property="FontSize" Value="{DynamicResource StudioType11}"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
+  <Style Selector="TextBlock.git-history-ref.branch"><Setter Property="Foreground" Value="{DynamicResource AccentInkBrush}"/></Style>
+  <Style Selector="Button.git-section-title"><Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="FontWeight" Value="Bold"/></Style>
+  <Style Selector="Button.git-history-title"><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Bold"/></Style>
+  <Style Selector="Button.git-commit-open, Button.git-commit-open:pointerover, Button.git-commit-open:pressed"><Setter Property="Background" Value="{DynamicResource TextBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource TextBrush}"/><Setter Property="Foreground" Value="{DynamicResource SurfaceBrush}"/></Style>
+  <Style Selector="Button.git-discard"><Setter Property="Opacity" Value="0"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
+  <Style Selector="Grid.git-change-item:pointerover Button.git-discard, Button.git-discard:focus-visible"><Setter Property="Opacity" Value="1"/></Style>
+  <Style Selector="Button.git-discard:pointerover"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
 </Styles>

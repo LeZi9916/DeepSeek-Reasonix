@@ -22,6 +22,9 @@ public sealed partial class GitRepositoryView : SettingsFormView
     /// <summary>Folders the user folded in the changes tree.</summary>
     private readonly HashSet<string> _folded = new(StringComparer.Ordinal);
 
+    /// <summary>Expanded patch state survives authoritative status refreshes.</summary>
+    private readonly Dictionary<string, bool> _expanded = new(StringComparer.Ordinal);
+
     /// <summary>Owning session's kernel client.</summary>
     private StudioPageClient _api = null!;
 
@@ -71,7 +74,7 @@ public sealed partial class GitRepositoryView : SettingsFormView
     private Func<Exception, string> _describe = null!;
 
     /// <summary>View currently displaying the expanded changes board.</summary>
-    private StackPanel? _board;
+    private GitChangesView? _board;
 
     /// <summary>Review container retained across changes-board refreshes.</summary>
     private StackPanel? _boardReview;
@@ -87,6 +90,9 @@ public sealed partial class GitRepositoryView : SettingsFormView
 
     /// <summary>Gets the changed-file count for this repository.</summary>
     internal int ChangeCount => _changes.Length;
+
+    /// <summary>Gets repository-relative paths and statuses for the workspace file tree.</summary>
+    internal System.Collections.Generic.IEnumerable<(string Path, string Status)> FileStatuses => _changes.Select(c => ((string)c["path"]!, (string?)c["status"] ?? "M"));
 
     /// <summary>Gets the directory to use on all reads and writes from this section.</summary>
     internal string Directory => _repo;
@@ -117,6 +123,9 @@ public sealed partial class GitRepositoryView : SettingsFormView
         _describe = describe;
         _remote = remote;
         Translate(language);
+        var changesTitle = new TextBlock { Text = Text("common.changes"), VerticalAlignment = VerticalAlignment.Center };
+        changesTitle.Bind(TextBlock.LineHeightProperty, Board.GetObservable(Button.FontSizeProperty));
+        Board.Content = changesTitle;
         UpdateIdentity(repo, several);
         RepoToggle.Click += async (_, _) =>
         {
@@ -128,7 +137,8 @@ public sealed partial class GitRepositoryView : SettingsFormView
         };
         Tag = _repo;
         Push.Content = Text("workbench.push") + "…";
-        HistoryTitle.Content = "⌄  " + Text("workbench.commit_history");
+        HistoryLabel.Text = Text("workbench.commit_history");
+        AutomationProperties.SetName(HistoryTitle, HistoryLabel.Text);
         Branch.Content = (string?)repo["branch"];
         Branch.IsEnabled = _repo.Length == 0;
         Branch.Click += async (_, _) => await ReadBranchesAsync().ConfigureAwait(true);
@@ -136,7 +146,7 @@ public sealed partial class GitRepositoryView : SettingsFormView
         Fold.Click += (_, _) =>
         {
             Changes.IsVisible = !Changes.IsVisible;
-            Fold.Content = Changes.IsVisible ? "⌄" : "›";
+            ChangesFoldIcon.RenderTransform = new RotateTransform(Changes.IsVisible ? 0 : -90);
         };
         Board.Click += (_, _) => ShowBoard();
         StageAll.Click += async (_, _) => await StageAsync(null).ConfigureAwait(true);
@@ -145,6 +155,7 @@ public sealed partial class GitRepositoryView : SettingsFormView
         HistoryTitle.Click += async (_, _) =>
         {
             HistoryScroll.IsVisible = !HistoryScroll.IsVisible;
+            HistoryFoldIcon.RenderTransform = new RotateTransform(HistoryScroll.IsVisible ? 0 : -90);
             if (HistoryScroll.IsVisible)
             {
                 await RefreshAsync().ConfigureAwait(true);
@@ -275,6 +286,20 @@ public sealed partial class GitRepositoryView : SettingsFormView
         (int?)c["deletions"] is { } removed ? "−" + removed.ToString(CultureInfo.CurrentCulture) : null,
     }.Where(v => v is not null));
 
+    /// <summary>Creates the shared sidebar and changes-board staging control.</summary>
+    /// <param name="changes">Authoritative paths represented by the control.</param>
+    /// <param name="path">Accessible path label.</param>
+    /// <param name="id">Canonical action.</param>
+    /// <returns>The host-driven three-state checkbox.</returns>
+    private GitStageBox StageBox(JsonObject[] changes, string path, string id)
+    {
+        var box = new GitStageBox { IsChecked = FullyStaged(changes) ? true : changes.Any(c => (bool?)c["staged"] == true) ? null : false };
+        AutomationProperties.SetAutomationId(box, "action:" + id);
+        AutomationProperties.SetName(box, Text("workbench.stage_path", ("path", path)));
+        box.Click += async (_, _) => await StageAsync(changes).ConfigureAwait(true);
+        return box;
+    }
+
     /// <summary>Checks whether the read still belongs to this mounted generation.</summary>
     /// <param name="ticket">The generation which issued this read.</param>
     /// <returns>Whether the read is still current.</returns>
@@ -399,19 +424,9 @@ public sealed partial class GitRepositoryView : SettingsFormView
                 }
 
                 var row = new Grid { Height = 26, ColumnDefinitions = new ColumnDefinitions("24,*,Auto") };
-                var stage = Action(FullyStaged(list) ? "✓" : list.Any(c => (bool?)c["staged"] == true) ? "−" : string.Empty, folder ? "workbench.stage-folder" : "workbench.stage", () => StageAsync(list), true);
-                stage.Width = stage.Height = 16;
+                row.Classes.Add("git-change-item");
+                var stage = StageBox(list, path, folder ? "workbench.stage-folder" : "workbench.stage");
                 stage.Margin = new Thickness(8, 0, 0, 0);
-                stage.BorderThickness = new Thickness(1);
-                stage.CornerRadius = new CornerRadius(3);
-                stage.Bind(Button.BorderBrushProperty, stage.GetResourceObservable("BorderBrush"));
-                if (FullyStaged(list))
-                {
-                    stage.Bind(Button.BackgroundProperty, stage.GetResourceObservable("AccentBrush"));
-                    stage.Bind(Button.ForegroundProperty, stage.GetResourceObservable("AccentFgBrush"));
-                }
-
-                AutomationProperties.SetName(stage, Text("workbench.stage_path", ("path", path)));
                 row.Children.Add(stage);
                 var name = FlatAction(folder ? (_folded.Contains(path) ? "› " : "⌄ ") + label : (string?)list[0]["status"] + " " + label, folder ? "workbench.change-folder" : "workbench.diff", async () =>
                 {
@@ -430,30 +445,53 @@ public sealed partial class GitRepositoryView : SettingsFormView
                     }
                 });
                 name.HorizontalAlignment = HorizontalAlignment.Stretch;
+                name.Classes.Add("git-change-name");
                 name.HorizontalContentAlignment = HorizontalAlignment.Left;
                 name.Height = 26;
                 name.Padding = new Thickness(6 + (depth * 12), 0, 10, 0);
-                var copy = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 5 };
-                copy.Children.Add(new TextBlock { Text = name.Content!.ToString(), FontSize = 12, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
-                var counts = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 3, VerticalAlignment = VerticalAlignment.Center };
+                var copy = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), ColumnSpacing = 7 };
+                Control leading;
                 if (folder)
                 {
-                    counts.Children.Add(Caption(list.Length.ToString(CultureInfo.CurrentCulture)));
+                    var shape = new Avalonia.Controls.Shapes.Path { Data = Geometry.Parse(_folded.Contains(path) ? "m9 6 6 6-6 6" : "M6 9l6 6 6-6"), StrokeThickness = 1.8, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round };
+                    shape.Bind(Avalonia.Controls.Shapes.Shape.StrokeProperty, shape.GetResourceObservable("FaintBrush"));
+                    var canvas = new Canvas { Width = 24, Height = 24 };
+                    canvas.Children.Add(shape);
+                    leading = new Viewbox { Width = 12, Height = 12, Child = canvas };
+                }
+                else
+                {
+                    var status = (string?)list[0]["status"] ?? "M";
+                    var marker = new TextBlock { Text = status, Width = 15, TextAlignment = TextAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+                    marker.Classes.Add(status is "A" or "??" ? "git-added" : status == "D" ? "git-removed" : "git-status");
+                    leading = marker;
                 }
 
-                foreach (var (field, symbol, brush) in new[] { ("insertions", "+", "AddBrush"), ("deletions", "−", "DelBrush") })
+                copy.Children.Add(leading);
+                var title = new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+                title.Classes.Add("git-path");
+                Grid.SetColumn(title, 1);
+                copy.Children.Add(title);
+                var counts = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 7, VerticalAlignment = VerticalAlignment.Center };
+                if (folder)
+                {
+                    var count = new TextBlock { Text = list.Length.ToString(CultureInfo.CurrentCulture), VerticalAlignment = VerticalAlignment.Center };
+                    count.Classes.Add("git-folder-count");
+                    counts.Children.Add(count);
+                }
+
+                foreach (var (field, symbol, role) in new[] { ("insertions", "+", "git-added"), ("deletions", "-", "git-removed") })
                 {
                     var measured = list.Where(c => c[field] is not null).Select(c => (int)c[field]!).ToArray();
                     if (measured.Length > 0)
                     {
-                        var number = Caption(symbol + measured.Sum().ToString(CultureInfo.CurrentCulture));
-                        number.FontSize = 10;
-                        number.Bind(TextBlock.ForegroundProperty, number.GetResourceObservable(brush));
+                        var number = new TextBlock { Text = symbol + measured.Sum().ToString(CultureInfo.CurrentCulture), VerticalAlignment = VerticalAlignment.Center };
+                        number.Classes.Add(role);
                         counts.Children.Add(number);
                     }
                 }
 
-                Grid.SetColumn(counts, 1);
+                Grid.SetColumn(counts, 2);
                 copy.Children.Add(counts);
                 name.Content = copy;
                 ToolTip.SetTip(name, path);
@@ -470,6 +508,7 @@ public sealed partial class GitRepositoryView : SettingsFormView
                         return Task.CompletedTask;
                     });
                     AutomationProperties.SetName(discard, Text("workbench.discard") + " " + path);
+                    discard.Classes.Add("git-discard");
                     discard.Width = discard.Height = 22;
                     discard.Margin = new Thickness(0, 0, 6, 0);
                     Grid.SetColumn(discard, 2);

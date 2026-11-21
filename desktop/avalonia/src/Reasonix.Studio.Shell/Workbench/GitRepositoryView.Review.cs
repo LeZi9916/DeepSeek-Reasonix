@@ -105,22 +105,34 @@ public sealed partial class GitRepositoryView
     {
         var files = proposal["files"]?.AsArray().OfType<JsonObject>().ToArray() ?? [];
         var fingerprint = (string?)proposal["fingerprint"];
-        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
-        header.Children.Add(new TextBlock { Text = Text("workbench.staged_files"), FontWeight = FontWeight.SemiBold, FontSize = 13 });
+        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 15.4 };
+        header.Children.Add(new TextBlock { Text = Text("workbench.staged_files"), FontWeight = FontWeight.Medium, FontSize = 11 });
         var count = Caption(Text("workbench.n_files_staged", ("n", files.Length.ToString(CultureInfo.CurrentCulture))));
+        count.FontSize = 11;
+        count.Bind(TextBlock.ForegroundProperty, count.GetResourceObservable("MutedBrush"));
         Grid.SetColumn(count, 1);
         header.Children.Add(count);
         ReviewArea.Children.Add(header);
+        var fileList = new StackPanel { Spacing = 2 };
+        ReviewArea.Children.Add(new ScrollViewer { Content = fileList, MaxHeight = 120, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled });
         foreach (var file in files)
         {
-            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
-            var path = new TextBlock { Text = (string?)file["status"] + "  " + (string?)file["path"], FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis };
-            path.Bind(TextBlock.FontFamilyProperty, path.GetResourceObservable("DataPathFamily"));
+            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto"), ColumnSpacing = 6, Height = 16.5 };
+            var path = new TextBlock { Text = (string?)file["status"] + "  " + (string?)file["path"], FontSize = 11, TextTrimming = TextTrimming.CharacterEllipsis };
+            ToolTip.SetTip(path, (string?)file["path"]);
+            path.Bind(TextBlock.ForegroundProperty, path.GetResourceObservable("MutedBrush"));
+            path.Bind(TextBlock.FontFamilyProperty, path.GetResourceObservable("WorkbenchMonoFamily"));
             row.Children.Add(path);
-            var totals = Caption(Counts(file));
-            Grid.SetColumn(totals, 1);
-            row.Children.Add(totals);
-            ReviewArea.Children.Add(row);
+            foreach (var (key, prefix, ink, column) in new[] { ("insertions", "+", "AddBrush", 1), ("deletions", "−", "DelBrush", 2) })
+            {
+                var number = new TextBlock { Text = file[key] is null ? string.Empty : prefix + file[key], FontSize = 11 };
+                number.Bind(TextBlock.ForegroundProperty, number.GetResourceObservable(ink));
+                number.Bind(TextBlock.FontFamilyProperty, number.GetResourceObservable("WorkbenchMonoFamily"));
+                Grid.SetColumn(number, column);
+                row.Children.Add(number);
+            }
+
+            fileList.Children.Add(row);
         }
 
         if ((bool?)proposal["truncated"] == true)
@@ -144,8 +156,8 @@ public sealed partial class GitRepositoryView
         var acknowledge = new CheckBox { Content = Caption(Text("workbench.i_confirm_these_can_be")), IsVisible = warned };
         AutomationProperties.SetAutomationId(acknowledge, "action:commit.acknowledge");
         ReviewArea.Children.Add(acknowledge);
-        var message = new TextBox { Text = (string?)proposal["message"], AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 124, FontSize = 12, FontWeight = FontWeight.Normal, PlaceholderText = Text("workbench.commit_message") };
-        message.Bind(TextBox.FontFamilyProperty, message.GetResourceObservable("DataPathFamily"));
+        var message = new TextBox { Text = (string?)proposal["message"], AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, Height = 126, Padding = new Thickness(10, 8), CornerRadius = new CornerRadius(7), LineHeight = 18, FontSize = 12, FontWeight = FontWeight.Medium, PlaceholderText = Text("workbench.commit_message") };
+        message.Bind(TextBox.FontFamilyProperty, message.GetResourceObservable("WorkbenchMonoFamily"));
         AutomationProperties.SetAutomationId(message, "action:commit.edit");
         ReviewArea.Children.Add(message);
         var apply = Action(Text("workbench.commit_locally"), "commit.confirm", async () =>
@@ -172,8 +184,11 @@ public sealed partial class GitRepositoryView
             }
         };
         acknowledge.IsCheckedChanged += (_, _) => apply.IsEnabled = Valid();
-        ReviewArea.Children.Add(Caption(Text("workbench.recorded_locally_only_nothing_is")));
-        var buttons = new WrapPanel { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, ItemSpacing = 5, LineSpacing = 4 };
+        var hint = Caption(Text("workbench.recorded_locally_only_nothing_is"));
+        hint.FontSize = 11;
+        hint.Bind(TextBlock.ForegroundProperty, hint.GetResourceObservable("FaintBrush"));
+        ReviewArea.Children.Add(hint);
+        var buttons = new WrapPanel { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, ItemSpacing = 6, LineSpacing = 4 };
         apply.Classes.Add("primary");
         buttons.Children.Add(apply);
         buttons.Children.Add(Action(Text("workbench.redraft"), "commit.redraft", () => LoadReviewAsync(true, _reviewHost)));

@@ -5,6 +5,7 @@
         xmlns:appearance="using:Reasonix.Studio.Shell.Appearance"
         xmlns:settings="using:Reasonix.Studio.Shell.Settings"
         xmlns:rail="using:Reasonix.Studio.Pages.Rail"
+        xmlns:workbench="using:Reasonix.Studio.Shell.Workbench"
         x:Class="Reasonix.Studio.Shell.MainWindow"
         Title="Reasonix Studio" Width="1440" Height="900"
         MinWidth="760" MinHeight="480" Background="{DynamicResource SurfaceBrush}">
@@ -190,6 +191,7 @@
             </StackPanel>
           </Grid>
           <Border Name="WorkbenchPanel" Grid.Column="1" Margin="0,8,8,8" AutomationProperties.AutomationId="class:workbench" IsVisible="False"
+                  TextElement.FontFamily="{DynamicResource WorkbenchUiFamily}" TextElement.FontWeight="Medium"
                   Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" ClipToBounds="True">
             <Grid RowDefinitions="42,*">
               <Grid UseLayoutRounding="False" ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="2" AutomationProperties.AutomationId="class:workbench-tabs" Background="{DynamicResource PageBrush}">
@@ -225,7 +227,7 @@
                 <Grid Name="ExplorerPane" UseLayoutRounding="False" Width="190" RowDefinitions="34,48,*" Background="{DynamicResource PageBrush}" AutomationProperties.AutomationId="class:workbench-explorer">
                   <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,1,0" AutomationProperties.AutomationId="class:workbench-explorer-head">
                     <Button Name="FilesTab" Classes="icon" Width="18" Height="22" Content="⌄"/>
-                    <TextBlock Name="ExplorerHeading" Grid.Column="1" Margin="4,0" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Name="ExplorerHeading" Grid.Column="1" Margin="4,0" FontSize="{DynamicResource StudioType13}" FontWeight="Bold" VerticalAlignment="Center"/>
                     <Button Name="ParentFolder" Grid.Column="2" Classes="icon" Width="20" Content="↑"/>
                     <Button Name="GitRefresh" Grid.Column="3" Classes="icon" Width="20" Content="↻" AutomationProperties.AutomationId="action:workbench.repos-reload"/>
                   </Grid>
@@ -239,8 +241,18 @@
                     <StackPanel Margin="0,0,1,0">
                       <TextBlock Name="GitError" IsVisible="False" TextWrapping="Wrap" Margin="6,3" Foreground="{DynamicResource ErrBrush}"/>
                       <StackPanel Name="GitRepositories"/>
-                      <Button Name="ToggleFileList" Height="28" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Background="Transparent" BorderThickness="0" FontSize="{DynamicResource StudioType12}"/>
-                      <ListBox Name="WorkspaceFiles" AutoScrollToSelectedItem="False" SelectionChanged="OnFileSelected" Background="Transparent" BorderThickness="0"/>
+                      <Border Height="34" Padding="6,0,10,0" AutomationProperties.AutomationId="class:workbench-explorer-head">
+                      <Grid ColumnDefinitions="18,*" ColumnSpacing="6">
+                        <Button Name="ToggleFileList" Classes="git-flat" Width="18" Height="18" VerticalAlignment="Center" AutomationProperties.AutomationId="action:workbench.files-fold">
+                          <Viewbox Name="FileListChevron" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="M6 9l6 6 6-6" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8"/></Canvas></Viewbox>
+                        </Button>
+                        <TextBlock Name="FileListHeading" Grid.Column="1" FontSize="{DynamicResource StudioType13}" FontWeight="Bold" VerticalAlignment="Center"/>
+                      </Grid>
+                      </Border>
+                      <ListBox Name="WorkspaceFiles" AutoScrollToSelectedItem="False" SelectionChanged="OnFileSelected" Background="Transparent" BorderThickness="0" Padding="0,2,0,16">
+                        <ListBox.ItemTemplate><DataTemplate x:DataType="workbench:WorkspaceFileEntry"><workbench:WorkspaceFileRow/></DataTemplate></ListBox.ItemTemplate>
+                      </ListBox>
+                      <TextBlock Name="NoWorkspaceFiles" IsVisible="False" Margin="12,18" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
                   </ScrollViewer>
                   <Border Grid.RowSpan="3" Width="1" HorizontalAlignment="Right" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>

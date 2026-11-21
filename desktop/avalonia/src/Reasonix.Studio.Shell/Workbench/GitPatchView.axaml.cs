@@ -33,7 +33,8 @@ public sealed partial class GitPatchView : UserControl
                 started = true;
                 old = int.Parse(header.Groups[1].Value, CultureInfo.InvariantCulture);
                 next = int.Parse(header.Groups[2].Value, CultureInfo.InvariantCulture);
-                var hunk = new SelectableTextBlock { Text = line, Margin = new Thickness(8, 2), FontSize = 11 };
+                var hunk = new SelectableTextBlock { Text = line, Margin = new Thickness(74, 0, 0, 0), FontSize = 12, LineHeight = 19.2, Height = 19.2 };
+                hunk.Bind(TextBlock.ForegroundProperty, hunk.GetResourceObservable("FaintBrush"));
                 var band = new Border { Child = hunk };
                 band.Bind(Border.BackgroundProperty, band.GetResourceObservable("OverlayBrush"));
                 Lines.Children.Add(band);
@@ -49,8 +50,9 @@ public sealed partial class GitPatchView : UserControl
             var removed = line[0] == '-';
             var left = added ? string.Empty : (old++).ToString(CultureInfo.InvariantCulture);
             var right = removed ? string.Empty : (next++).ToString(CultureInfo.InvariantCulture);
-            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("28,28,15,*"), MinHeight = 19 };
-            var numbers = new Button { Content = left.PadLeft(3) + " " + right.PadLeft(3), Padding = default, FontSize = 11, MinWidth = 0, MinHeight = 0, IsEnabled = open is not null };
+            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("30,30,14,*"), Height = 19.2 };
+            var numbers = new Button { Content = left.PadLeft(3) + " " + right.PadLeft(3), Padding = default, FontSize = 12, FontWeight = FontWeight.SemiBold, MinWidth = 0, MinHeight = 0, IsEnabled = open is not null };
+            numbers.Bind(Button.ForegroundProperty, numbers.GetResourceObservable("GhostBrush"));
             numbers.Classes.Add("git-flat");
             Grid.SetColumnSpan(numbers, 2);
             if (open is not null)
@@ -60,9 +62,10 @@ public sealed partial class GitPatchView : UserControl
 
             row.Children.Add(numbers);
             var sign = new TextBlock { Text = line[0].ToString(), HorizontalAlignment = HorizontalAlignment.Center };
+            sign.Bind(TextBlock.ForegroundProperty, sign.GetResourceObservable(added ? "AddBrush" : removed ? "DelBrush" : "GhostBrush"));
             Grid.SetColumn(sign, 2);
             row.Children.Add(sign);
-            var code = new SelectableTextBlock { Text = line[1..].TrimEnd('\r'), TextWrapping = TextWrapping.Wrap };
+            var code = new SelectableTextBlock { Text = line[1..].TrimEnd('\r'), TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.CharacterEllipsis, LineHeight = 19.2 };
             Grid.SetColumn(code, 3);
             row.Children.Add(code);
             var behind = new Border { Child = row };

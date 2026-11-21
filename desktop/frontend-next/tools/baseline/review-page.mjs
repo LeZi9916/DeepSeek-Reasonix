@@ -1,7 +1,7 @@
 // Rebuild a review from the actual reference screen and the native render produced
 // by NativeDomainTests. The committed pair retains every pixel at its original size.
 import { chromium } from "playwright";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rename, rm } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -38,6 +38,12 @@ try {
         if (pageName === "workbench") {
           const local = /^class:workbench|^action:(?:workbench\.|commit\.|push\.|browser\.full)|^role:tablist/;
           record.workbenchBoxDifferences = report.findings.filter(f => f.Kind === "box" && local.test(f.Identity)).length;
+          await source.locator('.workbench-changes [data-action="workbench.section-fold"]').first().evaluate(button => button.click());
+          await source.locator(".workbench-history > summary").evaluate(summary => summary.click());
+          record.files = file.replace(".png","-files.png");
+          await pair(stem.replace("workbench","workbench-files"), record.files);
+          await source.locator('.workbench-changes [data-action="workbench.section-fold"]').first().evaluate(button => button.click());
+          await source.locator(".workbench-history > summary").evaluate(summary => summary.click());
           await source.locator('.workbench-changes [data-action="workbench.changes-page"]').first().click();
           await source.locator(".wb-changes .wb-change").first().waitFor();
           record.changes = file.replace(".png","-changes.png");
@@ -62,7 +68,11 @@ try {
             const columns=[reference,native].map((image,i)=>`<figure><figcaption>${labels[i]} · ${width} × ${height} · ${scheme}</figcaption><img src="data:image/png;base64,${image.toString("base64")}"></figure>`).join("");
             await compare.setContent(`<!doctype html><meta charset="utf-8"><style>:root{color-scheme:${scheme}}body{margin:0;display:flex;gap:12px;font:14px system-ui}figure{margin:0}figcaption{height:36px;box-sizing:border-box;padding:8px 12px}img{display:block}</style>${columns}`);
             await compare.locator("img").evaluateAll(images=>Promise.all(images.map(i=>i.decode())));
-            await compare.screenshot({path:join(out,filename)});
+            const temporary = join(out,filename+".tmp");
+            try {
+              await writeFile(temporary,await compare.screenshot());
+              await rename(temporary,join(out,filename));
+            } finally { await rm(temporary,{force:true}); }
           } finally { await compare.close(); }
         }
       } finally { await context.close(); }

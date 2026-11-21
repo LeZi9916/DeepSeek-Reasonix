@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using FileEntry = Reasonix.Studio.Shell.Workbench.WorkspaceFileEntry;
 
 namespace Reasonix.Studio.Shell;
 
@@ -26,9 +27,6 @@ public sealed partial class MainWindow
 
     /// <summary>Whether the reader expanded the workbench to the pane.</summary>
     private bool _fullWorkbench;
-
-    /// <summary>The last directory the explorer accepted.</summary>
-    private string _directory = string.Empty;
 
     /// <summary>The version currently shown in the editor.</summary>
     private FileBuffer? _openFile;
@@ -71,19 +69,29 @@ public sealed partial class MainWindow
         EndTerminal.Click += ConfirmTerminalClose;
         Label(FilesTab, MessageKey.Workbench.Explorer);
         Label(GitRefresh, "common.read_again");
-        ToggleFileList.Content = "⌄  " + MessageCatalog.Get(MessageKey.Common.Files, Language);
-        ToggleFileList.Click += (_, _) => WorkspaceFiles.IsVisible = !WorkspaceFiles.IsVisible;
+        FileListHeading.Text = MessageCatalog.Get(MessageKey.Common.Files, Language);
+        Label(ToggleFileList, MessageKey.Common.Files);
+        ToggleFileList.Click += (_, _) =>
+        {
+            WorkspaceFiles.IsVisible = !WorkspaceFiles.IsVisible;
+            NoWorkspaceFiles.IsVisible = WorkspaceFiles.IsVisible && WorkspaceFiles.ItemCount == 0;
+            FileListChevron.RenderTransform = new RotateTransform(WorkspaceFiles.IsVisible ? 0 : -90);
+        };
+        WorkspaceFiles.AddHandler(Button.ClickEvent, OnWorkspaceFileClick);
+        WorkspaceFiles.AddHandler(Avalonia.Input.InputElement.KeyDownEvent, OnFileTreeKeyDown, RoutingStrategies.Tunnel);
+        NoWorkspaceFiles.Text = MessageCatalog.Get("workbench.no_matching_files", Language);
         WorkbenchSearch.PlaceholderText = MessageCatalog.Get("workbench.search_files", Language);
         WorkbenchSearch.TextChanged += async (_, _) =>
         {
             if (WorkbenchPanel.IsVisible)
             {
-                await ListFilesAsync(_directory).ConfigureAwait(true);
+                await ListFilesAsync().ConfigureAwait(true);
             }
         };
         GitRefresh.Click += async (_, _) => await LoadGitAsync().ConfigureAwait(true);
         WorkspaceBody.SizeChanged += (_, e) =>
         {
+            WorkspaceFiles.Margin = new Avalonia.Thickness(0, 0, ClientSize.Width > 900 ? 10 : 0, 0);
             foreach (var view in GitRepositories.Children.OfType<Workbench.GitRepositoryView>())
             {
                 view.Fit(e.NewSize.Height);
@@ -91,7 +99,7 @@ public sealed partial class MainWindow
         };
         TabViewport.ScrollChanged += (_, _) => UpdateTabOverflow();
         TabViewport.SizeChanged += (_, _) => UpdateTabOverflow();
-        FilesTab.Click += async (_, _) => await ListFilesAsync(_directory).ConfigureAwait(true);
+        FilesTab.Click += async (_, _) => await ListFilesAsync().ConfigureAwait(true);
         EditFile.Content = MessageCatalog.Get(MessageKey.Common.Edit, Language);
         EditFile.Click += (_, _) => ShowSource();
         DiffFile.Click += async (_, _) => await ShowFileDiffAsync().ConfigureAwait(true);
@@ -119,11 +127,7 @@ public sealed partial class MainWindow
             LayoutWorkbench();
             Composer.Focus();
         };
-        ParentFolder.Click += async (_, _) =>
-        {
-            var separator = _directory.LastIndexOf('/');
-            await ListFilesAsync(separator < 0 ? string.Empty : _directory[..separator]).ConfigureAwait(true);
-        };
+        ParentFolder.Click += async (_, _) => await ListFilesAsync().ConfigureAwait(true);
         FileEditor.TextChanged += (_, _) =>
         {
             if (_openFile is { } file)
@@ -151,7 +155,7 @@ public sealed partial class MainWindow
         HideBrowser();
         ResetGit();
         _workspaceRoot = root;
-        _directory = string.Empty;
+        ResetFileTree();
         _openFile = null;
         RenderedFile.IsVisible = false;
         FileEditor.IsVisible = true;
@@ -173,7 +177,7 @@ public sealed partial class MainWindow
         WorkbenchPanel.IsVisible = true;
         LayoutWorkbench();
         EnterView(WorkbenchPanel);
-        await Task.WhenAll(ListFilesAsync(_directory), LoadGitAsync()).ConfigureAwait(true);
+        await Task.WhenAll(ListFilesAsync(), LoadGitAsync()).ConfigureAwait(true);
     }
 
     /// <summary>Gives a narrow workbench the pane; wide windows retain the conversation beside it.</summary>
@@ -184,61 +188,6 @@ public sealed partial class MainWindow
         Grid.SetColumn(WorkbenchPanel, overlay ? 0 : 1);
         WorkbenchPanel.Width = overlay ? double.NaN : Math.Min(510, room - 246);
         ConversationArea.IsVisible = !(overlay && WorkbenchPanel.IsVisible);
-    }
-
-    /// <summary>Lists paths using the kernel's workspace grants.</summary>
-    /// <param name="directory">The relative directory to open.</param>
-    /// <returns>The directory update.</returns>
-    private async Task ListFilesAsync(string directory)
-    {
-        if (_engine is null)
-        {
-            return;
-        }
-
-        var ticket = ++_fileRead;
-        try
-        {
-            var list = await _engine.Pages.FilesAsync(directory, WorkbenchSearch.Text?.Trim() ?? string.Empty, _closing.Token).ConfigureAwait(true);
-            if (ticket != _fileRead || _closing.IsCancellationRequested)
-            {
-                return;
-            }
-
-            _directory = directory;
-            ParentFolder.IsEnabled = directory.Length > 0;
-            var folders = (list.Directories ?? Array.Empty<string>()).Select(path => new FileEntry(path, true));
-            WorkspaceFiles.ItemsSource = folders.Concat((list.Files ?? Array.Empty<string>()).Select(path => new FileEntry(path, false))).ToList();
-        }
-        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
-        {
-        }
-        catch (Exception error)
-        {
-            if (ticket == _fileRead)
-            {
-                ReportWorkbenchError(error);
-            }
-        }
-    }
-
-    /// <summary>Opens the chosen directory or versioned file.</summary>
-    /// <param name="sender">The explorer.</param>
-    /// <param name="e">The selection change.</param>
-    private async void OnFileSelected(object? sender, SelectionChangedEventArgs e)
-    {
-        if (_engine is null || WorkspaceFiles.SelectedItem is not FileEntry entry)
-        {
-            return;
-        }
-
-        if (entry.Directory)
-        {
-            await ListFilesAsync(entry.Path).ConfigureAwait(true);
-            return;
-        }
-
-        await OpenEntryAsync(entry).ConfigureAwait(true);
     }
 
     /// <summary>Opens a listed workspace file or a diff, ignoring superseded reads.</summary>
@@ -291,6 +240,7 @@ public sealed partial class MainWindow
             }
 
             _openFile = buffer;
+            SelectWorkspaceFile(entry.Path);
             ReleasePreview();
             FileModes.IsVisible = true;
             FileEditor.IsVisible = true;
@@ -485,6 +435,7 @@ public sealed partial class MainWindow
         ReleasePreview();
         FileEditor.IsVisible = false;
         RenderedFile.Padding = view.Classes.Contains("git-board") ? default : new Avalonia.Thickness(10);
+        RenderedFile.VerticalScrollBarVisibility = view.Classes.Contains("git-board") ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto;
         RenderedFile.Content = view;
         RenderedFile.IsVisible = true;
         SaveFile.IsEnabled = false;
@@ -499,6 +450,8 @@ public sealed partial class MainWindow
         foreach (var (key, buffer) in _fileBuffers.Where(pair => pair.Key.Root == _workspaceRoot))
         {
             var group = new StackPanel { Orientation = Orientation.Horizontal, Tag = key.Path };
+            group.Classes.Add("wb-tab-frame");
+            group.Classes.Set("active", ReferenceEquals(buffer, _openFile));
             if (ReferenceEquals(buffer, _openFile))
             {
                 selected = group;
@@ -515,6 +468,7 @@ public sealed partial class MainWindow
             ToolTip.SetTip(tab, key.Path);
             tab.Click += async (_, _) => await OpenEntryAsync(new FileEntry(key.Path, false)).ConfigureAwait(true);
             var close = new Button { Content = "×", Padding = new Avalonia.Thickness(4, 0), [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };
+            close.Classes.Add("wb-tab-close");
             Label(close, MessageKey.Workbench.CloseTab);
             close.Click += (_, _) =>
             {
@@ -547,11 +501,50 @@ public sealed partial class MainWindow
 
         if (_gitSurface is { } git)
         {
-            var tab = new Button { Content = git.Title, Tag = git };
+            var group = new StackPanel { Orientation = Orientation.Horizontal, Tag = git };
+            group.Classes.Add("wb-tab-frame");
+            group.Classes.Set("active", ReferenceEquals(git.View, RenderedFile.Content));
+            var tab = new Button { Content = git.Title };
             tab.Classes.Add("wb-tab");
             tab.Classes.Set("active", ReferenceEquals(git.View, RenderedFile.Content));
             tab.Click += (_, _) => ShowGitCanvas(git.Title, git.View);
-            FileTabs.Children.Add(tab);
+            var close = new Button { Content = "×" };
+            close.Classes.Add("wb-tab-close");
+            Label(close, MessageKey.Workbench.CloseTab);
+            Avalonia.Automation.AutomationProperties.SetAutomationId(close, "action:workbench.close-git");
+            close.Click += async (_, _) =>
+            {
+                var visible = ReferenceEquals(git.View, RenderedFile.Content);
+                _gitSurface = null;
+                if (visible)
+                {
+                    ReleasePreview();
+                    FileCanvas.RowDefinitions[0].Height = new GridLength(40);
+                    if (_fileBuffers.LastOrDefault(pair => pair.Key.Root == _workspaceRoot) is { Value: not null } last)
+                    {
+                        await OpenEntryAsync(new FileEntry(last.Key.Path, false)).ConfigureAwait(true);
+                        if (last.Value.Dirty)
+                        {
+                            ShowSource();
+                        }
+                    }
+                    else
+                    {
+                        FileEditor.IsVisible = true;
+                        FileEditor.IsReadOnly = true;
+                        FileEditor.Text = string.Empty;
+                    }
+                }
+
+                RebuildTabs();
+            };
+            group.Children.Add(tab);
+            group.Children.Add(close);
+            FileTabs.Children.Insert(0, group);
+            if (ReferenceEquals(git.View, RenderedFile.Content))
+            {
+                selected = group;
+            }
         }
 
         Avalonia.Threading.Dispatcher.UIThread.Post(
@@ -706,15 +699,6 @@ public sealed partial class MainWindow
         ShowRefusal(error);
         ToolTip.SetTip(WorkbenchTitle, ErrorText.Text);
         WorkbenchTitle.Text = ErrorText.Text;
-    }
-
-    /// <summary>An explorer entry with the exact path the host returned.</summary>
-    /// <param name="Path">Workspace-relative path.</param>
-    /// <param name="Directory">Whether selecting the row opens a directory.</param>
-    private sealed record FileEntry(string Path, bool Directory)
-    {
-        /// <inheritdoc/>
-        public override string ToString() => System.IO.Path.GetFileName(Path) + (Directory ? "/" : string.Empty);
     }
 
     /// <summary>A text buffer and the revision it was read against.</summary>

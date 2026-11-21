@@ -1,6 +1,6 @@
-<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Shell.Workbench.GitPatchView">
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Shell.Workbench.GitPatchView" UseLayoutRounding="False">
   <StackPanel>
-    <StackPanel Name="Lines" TextElement.FontFamily="{DynamicResource DataPathFamily}" TextElement.FontSize="{DynamicResource StudioType12}"/>
+    <StackPanel Name="Lines" Margin="0,4" TextElement.FontFamily="{DynamicResource WorkbenchMonoFamily}" TextElement.FontWeight="SemiBold" TextElement.FontSize="{DynamicResource StudioType12}"/>
     <TextBlock Name="Truncated" IsVisible="False" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
   </StackPanel>
 </UserControl>

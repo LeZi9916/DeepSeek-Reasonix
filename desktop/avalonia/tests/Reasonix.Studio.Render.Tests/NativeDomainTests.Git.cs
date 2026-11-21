@@ -1,5 +1,7 @@
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -16,6 +18,83 @@ namespace Reasonix.Studio.Render.Tests;
 
 public sealed partial class NativeDomainTests
 {
+    /// <summary>Keeps changed-file folds and the command bar stable while staging and scrolling.</summary>
+    /// <param name="width">Window width.</param>
+    /// <param name="dark">Whether the dark palette is active.</param>
+    /// <returns>The changes-board interaction.</returns>
+    [Theory]
+    [InlineData(1440, false)]
+    [InlineData(1440, true)]
+    [InlineData(760, false)]
+    [InlineData(760, true)]
+    public Task ChangesBoardPreservesFoldsAndCommands(int width, bool dark) => WithSettings(
+        "workbench",
+        (w, _) =>
+        {
+            w.Width = width;
+            w.Height = width == 760 ? 480 : 900;
+            w.RequestedThemeVariant = dark ? Avalonia.Styling.ThemeVariant.Dark : Avalonia.Styling.ThemeVariant.Light;
+            Dispatcher.UIThread.RunJobs();
+            ClickAt(w, "action:workbench.changes-page");
+            var canvas = w.FindControl<ContentControl>("RenderedFile")!;
+            Button Action(string id) => canvas.GetVisualDescendants().OfType<Button>().First(b => AutomationProperties.GetAutomationId(b) == "action:" + id);
+            void Click(string id)
+            {
+                Action(id).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Dispatcher.UIThread.RunJobs();
+            }
+
+            Click("workbench.change-fold");
+            Assert.Equal("›", Action("workbench.change-fold").Content);
+            Click("workbench.stage");
+            Assert.Equal("›", Action("workbench.change-fold").Content);
+            var peek = Action("workbench.change-peek");
+            Assert.True(peek.IsEffectivelyVisible);
+            Click("workbench.change-peek");
+            Assert.False(peek.IsVisible);
+            Click("commit.draft");
+            var editor = canvas.GetVisualDescendants().OfType<TextBox>().Single(b => AutomationProperties.GetAutomationId(b) == "action:commit.edit");
+            Assert.Equal(Avalonia.Media.FontWeight.Medium, editor.FontWeight);
+            Assert.Equal(12, editor.FontSize);
+            Assert.True(editor.IsEffectivelyVisible);
+            var confirm = Action("commit.confirm");
+            var background = confirm.Background;
+            w.MouseMove(confirm.TranslatePoint(new Point(confirm.Bounds.Width / 2, confirm.Bounds.Height / 2), w)!.Value);
+            Dispatcher.UIThread.RunJobs();
+            Assert.Same(background, confirm.Background);
+            Assert.True(confirm.Focus(Avalonia.Input.NavigationMethod.Tab));
+            Assert.NotNull(confirm.FocusAdorner);
+            Click("commit.close");
+            var scroll = canvas.GetVisualDescendants().OfType<ScrollViewer>().Single(b => AutomationProperties.GetAutomationId(b) == "class:wb-changes-body");
+            Assert.True(scroll.Viewport.Height > 0);
+            var command = Action("commit.draft");
+            var top = command.TranslatePoint(default, w);
+            scroll.Offset = new Avalonia.Vector(0, scroll.Extent.Height);
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(top, command.TranslatePoint(default, w));
+            Assert.True(command.IsEffectivelyVisible);
+        });
+
+    /// <summary>Closing a Git tab restores the unsaved source buffer beside it.</summary>
+    /// <returns>The tab interaction.</returns>
+    [Fact]
+    public Task ClosingGitTabRestoresFileDraft() => WithSettings(
+        "workbench",
+        (w, _) =>
+        {
+            w.FindControl<Button>("EditFile")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var source = w.FindControl<TextBox>("FileEditor")!;
+            source.Text = "unsaved file draft";
+            Dispatcher.UIThread.RunJobs();
+            Assert.True(w.FindControl<Button>("SaveFile")!.IsEnabled);
+            ClickAt(w, "action:workbench.changes-page");
+            ClickAt(w, "action:workbench.close-git");
+            Assert.True(source.IsEffectivelyVisible);
+            Assert.Equal("unsaved file draft", source.Text);
+            Assert.True(w.FindControl<Button>("SaveFile")!.IsEnabled);
+            Assert.DoesNotContain(w.GetVisualDescendants().OfType<Button>(), b => AutomationProperties.GetAutomationId(b) == "action:workbench.close-git");
+        });
+
     /// <summary>Checks index, discard, history and review actions against a nested repository.</summary>
     /// <returns>The workbench interaction.</returns>
     [Fact]
@@ -128,6 +207,14 @@ public sealed partial class NativeDomainTests
     /// <param name="file">Named viewport and color scheme.</param>
     private static void GitScreenProofs(Reasonix.Studio.Shell.MainWindow window, string output, string file)
     {
+        ClickAt(window, "action:workbench.section-fold");
+        var history = window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "HistoryTitle");
+        history.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Dispatcher.UIThread.RunJobs();
+        Save("files");
+        ClickAt(window, "action:workbench.section-fold");
+        history.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Dispatcher.UIThread.RunJobs();
         ClickAt(window, "action:workbench.changes-page");
         Save("changes");
         var board = window.FindControl<ContentControl>("RenderedFile")!;

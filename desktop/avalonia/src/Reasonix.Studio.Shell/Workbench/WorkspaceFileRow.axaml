@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Reasonix.Studio.Shell.Workbench"
+             x:Class="Reasonix.Studio.Shell.Workbench.WorkspaceFileRow" x:DataType="local:WorkspaceFileEntry" AutomationProperties.AutomationId="class:workbench-tree-row">
+  <Button Classes="workspace-file-row" Padding="{Binding Indent}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+          AutomationProperties.AutomationId="{Binding Action}" AutomationProperties.Name="{Binding Path}" ToolTip.Tip="{Binding Path}">
+    <Grid ColumnDefinitions="16,16,*,Auto" ColumnSpacing="6">
+      <Viewbox Width="15" Height="15" IsVisible="{Binding Directory}">
+        <Canvas Width="24" Height="24"><Path Data="{Binding Chevron}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8"/></Canvas>
+      </Viewbox>
+      <Viewbox Grid.Column="1" Width="15" Height="15">
+        <Canvas Width="24" Height="24">
+          <Path IsVisible="{Binding Directory}" Data="{StaticResource Glyph.folder}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8"/>
+          <Path IsVisible="{Binding !Directory}" Data="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h6"
+                Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8"/>
+        </Canvas>
+      </Viewbox>
+      <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+      <TextBlock Grid.Column="3" Text="{Binding Status}" VerticalAlignment="Center" Foreground="{DynamicResource WarnInkBrush}"/>
+    </Grid>
+  </Button>
+</UserControl>

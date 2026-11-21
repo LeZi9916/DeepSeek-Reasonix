@@ -8,15 +8,16 @@
       "height": 900,
       "scheme": "light",
       "referenceNodes": 614,
-      "observedNodes": 78,
+      "observedNodes": 84,
       "counts": {
         "box": 13,
-        "style": 208,
-        "missing": 538,
-        "extra": 2,
+        "style": 187,
+        "missing": 536,
+        "extra": 6,
         "token": 0
       },
       "workbenchBoxDifferences": 0,
+      "files": "1440x900-light-files.png",
       "changes": "1440x900-light-changes.png",
       "commitReview": "1440x900-light-commit.png"
     },
@@ -26,15 +27,16 @@
       "height": 900,
       "scheme": "dark",
       "referenceNodes": 614,
-      "observedNodes": 78,
+      "observedNodes": 84,
       "counts": {
         "box": 13,
-        "style": 208,
-        "missing": 538,
-        "extra": 2,
+        "style": 187,
+        "missing": 536,
+        "extra": 6,
         "token": 0
       },
       "workbenchBoxDifferences": 0,
+      "files": "1440x900-dark-files.png",
       "changes": "1440x900-dark-changes.png",
       "commitReview": "1440x900-dark-commit.png"
     },
@@ -44,15 +46,16 @@
       "height": 480,
       "scheme": "light",
       "referenceNodes": 610,
-      "observedNodes": 74,
+      "observedNodes": 78,
       "counts": {
         "box": 15,
-        "style": 209,
-        "missing": 538,
-        "extra": 2,
+        "style": 182,
+        "missing": 537,
+        "extra": 5,
         "token": 0
       },
       "workbenchBoxDifferences": 0,
+      "files": "760x480-light-files.png",
       "changes": "760x480-light-changes.png",
       "commitReview": "760x480-light-commit.png"
     },
@@ -62,15 +65,16 @@
       "height": 480,
       "scheme": "dark",
       "referenceNodes": 610,
-      "observedNodes": 74,
+      "observedNodes": 78,
       "counts": {
         "box": 15,
-        "style": 209,
-        "missing": 538,
-        "extra": 2,
+        "style": 182,
+        "missing": 537,
+        "extra": 5,
         "token": 0
       },
       "workbenchBoxDifferences": 0,
+      "files": "760x480-dark-files.png",
       "changes": "760x480-dark-changes.png",
       "commitReview": "760x480-dark-commit.png"
     }

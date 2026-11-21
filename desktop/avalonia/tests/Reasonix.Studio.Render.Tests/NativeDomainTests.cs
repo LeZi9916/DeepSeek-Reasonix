@@ -156,7 +156,7 @@ public sealed partial class NativeDomainTests
 
                     if (target == "workbench")
                     {
-                        var gitIds = new[] { "class:workbench-changes#0", "class:workbench-history#0", "action:workbench.stage#0", "action:workbench.discard#0", "action:workbench.commit#0", "action:commit.draft#0", "action:push.preview#0" };
+                        var gitIds = new[] { "class:workbench-changes#0", "class:workbench-history#0", "class:workbench-tree-row#0", "action:workbench.stage#0", "action:workbench.discard#0", "action:workbench.commit#0", "action:commit.draft#0", "action:push.preview#0" }.Concat(responsive ? [] : new[] { "class:workbench-tree-row#1" });
                         Assert.All(gitIds, id => Assert.True(tree.ContainsKey(id), id));
                         Assert.DoesNotContain(findings, f => f.Kind == "box" && IsWorkbenchGeometry(f.Identity));
                     }

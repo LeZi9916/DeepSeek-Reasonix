@@ -25,21 +25,25 @@ public sealed partial class MainWindow
         if ((string?)look["fontMono"] is { Length: > 0 } codeFamily)
         {
             Resources["DataPathFamily"] = FontFamily.Parse(codeFamily);
+            Resources["WorkbenchMonoFamily"] = FontFamily.Parse(codeFamily);
         }
         else
         {
             Resources.Remove("DataPathFamily");
+            Resources.Remove("WorkbenchMonoFamily");
         }
 
         if ((string?)look["fontUi"] is { Length: > 0 } family)
         {
             FontFamily = FontFamily.Parse(family);
             Resources["DataReadingFamily"] = FontFamily;
+            Resources["WorkbenchUiFamily"] = FontFamily;
         }
         else
         {
             ClearValue(FontFamilyProperty);
             Resources.Remove("DataReadingFamily");
+            Resources.Remove("WorkbenchUiFamily");
         }
     }
 }

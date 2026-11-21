@@ -7,12 +7,14 @@
     <StackPanel Name="ChangeContent">
      <Border Padding="6,5,10,5" AutomationProperties.AutomationId="class:workbench-explorer-head"><StackPanel Spacing="4">
       <Grid ColumnDefinitions="18,Auto,*" ColumnSpacing="6" Height="18">
-      <Button Name="Fold" Classes="git-flat" Width="18" Height="18" Content="⌄" AutomationProperties.AutomationId="action:workbench.section-fold"/>
-      <Button Name="Board" Grid.Column="1" Tag="common.changes" FontSize="13" MinHeight="0" Height="13" Classes="git-flat" AutomationProperties.AutomationId="action:workbench.changes-page"/>
-      <TextBlock Name="Count" Grid.Column="2" HorizontalAlignment="Right" FontSize="{DynamicResource StudioType11}" VerticalAlignment="Center" Foreground="{DynamicResource FaintBrush}"/>
+      <Button Name="Fold" Classes="git-flat" Width="18" Height="18" AutomationProperties.AutomationId="action:workbench.section-fold">
+        <Viewbox Name="ChangesFoldIcon" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="M6 9l6 6 6-6" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+      </Button>
+      <Button Name="Board" Grid.Column="1" Tag="common.changes" MinHeight="0" Height="13" Classes="git-flat git-section-title" AutomationProperties.AutomationId="action:workbench.changes-page"/>
+      <TextBlock Name="Count" Grid.Column="2" HorizontalAlignment="Right" FontSize="{DynamicResource StudioType12}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource FaintBrush}"/>
       </Grid>
       <Grid ColumnDefinitions="Auto,*,Auto"><Button Name="StageAll" Margin="8,0" Padding="10,0" Classes="git-tool" AutomationProperties.AutomationId="action:workbench.stage-all"/>
-      <Button Name="Draft" MinWidth="58" Grid.Column="2" Padding="10,0" Tag="workbench.commit" Classes="git-tool primary" AutomationProperties.AutomationId="action:commit.draft"/>
+      <Button Name="Draft" MinWidth="58" Grid.Column="2" Padding="10,0" Tag="workbench.commit" Classes="git-tool primary git-commit-open" AutomationProperties.AutomationId="action:commit.draft"/>
       </Grid>
       <Button Name="Push" MinWidth="58" HorizontalAlignment="Left" Padding="10,0" Tag="workbench.push" Classes="git-tool" AutomationProperties.AutomationId="action:push.preview"/>
      </StackPanel></Border>
@@ -24,8 +26,13 @@
    </ScrollViewer>
    <StackPanel Name="HistoryPanel" AutomationProperties.AutomationId="class:workbench-history">
     <Grid ColumnDefinitions="*,Auto" Margin="12,4,10,0" Height="32">
-     <Button Name="HistoryTitle" Classes="git-flat" HorizontalAlignment="Left"/>
-     <Button Name="Branch" Grid.Column="1" Classes="git-flat" AutomationProperties.AutomationId="action:workbench.branches"/>
+     <Button Name="HistoryTitle" Classes="git-flat git-history-title" HorizontalAlignment="Left">
+       <StackPanel Orientation="Horizontal" Spacing="8">
+         <Viewbox Name="HistoryFoldIcon" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="M6 9l6 6 6-6" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+         <TextBlock Name="HistoryLabel" VerticalAlignment="Center"/>
+       </StackPanel>
+     </Button>
+     <Button Name="Branch" Grid.Column="1" Classes="git-flat" FontWeight="SemiBold" Foreground="{DynamicResource FaintBrush}" AutomationProperties.AutomationId="action:workbench.branches"/>
     </Grid>
     <StackPanel Name="Branches" Margin="6,2" IsVisible="False"/>
     <ScrollViewer Name="HistoryScroll" MaxHeight="252" HorizontalScrollBarVisibility="Disabled"><StackPanel Name="History" Margin="0,0,0,6"/></ScrollViewer>

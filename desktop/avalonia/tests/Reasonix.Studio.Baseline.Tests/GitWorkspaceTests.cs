@@ -36,6 +36,7 @@ public sealed class GitWorkspaceTests
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
             var token = timeout.Token;
             await GitAsync("init", "-q", "-b", "main");
+            await GitAsync("config", "core.autocrlf", "false");
             var path = "notes with spaces.txt";
             var file = Path.Combine(repo.FullName, path);
             await File.WriteAllTextAsync(file, "original\n", token);
