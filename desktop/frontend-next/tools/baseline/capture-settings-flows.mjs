@@ -3,7 +3,7 @@ import { resolve, join } from "node:path";
 import { chromium } from "playwright";
 
 const output = resolve(process.env.STUDIO_PARITY_SHOTS ?? "../avalonia/bin/parity/reference");
-const url = process.env.PERF_URL ?? "http://127.0.0.1:4400/perf.html";
+const url = process.env.PERF_URL ?? "http://localhost:4399/perf.html";
 const browser = await chromium.launch({ channel: process.env.PERF_CHANNEL === "bundled" ? undefined : process.env.PERF_CHANNEL ?? "chrome" });
 await mkdir(output, { recursive: true });
 

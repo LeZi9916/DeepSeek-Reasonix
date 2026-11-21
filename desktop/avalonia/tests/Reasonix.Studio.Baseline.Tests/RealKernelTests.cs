@@ -20,6 +20,76 @@ namespace Reasonix.Studio.Baseline.Tests;
 /// </remarks>
 public sealed class RealKernelTests
 {
+    /// <summary>Edits a preexisting fact and a custom preset in a separate real host profile.</summary>
+    /// <returns>The real store readbacks.</returns>
+    [Fact]
+    public async Task LibraryChangesReachTheRealStores()
+    {
+        var binary = HostLauncher.Locate();
+        if (binary is null)
+        {
+            Assert.NotEqual("1", Environment.GetEnvironmentVariable("STUDIO_TEST_HOST_REQUIRED"));
+            return;
+        }
+
+        var sandbox = System.IO.Directory.CreateTempSubdirectory("studio-library-");
+        try
+        {
+            var project = sandbox.CreateSubdirectory("workspace");
+            var home = sandbox.CreateSubdirectory("profile");
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
+            using var kernel = await HostLauncher.StartAsync(binary, Array.Empty<string>(), timeout.Token, home.FullName);
+            await using var initial = new SessionEngine(kernel);
+            await using var scoped = await initial.OpenProjectAsync(project.FullName, timeout.Token);
+            var api = scoped.Pages;
+            var catalog = await api.MemoriesAsync(timeout.Token);
+            var location = (string?)catalog["indexPath"];
+            Assert.False(string.IsNullOrEmpty(location));
+            var dir = System.IO.Path.GetDirectoryName(location)!;
+            var root = sandbox.FullName.TrimEnd(System.IO.Path.DirectorySeparatorChar) + System.IO.Path.DirectorySeparatorChar;
+            Assert.True(dir.StartsWith(root, StringComparison.Ordinal) || (OperatingSystem.IsMacOS() && dir.StartsWith("/private" + root, StringComparison.Ordinal)), "Fixture writes must be under the isolated profile or project.");
+            System.IO.Directory.CreateDirectory(dir);
+            var name = "studio-fact";
+            await System.IO.File.WriteAllTextAsync(System.IO.Path.Combine(dir, name + ".md"), "---\nname: studio-fact\ntitle: Checked fact\ndescription: Studio fixture\nmetadata:\n  type: project\n  fact_type: project\n  scope: project\n---\n\noriginal body\n", timeout.Token);
+            var edit = new System.Text.Json.Nodes.JsonObject
+            {
+                ["name"] = name,
+                ["title"] = "Checked fact",
+                ["description"] = "Studio fixture",
+                ["type"] = "project",
+                ["activation"] = "relevant",
+                ["importance"] = 2,
+                ["body"] = "edited from the native client",
+            };
+            await api.SaveMemoryAsync(edit, timeout.Token);
+            var history = await api.MemoryRevisionsAsync(name, timeout.Token);
+            var original = Assert.Single(history, m => ((string?)m?["body"])?.Trim() == "original body");
+            await api.RestoreMemoryAsync(name, (int?)original!["revision"] ?? 1, timeout.Token);
+            var fact = Assert.Single((await api.MemoriesAsync(timeout.Token))["memories"]!.AsArray(), m => (string?)m?["name"] == name);
+            Assert.Equal("original body", ((string?)fact!["body"])?.Trim());
+            Assert.True((int?)fact["revision"] > (int?)original["revision"]);
+
+            var presets = await api.AgentPresetsAsync(timeout.Token);
+            var basis = Assert.Single(presets["presets"]!.AsArray(), v => (string?)v?["definition"]?["id"] == "builtin:minimal")!;
+            var definition = basis["definition"]!.DeepClone().AsObject();
+            definition["id"] = "user:studio-copy";
+            definition["name"] = "Studio copy";
+            var created = await api.SavePresetAsync(definition, string.Empty, timeout.Token);
+            var revision = (string)created["revision"]!;
+            definition["description"] = "revised";
+            await api.SavePresetAsync(definition, revision, timeout.Token);
+            var conflict = await Assert.ThrowsAsync<KernelRefusal>(() => api.SavePresetAsync(definition, revision, timeout.Token));
+            Assert.Equal("agent_composition.conflict", conflict.Code);
+            var after = await api.AgentPresetsAsync(timeout.Token);
+            var copy = Assert.Single(after["presets"]!.AsArray(), v => (string?)v?["definition"]?["id"] == "user:studio-copy");
+            Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(basis["definition"]!["tools"], copy!["definition"]!["tools"]));
+        }
+        finally
+        {
+            sandbox.Delete(true);
+        }
+    }
+
     /// <summary>Opens a chosen project in a real runtime and verifies that reads target that workspace.</summary>
     /// <returns>The isolated host interaction.</returns>
     [Fact]
