@@ -149,7 +149,7 @@ The React capture also exports `page-inputs.json`. The native tests replay those
 
 | Area | Next implementation and acceptance check |
 | --- | --- |
-| Data and agent settings | The memory form edits facts and restores an older revision through the kernel. Add preset creation and duplication and verify conflict recovery and cancellation. |
+| Data and agent settings | Memory editing, historical restoration and version-aware preset creation, duplication and editing have ordinary-control interaction tests. Compare the remaining library import/export and memory suggestion flows. |
 | Appearance and extensions | Add illustrated theme backgrounds, typography controls, and marketplace installation and update flows. Reopen each page to check that selections survive navigation. |
 | Connections and onboarding | Complete remote-machine management and the remaining protocol and project-selection steps. Exercise connection failure, retry and back navigation. |
 | Workbench and analysis | Compare file-tab overflow, diff presentation and signal grouping against measured runs. Keep browser acceptance on the manual system WebView path. |

@@ -1,0 +1,38 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.PresetWorkspace">
+  <StackPanel Spacing="10" Margin="0,12">
+    <StackPanel Name="Catalog" Spacing="9">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Tag="persona.agent_presets" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"/>
+        <Button Name="Create" Grid.Column="1" Tag="persona.new_preset" AutomationProperties.AutomationId="action:agent-preset.create"/>
+      </Grid>
+      <TextBlock Tag="persona.presets_define_which_capabilities_are" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+      <StackPanel Name="Groups" Spacing="8"/>
+    </StackPanel>
+    <StackPanel Name="Editor" IsVisible="False" Spacing="9">
+      <Grid ColumnDefinitions="Auto,*">
+        <Button Name="Back" AutomationProperties.AutomationId="action:agent-preset.back" Content="←"/>
+        <TextBlock Name="Heading" Grid.Column="1" Margin="10,0" FontWeight="SemiBold" FontSize="18" VerticalAlignment="Center"/>
+      </Grid>
+      <StackPanel Name="Fields" Spacing="9">
+        <StackPanel Spacing="3"><TextBlock Tag="persona.preset_name"/><TextBox Name="PresetName" AutomationProperties.AutomationId="field:agent-preset.name" MaxLength="200"/></StackPanel>
+        <StackPanel Spacing="3"><TextBlock Tag="persona.purpose"/><TextBox Name="Purpose" AutomationProperties.AutomationId="field:agent-preset.description" /></StackPanel>
+        <StackPanel Spacing="3"><TextBlock Tag="persona.persona_and_instructions"/><TextBox Name="Prefix" AutomationProperties.AutomationId="field:persona.prefix" MaxLength="32768" AcceptsReturn="True" MinHeight="66" TextWrapping="Wrap"/></StackPanel>
+        <StackPanel Spacing="3"><TextBlock Tag="persona.additional_instructions"/><TextBox Name="Suffix" AutomationProperties.AutomationId="field:persona.suffix" MaxLength="32768" AcceptsReturn="True" MinHeight="66" TextWrapping="Wrap"/></StackPanel>
+        <CheckBox Name="OmitRuntime" Tag="persona.do_not_inject_optional_runtime" AutomationProperties.AutomationId="action:persona.runtime-context"/>
+        <local:PresetModules Name="Modules"/>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+          <StackPanel Spacing="3"><TextBlock Tag="persona.storage_scope"/><ComboBox Name="Scope" HorizontalAlignment="Stretch"/></StackPanel>
+          <StackPanel Grid.Column="1" Spacing="3"><TextBlock Tag="persona.preset_id"/><TextBox Name="Identity" MaxLength="64" AutomationProperties.AutomationId="field:agent-preset.id"/></StackPanel>
+        </Grid>
+      </StackPanel>
+      <TextBlock Tag="persona.available_to_new_conversations_after" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+      <WrapPanel>
+        <Button Name="Cancel" Tag="common.cancel" Margin="0,0,6,0" AutomationProperties.AutomationId="action:agent-preset.leave"/>
+        <Button Name="Save" Tag="persona.save_preset" AutomationProperties.AutomationId="action:agent-preset.save"/>
+        <Button Name="Duplicate" Tag="persona.duplicate_as_custom_preset" AutomationProperties.AutomationId="action:agent-preset.copy"/>
+      </WrapPanel>
+    </StackPanel>
+    <TextBlock Name="Result" TextWrapping="Wrap" IsVisible="False"/>
+  </StackPanel>
+</local:SettingsFormView>

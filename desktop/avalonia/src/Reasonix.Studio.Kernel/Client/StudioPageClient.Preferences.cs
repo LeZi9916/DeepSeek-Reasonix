@@ -110,6 +110,23 @@ public sealed partial class StudioPageClient
     /// <returns>The preset catalog.</returns>
     public Task<JsonObject> AgentPresetsAsync(CancellationToken token) => ReadAsync<JsonObject>("/agent-presets", token);
 
+    /// <summary>Creates a new preset or updates the revision the editor opened.</summary>
+    /// <param name="definition">The complete composition definition.</param>
+    /// <param name="revision">Empty for creation or the last saved revision for an update.</param>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The saved definition and its new revision.</returns>
+    public async Task<JsonObject> SavePresetAsync(JsonObject definition, string revision, CancellationToken token)
+    {
+        var request = new
+        {
+            definition,
+            expectedRevision = revision,
+        };
+        using var response = await _http.PostAsJsonAsync("/agent-presets", request, token).ConfigureAwait(false);
+        await KernelClient.EnsureAsync(response, token).ConfigureAwait(false);
+        return await BodyAsync<JsonObject>(response, token).ConfigureAwait(false);
+    }
+
     /// <summary>Reads the configured model providers.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The configured providers.</returns>

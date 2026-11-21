@@ -1,0 +1,6 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.PresetModules">
+  <StackPanel Spacing="7"><TextBlock Tag="persona.skills_and_extensions" FontWeight="SemiBold"/>
+    <StackPanel Name="Groups" Spacing="4"/>
+  </StackPanel>
+</local:SettingsFormView>

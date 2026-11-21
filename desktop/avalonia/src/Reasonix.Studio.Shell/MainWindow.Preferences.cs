@@ -299,7 +299,14 @@ public sealed partial class MainWindow
                 case "session" when api is not null:
                     var modes = Card(column, "settings.persona_and_presets");
                     AddAction(modes, MessageKey.Persona.SystemPersona, () => ShowSectionAsync("session:persona"));
-                    ShowPresetCatalog(modes, await api.AgentPresetsAsync(_closing.Token).ConfigureAwait(true));
+                    var presets = new Settings.PresetWorkspace { Tag = "persona.agent_presets" };
+                    modes.Children.Add(presets);
+                    presets.Open(api, Language, await api.AgentPresetsAsync(_closing.Token).ConfigureAwait(true), MayLeaveSettingsAsync, DescribeError, _closing.Token);
+                    if (TopLevel.GetTopLevel(presets) == this)
+                    {
+                        _unsavedSettings = () => presets.HasChanges;
+                    }
+
                     var questions = Card(column, "settings.plans_and_questions");
                     var timeout = await api.AskTimeoutAsync(_closing.Token).ConfigureAwait(true);
                     var seconds = new NumericUpDown
