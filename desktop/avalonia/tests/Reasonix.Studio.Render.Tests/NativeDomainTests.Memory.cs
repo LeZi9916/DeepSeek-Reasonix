@@ -217,6 +217,14 @@ public sealed partial class NativeDomainTests
             return;
         }
 
+        window.FindControl<ScrollViewer>("SettingsScroller")!.Offset = default;
+        Dispatcher.UIThread.RunJobs();
+        if (scene == "memory-history")
+        {
+            ControlAt<Button>(window, "action:memory.restore").BringIntoView();
+            Dispatcher.UIThread.RunJobs();
+        }
+
         System.IO.Directory.CreateDirectory(output);
         using var image = new Avalonia.Media.Imaging.RenderTargetBitmap(Avalonia.PixelSize.FromSize(window.ClientSize, 1), new Avalonia.Vector(96, 96));
         image.Render(window);

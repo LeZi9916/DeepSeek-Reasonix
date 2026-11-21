@@ -31,6 +31,12 @@ try {
         await act(scene === "preset-create" ? "agent-preset.create" : "agent-preset.copy").click();
         await act("agent-preset.save").waitFor();
       }
+      // Start each comparison at the top of its sheet. A browser click can scroll
+      // the history trigger past the viewport before the revisions finish mounting.
+      await page.locator(".prefs-main").evaluate(panel => { panel.scrollTop = 0; });
+      if (scene === "memory-history") {
+        await act("memory.restore").evaluate(button => button.scrollIntoView({ block: "nearest", behavior: "instant" }));
+      }
       await page.evaluate(() => document.fonts.ready);
       await page.screenshot({ path: join(output, scene + ".light.png"), animations: "disabled" });
     } finally {
