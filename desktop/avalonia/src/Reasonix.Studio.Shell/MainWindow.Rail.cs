@@ -140,6 +140,12 @@ public sealed partial class MainWindow
         var ticket = _switch.Begin(path);
         try
         {
+            if (_launchOwner is not null)
+            {
+                await ActivateProjectAsync(string.Empty, false, path, () => _switch.IsCurrent(ticket)).ConfigureAwait(true);
+                return;
+            }
+
             await _engine.ResumeAsync(path, _closing.Token).ConfigureAwait(true);
             if (!_switch.IsCurrent(ticket))
             {
@@ -285,6 +291,12 @@ public sealed partial class MainWindow
         var ticket = _switch.Begin(string.Empty);
         try
         {
+            if (NewTaskPreset is not null)
+            {
+                await ActivateProjectAsync(_workspaceRoot, false, null, () => _switch.IsCurrent(ticket)).ConfigureAwait(true);
+                return;
+            }
+
             await _engine.NewSessionAsync(_closing.Token).ConfigureAwait(true);
             if (!_switch.IsCurrent(ticket))
             {

@@ -34,12 +34,23 @@ public sealed partial class PresetWorkspace : SettingsFormView
     /// <param name="api">The active kernel.</param>
     /// <param name="language">The shell language.</param>
     /// <param name="catalog">Initial definition versions and module choices.</param>
+    /// <param name="active">The composition bound to the current session.</param>
+    /// <param name="preferred">Reads this device's new-task default.</param>
+    /// <param name="setDefault">Saves the selected new-task default.</param>
     /// <param name="leave">The shell's unsaved-edit prompt.</param>
     /// <param name="describe">Localizes a refusal.</param>
     /// <param name="token">Window lifetime.</param>
-    internal void Open(StudioPageClient api, InterfaceLanguage language, JsonObject catalog, Func<Task<bool>> leave, Func<Exception, string> describe, CancellationToken token)
+    internal void Open(StudioPageClient api, InterfaceLanguage language, JsonObject catalog, JsonObject? active, Func<string?> preferred, Action<string> setDefault, Func<Task<bool>> leave, Func<Exception, string> describe, CancellationToken token)
     {
         Translate(language);
+        ActivePreset.IsVisible = active is not null;
+        if (active is not null)
+        {
+            var name = (string?)active["name"] ?? string.Empty;
+            var revision = (string?)active["revision"] ?? string.Empty;
+            ActivePreset.Text = string.Join(" · ", Text("common.this_session"), name, revision[..Math.Min(12, revision.Length)], Text((bool?)active["started"] == true ? "persona.locked" : "persona.switch_before_the_first_message"));
+        }
+
         var versions = (catalog["presets"] ??= new JsonArray()).AsArray();
         var scopes = new[] { new Option("builtin", Text("common.built_in")), new Option("user", Text("persona.personal")), new Option("project", Text("persona.shared_with_project")) };
         Scope.ItemsSource = scopes;
@@ -132,14 +143,19 @@ public sealed partial class PresetWorkspace : SettingsFormView
                 }
 
                 Groups.Children.Add(new TextBlock { Text = scope.Label, FontWeight = FontWeight.SemiBold });
-                var tiles = new WrapPanel();
+                var tiles = new Avalonia.Controls.Primitives.UniformGrid { Columns = 1 };
+                if (scope.Id == "builtin")
+                {
+                    tiles.SizeChanged += (_, e) => tiles.Columns = e.NewSize.Width >= 650 ? 2 : 1;
+                }
+
                 Groups.Children.Add(tiles);
                 foreach (var v in items)
                 {
                     var d = v["definition"]!.AsObject();
                     var id = (string)d["id"]!;
                     var copy = new StackPanel { Spacing = 5 };
-                    var card = new Border { Width = 250, Padding = new Thickness(12), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1), Margin = new Thickness(0, 0, 8, 8), Child = copy };
+                    var card = new Border { Padding = new Thickness(16), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1), Margin = new Thickness(0, 0, 8, 8), Child = copy };
                     card.Bind(Border.BorderBrushProperty, card.GetResourceObservable("HairBrush"));
                     copy.Children.Add(new TextBlock { Text = Label(d, "name"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
                     copy.Children.Add(Caption(Label(d, "description")));
@@ -150,6 +166,27 @@ public sealed partial class PresetWorkspace : SettingsFormView
                     AutomationProperties.SetAutomationId(duplicate, "action:agent-preset.copy");
                     view.Click += (_, _) => Start(d, v, false, view);
                     duplicate.Click += (_, _) => Start(d, null, true, duplicate);
+                    if (scope.Id != "project")
+                    {
+                        var selected = id == (preferred() ?? "builtin:general");
+                        var pick = new Button { Tag = id, Content = Text(selected ? "persona.new_task_default" : "common.make_default"), IsEnabled = !selected, Margin = new Thickness(0, 0, 4, 0) };
+                        AutomationProperties.SetAutomationId(pick, "action:agent-preset.new-task-default");
+                        pick.Click += (_, _) =>
+                        {
+                            try
+                            {
+                                setDefault(id);
+                                List(id);
+                            }
+                            catch (Exception error)
+                            {
+                                Message(describe(error), true);
+                            }
+                        };
+                        actions.Children.Add(pick);
+                        card.Bind(Border.BorderBrushProperty, card.GetResourceObservable(selected ? "AccentBrush" : "HairBrush"));
+                    }
+
                     actions.Children.Add(view);
                     actions.Children.Add(duplicate);
                     copy.Children.Add(actions);
@@ -204,7 +241,11 @@ public sealed partial class PresetWorkspace : SettingsFormView
             OmitRuntime.IsChecked = (bool?)_draft["persona"]?["include_runtime_context"] != true;
             Modules.Open(_draft, catalog["modules"] as JsonObject, Language, immutable, Update);
             Heading.Text = Text(immutable ? "persona.preset_details" : existing is null ? "persona.new_preset" : "persona.edit_preset");
-            AutomationProperties.SetName(Back, Text("common.back"));
+            SourceLabel.Text = existing is not null ? Label(basis, "name") : Text("persona.based_on_name", ("name", Label(basis, "name")));
+            var revision = (string?)existing?["revision"] ?? string.Empty;
+            Revision.IsVisible = revision.Length > 0;
+            Revision.Text = Text("persona.preset_version") + " · " + revision[..Math.Min(12, revision.Length)];
+            AutomationProperties.SetName(Back, Text("persona.back_to_presets"));
             Save.IsVisible = !immutable;
             Duplicate.IsVisible = immutable;
             Catalog.IsVisible = false;

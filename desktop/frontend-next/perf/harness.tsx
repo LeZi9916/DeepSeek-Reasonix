@@ -656,7 +656,7 @@ window.__nativeReference = async () => {
     "/auto-archive": port.autoArchive(), "/observability": port.observabilitySettings(),
     "/ask-timeout": port.askTimeout(), "/persona": port.persona(), "/network": port.network(),
     "/remotes": hub.remoteHosts(), "/remotes/wsl": hub.wslDistros(), "/remotes/candidates": hub.remoteCandidates(),
-    "/memory": port.memories(), "/agent-presets": port.agentPresets(), "/themes": port.themes(),
+    "/memory": port.memories(), "/agent-presets": port.agentPresets(), "/agent-composition": port.agentComposition(), "/themes": port.themes(),
     "/account": port.account(), "/plugins": port.plugins(), "/market/packages": port.marketList({}),
   };
   return Object.fromEntries(await Promise.all(Object.entries(reads).map(async ([key, value]) => [key, await value])));

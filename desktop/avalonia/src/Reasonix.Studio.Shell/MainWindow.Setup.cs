@@ -31,7 +31,7 @@ public sealed partial class MainWindow
     /// <summary>Connects the onboarding controls.</summary>
     private void InitializeSetup()
     {
-        ProjectStep.Configure(() => new Host.AvaloniaHost(this).PickFolderAsync(_workspaceRoot), ActivateProjectAsync, ReturnToConversation, DescribeError);
+        ProjectStep.Configure(() => new Host.AvaloniaHost(this).PickFolderAsync(_workspaceRoot), path => ActivateProjectAsync(path, true), ReturnToConversation, DescribeError);
         SetupPanel.SizeChanged += (_, e) =>
         {
             var wide = e.NewSize.Width >= 900;
@@ -174,14 +174,17 @@ public sealed partial class MainWindow
     /// <summary>Switches the native controls and event subscription to the chosen project.</summary>
     /// <param name="path">The user-selected folder.</param>
     /// <returns>The transition to the new conversation.</returns>
-    private async System.Threading.Tasks.Task ActivateProjectAsync(string path)
+    /// <param name="register">Whether to register a newly picked folder.</param>
+    /// <param name="session">Transcript to activate, or null to start a new task.</param>
+    /// <param name="current">Checks that another navigation has not superseded this one.</param>
+    private async System.Threading.Tasks.Task ActivateProjectAsync(string path, bool register, string? session = null, Func<bool>? current = null)
     {
         if (_engine is not { } previous)
         {
             return;
         }
 
-        var next = await previous.OpenProjectAsync(path, _closing.Token).ConfigureAwait(true);
+        var next = await previous.OpenProjectAsync(path, _closing.Token, register, session, NewTaskPreset).ConfigureAwait(true);
         Kernel.Client.SessionStatus? status;
         try
         {
@@ -193,6 +196,12 @@ public sealed partial class MainWindow
         {
             await next.DisposeAsync().ConfigureAwait(true);
             throw;
+        }
+
+        if ((current is not null && !current()) || !ReferenceEquals(_engine, previous))
+        {
+            await next.DisposeAsync().ConfigureAwait(true);
+            return;
         }
 
         SaveDraft();

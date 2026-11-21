@@ -75,6 +75,8 @@ public sealed partial class NativeDomainTests
             Assert.Equal(string.Empty, expected);
             Assert.Equal("Keep these instructions.", (string?)submitted["persona"]?["suffix"]);
             Assert.True(JsonNode.DeepEquals(source["tools"], submitted["tools"]));
+            ClickOn("action:agent-preset.new-task-default", "user:custom");
+            Assert.Equal(1, count);
             ClickOn("action:agent-preset.copy", "user:custom");
             Assert.Equal("custom-1", ControlAt<TextBox>(w, "field:agent-preset.id").Text);
             Assert.Equal("Keep these instructions.", ControlAt<TextBox>(w, "field:persona.suffix").Text);

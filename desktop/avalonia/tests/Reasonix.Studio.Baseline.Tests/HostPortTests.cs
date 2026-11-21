@@ -128,11 +128,12 @@ public sealed class HostPortTests
         try
         {
             var store = new WindowStateStore(path);
-            store.Save(new WindowGeometry(x, 64, 1280, 720, maximised));
+            store.Save(new WindowGeometry(x, 64, 1280, 720, maximised, NewTaskPreset: "user:review"));
 
             var loaded = new WindowStateStore(path).Load();
 
             Assert.Equal(x, loaded.X);
+            Assert.Equal("user:review", loaded.NewTaskPreset);
             Assert.Equal(1280, loaded.Width);
             Assert.Equal(720, loaded.Height);
             Assert.Equal(maximised, loaded.Maximised);

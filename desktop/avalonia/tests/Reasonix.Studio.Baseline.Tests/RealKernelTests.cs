@@ -42,10 +42,11 @@ public sealed class RealKernelTests
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
             using var kernel = await HostLauncher.StartAsync(binary, Array.Empty<string>(), timeout.Token, home.FullName);
             await using var initial = new SessionEngine(kernel);
-            await using var next = await initial.OpenProjectAsync(project.FullName, timeout.Token);
+            await using var next = await initial.OpenProjectAsync(project.FullName, timeout.Token, preset: "builtin:minimal");
             var status = await next.StatusAsync(timeout.Token);
             Assert.EndsWith("/chosen", status!.WorkspaceRoot.Replace('\\', '/'), StringComparison.Ordinal);
             Assert.Equal("selected project", (await next.Pages.FileAsync(sentinel, timeout.Token)).Content);
+            Assert.Equal("builtin:minimal", (string?)(await next.Pages.CurrentCompositionAsync(timeout.Token))?["id"]);
             Assert.Contains(await next.TreeAsync(null, timeout.Token), workspace => workspace.Root == status.WorkspaceRoot);
         }
         finally

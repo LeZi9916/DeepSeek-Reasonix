@@ -59,7 +59,7 @@ public sealed class WindowStateStore
                 return Default();
             }
 
-            return new WindowGeometry(stored.X, stored.Y, stored.Width, stored.Height, stored.Maximised, stored.RailWidth, stored.Theme, stored.ReducedEffects, stored.QueueDuringRun);
+            return new WindowGeometry(stored.X, stored.Y, stored.Width, stored.Height, stored.Maximised, stored.RailWidth, stored.Theme, stored.ReducedEffects, stored.QueueDuringRun, stored.NewTaskPreset);
         }
         catch (Exception)
         {
@@ -99,8 +99,18 @@ public sealed class WindowStateStore
             Theme = geometry.Theme,
             ReducedEffects = geometry.ReducedEffects,
             QueueDuringRun = geometry.QueueDuringRun,
+            NewTaskPreset = geometry.NewTaskPreset,
         };
-        File.WriteAllText(_path, JsonSerializer.Serialize(stored));
+        var temporary = _path + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(temporary, JsonSerializer.Serialize(stored));
+            File.Move(temporary, _path, overwrite: true);
+        }
+        finally
+        {
+            File.Delete(temporary);
+        }
     }
 
     /// <summary>
@@ -118,6 +128,12 @@ public sealed class WindowStateStore
     /// </summary>
     private sealed record Stored
     {
+        /// <summary>Gets the saved new-task composition.</summary>
+        public string? NewTaskPreset
+        {
+            get; init;
+        }
+
         /// <summary>Gets a value indicating whether messages sent during a run are queued.</summary>
         public bool QueueDuringRun
         {

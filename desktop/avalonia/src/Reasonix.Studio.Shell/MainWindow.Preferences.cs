@@ -34,6 +34,18 @@ public sealed partial class MainWindow
     /// <summary>Identifies the active settings read when the reader navigates quickly.</summary>
     private long _settingsRead;
 
+    /// <summary>Gets or sets the device-local preset used when opening a new task.</summary>
+    internal string? NewTaskPreset
+    {
+        get; set;
+    }
+
+    /// <summary>Gets or sets the persistence callback installed by the desktop lifetime.</summary>
+    internal Action? SaveWindowPreferences
+    {
+        get; set;
+    }
+
     /// <summary>Connects the settings sheet and the first-run screen to window navigation.</summary>
     private void InitializePreferences()
     {
@@ -132,6 +144,23 @@ public sealed partial class MainWindow
         TerminalAction.Header = MessageCatalog.Get(MessageKey.Workbench.Terminal, Language);
         ShowComposerState(Conversation.State);
         LabelSetup();
+    }
+
+    /// <summary>Saves a device-local new-task choice without changing any existing conversation.</summary>
+    /// <param name="id">Builtin or personal preset.</param>
+    private void SetNewTaskPreset(string id)
+    {
+        var old = NewTaskPreset;
+        NewTaskPreset = id;
+        try
+        {
+            SaveWindowPreferences?.Invoke();
+        }
+        catch
+        {
+            NewTaskPreset = old;
+            throw;
+        }
     }
 
     /// <summary>Opens the settings sheet and focuses its search box.</summary>
@@ -305,7 +334,9 @@ public sealed partial class MainWindow
                     AddAction(modes, MessageKey.Persona.SystemPersona, () => ShowSectionAsync("session:persona"));
                     var presets = new Settings.PresetWorkspace { Tag = "persona.agent_presets" };
                     modes.Children.Add(presets);
-                    presets.Open(api, Language, await api.AgentPresetsAsync(_closing.Token).ConfigureAwait(true), MayLeaveSettingsAsync, DescribeError, _closing.Token);
+                    var definitions = await api.AgentPresetsAsync(_closing.Token).ConfigureAwait(true);
+                    var activePreset = await api.CurrentCompositionAsync(_closing.Token).ConfigureAwait(true);
+                    presets.Open(api, Language, definitions, activePreset, () => NewTaskPreset, SetNewTaskPreset, MayLeaveSettingsAsync, DescribeError, _closing.Token);
                     if (TopLevel.GetTopLevel(presets) == this)
                     {
                         _unsavedSettings = () => presets.HasChanges;

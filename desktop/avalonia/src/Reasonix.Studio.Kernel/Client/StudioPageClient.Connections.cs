@@ -58,16 +58,34 @@ public sealed partial class StudioPageClient
     public Task<JsonObject> ProbeRemoteAsync(string name, CancellationToken token) => ReadAsync<JsonObject>("/remotes/" + Uri.EscapeDataString(name) + "/probe", token);
 
     /// <summary>Registers a local project and opens a runtime on the hub's canonical root.</summary>
-    /// <param name="path">The folder the user picked.</param>
+    /// <param name="path">The chosen project root.</param>
+    /// <param name="register">Whether the user picked a new folder to register.</param>
+    /// <param name="session">An existing transcript to resume.</param>
+    /// <param name="preset">Explicit composition for a new task.</param>
     /// <param name="token">Cancels opening.</param>
     /// <returns>The runtime descriptor.</returns>
-    internal async Task<JsonObject> OpenProjectRuntimeAsync(string path, CancellationToken token)
+    internal async Task<JsonObject> OpenProjectRuntimeAsync(string path, bool register, string? session, string? preset, CancellationToken token)
     {
-        using var registration = await _http.PostAsJsonAsync("/tree/workspaces", new JsonObject { ["path"] = path }, token).ConfigureAwait(false);
-        await KernelClient.EnsureAsync(registration, token).ConfigureAwait(false);
-        var project = await BodyAsync<JsonObject>(registration, token).ConfigureAwait(false);
-        var root = (string?)project["root"] ?? throw new System.IO.InvalidDataException("Missing registered workspace root.");
-        using var open = await _http.PostAsJsonAsync("/runtimes", new JsonObject { ["root"] = root }, token).ConfigureAwait(false);
+        var root = path;
+        if (register)
+        {
+            using var registration = await _http.PostAsJsonAsync("/tree/workspaces", new JsonObject { ["path"] = path }, token).ConfigureAwait(false);
+            await KernelClient.EnsureAsync(registration, token).ConfigureAwait(false);
+            var project = await BodyAsync<JsonObject>(registration, token).ConfigureAwait(false);
+            root = (string?)project["root"] ?? throw new System.IO.InvalidDataException("Missing registered workspace root.");
+        }
+
+        var request = new JsonObject { ["root"] = root };
+        if (!string.IsNullOrEmpty(session))
+        {
+            request["sessionPath"] = session;
+        }
+        else if (!string.IsNullOrEmpty(preset))
+        {
+            request["agentComposition"] = preset;
+        }
+
+        using var open = await _http.PostAsJsonAsync("/runtimes", request, token).ConfigureAwait(false);
         await KernelClient.EnsureAsync(open, token).ConfigureAwait(false);
         return await BodyAsync<JsonObject>(open, token).ConfigureAwait(false);
     }

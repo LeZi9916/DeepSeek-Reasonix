@@ -279,10 +279,13 @@ public sealed class SessionEngine : IAsyncDisposable
     /// <param name="path">The local project folder.</param>
     /// <param name="token">Cancels the opening.</param>
     /// <returns>An independently disposable engine on the same launch.</returns>
-    public async Task<SessionEngine> OpenProjectAsync(string path, CancellationToken token)
+    /// <param name="register">Whether to add a new folder to the project tree.</param>
+    /// <param name="session">Existing transcript, whose saved composition takes precedence.</param>
+    /// <param name="preset">Device-selected composition for a new session.</param>
+    public async Task<SessionEngine> OpenProjectAsync(string path, CancellationToken token, bool register = true, string? session = null, string? preset = null)
     {
         var host = _kernel ?? throw new InvalidOperationException("This engine has no running workspace host.");
-        var descriptor = await Pages.OpenProjectRuntimeAsync(path, token).ConfigureAwait(false);
+        var descriptor = await Pages.OpenProjectRuntimeAsync(path, register, session, preset, token).ConfigureAwait(false);
         var id = (string?)descriptor["id"];
         if (string.IsNullOrEmpty(id) || id.Length < 2 || id[0] != 'r' || !id[1..].All(char.IsAsciiDigit) || (string?)descriptor["base"] != "/rt/" + id)
         {

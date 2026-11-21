@@ -107,6 +107,7 @@ public sealed partial class App : Application
             RailWidth = window.RailWidth,
             ReducedEffects = window.ReducedEffects,
             QueueDuringRun = window.QueueDuringRun,
+            NewTaskPreset = window.NewTaskPreset,
             Theme = window.RequestedThemeVariant?.Key as string,
         };
     }
@@ -165,6 +166,8 @@ public sealed partial class App : Application
         var store = new WindowStateStore(GeometryPath());
         var geometry = store.Load();
         window.QueueDuringRun = geometry.QueueDuringRun;
+        window.NewTaskPreset = geometry.NewTaskPreset;
+        window.SaveWindowPreferences = () => store.Save(GeometryOf(window));
         window.RestoreChrome(geometry.RailWidth, geometry.Theme, geometry.ReducedEffects);
 
         // Size now, position when the platform can answer which screens exist.

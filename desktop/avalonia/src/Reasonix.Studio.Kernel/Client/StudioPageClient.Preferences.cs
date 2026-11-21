@@ -134,6 +134,11 @@ public sealed partial class StudioPageClient
     public Task RestoreMemoryAsync(string name, int revision, CancellationToken token) =>
         PostAsync("/memory/restore", new JsonObject { ["name"] = name, ["revision"] = revision }, token);
 
+    /// <summary>Reads the composition bound to this particular runtime.</summary>
+    /// <param name="token">Cancels the read.</param>
+    /// <returns>The actual bound composition when supplied by the kernel.</returns>
+    public Task<JsonObject?> CurrentCompositionAsync(CancellationToken token) => OptionalPreferenceAsync("/agent-composition", token);
+
     /// <summary>Reads the agent preset definitions available to this workspace.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The preset catalog.</returns>

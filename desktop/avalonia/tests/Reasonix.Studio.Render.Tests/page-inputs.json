@@ -1402,5 +1402,6 @@
   "/remotes/candidates": [
     "attic",
     "old-laptop"
-  ]
+  ],
+  "/agent-composition": null
 }
