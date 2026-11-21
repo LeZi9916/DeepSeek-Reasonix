@@ -150,6 +150,8 @@ The React capture also exports `page-inputs.json`. The native tests replay those
 
 The [data settings review](reviews/settings-storage/report.json) records the measured geometries for all four size/theme combinations. Its adjacent PNGs show Electron on the left and Avalonia on the right.
 
+The Windows review uses the embedded path font for the session write-location row. All 77 mapped nodes have no box differences at the 0.5-DIP tolerance in both sizes and themes, including wrapping at 760 × 480. Unmapped nodes and style differences remain listed in the report.
+
 To regenerate a page review after running the native render tests, run `node tools/baseline/review-page.mjs settings-storage` from `desktop/frontend-next` with the reference harness running.
 
 The [workbench review](reviews/workbench/report.json) distinguishes Git and workbench geometry from the conversation visible beside it. Each viewport includes the explorer, expanded changes and an unconfirmed commit proposal. Open the [page review gallery](reviews/index.html) to switch between them.

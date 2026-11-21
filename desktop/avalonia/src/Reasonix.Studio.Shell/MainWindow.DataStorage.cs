@@ -145,7 +145,7 @@ public sealed partial class MainWindow
             }
         };
         var pathText = DataText(_engine is null ? _workspaceRoot : (await _engine.StatusAsync(token).ConfigureAwait(true))?.Cwd ?? _workspaceRoot, 12, 30);
-        pathText.FontFamily = FontFamily.Parse("monospace");
+        pathText.Bind(TextBlock.FontFamilyProperty, pathText.GetResourceObservable("DataPathFamily"));
         pathText.MaxWidth = 260;
         pathText.Padding = new Thickness(4, 0);
         pathText.TextTrimming = TextTrimming.CharacterEllipsis;
