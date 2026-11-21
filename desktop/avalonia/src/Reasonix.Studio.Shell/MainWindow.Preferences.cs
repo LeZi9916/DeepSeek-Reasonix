@@ -148,7 +148,7 @@ public sealed partial class MainWindow
 
     /// <summary>Saves a device-local new-task choice without changing any existing conversation.</summary>
     /// <param name="id">Builtin or personal preset.</param>
-    private void SetNewTaskPreset(string id)
+    private void SetNewTaskPreset(string? id)
     {
         var old = NewTaskPreset;
         NewTaskPreset = id;

@@ -8,6 +8,7 @@
       </Grid>
       <TextBlock Tag="persona.presets_define_which_capabilities_are" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
       <StackPanel Name="Groups" Spacing="8"/>
+      <WrapPanel><local:PresetImport Name="Import"/><Button Name="Refresh" Tag="common.reload" AutomationProperties.AutomationId="action:agent-preset.reload" Margin="6,0"/></WrapPanel>
       <TextBlock Name="ActivePreset" TextWrapping="Wrap" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}"/>
     </StackPanel>
     <StackPanel Name="Editor" IsVisible="False" Spacing="9">
@@ -29,6 +30,14 @@
           <StackPanel Grid.Column="1" Spacing="3"><TextBlock Tag="persona.preset_id"/><TextBox Name="Identity" MaxLength="64" AutomationProperties.AutomationId="field:agent-preset.id"/></StackPanel>
         </Grid>
       </StackPanel>
+      <Expander Name="Extra" Header="{Binding #MoreLabel.Text}" Margin="32,0" HorizontalAlignment="Stretch" AutomationProperties.AutomationId="action:agent-preset.more">
+        <StackPanel Spacing="6"><TextBlock Name="MoreLabel" Tag="common.more_actions" IsVisible="False"/>
+          <WrapPanel><Button Name="Export" Tag="persona.export_file" AutomationProperties.AutomationId="action:agent-preset.export"/><Button Name="Download" Tag="persona.download_preset_json" IsVisible="False" Margin="6,0" AutomationProperties.AutomationId="action:agent-preset.download"/></WrapPanel>
+          <WrapPanel><Button Name="Remove" Tag="persona.delete_preset" AutomationProperties.AutomationId="action:agent-preset.delete-preview"/><Button Name="ConfirmRemove" Tag="common.delete" IsVisible="False" Margin="6,0" AutomationProperties.AutomationId="action:agent-preset.delete"/><Button Name="Keep" Tag="persona.cancel_deletion" IsVisible="False"/></WrapPanel>
+          <TextBlock Tag="persona.explicit_default_configuration" FontWeight="Medium"/><TextBlock Tag="persona.used_only_when_explicitly_selecting" TextWrapping="Wrap"/>
+          <WrapPanel><Button Name="Personal" Tag="persona.set_personal_preference"/><Button Name="Workspace" Tag="persona.set_workspace_preference" Margin="6,0"/></WrapPanel>
+        </StackPanel>
+      </Expander>
       <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="32,16">
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
       <TextBlock Tag="persona.available_to_new_conversations_after" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>

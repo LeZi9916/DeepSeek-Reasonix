@@ -40,7 +40,7 @@ public sealed partial class PresetWorkspace : SettingsFormView
     /// <param name="leave">The shell's unsaved-edit prompt.</param>
     /// <param name="describe">Localizes a refusal.</param>
     /// <param name="token">Window lifetime.</param>
-    internal void Open(StudioPageClient api, InterfaceLanguage language, JsonObject catalog, JsonObject? active, Func<string?> preferred, Action<string> setDefault, Func<Task<bool>> leave, Func<Exception, string> describe, CancellationToken token)
+    internal void Open(StudioPageClient api, InterfaceLanguage language, JsonObject catalog, JsonObject? active, Func<string?> preferred, Action<string?> setDefault, Func<Task<bool>> leave, Func<Exception, string> describe, CancellationToken token)
     {
         Translate(language);
         ActivePreset.IsVisible = active is not null;
@@ -59,6 +59,56 @@ public sealed partial class PresetWorkspace : SettingsFormView
         var populating = false;
         var busy = false;
         var immutable = false;
+        string? exported = null;
+        Import.Open(api, language, PreviewImported, error => Message(describe(error), true), token);
+        void PreviewImported(JsonObject imported)
+        {
+            Start(imported["definition"]!.AsObject(), null, true, Create);
+            var diagnostics = (imported["diagnostics"]?.AsArray() ?? []).Select(d => (string?)d?["detail"]).Where(value => !string.IsNullOrEmpty(value));
+            var summary = string.Join(Environment.NewLine, diagnostics);
+            if (summary.Length > 0)
+            {
+                Message(summary, false);
+            }
+        }
+
+        Refresh.Click += async (_, _) => await RunExtraAsync(async () =>
+        {
+            catalog = await api.AgentPresetsAsync(token).ConfigureAwait(true);
+            versions = (catalog["presets"] ??= new JsonArray()).AsArray();
+            List(null);
+        }).ConfigureAwait(true);
+        Export.Click += async (_, _) => await RunExtraAsync(async () =>
+        {
+            var definition = await api.ExportPresetAsync((string)version!["definition"]!["id"]!, token).ConfigureAwait(true);
+            exported = definition.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            Download.IsVisible = true;
+        }).ConfigureAwait(true);
+        Download.Click += async (_, _) => await RunExtraAsync(async () =>
+        {
+            if (exported is not null && TopLevel.GetTopLevel(this) is Window window)
+            {
+                await new Host.AvaloniaHost(window).SaveTextAsync("agent-preset.json", exported).ConfigureAwait(true);
+            }
+        }).ConfigureAwait(true);
+        Remove.Click += (_, _) => ConfirmRemove.IsVisible = Keep.IsVisible = true;
+        Keep.Click += (_, _) => ConfirmRemove.IsVisible = Keep.IsVisible = false;
+        ConfirmRemove.Click += async (_, _) => await RunExtraAsync(async () =>
+        {
+            var id = (string)version!["definition"]!["id"]!;
+            await api.DeletePresetAsync(id, (string)version["revision"]!, token).ConfigureAwait(true);
+            versions.Remove(version);
+            if (preferred() == id)
+            {
+                setDefault(null);
+            }
+
+            CloseEditor();
+            List(null);
+            Message(Text("persona.preset_deleted_existing_conversations_keep"), false);
+        }).ConfigureAwait(true);
+        Personal.Click += async (_, _) => await ExplicitDefaultAsync(false).ConfigureAwait(true);
+        Workspace.Click += async (_, _) => await ExplicitDefaultAsync(true).ConfigureAwait(true);
         Create.Click += (_, _) =>
         {
             if (versions.FirstOrDefault(v => (string?)v?["definition"]?["id"] == "builtin:general")?["definition"] is JsonObject basis)
@@ -226,8 +276,13 @@ public sealed partial class PresetWorkspace : SettingsFormView
             }
 
             _original = _draft.DeepClone().AsObject();
+            exported = null;
+            Download.IsVisible = ConfirmRemove.IsVisible = Keep.IsVisible = Extra.IsExpanded = false;
+            Extra.IsVisible = existing is not null;
             var id = ((string)_draft["id"]!).Split(':', 2);
             immutable = id[0] == "builtin";
+            Remove.IsVisible = !immutable;
+            Personal.IsEnabled = id[0] != "project";
             PresetName.IsReadOnly = Purpose.IsReadOnly = Prefix.IsReadOnly = Suffix.IsReadOnly = immutable;
             OmitRuntime.IsEnabled = !immutable;
             Scope.IsEnabled = Identity.IsEnabled = existing is null;
@@ -271,9 +326,43 @@ public sealed partial class PresetWorkspace : SettingsFormView
             persona["prefix"] = Prefix.Text ?? string.Empty;
             persona["suffix"] = Suffix.Text ?? string.Empty;
             persona["include_runtime_context"] = OmitRuntime.IsChecked != true;
+            Extra.IsVisible = version is not null && !HasChanges;
             Save.IsEnabled = !busy && Modules.IsValid && !string.IsNullOrWhiteSpace(PresetName.Text)
                 && IsPresetId((string)_draft["id"]!) && (version is null || HasChanges);
         }
+
+        async Task RunExtraAsync(Func<Task> action)
+        {
+            if (busy)
+            {
+                return;
+            }
+
+            busy = true;
+            IsEnabled = false;
+            try
+            {
+                await action().ConfigureAwait(true);
+            }
+            catch (Exception error)
+            {
+                if (!token.IsCancellationRequested)
+                {
+                    Message(describe(error), true);
+                }
+            }
+            finally
+            {
+                busy = false;
+                IsEnabled = true;
+            }
+        }
+
+        Task ExplicitDefaultAsync(bool workspace) => RunExtraAsync(async () =>
+        {
+            await api.SetPresetDefaultAsync((string)version!["definition"]!["id"]!, workspace, token).ConfigureAwait(true);
+            Message(Text(workspace ? "persona.set_as_workspace_preference" : "persona.set_as_personal_preference"), false);
+        });
 
         async Task BackAsync()
         {

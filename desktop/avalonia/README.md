@@ -146,11 +146,11 @@ Open `desktop/avalonia/bin/parity/overview.html` to browse the full set by theme
 
 The React capture also exports `page-inputs.json`. The native tests replay those same responses from their checked-in fixture. Refresh the fixture alongside an intentional reference change.
 
-### Remaining parity work
+### Parity checks and remaining verification
 
 | Area | Next implementation and acceptance check |
 | --- | --- |
-| Data and agent settings | Native controls exercise memory edits, history, restoration, confirmation and archive. A real isolated host verifies the revision chain, preset copy, stale-revision refusal and new-task binding. Compare the remaining library import/export and memory suggestion flows. |
+| Data and agent settings | Native controls exercise memory edits, history, restoration, confirmation and archive. A real isolated host verifies the revision chain, preset copy, stale-revision refusal and new-task binding. The file picker previews imported definitions before saving. Composer proposals can be accepted, edited or dismissed. |
 | Appearance and extensions | Installed packs now supply background images, sky, surface opacity and per-scheme colors. Font, reading size, UI scale and reviewed marketplace updates have interaction tests. Compare OS-specific fonts and compositing on each desktop. |
 | Connections and onboarding | The connection settings manage saved machines. Onboarding supports ambiguous protocols, a folder picker, folder drop and skip. A real-host test verifies that the selected root is used by the next runtime. |
 | Workbench and analysis | File-tab overflow, selectable unified diffs, grouped signal inspection and 1–16× zoom have interaction tests. Keep browser acceptance on the manual system WebView path. |

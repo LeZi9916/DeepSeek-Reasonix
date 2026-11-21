@@ -14,6 +14,74 @@ namespace Reasonix.Studio.Render.Tests;
 
 public sealed partial class NativeDomainTests
 {
+    /// <summary>Checks import preview, canonical export and revision-checked deletion on the normal settings page.</summary>
+    /// <returns>The file and editor interaction.</returns>
+    [Fact]
+    public Task ImportedPresetWaitsForSaveAndExportsItsDefinition() => WithSettings(
+        "settings-session",
+        (w, reads) =>
+        {
+            var source = reads.Read<JsonObject>("/agent-presets")["presets"]![0]!["definition"]!.DeepClone();
+            source["id"] = "user:foreign";
+            source["name"] = "portable";
+            var saves = 0;
+            var removals = 0;
+            JsonNode? saved = null;
+            reads.Exchange = async req =>
+            {
+                var path = req.RequestUri!.AbsolutePath;
+                if (path == "/agent-presets/import")
+                {
+                    var payload = JsonNode.Parse(await req.Content!.ReadAsStringAsync())!;
+                    Assert.True(JsonNode.DeepEquals(source, payload["content"]));
+                    return JsonReply(new JsonObject { ["definition"] = source.DeepClone(), ["diagnostics"] = new JsonArray() });
+                }
+
+                if (path == "/agent-presets" && req.Method == HttpMethod.Post)
+                {
+                    var payload = JsonNode.Parse(await req.Content!.ReadAsStringAsync())!;
+                    saved = payload["definition"]!.DeepClone();
+                    saves++;
+                    return JsonReply(new JsonObject { ["definition"] = saved.DeepClone(), ["revision"] = "saved-rev" });
+                }
+
+                if (path.EndsWith("/export", System.StringComparison.Ordinal))
+                {
+                    return JsonReply(saved!);
+                }
+
+                if (req.Method == HttpMethod.Delete)
+                {
+                    Assert.Equal("?revision=saved-rev", req.RequestUri.Query);
+                    removals++;
+                    return new HttpResponseMessage(HttpStatusCode.NoContent);
+                }
+
+                return null;
+            };
+            var file = w.GetVisualDescendants().OfType<Reasonix.Studio.Shell.Settings.PresetImport>().Single();
+            using var bytes = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(source.ToJsonString()));
+            var preview = file.PreviewAsync(bytes);
+            Dispatcher.UIThread.RunJobs();
+            Assert.True(preview.IsCompletedSuccessfully);
+            Assert.Equal(0, saves);
+            ControlAt<TextBox>(w, "field:agent-preset.name").Text = "local copy";
+            ClickAt(w, "action:agent-preset.save");
+            Assert.Equal("user:custom", (string?)saved!["id"]);
+            var pick = w.GetVisualDescendants().OfType<Button>().Single(b => b.IsEffectivelyVisible && AutomationProperties.GetAutomationId(b) == "action:agent-preset.view" && Equals(b.Tag, "user:custom"));
+            pick.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Dispatcher.UIThread.RunJobs();
+            ControlAt<Expander>(w, "action:agent-preset.more").IsExpanded = true;
+            Dispatcher.UIThread.RunJobs();
+            ClickAt(w, "action:agent-preset.export");
+            Assert.True(ControlAt<Button>(w, "action:agent-preset.download").IsEffectivelyVisible);
+            ClickAt(w, "action:agent-preset.delete-preview");
+            Assert.Equal(0, removals);
+            ClickAt(w, "action:agent-preset.delete");
+            Assert.Equal(1, removals);
+            Assert.Equal(1, saves);
+        });
+
     /// <summary>Creates, duplicates and edits a versioned preset through the list and editor.</summary>
     /// <returns>The native interaction.</returns>
     [Fact]
