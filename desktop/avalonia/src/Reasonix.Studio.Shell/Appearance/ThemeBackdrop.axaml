@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Appearance" x:Class="Reasonix.Studio.Shell.Appearance.ThemeBackdrop" IsHitTestVisible="False" ClipToBounds="True">
+ <Grid>
+  <Canvas Name="Frame" ClipToBounds="True"><Image Name="Picture" AutomationProperties.AutomationId="class:theme-background" Stretch="Fill"/></Canvas>
+  <Border Name="Scrim" Background="{DynamicResource PageBrush}" IsVisible="False"/>
+  <local:ThemeSky Name="Sky" IsVisible="False">
+    <local:ThemeSky.OpacityMask><RadialGradientBrush Center="72%,-14%" GradientOrigin="72%,-14%" RadiusX="118%" RadiusY="82%">
+     <GradientStop Offset="0" Color="Black"/><GradientStop Offset=".34" Color="#80000000"/><GradientStop Offset=".62" Color="#24000000"/><GradientStop Offset=".88" Color="Transparent"/>
+    </RadialGradientBrush></local:ThemeSky.OpacityMask>
+  </local:ThemeSky>
+ </Grid>
+</UserControl>

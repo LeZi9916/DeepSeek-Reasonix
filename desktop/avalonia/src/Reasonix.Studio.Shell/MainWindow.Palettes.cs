@@ -67,6 +67,24 @@ public sealed partial class MainWindow
                 }
             }
 
+            if (pack["sky"] is not null || (bool?)pack["background"]?["image"] == true)
+            {
+                foreach (var (field, slot) in new[] { ("rail", "ArtworkRailBrush"), ("chrome", "ArtworkChromeBrush"), ("side", "ArtworkSideBrush"), ("compose", "ArtworkComposeBrush") })
+                {
+                    var key = field == "compose" ? "RaisedBrush" : "PageBrush";
+                    if (!colors.TryGetResource(key, variant, out var brush))
+                    {
+                        Application.Current!.TryGetResource(key, variant, out brush);
+                    }
+
+                    if (brush is ISolidColorBrush source)
+                    {
+                        var opacity = (double?)pack["background"]?["surfaceOpacity"]?[scheme]?[field] ?? (field == "compose" ? 0.8 : 0.62);
+                        colors[slot] = new SolidColorBrush(source.Color, Math.Clamp(opacity, 0, 1));
+                    }
+                }
+            }
+
             result.ThemeDictionaries[variant] = colors;
         }
 
@@ -134,10 +152,25 @@ public sealed partial class MainWindow
                 _palette = null;
             }
 
-            if (packs.OfType<JsonObject>().FirstOrDefault(p => (bool?)p["active"] == true) is { } active)
+            var active = packs.OfType<JsonObject>().FirstOrDefault(p => (bool?)p["active"] == true);
+            if (active is not null)
             {
                 _palette = PaletteResources(active);
                 Resources.MergedDictionaries.Add(_palette);
+            }
+
+            Classes.Set("illustrated", active?["sky"] is not null || (bool?)active?["background"]?["image"] == true);
+            Backdrop.SetBusy(Conversation.State.Running);
+            try
+            {
+                await Backdrop.ApplyAsync(active, api, _closing.Token).ConfigureAwait(true);
+            }
+            catch (Exception error) when (!_closing.IsCancellationRequested)
+            {
+                if (ticket == _paletteRead)
+                {
+                    SettingsError.Text = DescribeError(error);
+                }
             }
         }
 

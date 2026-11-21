@@ -151,7 +151,7 @@ The React capture also exports `page-inputs.json`. The native tests replay those
 | Area | Next implementation and acceptance check |
 | --- | --- |
 | Data and agent settings | Memory editing, historical restoration and version-aware preset creation, duplication and editing have ordinary-control interaction tests. Compare the remaining library import/export and memory suggestion flows. |
-| Appearance and extensions | Verify illustrated theme backgrounds and typography controls. Marketplace installation and updates now display and apply the kernel's reviewed plan. |
+| Appearance and extensions | Installed packs now supply background images, sky, surface opacity and per-scheme colors. Font, reading size, UI scale and reviewed marketplace updates have interaction tests. Compare OS-specific fonts and compositing on each desktop. |
 | Connections and onboarding | The connection settings manage saved machines. Onboarding supports ambiguous protocols, a folder picker, folder drop and skip. A real-host test verifies that the selected root is used by the next runtime. |
 | Workbench and analysis | File-tab overflow, selectable unified diffs, grouped signal inspection and 1–16× zoom have interaction tests. Keep browser acceptance on the manual system WebView path. |
 | Platform interaction | Run the Windows and Linux CI jobs and inspect their screenshots. Verify keyboard focus, native menus, scrolling, motion and the system WebView on each desktop. |

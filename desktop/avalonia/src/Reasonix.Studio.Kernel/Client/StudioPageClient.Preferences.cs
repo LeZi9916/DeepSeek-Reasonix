@@ -70,6 +70,23 @@ public sealed partial class StudioPageClient
     /// <returns>The theme packs.</returns>
     public Task<JsonArray> ThemesAsync(CancellationToken token) => ReadAsync<JsonArray>("/themes", token);
 
+    /// <summary>Reads a background image from an installed pack on this kernel.</summary>
+    /// <param name="id">Installed theme identity.</param>
+    /// <param name="token">Cancels the read.</param>
+    /// <returns>The image bytes served by the kernel.</returns>
+    public async Task<byte[]> ThemeBackgroundAsync(string id, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(id) || id is "." or ".." || id.Contains('/'))
+        {
+            throw new System.ArgumentException("Invalid theme identity.", nameof(id));
+        }
+
+        using var response = await _http.GetAsync("/themes/" + System.Uri.EscapeDataString(id) + "/background", System.Net.Http.HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+        await KernelClient.EnsureAsync(response, token).ConfigureAwait(false);
+        await response.Content.LoadIntoBufferAsync(8 << 20, token).ConfigureAwait(false);
+        return await response.Content.ReadAsByteArrayAsync(token).ConfigureAwait(false);
+    }
+
     /// <summary>Activates a theme for this machine.</summary>
     /// <param name="id">The installed pack id, or empty to restore Studio's default colors.</param>
     /// <param name="token">Cancels the request.</param>

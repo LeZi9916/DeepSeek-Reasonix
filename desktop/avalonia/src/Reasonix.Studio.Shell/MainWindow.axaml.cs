@@ -140,6 +140,7 @@ public sealed partial class MainWindow : Window
     /// </remarks>
     public void ShowState(SessionState state)
     {
+        Backdrop.SetBusy(state.Running);
         Conversation.Show(state);
         ShowComposerState(state);
     }

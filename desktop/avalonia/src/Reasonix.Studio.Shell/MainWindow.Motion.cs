@@ -143,6 +143,7 @@ public sealed partial class MainWindow
         if (current == _motionRead && !_closing.IsCancellationRequested)
         {
             Classes.Set("motion", allowed);
+            Backdrop.SetMotion(allowed);
             if (!allowed)
             {
                 _viewMotion?.Cancel();
