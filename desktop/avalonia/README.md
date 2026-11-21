@@ -142,7 +142,9 @@ PERF_CHANNEL=bundled node tools/baseline/capture-settings-flows.mjs
 node ../avalonia/tools/compare-pages.mjs
 ```
 
-Open `desktop/avalonia/bin/parity/overview.html` to browse the full set by theme and window size. Four additional pairs in `editors.html` show memory editing, revision restoration, preset creation and duplication. Its page titles lead to the paired full-size renders and the node, geometry and style findings in `index.html`.
+Open `desktop/avalonia/bin/parity/overview.html` to browse 74 layout comparisons by theme and window size. Each page title links to its full-size renders and measured differences.
+
+Open `editors.html` for four additional screenshot pairs covering memory editing, revision history, preset creation and duplication.
 
 The React capture also exports `page-inputs.json`. The native tests replay those same responses from their checked-in fixture. Refresh the fixture alongside an intentional reference change.
 
