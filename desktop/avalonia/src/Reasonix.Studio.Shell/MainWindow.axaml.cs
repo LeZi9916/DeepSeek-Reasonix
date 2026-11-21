@@ -51,6 +51,9 @@ public sealed partial class MainWindow : Window
     /// </summary>
     private SessionEngine? _engine;
 
+    /// <summary>Owns the launch after the window switches to a child workspace runtime.</summary>
+    private SessionEngine? _launchOwner;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindow"/> class and loads its XAML.
     /// </summary>
@@ -278,6 +281,11 @@ public sealed partial class MainWindow : Window
             _engine.QueueChanged -= OnQueueChanged;
             _engine.TreeChanged -= OnTreeChanged;
             await _engine.DisposeAsync().ConfigureAwait(true);
+            if (_launchOwner is not null && !ReferenceEquals(_launchOwner, _engine))
+            {
+                await _launchOwner.DisposeAsync().ConfigureAwait(true);
+            }
+
             _engine = null;
         }
 
@@ -299,7 +307,10 @@ public sealed partial class MainWindow : Window
     {
         Dispatcher.UIThread.Post(() =>
         {
-            ShowState(state);
+            if (ReferenceEquals(_engine?.State, state))
+            {
+                ShowState(state);
+            }
         });
     }
 

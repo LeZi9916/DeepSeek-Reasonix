@@ -64,6 +64,7 @@ public static class HostLauncher
     /// <param name="binary">The kernel binary's path.</param>
     /// <param name="arguments">The arguments to start it with.</param>
     /// <param name="cancellationToken">Cancels the wait.</param>
+    /// <param name="profileDirectory">Optional isolated configuration and state directory for this launch.</param>
     /// <returns>The running kernel and the handshake it announced.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="binary"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
@@ -74,7 +75,8 @@ public static class HostLauncher
     public static async Task<LaunchedKernel> StartAsync(
         string binary,
         IEnumerable<string> arguments,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        string? profileDirectory = null)
     {
         if (binary is null)
         {
@@ -88,6 +90,12 @@ public static class HostLauncher
             UseShellExecute = false,
             CreateNoWindow = true,
         };
+
+        if (profileDirectory is not null)
+        {
+            start.Environment["REASONIX_HOME"] = profileDirectory;
+            start.Environment["REASONIX_STATE_HOME"] = profileDirectory;
+        }
 
         foreach (var argument in arguments)
         {

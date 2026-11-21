@@ -20,6 +20,40 @@ namespace Reasonix.Studio.Baseline.Tests;
 /// </remarks>
 public sealed class RealKernelTests
 {
+    /// <summary>Opens a chosen project in a real runtime and verifies that reads target that workspace.</summary>
+    /// <returns>The isolated host interaction.</returns>
+    [Fact]
+    public async Task RegisteredProjectUsesItsOwnWorkspace()
+    {
+        var binary = HostLauncher.Locate();
+        if (binary is null)
+        {
+            Assert.NotEqual("1", Environment.GetEnvironmentVariable("STUDIO_TEST_HOST_REQUIRED"));
+            return;
+        }
+
+        var sandbox = System.IO.Directory.CreateTempSubdirectory("studio-project-");
+        try
+        {
+            var project = sandbox.CreateSubdirectory("chosen");
+            var home = sandbox.CreateSubdirectory("profile");
+            var sentinel = "registered-workspace.md";
+            await System.IO.File.WriteAllTextAsync(System.IO.Path.Combine(project.FullName, sentinel), "selected project");
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
+            using var kernel = await HostLauncher.StartAsync(binary, Array.Empty<string>(), timeout.Token, home.FullName);
+            await using var initial = new SessionEngine(kernel);
+            await using var next = await initial.OpenProjectAsync(project.FullName, timeout.Token);
+            var status = await next.StatusAsync(timeout.Token);
+            Assert.EndsWith("/chosen", status!.WorkspaceRoot.Replace('\\', '/'), StringComparison.Ordinal);
+            Assert.Equal("selected project", (await next.Pages.FileAsync(sentinel, timeout.Token)).Content);
+            Assert.Contains(await next.TreeAsync(null, timeout.Token), workspace => workspace.Root == status.WorkspaceRoot);
+        }
+        finally
+        {
+            sandbox.Delete(true);
+        }
+    }
+
     /// <summary>
     /// Checks that a real kernel announces itself, admits a credentialled read, and
     /// refuses the same read without the credential.

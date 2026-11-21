@@ -9,6 +9,11 @@ namespace Reasonix.Studio.Kernel.Client;
 
 public sealed partial class StudioPageClient
 {
+    /// <summary>Reads the provider protocol catalog for custom service configuration.</summary>
+    /// <param name="token">Cancels the read.</param>
+    /// <returns>Provider protocols.</returns>
+    public Task<JsonArray> ProtocolsAsync(CancellationToken token) => ReadAsync<JsonArray>("/providers/protocols", token);
+
     /// <summary>Reads the local hub's machine address book.</summary>
     /// <param name="token">Cancels the read.</param>
     /// <returns>The entries or null on a host without remote connections.</returns>
@@ -51,4 +56,19 @@ public sealed partial class StudioPageClient
     /// <param name="token">Cancels the probe.</param>
     /// <returns>The hub's result.</returns>
     public Task<JsonObject> ProbeRemoteAsync(string name, CancellationToken token) => ReadAsync<JsonObject>("/remotes/" + Uri.EscapeDataString(name) + "/probe", token);
+
+    /// <summary>Registers a local project and opens a runtime on the hub's canonical root.</summary>
+    /// <param name="path">The folder the user picked.</param>
+    /// <param name="token">Cancels opening.</param>
+    /// <returns>The runtime descriptor.</returns>
+    internal async Task<JsonObject> OpenProjectRuntimeAsync(string path, CancellationToken token)
+    {
+        using var registration = await _http.PostAsJsonAsync("/tree/workspaces", new JsonObject { ["path"] = path }, token).ConfigureAwait(false);
+        await KernelClient.EnsureAsync(registration, token).ConfigureAwait(false);
+        var project = await BodyAsync<JsonObject>(registration, token).ConfigureAwait(false);
+        var root = (string?)project["root"] ?? throw new System.IO.InvalidDataException("Missing registered workspace root.");
+        using var open = await _http.PostAsJsonAsync("/runtimes", new JsonObject { ["root"] = root }, token).ConfigureAwait(false);
+        await KernelClient.EnsureAsync(open, token).ConfigureAwait(false);
+        return await BodyAsync<JsonObject>(open, token).ConfigureAwait(false);
+    }
 }

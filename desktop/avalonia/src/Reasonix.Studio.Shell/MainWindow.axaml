@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ctl="using:Reasonix.Studio.Controls"
         xmlns:pages="using:Reasonix.Studio.Pages"
+        xmlns:settings="using:Reasonix.Studio.Shell.Settings"
         xmlns:rail="using:Reasonix.Studio.Pages.Rail"
         x:Class="Reasonix.Studio.Shell.MainWindow"
         Title="Reasonix Studio" Width="1440" Height="900"
@@ -419,6 +420,7 @@
     <Border Grid.Row="2" AutomationProperties.AutomationId="class:onb-foot">
       <TextBlock Name="SetupFoot" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource MutedBrush}" />
     </Border>
+    <settings:ProjectChoice Name="ProjectStep" Grid.Row="1" IsVisible="False"/>
     <ScrollViewer Name="SetupForm" Grid.Row="1" IsVisible="False">
       <Border MaxWidth="900" Margin="18,12" HorizontalAlignment="Stretch" VerticalAlignment="Center"
               Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
@@ -432,6 +434,8 @@
             <TextBox Name="ServiceName" Text="deepseek" />
           </StackPanel>
           <TextBox Name="ServiceKey" PasswordChar="●" PlaceholderText="API Key" />
+          <ComboBox Name="ServiceProtocol" IsVisible="False" HorizontalAlignment="Stretch" AutomationProperties.AutomationId="action:onboarding.protocol"/>
+          <StackPanel Name="ModelOptions" IsVisible="False" Spacing="4"/>
           <ComboBox Name="ServiceModels" IsVisible="False" HorizontalAlignment="Stretch" />
           <TextBlock Name="SetupError" IsVisible="False" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}"/>
           <StackPanel Orientation="Horizontal" Spacing="8">

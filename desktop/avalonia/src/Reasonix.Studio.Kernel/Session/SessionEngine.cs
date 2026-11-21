@@ -84,6 +84,9 @@ public sealed class SessionEngine : IAsyncDisposable
     /// </summary>
     private readonly string _host;
 
+    /// <summary>Provides new authenticated connections for another runtime in this same launch.</summary>
+    private readonly LaunchedKernel? _kernel;
+
     /// <summary>
     /// The tree's own stream, or null when the caller supplied the reads.
     /// </summary>
@@ -116,36 +119,8 @@ public sealed class SessionEngine : IAsyncDisposable
     /// <param name="kernel">The kernel this conversation reads.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="kernel"/> is null.</exception>
     public SessionEngine(LaunchedKernel kernel)
+        : this(kernel, null)
     {
-        if (kernel is null)
-        {
-            throw new ArgumentNullException(nameof(kernel));
-        }
-
-        // One handler for both reads and the stream, so a connection is pooled
-        // rather than rebuilt and the credential rides exactly one place: a second
-        // handler would be a second place to keep correct.
-        var handler = new Boundary.CredentialHandler(kernel.Cookie());
-        var http = new HttpClient(handler)
-        {
-            BaseAddress = kernel.Origin,
-            Timeout = Timeout.InfiniteTimeSpan,
-        };
-
-        _client = new KernelClient(http);
-        var transport = new SseEventTransport(kernel.Origin.ToString(), http);
-        _transport = transport;
-        _host = kernel.Origin.GetLeftPart(UriPartial.Authority);
-        _tree = new SseEventTransport(kernel.Origin.ToString(), "/tree/events", "/tree/events/replay", http);
-        _subscription = new EventSubscription(transport, Fold, ReportGap);
-        _release = () =>
-        {
-            // The transports close the client's connections; the kernel then stops.
-            transport.Dispose();
-            _tree.Dispose();
-            kernel.Dispose();
-            return ValueTask.CompletedTask;
-        };
     }
 
     /// <summary>
@@ -165,6 +140,52 @@ public sealed class SessionEngine : IAsyncDisposable
         _tree = null;
         _subscription = new EventSubscription(transport, Fold, ReportGap);
         _release = null;
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="SessionEngine"/> class on a specific runtime.</summary>
+    /// <param name="kernel">The same local host process.</param>
+    /// <param name="runtime">The validated pane base. The default engine owns the process.</param>
+    private SessionEngine(LaunchedKernel kernel, string? runtime)
+    {
+        if (kernel is null)
+        {
+            throw new ArgumentNullException(nameof(kernel));
+        }
+
+        // One handler for both reads and the stream, so a connection is pooled
+        // rather than rebuilt and the credential rides exactly one place: a second
+        // handler would be a second place to keep correct.
+        _kernel = kernel;
+        HttpMessageHandler handler = new Boundary.CredentialHandler(kernel.Cookie());
+        if (runtime is not null)
+        {
+            handler = new ProjectRuntimeHandler(runtime, handler);
+        }
+
+        var http = new HttpClient(handler)
+        {
+            BaseAddress = kernel.Origin,
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
+
+        _client = new KernelClient(http);
+        var transport = new SseEventTransport(kernel.Origin.ToString(), http);
+        _transport = transport;
+        _host = kernel.Origin.GetLeftPart(UriPartial.Authority);
+        _tree = new SseEventTransport(kernel.Origin.ToString(), "/tree/events", "/tree/events/replay", http);
+        _subscription = new EventSubscription(transport, Fold, ReportGap);
+        _release = () =>
+        {
+            // The transports close the client's connections; the kernel then stops.
+            transport.Dispose();
+            _tree.Dispose();
+            if (runtime is null)
+            {
+                kernel.Dispose();
+            }
+
+            return ValueTask.CompletedTask;
+        };
     }
 
     /// <summary>
@@ -253,6 +274,27 @@ public sealed class SessionEngine : IAsyncDisposable
     {
         return _client.CancelTurnAsync(cancellationToken);
     }
+
+    /// <summary>Registers a chosen folder and constructs the engine for its returned runtime.</summary>
+    /// <param name="path">The local project folder.</param>
+    /// <param name="token">Cancels the opening.</param>
+    /// <returns>An independently disposable engine on the same launch.</returns>
+    public async Task<SessionEngine> OpenProjectAsync(string path, CancellationToken token)
+    {
+        var host = _kernel ?? throw new InvalidOperationException("This engine has no running workspace host.");
+        var descriptor = await Pages.OpenProjectRuntimeAsync(path, token).ConfigureAwait(false);
+        var id = (string?)descriptor["id"];
+        if (string.IsNullOrEmpty(id) || id.Length < 2 || id[0] != 'r' || !id[1..].All(char.IsAsciiDigit) || (string?)descriptor["base"] != "/rt/" + id)
+        {
+            throw new System.IO.InvalidDataException("Invalid workspace runtime base.");
+        }
+
+        return new SessionEngine(host, "/rt/" + id);
+    }
+
+    /// <summary>Stops watching a replaced pane while its owning host remains available.</summary>
+    /// <returns>Cancellation of the old stream.</returns>
+    public Task StopWatchingAsync() => _closing.CancelAsync();
 
     /// <summary>
     /// Reads what the kernel says about the session before anything is folded.

@@ -31,6 +31,7 @@ public sealed partial class MainWindow
     /// <summary>Connects the onboarding controls.</summary>
     private void InitializeSetup()
     {
+        ProjectStep.Configure(() => new Host.AvaloniaHost(this).PickFolderAsync(_workspaceRoot), ActivateProjectAsync, ReturnToConversation, DescribeError);
         SetupPanel.SizeChanged += (_, e) =>
         {
             var wide = e.NewSize.Width >= 900;
@@ -116,6 +117,7 @@ public sealed partial class MainWindow
     private void ShowSetup(ProviderSetup setup)
     {
         _setup = setup;
+        ProjectStep.IsVisible = false;
         SetupServices.Children.Clear();
         foreach (var service in s_setupServices)
         {
@@ -157,12 +159,83 @@ public sealed partial class MainWindow
     private void ResetProbe()
     {
         _probe = null;
+        ServiceProtocol.ItemsSource = null;
+        ServiceProtocol.IsVisible = false;
         ServiceModels.ItemsSource = null;
         ServiceModels.IsVisible = false;
+        ModelOptions.IsVisible = false;
+        ModelOptions.Children.Clear();
         ServiceFields.IsVisible = _setup?.NoProvider == true;
         ServiceKey.IsVisible = true;
         UpdateConnectButton();
         ConnectProvider.Content = MessageCatalog.Get(MessageKey.Onboarding.Connect, Language);
+    }
+
+    /// <summary>Switches the native controls and event subscription to the chosen project.</summary>
+    /// <param name="path">The user-selected folder.</param>
+    /// <returns>The transition to the new conversation.</returns>
+    private async System.Threading.Tasks.Task ActivateProjectAsync(string path)
+    {
+        if (_engine is not { } previous)
+        {
+            return;
+        }
+
+        var next = await previous.OpenProjectAsync(path, _closing.Token).ConfigureAwait(true);
+        Kernel.Client.SessionStatus? status;
+        try
+        {
+            status = await next.StatusAsync(_closing.Token).ConfigureAwait(true) ?? throw new InvalidOperationException("Workspace runtime did not return its status.");
+            await next.LoadHistoryAsync(_closing.Token).ConfigureAwait(true);
+            _closing.Token.ThrowIfCancellationRequested();
+        }
+        catch
+        {
+            await next.DisposeAsync().ConfigureAwait(true);
+            throw;
+        }
+
+        SaveDraft();
+        previous.Changed -= OnChanged;
+        previous.QueueChanged -= OnQueueChanged;
+        previous.TreeChanged -= OnTreeChanged;
+        _launchOwner ??= previous;
+        _engine = next;
+        next.Changed += OnChanged;
+        next.QueueChanged += OnQueueChanged;
+        next.TreeChanged += OnTreeChanged;
+        AdoptComposer(status);
+        AdoptSessionPath(status.SessionPath);
+        CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? MessageCatalog.Get(MessageKey.Common.NewSession, Language) : status.Label;
+        ShowState(next.State);
+        ReturnToConversation();
+        _ = WatchAsync();
+        if (ReferenceEquals(previous, _launchOwner))
+        {
+            await previous.StopWatchingAsync().ConfigureAwait(true);
+        }
+        else
+        {
+            await previous.DisposeAsync().ConfigureAwait(true);
+        }
+
+        await LoadTreeAsync().ConfigureAwait(true);
+        await LoadQueueAsync().ConfigureAwait(true);
+
+        async System.Threading.Tasks.Task WatchAsync()
+        {
+            try
+            {
+                await next.StartAsync().ConfigureAwait(true);
+            }
+            catch (Exception error)
+            {
+                if (!_closing.IsCancellationRequested && ReferenceEquals(_engine, next))
+                {
+                    ShowRefusal(error);
+                }
+            }
+        }
     }
 
     /// <summary>Enables only a fully specified connection or a discovered model.</summary>
@@ -191,6 +264,7 @@ public sealed partial class MainWindow
         ServiceFields.IsEnabled = false;
         ServiceKey.IsEnabled = false;
         ServiceModels.IsEnabled = false;
+        ServiceProtocol.IsEnabled = ModelOptions.IsEnabled = false;
         try
         {
             var key = ServiceKey.Text.Trim();
@@ -203,13 +277,50 @@ public sealed partial class MainWindow
             {
                 var probe = await api.ProbeAsync(ServiceAddress.Text?.Trim() ?? string.Empty, key, _closing.Token).ConfigureAwait(true);
                 _probe = probe;
+                var kinds = (probe.Kinds ?? []).Append(probe.Kind).Distinct(StringComparer.Ordinal).ToArray();
+                if (!ServiceAddress.IsReadOnly && (probe.Ambiguous || kinds.Length > 1))
+                {
+                    try
+                    {
+                        var catalog = await api.ProtocolsAsync(_closing.Token).ConfigureAwait(true);
+                        kinds = kinds.Concat(catalog.Select(p => (string?)p?["kind"]).OfType<string>()).Distinct(StringComparer.Ordinal).ToArray();
+                    }
+                    catch (KernelRefusal)
+                    {
+                        // Older hosts still advertise the usable protocols in their probe.
+                    }
+                }
+
+                ServiceProtocol.ItemsSource = kinds;
+                ServiceProtocol.SelectedItem = probe.Kind;
+                ServiceProtocol.IsVisible = !ServiceAddress.IsReadOnly && (probe.Ambiguous || kinds.Length > 1);
+                Label(ServiceProtocol, "onboarding.how_it_is_spoken_to");
                 ServiceModels.ItemsSource = probe.Models;
                 ServiceModels.SelectedItem = probe.Default ?? probe.Models.FirstOrDefault();
-                ServiceModels.IsVisible = true;
+                ServiceModels.IsVisible = probe.Models.Length > 8;
+                ModelOptions.IsVisible = !ServiceModels.IsVisible;
+                ModelOptions.Children.Clear();
+                if (ModelOptions.IsVisible)
+                {
+                    foreach (var name in probe.Models)
+                    {
+                        var pick = new RadioButton { Content = name, IsChecked = Equals(ServiceModels.SelectedItem, name) };
+                        AutomationProperties.SetAutomationId(pick, "action:onboarding.model");
+                        pick.IsCheckedChanged += (_, _) =>
+                        {
+                            if (pick.IsChecked == true)
+                            {
+                                ServiceModels.SelectedItem = name;
+                            }
+                        };
+                        ModelOptions.Children.Add(pick);
+                    }
+                }
+
                 ServiceKey.IsVisible = false;
                 ServiceFields.IsVisible = false;
                 LabelSetup();
-                ServiceModels.Focus();
+                (ServiceModels.IsVisible ? (Control)ServiceModels : ModelOptions.Children.FirstOrDefault())?.Focus();
                 return;
             }
             else if (ServiceModels.SelectedItem is string model)
@@ -218,7 +329,10 @@ public sealed partial class MainWindow
                     ServiceName.Text?.Trim() ?? string.Empty,
                     ServiceAddress.Text?.Trim() ?? string.Empty,
                     key,
-                    _probe,
+                    _probe with
+                    {
+                        Kind = ServiceProtocol.SelectedItem as string ?? _probe.Kind,
+                    },
                     model,
                     _closing.Token).ConfigureAwait(true);
             }
@@ -239,7 +353,10 @@ public sealed partial class MainWindow
                 SetModelLabel(status);
             }
 
-            ReturnToConversation();
+            ServiceKey.Text = string.Empty;
+            SetupForm.IsVisible = false;
+            ProjectStep.IsVisible = true;
+            ProjectStep.Begin(Language);
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
         {
@@ -256,6 +373,7 @@ public sealed partial class MainWindow
             ServiceFields.IsEnabled = true;
             ServiceKey.IsEnabled = true;
             ServiceModels.IsEnabled = true;
+            ServiceProtocol.IsEnabled = ModelOptions.IsEnabled = true;
             UpdateConnectButton();
             LabelSetup();
         }
