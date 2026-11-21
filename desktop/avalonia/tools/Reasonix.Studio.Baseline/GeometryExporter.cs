@@ -45,7 +45,8 @@ public sealed class GeometryExporter
     /// <summary>
     /// Walks a visual tree and returns every element that carries an identity.
     /// </summary>
-    /// <param name="root">The visual to start from, usually the window's content.</param>
+    /// <param name="root">The window coordinate system.</param>
+    /// <param name="region">Optional visible subtree to compare.</param>
     /// <returns>
     /// The observed nodes and tokens, keyed by the same identity the baseline uses.
     /// </returns>
@@ -54,7 +55,7 @@ public sealed class GeometryExporter
     /// Thrown when two controls declare the same identity, because an identity
     /// must name exactly one element for a comparison to mean anything.
     /// </exception>
-    public IReadOnlyDictionary<string, ObservedNode> Export(Visual root)
+    public IReadOnlyDictionary<string, ObservedNode> Export(Visual root, Visual? region = null)
     {
         if (root is null)
         {
@@ -65,9 +66,9 @@ public sealed class GeometryExporter
         var origin = root.TranslatePoint(default, root) ?? default;
         var occurrences = new Dictionary<string, int>(StringComparer.Ordinal);
 
-        foreach (var visual in root.GetSelfAndVisualDescendants())
+        foreach (var visual in (region ?? root).GetSelfAndVisualDescendants())
         {
-            if (visual is not Control control)
+            if (visual is not Control control || !control.IsEffectivelyVisible || control.Bounds.Width == 0 || control.Bounds.Height == 0)
             {
                 continue;
             }
@@ -109,7 +110,7 @@ public sealed class GeometryExporter
             observed[key] = node;
         }
 
-        ExportTokens(observed);
+        ExportTokens(observed, root.ActualThemeVariant);
 
         return observed;
     }
@@ -118,6 +119,7 @@ public sealed class GeometryExporter
     /// Copies the captured token values out of the application's resources.
     /// </summary>
     /// <param name="observed">The observations to add the tokens to.</param>
+    /// <param name="actual">The theme of the window being measured.</param>
     /// <remarks>
     /// A token is not an element: it is a value the stylesheet resolved once and
     /// every element reads. The dictionary holds each one twice — a typed
@@ -126,7 +128,7 @@ public sealed class GeometryExporter
     /// Color or a Double would answer a question about the type rather than about
     /// the value the browser resolved.
     /// </remarks>
-    private static void ExportTokens(Dictionary<string, ObservedNode> observed)
+    private static void ExportTokens(Dictionary<string, ObservedNode> observed, ThemeVariant actual)
     {
         if (Application.Current is not { } app)
         {
@@ -136,7 +138,7 @@ public sealed class GeometryExporter
         // The dictionary declares Light and Dark; a headless application reports
         // Default until a window asks for one, so an unresolved variant reads the
         // light tier rather than finding nothing.
-        var variant = app.ActualThemeVariant;
+        var variant = actual;
         if (variant == ThemeVariant.Default)
         {
             variant = ThemeVariant.Light;
@@ -205,6 +207,7 @@ public sealed class GeometryExporter
             {
                 HorizontalAlignment.Center => "center",
                 HorizontalAlignment.Right => "right",
+                HorizontalAlignment.Left when content.IsSet(ContentControl.HorizontalContentAlignmentProperty) => "left",
 
                 // Stretch is how a control fills its slot, not how its text is
                 // aligned inside it: CSS reports `start` for that, and reading

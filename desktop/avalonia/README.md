@@ -1,3 +1,10 @@
+---
+owner: @esengine
+backup: @SivanCola
+status: active
+reviewed: 2026-11-21
+---
+
 # Reasonix Studio, the native shell
 
 The replacement desktop shell: Avalonia drawing Reasonix's own interface in
@@ -40,6 +47,7 @@ capability ledger. Both state what is and is not covered.
   target Avalonia 12.1.6 publishes assets for, so a newer SDK builds them
   without a `net11.0` runtime to run on.
 - **Node 24+**, for `tools/render-tokens.mjs` and the baseline collector.
+- For manual web previews, use the system WebView. Windows requires the Edge WebView2 runtime. macOS uses WebKit. Linux requires WebKitGTK or WPE WebKit and its system libraries.
 - **Go**, matching `go.mod`'s `toolchain` line, for the kernel-side gates.
 
 ## Building and testing
@@ -47,13 +55,19 @@ capability ledger. Both state what is and is not covered.
 ```
 make studio-dotnet        # build the solution
 make studio-dotnet-test   # run its cases
+make studio-native        # build the Go host beside the shell and launch the native window
 ```
 
-Both targets are what CI's `shell (dotnet)` job runs, so a local run and CI
-answer the same question.
+The CI matrix builds the same solution in Release and runs both test projects with the compiled Go host.
 
 Warnings are errors, and `GenerateDocumentationFile` is on: a member without
 XML documentation fails the build rather than reaching review.
+
+The workbench's **Browser** menu opens a manual system WebView. A workspace HTML file also offers a preview.
+
+To check the actual adapter on a desktop, run `dotnet run --project desktop/avalonia/tests/Reasonix.Studio.WebView.Smoke` from the repository root.
+
+The smoke test serves two local pages, opens them through the workbench, and verifies navigation, history, reload and isolated HTML preview. The Studio workflow exposes the same check through its `system_webview` manual input.
 
 ## Running the kernel-side gates
 
@@ -71,10 +85,13 @@ wsl.exe -e bash -lc 'ls /home/*/sdk/go/bin /usr/local/go/bin 2>/dev/null'
 
 **A worktree's `.git` file names an absolute Windows path.** WSL's git reads
 `gitdir: C:/…` as a relative path and joins it onto the working directory, so
-every git command fails with `not a git repository`. Repointing `GIT_DIR` at the
+every git command fails with `not a git repository`.
+
+Repointing `GIT_DIR` at the
 `/mnt/c` form fixes the lookup — but a `git status` or `git diff` across the
-Windows drive then climbs the whole tree through 9p and can take minutes, which
-is why `make check` (repolint `-changed`, which shells out to git) is not a
+Windows drive then climbs the whole tree through 9p and can take minutes.
+
+For this setup, `make check` (repolint `-changed`, which shells out to git) is not a
 usable form here.
 
 The working division is therefore: **let the Windows-side git name the change
@@ -99,10 +116,46 @@ Two things this does not do, and both matter:
 On a host with a native Go toolchain, `make check` runs as written and none of
 this applies. CI is that host.
 
+## Comparing the desktop renderers
+
+The `shell (dotnet)` CI matrix runs on Windows, macOS and Linux. Each job builds the real Go host and uploads native screenshots and difference reports. The conversation gate enforces the recorded differences.
+
+The named-screen tests use the normal controls to enter 18 distinct page states at 1440 × 900 and 760 × 480 in both themes, plus the conversation at 1000 × 720 in both themes.
+
+These 74 comparisons check page-specific geometry anchors, including settings search and navigation, the workbench explorer and canvas, the onboarding card, and the analysis header and metrics. Their reports also include the missing identities and outstanding differences across the rest of each page.
+
+To generate the native side locally, build the solution and run the capture from the repository root:
+
+```sh
+make studio-dotnet
+STUDIO_PARITY_OUTPUT="$PWD/desktop/avalonia/bin/parity/native" \
+  dotnet test desktop/avalonia/Reasonix.Studio.slnx --no-build --filter FullyQualifiedName~NativeDomainTests
+```
+
+To capture the React side, serve the production `perf.html` bundle following the frontend performance harness instructions. From `desktop/frontend-next`, with Playwright Chromium installed:
+
+```sh
+STUDIO_PARITY_SHOTS="$PWD/../avalonia/bin/parity/reference" \
+  STUDIO_BASELINE_OUT="$PWD/../avalonia/bin/parity/geometry" \
+  PERF_CHANNEL=bundled node tools/baseline/collect.mjs
+node ../avalonia/tools/compare-pages.mjs
+```
+
+Open `desktop/avalonia/bin/parity/overview.html` to browse the full set by theme and window size. Its page titles lead to the paired full-size renders and the node, geometry and style findings in `index.html`.
+
+The React capture also exports `page-inputs.json`. The native tests replay those same responses from their checked-in fixture. Refresh the fixture alongside an intentional reference change.
+
+### Remaining parity work
+
+| Area | Next implementation and acceptance check |
+| --- | --- |
+| Data and agent settings | Extend the searchable memory catalog with edit and revision flows. Add preset creation and duplication. Compare a successful save, a rejected save and cancellation against Electron. |
+| Appearance and extensions | Add illustrated theme backgrounds, typography controls, and marketplace installation and update flows. Reopen each page to check that selections survive navigation. |
+| Connections and onboarding | Complete remote-machine management and the remaining protocol and project-selection steps. Exercise connection failure, retry and back navigation. |
+| Workbench and analysis | Compare file-tab overflow, diff presentation and signal grouping against measured runs. Keep browser acceptance on the manual system WebView path. |
+| Platform interaction | Run the Windows and Linux CI jobs and inspect their screenshots. Verify keyboard focus, native menus, scrolling, motion and the system WebView on each desktop. |
+
 ## What the geometry baseline is
 
 `baseline/` holds the boxes, inks, type scale and spacing the reference
-frontend actually resolved, captured per page domain and per scheme. It is JSON
-rather than screenshots because glyph rasterisation and antialiasing differ per
-engine and per platform, and a gate failing on those would be switched off
-within a week. What it holds the shell to is what both sides can compute.
+frontend actually resolved, captured per page domain and per scheme. The gate compares these JSON measurements across engines and platforms. Screenshots support review of glyph rendering and antialiasing.

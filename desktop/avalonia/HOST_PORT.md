@@ -1,3 +1,10 @@
+---
+owner: @esengine
+backup: @SivanCola
+status: active
+reviewed: 2026-11-21
+---
+
 # Host capability ledger
 
 Every capability the page can ask for, the Electron module that carries it today,
@@ -45,15 +52,15 @@ menu's own cut/copy/paste. Avalonia's text controls carry that themselves.
 
 | Concern | Electron module | C# here | Test |
 | --- | --- | --- | --- |
-| single instance | `instance.js` | `SingleInstance` (named mutex) | `SecondLaunchIsRefused` |
+| single instance | `instance.js` | `SingleInstance` and `InstanceActivation` (Windows event or same-user Unix pipe) | `SecondLaunchIsRefused`, `AnotherLaunchRaisesTheListener` |
 | window state memory | `windowstate.js` | `WindowStateStore` | `WindowGeometryRoundTrips`, `AMissingGeometryOpensAtTheDefaultSize` |
 | launch logs | `shelllog.js` | `ShellLog` | — (see note) |
-| tray icon | `tray.js`, `trayimage.js` | `TrayIcon` on `AvaloniaHost.Tray` | — (see note) |
+| tray icon | `tray.js`, `trayimage.js` | `MainWindow.AttachTray` uses `/tray/prefs` and `/tray/state` for its native menu and close behavior | platform acceptance pending |
 | host spawn + lease | `host.js`, `hostclient.js`, `hostprobe.js`, `hostexit.js` | pending `plan_step_16` | — |
-| window layout, startup, launcher | `layout.js`, `starting.js`, `launcher.js`, `ground.js` | pending `plan_step_16` | — |
+| window layout, startup, launcher | `layout.js`, `starting.js`, `launcher.js`, `ground.js` | responsive native window, launch and setup views | `WindowLayoutTests`, `NativeDomainTests` |
 | page preferences | `prefs.js` | pending `plan_step_16` (the page keeps its own `rx-` keys) | — |
 | menu, edit menu | `menu.js`, `editmenu.js` | pending `plan_step_16` | — |
-| credential cookie | `credential.js` | pending `plan_step_20` | — |
+| credential cookie | `credential.js` | `CredentialHandler`, `CredentialKeeper` | `CredentialHandlerTests`, `RealKernelTests` |
 | package grants | `packagegrants.js` | pending `plan_step_5` (packaging) | — |
 | power, keyboard, input wake | `powerguard.js`, `keyboard.js`, `inputwake.js` | Avalonia handles these; no shell verb | — |
 | graphics policy, ozone, app icon | `graphics.js`, `ozone.js`, `appicon.js` | `GraphicsInfo`, `Window.Icon` | — |
@@ -65,7 +72,9 @@ real tray or a real log directory on the platform, which a unit test cannot supp
 without asserting on the test machine's state rather than on the code. Their
 behaviour is checked when the vertical slice runs the real window.
 
-## The agent's browser — outside this port
+## Manual preview and the agent browser
+
+The workbench manual preview uses the installed system web runtime, with an address bar, back, forward and reload. The URL policy is held by `ManualPreviewTests`. System WebView smoke testing and headless main-window geometry are separate checks.
 
 `browserguard.js`, `browserprotocol.js`, `browserrelay.js`, `browserviews.js`,
 `elementpick.js` and `cua.js` draw the agent's pages.

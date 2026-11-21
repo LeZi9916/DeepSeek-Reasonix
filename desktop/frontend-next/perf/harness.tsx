@@ -78,7 +78,7 @@ class BenchPort extends MockPort {
         { kind: "tool_dispatch", tool },
         { kind: "tool_result", tool: { ...tool, durationMs: 820, output: "README.md 的正文。\n".repeat(12) } },
         { kind: "usage", usage: { promptTokens: 12840, completionTokens: 912, totalTokens: 13752, cacheHitTokens: 11200, cacheMissTokens: 1640, sessionCacheHitTokens: 11200, sessionCacheMissTokens: 1640, source: "executor", attemptId: "a1" } },
-        { kind: "turn_done", workDurationMs: 7460, workStartedAt: Date.now() - 7460 },
+        { kind: "turn_done", workDurationMs: 7460, workStartedAt: Date.UTC(2026, 9, 17, 12) },
       ],
     } as unknown as import("../src/port/wire").TrajectoryRead;
   }
@@ -635,9 +635,31 @@ declare global {
     __refuse: (method: string, message: string) => void;
     // Put a notice in the window's corner the way a failed setting does.
     __toast: (text: string) => void;
+    __nativeReference: () => Promise<Record<string, unknown>>;
+    __nativeTrajectory: () => ReturnType<AgentPort["trajectory"]>;
     __syntax: { apply: typeof applyPack; mount: typeof mountEditor };
   }
 }
+window.__nativeTrajectory = () => hub.machinePort().trajectory();
+window.__nativeReference = async () => {
+  const port = hub.machinePort();
+  const reads: Record<string, Promise<unknown>> = {
+    "/tree": hub.tree(), "/status": port.status(), "/appearance": port.appearance(),
+    "/models": port.models("chat").then(models => ({ models })), "/provider-setup": port.providerSetup(),
+    "/workspace/files": port.workspaceFiles(), "/workspace/file": port.workspaceFile("README.md"),
+    "/workspace/preview/info": port.workspacePreviewInfo({ path: "README.md" }), "/changes": port.changes(),
+    "/notifications": port.notifyPrefs(), "/studio/update-mode": port.updateMode().then(mode => ({mode})),
+    "/tools": port.toolSettings(), "/studio/versions": port.versions(), "/providers": port.providers(),
+    "/default-mode": port.defaultMode(), "/fold-work-settings": port.foldWorkSettings(),
+    "/present-files": port.presentFiles(), "/changed-files-settings": port.changedFilesSettings(),
+    "/providers/health/settings": port.providerHealthSettings(), "/browser-tools": port.browserTools(),
+    "/auto-archive": port.autoArchive(), "/observability": port.observabilitySettings(),
+    "/ask-timeout": port.askTimeout(), "/persona": port.persona(), "/network": port.network(),
+    "/memory": port.memories(), "/agent-presets": port.agentPresets(), "/themes": port.themes(),
+    "/account": port.account(), "/plugins": port.plugins(), "/market/packages": port.marketList({}),
+  };
+  return Object.fromEntries(await Promise.all(Object.entries(reads).map(async ([key, value]) => [key, await value])));
+};
 window.__toast = pushToast;
 window.__syntax = { apply: applyPack, mount: mountEditor };
 window.__feed = (ev) => hub.feeds.forEach((p) => p.feed(ev));

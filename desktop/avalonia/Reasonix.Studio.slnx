@@ -12,6 +12,8 @@
     <Project Path="tools/Reasonix.Studio.MessageKeys/Reasonix.Studio.MessageKeys.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Reasonix.Studio.Render.Tests/Reasonix.Studio.Render.Tests.csproj" />
+    <Project Path="tests/Reasonix.Studio.WebView.Smoke/Reasonix.Studio.WebView.Smoke.csproj" />
     <Project Path="tests/Reasonix.Studio.Baseline.Tests/Reasonix.Studio.Baseline.Tests.csproj" />
   </Folder>
 </Solution>

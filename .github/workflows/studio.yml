@@ -6,10 +6,16 @@ name: Studio
 # the kernel; this file covers the frontend build, the desktop module's Go side,
 # and the packaging contract on real artifacts.
 on:
+  workflow_dispatch:
+    inputs:
+      system_webview:
+        description: Check the installed native web runtime on each desktop
+        type: boolean
+        default: false
   push:
-    branches: [studio]
+    branches: [studio, frontend/avalonia]
   pull_request:
-    branches: [studio]
+    branches: [studio, frontend/avalonia]
 
 permissions:
   contents: read
@@ -245,8 +251,12 @@ jobs:
   # neither `go test` nor pnpm reaches it: this job is the only place its build,
   # its documentation gate and its geometry baseline run.
   shell-dotnet:
-    name: shell (dotnet)
-    runs-on: windows-latest
+    name: ${{ matrix.os == 'windows-latest' && 'shell (dotnet)' || format('shell (dotnet, {0})', matrix.os) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     defaults:
       run:
@@ -269,8 +279,43 @@ jobs:
       - name: build
         run: dotnet build Reasonix.Studio.slnx -c Release --no-restore
 
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: go.mod
+
+      - name: build host for integration tests
+        working-directory: .
+        run: go build -o desktop/avalonia/tests/Reasonix.Studio.Baseline.Tests/bin/Release/net10.0/ ./cmd/reasonix-studio-host
+
       - name: test
+        env:
+          REASONIX_HOME: ${{ runner.temp }}/studio-test-home
+          STUDIO_TEST_HOST_REQUIRED: "1"
+          STUDIO_PARITY_OUTPUT: ${{ runner.temp }}/studio-native-parity
         run: dotnet test Reasonix.Studio.slnx -c Release --no-build
+
+      - name: Linux system WebView prerequisites
+        if: github.event_name == 'workflow_dispatch' && inputs.system_webview && runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libwebkit2gtk-4.1-0
+
+      - name: Linux system WebView smoke
+        if: github.event_name == 'workflow_dispatch' && inputs.system_webview && runner.os == 'Linux'
+        run: xvfb-run -a dotnet run --no-build -c Release --project tests/Reasonix.Studio.WebView.Smoke
+
+      - name: system WebView smoke
+        if: github.event_name == 'workflow_dispatch' && inputs.system_webview && runner.os != 'Linux'
+        run: dotnet run --no-build -c Release --project tests/Reasonix.Studio.WebView.Smoke
+
+      - name: native render evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-parity-${{ matrix.os }}
+          path: ${{ runner.temp }}/studio-native-parity
+          if-no-files-found: warn
+          retention-days: 7
 
       # The same command `make studio-geometry` runs. The cases are part of the
       # step above as well; this one names them so a red run says which subject

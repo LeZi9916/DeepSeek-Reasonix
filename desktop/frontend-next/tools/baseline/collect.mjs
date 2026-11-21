@@ -16,7 +16,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, "..", "..", "..", "avalonia", "baseline");
+const OUT = process.env.STUDIO_BASELINE_OUT ?? join(HERE, "..", "..", "..", "avalonia", "baseline");
+const SHOTS = process.env.STUDIO_PARITY_SHOTS;
 const BASE = process.env.PERF_URL ?? "http://localhost:4399/perf.html";
 
 // The domains are named here rather than discovered: a page that stops being
@@ -468,11 +469,13 @@ async function proveArrived(page, domain) {
 
 const main = async () => {
   await mkdir(OUT, { recursive: true });
-  const browser = await chromium.launch({ channel: process.env.PERF_CHANNEL ?? "chrome" });
+  if (SHOTS) await mkdir(SHOTS, { recursive: true });
+  const browser = await chromium.launch({ channel: process.env.PERF_CHANNEL === "bundled" ? undefined : process.env.PERF_CHANNEL ?? "chrome" });
 
   const domains = {};
   const contrast = {};
   const failures = [];
+  let referenceInputs;
 
   // A fresh context per capture. Two reasons, and both were measured:
   //  - switching colorScheme on a loaded page leaves the previous scheme's
@@ -496,6 +499,15 @@ const main = async () => {
         await settle(page);
         await proveArrived(page, domain);
         domains[`${domain.name}/${scheme}`] = await grab(page, STYLE_PROPS, domain.root);
+        if (SHOTS) {
+          await page.screenshot({ path: join(SHOTS, `${domain.name}.${scheme}.png`) });
+          if (domain.name === "conversation" && scheme === "light") {
+            referenceInputs = await page.evaluate(() => window.__nativeReference());
+          }
+          if (domain.name === "analysis" && scheme === "light" && referenceInputs) {
+            referenceInputs["/trajectory"] = await page.evaluate(() => window.__nativeTrajectory());
+          }
+        }
 
         // The contrast tiers are one axis of the token set, not of any page, so
         // they are read once per scheme from the page that is already open.
@@ -509,6 +521,27 @@ const main = async () => {
     }
   }
 
+  const responsive = new Map();
+  for (const [width, height] of [[760, 480], [1000, 720]]) {
+    for (const scheme of ["light", "dark"]) {
+      for (const domain of width === 760 ? DOMAINS : DOMAINS.slice(0, 1)) {
+        const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, colorScheme: scheme });
+        const stem = `${domain.name}-${width}x${height}.${scheme}`;
+        try {
+          const page = await context.newPage();
+          await page.goto(addressOf(domain.screen), { waitUntil: "domcontentloaded" });
+          await settle(page);
+          await proveArrived(page, domain);
+          responsive.set(stem, await grab(page, STYLE_PROPS, domain.root));
+          if (SHOTS) await page.screenshot({ path: join(SHOTS, stem + ".png") });
+        } catch (error) {
+          failures.push(`${stem}: ${error instanceof Error ? error.message : error}`);
+        } finally {
+          await context.close();
+        }
+      }
+    }
+  }
   await browser.close();
 
   // Nothing is written for a half-read baseline: a directory holding some
@@ -521,6 +554,10 @@ const main = async () => {
     process.exit(1);
   }
 
+  const sizes = join(OUT, "responsive");
+  await mkdir(sizes, { recursive: true });
+  for (const [stem, capture] of responsive) await writeFile(join(sizes, stem + ".json"), JSON.stringify(capture) + "\n");
+  if (SHOTS && referenceInputs) await writeFile(join(SHOTS, "page-inputs.json"), JSON.stringify(referenceInputs, null, 2) + "\n");
   // One file per domain, written compactly: the baseline is read by a gate, not
   // by a person, and pretty-printing it spent a third of its bytes on
   // indentation. Splitting it keeps a review of one domain's drift down to one

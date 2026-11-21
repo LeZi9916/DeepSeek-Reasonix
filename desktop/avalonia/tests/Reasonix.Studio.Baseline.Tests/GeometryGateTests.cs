@@ -80,6 +80,17 @@ public sealed class GeometryGateTests
             $"{fresh.Count} difference(s) are not in baseline/gate-debt.json; first is {fresh.FirstOrDefault()}");
     }
 
+    /// <summary>Checks both the mounted controls and the resolved resources in the dark appearance.</summary>
+    /// <returns>The result of laying out the dark conversation.</returns>
+    [Fact]
+    public async Task TheDarkConversationMatchesTheCapturedOne()
+    {
+        var observed = await GateFixture.Render(dark: true);
+        var findings = new GeometryComparer(GeometryComparerOptions.Studio).Compare(GateFixture.Domain(dark: true), observed);
+        var debt = GateFixture.ReadDebt();
+        Assert.All(findings, f => Assert.Contains(GateFixture.KeyOf(f), debt));
+    }
+
     /// <summary>
     /// Reports debt the gate no longer finds, so a ratchet can be lowered.
     /// </summary>

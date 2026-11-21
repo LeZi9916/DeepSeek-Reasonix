@@ -1,3 +1,10 @@
+---
+owner: @esengine
+backup: @SivanCola
+status: active
+reviewed: 2026-11-21
+---
+
 # The loopback boundary, from the shell's side
 
 `docs/STUDIO_SHELL_BOUNDARIES.md` states the contract and
@@ -56,21 +63,12 @@ exactly what "never read from config" exists to prevent.
   person configured; restoring a cookie in answer to it would hide the failure they
   need to see. Only 403 is the gate refusing this launch's credential.
 
-## The sender check has no counterpart here
+## Manual web previews
 
-Electron verifies `event.sender === win.webContents` on every IPC handler because
-its renderer is a web page in another process: a page that ran someone else's
-script could otherwise ask for OS capability. The C# shell has no such edge —
+The application chrome is AXAML. The workbench creates a separate system WebView for a user-entered HTTP or HTTPS address. Windows uses the installed Edge WebView2 runtime, macOS uses WKWebView, and Linux uses an installed WebKitGTK or WPE WebKit backend.
 
-- the window is AXAML in this process, so *there is no IPC carrying capability*;
-- the page-reachable surface is the kernel's HTTP API, which the gate already
-  guards;
-- agent-authored UI (an extension surface) reaches the shell only as data the
-  kernel rendered, never as a call into `IHostPort`.
+The guest receives no session HTTP client, launch cookie, file grant, or native command bridge. The address bar, top-level redirects and new-window requests use the same URL check. The private loopback authority is excluded. A new-window request can populate the address field, and the user chooses whether to open it.
 
-So the row is **not covered by a check; it is covered by not having the edge.**
-The condition that would create it is recorded here so it is not rediscovered as a
-surprise: **the moment a web page runs in this shell** — the agent's browser view
-host in `plan_step_25` — that page is another origin's content in this process,
-and every capability it can reach needs a sender check of its own. That step
-inherits this paragraph.
+HTML files are read by the kernel under the ordinary workspace grant. An explicit preview displays the returned text in a sandboxed document with scripts disabled. The guest never receives a host filesystem URL.
+
+Any future page-to-host command channel or agent browser relay needs its own sender and capability checks. The manual viewer exposes neither.

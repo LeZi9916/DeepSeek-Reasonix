@@ -1,0 +1,1354 @@
+{
+  "/tree": [
+    {
+      "root": "~/projects/workspace-0",
+      "name": "workspace-0",
+      "remembered": true,
+      "open": true,
+      "sessions": [
+        {
+          "path": "/sessions/w0-s0.jsonl",
+          "name": "w0-s0",
+          "title": "第 0 次会话，标题是内核起的一句话",
+          "turns": 1
+        },
+        {
+          "path": "/sessions/w0-s1.jsonl",
+          "name": "w0-s1",
+          "title": "第 1 次会话，标题是内核起的一句话",
+          "turns": 2
+        },
+        {
+          "path": "/sessions/w0-s2.jsonl",
+          "name": "w0-s2",
+          "title": "第 2 次会话，标题是内核起的一句话",
+          "turns": 3
+        },
+        {
+          "path": "/sessions/w0-s3.jsonl",
+          "name": "w0-s3",
+          "title": "第 3 次会话，标题是内核起的一句话",
+          "turns": 4
+        },
+        {
+          "path": "/sessions/w0-s4.jsonl",
+          "name": "w0-s4",
+          "title": "第 4 次会话，标题是内核起的一句话",
+          "turns": 5
+        },
+        {
+          "path": "/sessions/w0-s5.jsonl",
+          "name": "w0-s5",
+          "title": "第 5 次会话，标题是内核起的一句话",
+          "turns": 6
+        }
+      ]
+    },
+    {
+      "root": "~/projects/workspace-1",
+      "name": "workspace-1",
+      "remembered": true,
+      "open": false,
+      "sessions": [
+        {
+          "path": "/sessions/w1-s0.jsonl",
+          "name": "w1-s0",
+          "title": "第 0 次会话，标题是内核起的一句话",
+          "turns": 1
+        },
+        {
+          "path": "/sessions/w1-s1.jsonl",
+          "name": "w1-s1",
+          "title": "第 1 次会话，标题是内核起的一句话",
+          "turns": 2
+        },
+        {
+          "path": "/sessions/w1-s2.jsonl",
+          "name": "w1-s2",
+          "title": "第 2 次会话，标题是内核起的一句话",
+          "turns": 3
+        },
+        {
+          "path": "/sessions/w1-s3.jsonl",
+          "name": "w1-s3",
+          "title": "第 3 次会话，标题是内核起的一句话",
+          "turns": 4
+        },
+        {
+          "path": "/sessions/w1-s4.jsonl",
+          "name": "w1-s4",
+          "title": "第 4 次会话，标题是内核起的一句话",
+          "turns": 5
+        },
+        {
+          "path": "/sessions/w1-s5.jsonl",
+          "name": "w1-s5",
+          "title": "第 5 次会话，标题是内核起的一句话",
+          "turns": 6
+        }
+      ]
+    }
+  ],
+  "/status": {
+    "label": "deepseek-v4-pro",
+    "running": false,
+    "plan": false,
+    "preset": "balanced",
+    "effort": "auto",
+    "modelRef": "deepseek/deepseek-v4-pro",
+    "toolApprovalMode": "ask",
+    "autoApproveTools": false,
+    "bypass": false,
+    "goal": "",
+    "goalStatus": "stopped",
+    "cwd": "~/projects/DeepSeek-Reasonix/.reasonix/sessions",
+    "workspaceRoot": "~/projects/DeepSeek-Reasonix",
+    "used": 0,
+    "window": 128000,
+    "cacheHit": 0,
+    "cacheMiss": 0,
+    "agentCompositionLocked": false
+  },
+  "/appearance": {
+    "language": "zh",
+    "zoomRange": {
+      "min": 0.8,
+      "max": 1.8,
+      "step": 0.05
+    },
+    "widthPercent": 80,
+    "widthRange": {
+      "min": 30,
+      "max": 100,
+      "step": 1
+    }
+  },
+  "/models": {
+    "models": [
+      {
+        "ref": "deepseek/deepseek-v4-pro",
+        "provider": "deepseek",
+        "model": "deepseek-v4-pro",
+        "kind": "openai",
+        "vendor": "api.deepseek.com",
+        "mark": "deepseek",
+        "keyEnv": "DEEPSEEK_API_KEY",
+        "active": true,
+        "efforts": [
+          "auto",
+          "low",
+          "high",
+          "max"
+        ],
+        "effort": "high",
+        "webSearch": true,
+        "contextWindow": 131072,
+        "price": {
+          "input": 2,
+          "output": 8,
+          "currency": "CNY"
+        },
+        "default": false
+      },
+      {
+        "ref": "deepseek-anthropic/deepseek-v4-pro",
+        "provider": "deepseek-anthropic",
+        "model": "deepseek-v4-pro",
+        "kind": "anthropic",
+        "vendor": "api.deepseek.com",
+        "mark": "deepseek",
+        "keyEnv": "DEEPSEEK_API_KEY",
+        "efforts": [
+          "auto",
+          "low",
+          "high",
+          "max"
+        ],
+        "effort": "high",
+        "contextWindow": 131072,
+        "default": false
+      },
+      {
+        "ref": "deepseek/deepseek-flash",
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "kind": "openai",
+        "vendor": "api.deepseek.com",
+        "mark": "deepseek",
+        "keyEnv": "DEEPSEEK_API_KEY",
+        "efforts": [
+          "auto",
+          "low",
+          "high",
+          "max"
+        ],
+        "effort": "high",
+        "contextWindow": 131072,
+        "price": {
+          "input": 0.5,
+          "output": 2,
+          "currency": "CNY"
+        },
+        "default": false
+      },
+      {
+        "ref": "kimi/kimi-k2-vision",
+        "provider": "kimi",
+        "model": "kimi-k2-vision",
+        "kind": "openai",
+        "vendor": "api.moonshot.cn",
+        "mark": "kimi",
+        "keyEnv": "KIMI_API_KEY",
+        "vision": true,
+        "contextWindow": 262144,
+        "default": false
+      },
+      {
+        "ref": "myrelay/gpt-4o",
+        "provider": "myrelay",
+        "model": "gpt-4o",
+        "kind": "openai",
+        "vendor": "relay.example.com",
+        "serviceMark": "openrouter",
+        "keyEnv": "MYRELAY_API_KEY",
+        "vision": true,
+        "contextWindow": 131072,
+        "default": false
+      },
+      {
+        "ref": "myrelay/claude-sonnet-4",
+        "provider": "myrelay",
+        "model": "claude-sonnet-4",
+        "kind": "openai",
+        "vendor": "relay.example.com",
+        "serviceMark": "openrouter",
+        "keyEnv": "MYRELAY_API_KEY",
+        "contextWindow": 200000,
+        "default": false
+      },
+      {
+        "ref": "myrelay-work/gpt-4o",
+        "provider": "myrelay-work",
+        "model": "gpt-4o",
+        "kind": "openai",
+        "vendor": "relay.example.com",
+        "keyEnv": "MYRELAY_WORK_API_KEY",
+        "contextWindow": 131072,
+        "default": false
+      }
+    ]
+  },
+  "/provider-setup": null,
+  "/workspace/files": {
+    "files": [
+      "README.md"
+    ],
+    "directories": [
+      "internal"
+    ]
+  },
+  "/workspace/file": {
+    "path": "README.md",
+    "content": "// README.md\n",
+    "revision": "fixture"
+  },
+  "/workspace/preview/info": {
+    "ref": {
+      "path": "README.md"
+    },
+    "kind": "markdown",
+    "size": 13,
+    "version": "fixture",
+    "readOnly": false,
+    "limit": 2097152
+  },
+  "/changes": {
+    "repo": true,
+    "changes": [
+      {
+        "path": "internal/provider/retry.go",
+        "status": "M",
+        "unstaged": true,
+        "insertions": 14,
+        "deletions": 3
+      },
+      {
+        "path": "internal/config/credentials.go",
+        "status": "M",
+        "staged": true,
+        "insertions": 6,
+        "deletions": 2
+      },
+      {
+        "path": "internal/provider/openai/streaming/chunk_decoder.go",
+        "status": "A",
+        "staged": true,
+        "unstaged": true
+      },
+      {
+        "path": "docs/notes.md",
+        "status": "??",
+        "unstaged": true
+      }
+    ]
+  },
+  "/notifications": {
+    "enabled": false,
+    "turnDone": true,
+    "approval": true,
+    "ask": true,
+    "feedbackReply": true,
+    "diskLow": true,
+    "sound": false,
+    "phone": {
+      "enabled": false,
+      "approval": false,
+      "input": false,
+      "error": false
+    }
+  },
+  "/studio/update-mode": {
+    "mode": "notify"
+  },
+  "/tools": {
+    "tools": [
+      {
+        "name": "bash",
+        "description": "Run a shell command in the workspace.",
+        "disabled": false
+      },
+      {
+        "name": "read_file",
+        "description": "Read a file, or a line range of it.",
+        "disabled": false
+      },
+      {
+        "name": "recall",
+        "description": "Search what earlier turns folded away.",
+        "disabled": false
+      },
+      {
+        "name": "todo_write",
+        "description": "Keep a checklist for a multi-step task.",
+        "disabled": false,
+        "requiredBy": "plan_steps"
+      },
+      {
+        "name": "web_search",
+        "description": "Search the web.",
+        "disabled": true,
+        "byProject": true
+      },
+      {
+        "name": "update_goal",
+        "description": "Report a goal as complete, blocked or stopped.",
+        "disabled": false,
+        "requiredBy": "goal_mode"
+      },
+      {
+        "name": "use_capability",
+        "description": "Reach a deferred MCP tool.",
+        "disabled": false,
+        "requiredBy": "deferred_mcp_tools"
+      },
+      {
+        "name": "web_fetch",
+        "description": "Fetch a web page.",
+        "disabled": false
+      }
+    ],
+    "path": "/Users/you/.reasonix/config.toml"
+  },
+  "/studio/versions": {
+    "current": "dev",
+    "pinned": "",
+    "stalePin": false,
+    "latest": "",
+    "newer": false,
+    "versions": []
+  },
+  "/providers": [
+    {
+      "name": "deepseek",
+      "kind": "openai",
+      "effortField": "reasoning_effort",
+      "baseUrl": "https://api.deepseek.com",
+      "models": [
+        "deepseek-v4-pro",
+        "deepseek-flash"
+      ],
+      "default": "deepseek-v4-pro",
+      "hasKey": true,
+      "inUse": true,
+      "preset": false,
+      "mark": "deepseek",
+      "keyEnv": "DEEPSEEK_API_KEY",
+      "canSetVision": false,
+      "balanceUrl": "https://api.deepseek.com/user/balance",
+      "impliedBalanceFormat": "deepseek",
+      "balanceFormats": [
+        "deepseek",
+        "moonshot",
+        "openrouter"
+      ]
+    },
+    {
+      "name": "deepseek-anthropic",
+      "kind": "anthropic",
+      "baseUrl": "https://api.deepseek.com/anthropic",
+      "models": [
+        "deepseek-v4-pro"
+      ],
+      "default": "deepseek-v4-pro",
+      "hasKey": true,
+      "inUse": false,
+      "preset": false,
+      "mark": "deepseek",
+      "keyEnv": "DEEPSEEK_API_KEY",
+      "canSetVision": false,
+      "canWebSearch": true,
+      "webSearch": true,
+      "canSetThinking": true,
+      "sendsThinking": true,
+      "effortField": "output_config.effort"
+    },
+    {
+      "name": "myrelay",
+      "kind": "openai",
+      "effortField": "reasoning_effort",
+      "baseUrl": "https://relay.example.com/v1",
+      "models": [
+        "gpt-4o",
+        "claude-sonnet-4"
+      ],
+      "default": "gpt-4o",
+      "hasKey": true,
+      "inUse": false,
+      "preset": false,
+      "mark": "openrouter",
+      "keyEnv": "MYRELAY_API_KEY",
+      "balanceUrl": "https://relay.example.com/user/balance",
+      "impliedBalanceFormat": "",
+      "balanceFormats": [
+        "deepseek",
+        "moonshot",
+        "openrouter"
+      ],
+      "visionModels": [
+        "gpt-4o"
+      ],
+      "canSetVision": true,
+      "canSetThinking": true,
+      "sendsThinking": true,
+      "reasoningProtocol": "openai",
+      "supportedEfforts": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "modelEfforts": {
+        "claude-sonnet-4": {
+          "supportedEfforts": [
+            "low",
+            "high",
+            "max"
+          ],
+          "defaultEffort": "high"
+        }
+      },
+      "contextWindow": 131072,
+      "modelLimits": {
+        "claude-sonnet-4": {
+          "contextWindow": 200000,
+          "maxOutputTokens": 64000
+        }
+      },
+      "modelPrices": {
+        "gpt-4o": {
+          "input": 2.5,
+          "output": 10,
+          "cacheHit": 1.25,
+          "currency": "USD",
+          "sourceUrl": "https://relay.example.com/pricing",
+          "checked": "2026-10-17"
+        }
+      },
+      "inheritedLimits": {
+        "gpt-4o": {
+          "contextWindow": 131072
+        },
+        "claude-sonnet-4": {
+          "contextWindow": 131072
+        }
+      },
+      "inheritedEfforts": {
+        "gpt-4o": {
+          "supportedEfforts": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "claude-sonnet-4": {
+          "supportedEfforts": [
+            "low",
+            "medium",
+            "high"
+          ]
+        }
+      }
+    },
+    {
+      "name": "myrelay-responses",
+      "kind": "responses",
+      "baseUrl": "https://relay.example.com/v1",
+      "models": [
+        "gpt-4o"
+      ],
+      "default": "gpt-4o",
+      "hasKey": true,
+      "inUse": false,
+      "preset": false,
+      "mark": "openrouter",
+      "keyEnv": "MYRELAY_API_KEY",
+      "canSetContinuation": true,
+      "continuation": "",
+      "canSetThinking": true,
+      "sendsThinking": true,
+      "effortField": "reasoning.effort"
+    },
+    {
+      "name": "myrelay-work",
+      "kind": "openai",
+      "effortField": "reasoning_effort",
+      "baseUrl": "https://relay.example.com/v1",
+      "models": [
+        "gpt-4o"
+      ],
+      "default": "gpt-4o",
+      "hasKey": true,
+      "inUse": false,
+      "preset": false,
+      "keyEnv": "MYRELAY_WORK_API_KEY"
+    }
+  ],
+  "/default-mode": {
+    "plan": false,
+    "path": "/Users/you/.reasonix/config.toml"
+  },
+  "/fold-work-settings": {
+    "fold": false,
+    "path": "/Users/you/.reasonix/config.toml"
+  },
+  "/present-files": {
+    "enabled": false,
+    "path": "/Users/you/.reasonix/config.toml"
+  },
+  "/changed-files-settings": {
+    "show": true,
+    "path": "/Users/you/.reasonix/config.toml"
+  },
+  "/providers/health/settings": {
+    "enabled": false
+  },
+  "/browser-tools": {
+    "enabled": true,
+    "effective": true,
+    "path": "/Users/you/.reasonix/config.toml"
+  },
+  "/auto-archive": {
+    "enabled": false,
+    "days": 30,
+    "defaultDays": 30,
+    "path": "/Users/you/.reasonix/config.toml"
+  },
+  "/observability": {
+    "enabled": false,
+    "endpoint": "",
+    "headerName": "",
+    "headerEnv": "",
+    "serviceName": "",
+    "headerEnvSet": false,
+    "path": "/Users/you/.reasonix/config.toml",
+    "applies": "next_session"
+  },
+  "/ask-timeout": {
+    "seconds": 0,
+    "defaultSeconds": 300,
+    "minSeconds": 10,
+    "maxSeconds": 86400,
+    "path": "/Users/you/.reasonix/config.toml"
+  },
+  "/persona": {
+    "prefix": "",
+    "suffix": "",
+    "include_runtime_context": true,
+    "path": "/Users/you/.reasonix/config.toml",
+    "presets": [
+      {
+        "id": "engineer",
+        "prefix": "You are a rigorous staff engineer. Verify before claiming, make the smallest correct change, and state the residual risk.",
+        "suffix": "",
+        "include_runtime_context": true
+      },
+      {
+        "id": "concise",
+        "prefix": "",
+        "suffix": "Be terse. Skip the preamble; prefer code and bullets.",
+        "include_runtime_context": false
+      }
+    ]
+  },
+  "/network": {
+    "mode": "auto",
+    "effective": "auto (env)",
+    "direct": [
+      "api.mimo.cn"
+    ],
+    "endpoint": "https://api.deepseek.com/v1"
+  },
+  "/account": {
+    "signedIn": false
+  },
+  "/plugins": [
+    {
+      "name": "review-kit",
+      "version": "1.4.0",
+      "root": "~/.reasonix/plugins/review-kit",
+      "description": "代码评审的技能与命令",
+      "source": "github:acme/review-kit",
+      "manifestKind": "reasonix",
+      "enabled": true,
+      "skills": [
+        {
+          "name": "review",
+          "description": "按改动范围逐块评审",
+          "invocation": "/review-kit:review"
+        },
+        {
+          "name": "risk",
+          "description": "只找会出事的那几处",
+          "invocation": "/review-kit:risk"
+        }
+      ],
+      "commands": [
+        {
+          "name": "pr",
+          "description": "写一份 PR 说明",
+          "invocation": "/review-kit:pr"
+        }
+      ]
+    },
+    {
+      "name": "notion-bridge",
+      "version": "0.9.1",
+      "root": "~/.reasonix/plugins/notion-bridge",
+      "description": "把 Notion 接进来",
+      "source": "https://example.com/notion-bridge",
+      "manifestKind": "claude",
+      "enabled": false,
+      "skills": [
+        {
+          "name": "notes",
+          "description": "读写页面",
+          "invocation": "/notion-bridge:notes"
+        }
+      ],
+      "hooks": [
+        {
+          "event": "SessionStart",
+          "command": "hooks/sync.sh",
+          "description": "开会话时同步一次"
+        }
+      ],
+      "mcpServers": [
+        {
+          "name": "notion",
+          "transport": "stdio",
+          "command": "notion-mcp",
+          "autoStart": true
+        }
+      ],
+      "runtime": {
+        "command": "bin/bridge",
+        "args": [
+          "--serve"
+        ],
+        "intercepts": [
+          "tool.before"
+        ],
+        "capabilities": [
+          "interceptors",
+          "ui"
+        ]
+      }
+    }
+  ],
+  "/market/packages": {
+    "packages": [
+      {
+        "kind": "skill",
+        "handle": "nanfei892",
+        "name": "make-ui-not-ai",
+        "slug": "nanfei892/make-ui-not-ai",
+        "summary": "前端界面技能：从真实产品任务出发，设计并验证可用、完整、有辨识度的界面。",
+        "description": "适合需要从零搭一个页面、或者把现有页面改得不像模板的时候。\n\n它会先问清楚这个页面给谁用、要完成什么，再给出布局与验证步骤。",
+        "homepage": "",
+        "repoUrl": "https://github.com/nanfei892/ship-it-skills",
+        "tags": [
+          "frontend",
+          "ui-design"
+        ],
+        "latestVersion": "1.0.0",
+        "installCount": 2118,
+        "starCount": 41,
+        "upCount": 41,
+        "downCount": 3,
+        "approvalRate": 0.9318181818181818,
+        "score": 0.83,
+        "verified": true,
+        "status": "active",
+        "updatedAt": "2026-09-04T02:56:03Z",
+        "pinned": true
+      },
+      {
+        "kind": "plugin",
+        "handle": "acme",
+        "name": "review-kit",
+        "slug": "acme/review-kit",
+        "summary": "代码评审套件：按改动范围逐块评审，只标出会出事的地方。",
+        "description": "三个技能 + 一个 /pr 命令。不启动任何进程，不注册钩子。",
+        "homepage": "",
+        "repoUrl": "https://github.com/acme/review-kit",
+        "tags": [
+          "review",
+          "git"
+        ],
+        "latestVersion": "1.4.0",
+        "installCount": 986,
+        "starCount": 12,
+        "upCount": 12,
+        "downCount": 2,
+        "approvalRate": 0.8571428571428571,
+        "score": 0.61,
+        "verified": false,
+        "status": "active",
+        "updatedAt": "2026-09-20T10:00:00Z",
+        "pinned": true
+      },
+      {
+        "kind": "mcp",
+        "handle": "irmia",
+        "name": "irmia-devkit",
+        "slug": "irmia/irmia-devkit",
+        "summary": "一组对模型友好的开发工具：批量读写、结构化搜索、依赖图。",
+        "description": "",
+        "homepage": "",
+        "repoUrl": "https://github.com/irmia2026/irmia_devkit_mcp",
+        "tags": [
+          "tool",
+          "coding"
+        ],
+        "latestVersion": "2.7.0",
+        "installCount": 1527,
+        "starCount": 5,
+        "upCount": 5,
+        "downCount": 1,
+        "approvalRate": 0.8333333333333334,
+        "score": 0.52,
+        "verified": false,
+        "status": "active",
+        "updatedAt": "2026-07-22T12:11:46Z",
+        "installed": {
+          "version": "2.7.0",
+          "contentHash": "sha256:5f0c1e9a7b3d2c4e6f8a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e"
+        },
+        "pinned": true
+      },
+      {
+        "kind": "skill",
+        "handle": "1574022644",
+        "name": "lm-studio-vision-bridge",
+        "slug": "1574022644/lm-studio-vision-bridge",
+        "summary": "通过本地 LM Studio 视觉模型为 agent 提供图片识别能力。",
+        "description": "",
+        "homepage": "",
+        "repoUrl": "https://github.com/FuchaZ/lm-studio-vision-bridge",
+        "tags": [
+          "vision",
+          "local"
+        ],
+        "latestVersion": "2.0.0",
+        "installCount": 1678,
+        "starCount": 0,
+        "upCount": 0,
+        "downCount": 0,
+        "approvalRate": null,
+        "score": 0.29,
+        "verified": false,
+        "status": "active",
+        "updatedAt": "2026-07-28T07:14:25Z",
+        "pinned": false
+      },
+      {
+        "kind": "theme",
+        "handle": "lumen",
+        "name": "dusk-harbor",
+        "slug": "lumen/dusk-harbor",
+        "summary": "低饱和的暮色主题：浅色、深色各一套，只含主题，不带任何技能或钩子。",
+        "description": "",
+        "homepage": "",
+        "repoUrl": "https://github.com/lumen/reasonix-themes",
+        "tags": [
+          "theme",
+          "dark"
+        ],
+        "latestVersion": "1.2.0",
+        "installCount": 412,
+        "starCount": 5,
+        "upCount": 5,
+        "downCount": 0,
+        "approvalRate": 1,
+        "score": 0.44,
+        "verified": false,
+        "status": "active",
+        "updatedAt": "2026-09-18T08:00:00Z",
+        "pinned": true
+      }
+    ],
+    "limit": 24,
+    "offset": 0
+  },
+  "/trajectory": {
+    "availability": "complete",
+    "events": [
+      {
+        "kind": "turn_started",
+        "text": "第 1 个问题，麻烦看一下这个文件。"
+      },
+      {
+        "kind": "stream_attempt",
+        "streamAttempt": {
+          "id": "a1",
+          "action": "begin",
+          "attempt": 1,
+          "max": 3
+        }
+      },
+      {
+        "kind": "stream_attempt",
+        "streamAttempt": {
+          "id": "a1",
+          "action": "commit",
+          "firstTokenMs": 640
+        }
+      },
+      {
+        "kind": "tool_dispatch",
+        "tool": {
+          "id": "call-1",
+          "name": "read_file",
+          "resolvedName": "read_file",
+          "readOnly": true,
+          "args": "{\"path\":\"README.md\"}"
+        }
+      },
+      {
+        "kind": "tool_result",
+        "tool": {
+          "id": "call-1",
+          "name": "read_file",
+          "resolvedName": "read_file",
+          "readOnly": true,
+          "args": "{\"path\":\"README.md\"}",
+          "durationMs": 820,
+          "output": "README.md 的正文。\nREADME.md 的正文。\nREADME.md 的正文。\nREADME.md 的正文。\nREADME.md 的正文。\nREADME.md 的正文。\nREADME.md 的正文。\nREADME.md 的正文。\nREADME.md 的正文。\nREADME.md 的正文。\nREADME.md 的正文。\nREADME.md 的正文。\n"
+        }
+      },
+      {
+        "kind": "usage",
+        "usage": {
+          "promptTokens": 12840,
+          "completionTokens": 912,
+          "totalTokens": 13752,
+          "cacheHitTokens": 11200,
+          "cacheMissTokens": 1640,
+          "sessionCacheHitTokens": 11200,
+          "sessionCacheMissTokens": 1640,
+          "source": "executor",
+          "attemptId": "a1"
+        }
+      },
+      {
+        "kind": "turn_done",
+        "workDurationMs": 7460,
+        "workStartedAt": 1792238400000
+      }
+    ]
+  },
+  "/memory": {
+    "memories": [
+      {
+        "name": "no-coauthored-by",
+        "title": "提交信息不带 Co-Authored-By",
+        "description": "也不要 Generated with 之类的署名脚注",
+        "activation": "pinned",
+        "scope": "project",
+        "type": "feedback",
+        "updatedAt": "2026-06-11",
+        "galaxy": "发布流程",
+        "importance": 3,
+        "state": "clear",
+        "clearForDays": 64,
+        "uses": 9,
+        "lastUsedAt": "2026-10-31",
+        "body": "提交信息里不要出现 Co-Authored-By，PR 描述里也不要生成署名脚注。",
+        "path": "~/.reasonix/projects/reasonix/memory/no-coauthored-by.md"
+      },
+      {
+        "name": "reply-language",
+        "title": "回复用中文",
+        "description": "跟着用户每条消息的语言走",
+        "activation": "pinned",
+        "scope": "global",
+        "type": "user",
+        "updatedAt": "2026-05-02",
+        "galaxy": "用户偏好",
+        "importance": 3,
+        "state": "clear",
+        "noDecay": true,
+        "uses": 21,
+        "lastUsedAt": "2026-11-01",
+        "body": "回复语言跟随用户当前这条消息的语言。"
+      },
+      {
+        "name": "v2-rewrite",
+        "title": "v2 是从零重写的 Go 内核",
+        "description": "没有 web，桌面端重做；main-v2 是默认分支",
+        "activation": "relevant",
+        "scope": "project",
+        "type": "project",
+        "updatedAt": "2026-05-30",
+        "galaxy": "架构",
+        "importance": 2,
+        "state": "fuzzy",
+        "uses": 3,
+        "lastUsedAt": "2026-09-12",
+        "body": "v2 = 从零重写的 Go 内核。不带 web；桌面端重做。main-v2 是默认分支。",
+        "usedLastTurn": true,
+        "why": "问题里提到了 main-v2 和分支"
+      },
+      {
+        "name": "old-build-flag",
+        "title": "构建用 -tags legacy",
+        "description": "迁移前的构建方式",
+        "activation": "relevant",
+        "scope": "project",
+        "type": "reference",
+        "updatedAt": "2025-11-02",
+        "expired": true,
+        "importance": 1,
+        "state": "faded",
+        "body": "构建时加 -tags legacy。"
+      },
+      {
+        "name": "merge-queue-first",
+        "title": "发版前先确认合并队列",
+        "description": "队列里有严重修复就先合进同一版",
+        "activation": "relevant",
+        "scope": "project",
+        "type": "constraint",
+        "createdAt": "2026-08-20",
+        "updatedAt": "2026-08-20",
+        "galaxy": "发布流程",
+        "importance": 3,
+        "state": "clear",
+        "noDecay": true,
+        "uses": 6,
+        "lastUsedAt": "2026-10-28",
+        "body": "发版前先扫一遍待合并的修复；有严重的先合进同一版再发，免得补发。"
+      },
+      {
+        "name": "one-release-a-day",
+        "title": "每天最多发一个版本",
+        "description": "热修只在完全不可用时例外",
+        "activation": "relevant",
+        "scope": "project",
+        "type": "project",
+        "createdAt": "2026-11-02",
+        "updatedAt": "2026-11-02",
+        "galaxy": "发布流程",
+        "importance": 2,
+        "state": "clear",
+        "clearForDays": 16,
+        "new": true,
+        "body": "北京日历日最多发一个版本；热修只在“完全不可用”时例外。"
+      },
+      {
+        "name": "tests-on-windows",
+        "title": "测试都在 Windows 机器上跑",
+        "description": "Mac 只改代码",
+        "activation": "relevant",
+        "scope": "global",
+        "type": "feedback",
+        "createdAt": "2026-11-01",
+        "updatedAt": "2026-11-01",
+        "galaxy": "工作流",
+        "importance": 2,
+        "state": "clear",
+        "clearForDays": 15,
+        "new": true,
+        "body": "所有 Go/前端测试和 lint 用 wintest.sh 在 Windows 机器上跑。"
+      }
+    ],
+    "recallQuery": "缓存命中率为什么会掉",
+    "indexPath": "~/.reasonix/projects/reasonix/memory/MEMORY.md"
+  },
+  "/agent-presets": {
+    "presets": [
+      {
+        "definition": {
+          "schemaVersion": 1,
+          "id": "builtin:general",
+          "name": "日常搭档",
+          "description": "写代码、查资料、理清思路，和你一起把事情做好。沿用你的工具与配置，按需检索、编辑和运行。",
+          "persona": {
+            "prefix": "",
+            "suffix": "",
+            "include_runtime_context": true
+          },
+          "tools": {
+            "mode": "inherit",
+            "members": []
+          },
+          "skills": {
+            "mode": "inherit",
+            "members": []
+          },
+          "mcp": {
+            "mode": "inherit",
+            "members": []
+          },
+          "extensions": {
+            "mode": "inherit",
+            "members": []
+          },
+          "hooks": {
+            "mode": "inherit",
+            "members": []
+          },
+          "commands": {
+            "mode": "inherit",
+            "members": []
+          }
+        },
+        "revision": "90d6a645648f1767371fedc2c01a487428dc847417c77bddd82a365520a65dfb"
+      },
+      {
+        "definition": {
+          "schemaVersion": 1,
+          "id": "builtin:minimal",
+          "name": "轻装搭档",
+          "description": "带上终端和看图工具，轻装开工。和你一起处理小任务、快速试验，也方便对比模型表现。",
+          "persona": {
+            "prefix": "You are a helpful software engineer assistant.",
+            "suffix": "",
+            "include_runtime_context": false
+          },
+          "tools": {
+            "mode": "select",
+            "members": [
+              {
+                "id": "bash"
+              },
+              {
+                "id": "view_image",
+                "optional": true
+              }
+            ]
+          },
+          "skills": {
+            "mode": "select",
+            "members": []
+          },
+          "mcp": {
+            "mode": "select",
+            "members": []
+          },
+          "extensions": {
+            "mode": "select",
+            "members": []
+          },
+          "hooks": {
+            "mode": "select",
+            "members": []
+          },
+          "commands": {
+            "mode": "select",
+            "members": []
+          }
+        },
+        "revision": "b25962a98543abdb021332dcb2216d66a59ad90a3395c3d2f7d9cc30186a7a5b"
+      }
+    ],
+    "default": "builtin:general",
+    "diagnostics": [],
+    "modules": {
+      "tools": [
+        {
+          "source": "builtin",
+          "id": "bash",
+          "description": "Run a shell command in the workspace and return its output."
+        },
+        {
+          "source": "builtin",
+          "id": "bash_output",
+          "description": "Read new output from a shell command that is still running."
+        },
+        {
+          "source": "builtin",
+          "id": "browser_act",
+          "description": "Click, type or scroll on the page open in the built-in browser."
+        },
+        {
+          "source": "builtin",
+          "id": "edit_file",
+          "description": "Replace an exact piece of text in a file."
+        },
+        {
+          "source": "builtin",
+          "id": "task"
+        },
+        {
+          "source": "builtin",
+          "id": "view_image",
+          "description": "Read an image file."
+        }
+      ],
+      "skills": [
+        {
+          "source": "builtin",
+          "id": "review",
+          "description": "Review the changes on this branch and report problems by severity."
+        },
+        {
+          "source": "builtin",
+          "id": "explore",
+          "description": "Explore the codebase and trace how a feature works."
+        },
+        {
+          "source": "builtin",
+          "id": "reasonix-guide",
+          "description": "Explain Reasonix configuration and workflows."
+        },
+        {
+          "source": "custom",
+          "id": "tidy-notes",
+          "description": "Tidy the notes folder"
+        },
+        {
+          "source": "custom",
+          "id": "api-check",
+          "description": "Validate project endpoints and response contracts."
+        },
+        {
+          "source": "custom",
+          "id": "release-check",
+          "description": "Run the team's release checklist."
+        }
+      ]
+    }
+  },
+  "/themes": [
+    {
+      "schemaVersion": 1,
+      "id": "official-clear-blue",
+      "name": "清白蓝",
+      "author": "Reasonix",
+      "description": "清透白底与克制蓝色，适合专注阅读和日常工作。",
+      "license": "MIT",
+      "tokens": {
+        "light": {
+          "bg": "#F5F7FA",
+          "bgSoft": "#FFFFFF",
+          "bgElev": "#F0F3F7",
+          "panel": "#FFFFFF",
+          "border": "#DCE2EA",
+          "borderSoft": "#E8EDF3",
+          "fg": "#202936",
+          "fgStrong": "#182231",
+          "fgDim": "#566274",
+          "fgFaint": "#637083",
+          "accent": "#356AD2",
+          "accentFg": "#FFFFFF",
+          "accentInk": "#285BBC",
+          "link": "#285BBC",
+          "brand": "#285BBC",
+          "halo": "#356AD2",
+          "labelAgent": "#285BBC",
+          "float": "#FFFFFF",
+          "floatHi": "#F0F3F7",
+          "codeBg": "#F0F3F7",
+          "sunkBg": "#F5F7FA",
+          "synKeyword": "#7545A0",
+          "synString": "#276749",
+          "synNumber": "#975312",
+          "synFunction": "#285BBC"
+        },
+        "dark": {
+          "bg": "#151B24",
+          "bgSoft": "#1A2330",
+          "bgElev": "#253142",
+          "panel": "#202B3A",
+          "border": "#39485D",
+          "borderSoft": "#2B394C",
+          "fg": "#E3EBF6",
+          "fgStrong": "#F2F6FC",
+          "fgDim": "#BCC9DA",
+          "fgFaint": "#A0AFBF",
+          "accent": "#8FB8F4",
+          "accentFg": "#142135",
+          "accentInk": "#A6C5FF",
+          "link": "#A6C5FF",
+          "brand": "#A6C5FF",
+          "halo": "#8FB8F4",
+          "labelAgent": "#A6C5FF",
+          "float": "#202B3A",
+          "floatHi": "#253142",
+          "codeBg": "#1A2330",
+          "sunkBg": "#151B24",
+          "synKeyword": "#C8AEED",
+          "synString": "#9FD2AD",
+          "synNumber": "#E4BD84",
+          "synFunction": "#A6C5FF"
+        }
+      },
+      "active": false
+    },
+    {
+      "schemaVersion": 1,
+      "id": "official-tea-green",
+      "name": "茶绿",
+      "author": "Reasonix",
+      "description": "柔和暖白与低饱和茶绿，营造安静舒展的工作台。",
+      "license": "MIT",
+      "tokens": {
+        "light": {
+          "bg": "#F3F4EE",
+          "bgSoft": "#FBFCF8",
+          "bgElev": "#EAF0E8",
+          "panel": "#FFFFFF",
+          "border": "#D7DFD3",
+          "borderSoft": "#E5EAE1",
+          "fg": "#27342D",
+          "fgStrong": "#1C2C23",
+          "fgDim": "#56665B",
+          "fgFaint": "#627065",
+          "accent": "#42745D",
+          "accentFg": "#FFFFFF",
+          "accentInk": "#35624D",
+          "link": "#35624D",
+          "brand": "#35624D",
+          "halo": "#42745D",
+          "labelAgent": "#35624D",
+          "float": "#FFFFFF",
+          "floatHi": "#EAF0E8",
+          "codeBg": "#EEF2EA",
+          "sunkBg": "#F3F4EE",
+          "synKeyword": "#725489",
+          "synString": "#35624D",
+          "synNumber": "#8A581B",
+          "synFunction": "#326578"
+        },
+        "dark": {
+          "bg": "#18211B",
+          "bgSoft": "#1D2921",
+          "bgElev": "#2A392F",
+          "panel": "#243229",
+          "border": "#415448",
+          "borderSoft": "#324439",
+          "fg": "#E5EDE2",
+          "fgStrong": "#F3F7F0",
+          "fgDim": "#C0CFBF",
+          "fgFaint": "#A3B3A6",
+          "accent": "#93BE9E",
+          "accentFg": "#15261C",
+          "accentInk": "#AED3B6",
+          "link": "#AED3B6",
+          "brand": "#AED3B6",
+          "halo": "#93BE9E",
+          "labelAgent": "#AED3B6",
+          "float": "#243229",
+          "floatHi": "#2A392F",
+          "codeBg": "#1D2921",
+          "sunkBg": "#18211B",
+          "synKeyword": "#C9B3DC",
+          "synString": "#AED3B6",
+          "synNumber": "#DEC18E",
+          "synFunction": "#A2CBD3"
+        }
+      },
+      "active": false
+    },
+    {
+      "id": "dusk",
+      "name": "Dusk",
+      "author": "fixture",
+      "removable": true,
+      "active": false,
+      "tokens": {
+        "light": {
+          "bg": "#F6F3EE",
+          "bgSoft": "#FBF9F5",
+          "panel": "#FFFFFF",
+          "border": "#DDD5C8",
+          "fg": "#1B1814",
+          "fgDim": "#5F564A",
+          "accent": "#8A5A2B"
+        },
+        "dark": {
+          "bg": "#0F0D0B",
+          "bgSoft": "#141110",
+          "panel": "#1B1715",
+          "border": "#332C26",
+          "fg": "#EFE9E1",
+          "fgDim": "#9A8F82",
+          "accent": "#D89B5A"
+        }
+      }
+    },
+    {
+      "id": "tide",
+      "name": "Tide",
+      "author": "fixture",
+      "active": false,
+      "sky": {
+        "ray": "rgba(255,216,142,.55)",
+        "cloud": "255,240,212",
+        "cloudLit": "242,206,140",
+        "rayAlpha": 0.85,
+        "cloudAlpha": 0.4
+      },
+      "tokens": {
+        "light": {
+          "bg": "#F2F6F8",
+          "bgSoft": "#F9FCFD",
+          "panel": "#FFFFFF",
+          "border": "#CBD9E0",
+          "fg": "#12191C",
+          "fgDim": "#4E5D65",
+          "accent": "#0E6E82"
+        },
+        "dark": {
+          "bg": "#080D10",
+          "bgSoft": "#0C1316",
+          "panel": "#131C21",
+          "border": "#23333A",
+          "fg": "#E4EEF2",
+          "fgDim": "#8298A2",
+          "accent": "#4FB6CE"
+        }
+      }
+    }
+  ]
+}

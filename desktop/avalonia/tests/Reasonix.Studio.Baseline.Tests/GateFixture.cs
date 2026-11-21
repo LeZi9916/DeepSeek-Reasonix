@@ -1,16 +1,15 @@
 using Avalonia.Headless;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Reasonix.Studio.Baseline;
+using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell;
-using Reasonix.Studio.State;
-using Reasonix.Studio.State.Transcript;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Tool = Reasonix.Studio.Contracts.Wire.Tool;
 
 namespace Reasonix.Studio.Baseline.Tests;
 
@@ -34,17 +33,21 @@ internal static class GateFixture
     /// <summary>
     /// Renders the window on the captured conversation and exports its tree.
     /// </summary>
+    /// <param name="dark">Whether to render the dark reference scheme.</param>
     /// <returns>One observation per identified control and token.</returns>
-    public static async Task<IReadOnlyDictionary<string, ObservedNode>> Render()
+    public static async Task<IReadOnlyDictionary<string, ObservedNode>> Render(bool dark = false)
     {
         var session = HeadlessUnitTestSession.StartNew(typeof(App));
 
         return await session.Dispatch(
             () =>
             {
-                var window = new MainWindow(connectOnOpen: false);
+                var window = new MainWindow(false, null, InterfaceLanguage.Zh)
+                {
+                    RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light,
+                };
                 window.Show();
-                window.ShowState(Conversation());
+                window.ShowState(Reasonix.Studio.Testing.ReferenceConversation.Create());
                 Dispatcher.UIThread.RunJobs();
 
                 var found = new GeometryExporter(GeometryComparerOptions.Studio).Export(window);
@@ -55,54 +58,14 @@ internal static class GateFixture
     }
 
     /// <summary>
-    /// Builds the conversation the baseline was captured on.
-    /// </summary>
-    /// <returns>The state the captured window was showing.</returns>
-    /// <remarks>
-    /// The words are the captured ones. The gate is about boxes and inks, and a
-    /// different sentence would wrap to a different height for a reason that has
-    /// nothing to do with the layout being measured.
-    /// </remarks>
-    public static SessionState Conversation()
-    {
-        var items = new List<TranscriptItem>();
-        for (var turn = 0; turn < 2; turn++)
-        {
-            items.Add(new UserItem
-            {
-                Id = $"user-{turn}",
-                Text = $"第 {turn} 个问题，麻烦看一下这个文件。",
-            });
-            items.Add(new SayItem
-            {
-                Id = $"say-{turn}",
-                Text = $"第 {turn} 段回答，说明刚才那一步做了什么。\n\n- 要点一\n- 要点二\n",
-                Reasoning = "先看文件再决定改哪里。",
-                Done = true,
-            });
-            items.Add(new ToolItem
-            {
-                Id = $"tool-{turn}",
-                Call = new Tool
-                {
-                    Name = "edit_file",
-                    Args = $"{{\"path\":\"internal/pkg/mod{turn}/file{turn}.go\"}}",
-                    ReadOnly = false,
-                },
-            });
-        }
-
-        return new SessionState { Items = items };
-    }
-
-    /// <summary>
     /// Reads the captured conversation.
     /// </summary>
+    /// <param name="dark">Whether to read the dark reference scheme.</param>
     /// <returns>The parsed domain.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the file does not parse.</exception>
-    public static BaselineDomain Domain()
+    public static BaselineDomain Domain(bool dark = false)
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "baseline", DomainFile);
+        var path = Path.Combine(AppContext.BaseDirectory, "baseline", dark ? "conversation.dark.json" : DomainFile);
         return JsonSerializer.Deserialize<BaselineDomain>(File.ReadAllText(path))
             ?? throw new InvalidOperationException($"{DomainFile} did not parse into a domain");
     }

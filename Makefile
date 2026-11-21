@@ -9,7 +9,7 @@ GOEXE := $(shell go env GOEXE)
 # One pin for the Makefile and the CI lint job; see .github/workflows/ci.yml.
 GOLANGCI_VERSION := $(shell cat .golangci-version)
 
-.PHONY: build vet fmt lint lint-go lint-install lint-cross lint-update coverage-gate coverage-gate-update pricecheck acp-conformance check test studio-test sdk-test sdk-test-race hooks cross clean studio studio-dotnet studio-dotnet-test studio-geometry studio-messages studio-messages-check wiregen-check
+.PHONY: build vet fmt lint lint-go lint-install lint-cross lint-update coverage-gate coverage-gate-update pricecheck acp-conformance check test studio-test sdk-test sdk-test-race hooks cross clean studio studio-native studio-dotnet studio-dotnet-test studio-geometry studio-messages studio-messages-check wiregen-check
 
 build:
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/reasonix$(GOEXE) ./cmd/reasonix
@@ -103,6 +103,10 @@ studio-test:
 # the build flags and the test filter are written once.
 studio-dotnet:
 	dotnet build desktop/avalonia/Reasonix.Studio.slnx -c Debug
+
+studio-native: studio-dotnet
+	go build -o desktop/avalonia/src/Reasonix.Studio.Shell/bin/Debug/net10.0/ ./cmd/reasonix-studio-host
+	dotnet run --no-build --project desktop/avalonia/src/Reasonix.Studio.Shell
 
 studio-dotnet-test:
 	dotnet test desktop/avalonia/Reasonix.Studio.slnx -c Debug --no-build

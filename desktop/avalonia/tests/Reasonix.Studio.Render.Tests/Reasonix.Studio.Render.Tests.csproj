@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Reasonix.Studio.Render.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="Avalonia.Headless" Version="12.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\tools\Reasonix.Studio.Baseline\Reasonix.Studio.Baseline.csproj" />
+    <ProjectReference Include="..\..\src\Reasonix.Studio.Controls\Reasonix.Studio.Controls.csproj" />
+    <ProjectReference Include="..\..\src\Reasonix.Studio.Kernel\Reasonix.Studio.Kernel.csproj" />
+    <ProjectReference Include="..\..\src\Reasonix.Studio.State\Reasonix.Studio.State.csproj" />
+    <ProjectReference Include="..\..\src\Reasonix.Studio.Shell\Reasonix.Studio.Shell.csproj" />
+  </ItemGroup>
+
+  <!--
+    The real baseline ships beside the test so a comparison runs against what
+    was captured from the reference frontend, never against a fixture written to
+    agree with the code it exercises.
+  -->
+  <ItemGroup>
+    <Compile Include="../Shared/ReferenceConversation.cs" Link="ReferenceConversation.cs" />
+    <None Include="../../baseline/responsive/*.json" Link="baseline/responsive/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="page-inputs.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\baseline\*.json" Link="baseline\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
