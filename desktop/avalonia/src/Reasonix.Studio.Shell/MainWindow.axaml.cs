@@ -140,6 +140,7 @@ public sealed partial class MainWindow : Window
     /// </remarks>
     public void ShowState(SessionState state)
     {
+        RefreshGitAfterTurn(state.Running);
         UpdateMemorySuggestions(state.Running);
         Backdrop.SetBusy(state.Running);
         Conversation.Show(state);
@@ -277,6 +278,7 @@ public sealed partial class MainWindow : Window
         // before the window tears anything down.
         SaveDraft();
 
+        ResetGit();
         await _closing.CancelAsync().ConfigureAwait(true);
         if (_engine is not null)
         {

@@ -145,7 +145,8 @@ public sealed class SessionEngine : IAsyncDisposable
     /// <summary>Initializes a new instance of the <see cref="SessionEngine"/> class on a specific runtime.</summary>
     /// <param name="kernel">The same local host process.</param>
     /// <param name="runtime">The validated pane base. The default engine owns the process.</param>
-    private SessionEngine(LaunchedKernel kernel, string? runtime)
+    /// <param name="remote">Whether the hub hosts the pane on another machine.</param>
+    private SessionEngine(LaunchedKernel kernel, string? runtime, bool remote = false)
     {
         if (kernel is null)
         {
@@ -156,6 +157,7 @@ public sealed class SessionEngine : IAsyncDisposable
         // rather than rebuilt and the credential rides exactly one place: a second
         // handler would be a second place to keep correct.
         _kernel = kernel;
+        IsRemote = remote;
         HttpMessageHandler handler = new Boundary.CredentialHandler(kernel.Cookie());
         if (runtime is not null)
         {
@@ -227,6 +229,12 @@ public sealed class SessionEngine : IAsyncDisposable
     /// </remarks>
     public string Host => _host;
 
+    /// <summary>Gets a value indicating whether this runtime is a remote pane.</summary>
+    public bool IsRemote
+    {
+        get;
+    }
+
     /// <summary>Gets the authenticated endpoints backing native pages.</summary>
     public StudioPageClient Pages => _client.Pages;
 
@@ -292,7 +300,7 @@ public sealed class SessionEngine : IAsyncDisposable
             throw new System.IO.InvalidDataException("Invalid workspace runtime base.");
         }
 
-        return new SessionEngine(host, "/rt/" + id);
+        return new SessionEngine(host, "/rt/" + id, !string.IsNullOrEmpty((string?)descriptor["host"]));
     }
 
     /// <summary>Stops watching a replaced pane while its owning host remains available.</summary>

@@ -646,6 +646,8 @@ window.__nativeReference = async () => {
   const reads: Record<string, Promise<unknown>> = {
     "/tree": hub.tree(), "/status": port.status(), "/appearance": port.appearance(),
     "/models": port.models("chat").then(models => ({ models })), "/provider-setup": port.providerSetup(),
+    "/git/repos": port.gitRepos(), "/workspace/git": port.workspaceGit(), "/workspace/git/log": port.workspaceGitLog(100),
+    "/workspace/branches": port.branches(),
     "/workspace/files": port.workspaceFiles(), "/workspace/file": port.workspaceFile("README.md"),
     "/workspace/preview/info": port.workspacePreviewInfo({ path: "README.md" }), "/changes": port.changes(),
     "/notifications": port.notifyPrefs(), "/studio/update-mode": port.updateMode().then(mode => ({mode})),
@@ -662,6 +664,11 @@ window.__nativeReference = async () => {
     "/memory": port.memories(), "/agent-presets": port.agentPresets(), "/agent-composition": port.agentComposition(), "/themes": port.themes(),
     "/account": port.account(), "/plugins": port.plugins(), "/market/packages": port.marketList({}),
   };
+  for (const change of (await port.changes()).changes) {
+    reads["/changes/diff?path=" + encodeURIComponent(change.path)] = port.changeDiff(change.path);
+  }
+  reads["/commit/propose"] = port.proposeCommit();
+  reads["/git/push"] = port.pushPreview();
   return Object.fromEntries(await Promise.all(Object.entries(reads).map(async ([key, value]) => [key, await value])));
 };
 window.__toast = pushToast;

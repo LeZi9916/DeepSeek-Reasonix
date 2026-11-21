@@ -1867,5 +1867,171 @@
       }
     ],
     "minPassphrase": 10
+  },
+  "/git/repos": {
+    "repos": [
+      {
+        "dir": "",
+        "name": "reasonix",
+        "branch": "main",
+        "detached": false
+      }
+    ],
+    "truncated": false
+  },
+  "/workspace/git": {
+    "repo": true,
+    "name": "reasonix",
+    "branch": "main",
+    "detached": false,
+    "added": 2,
+    "removed": 1,
+    "untracked": 3
+  },
+  "/workspace/git/log": {
+    "repo": true,
+    "truncated": false,
+    "commits": [
+      {
+        "id": "a1",
+        "parents": [
+          "a2"
+        ],
+        "subject": "feat(studio): show the commit graph",
+        "author": "ada",
+        "at": 1795260004,
+        "refs": [
+          "HEAD -> main",
+          "origin/main"
+        ]
+      },
+      {
+        "id": "a2",
+        "parents": [
+          "a3",
+          "b2"
+        ],
+        "subject": "Merge branch 'retry-backoff'",
+        "author": "ada",
+        "at": 1795257964,
+        "refs": []
+      },
+      {
+        "id": "b2",
+        "parents": [
+          "b1"
+        ],
+        "subject": "fix(provider): honour Retry-After",
+        "author": "grace",
+        "at": 1795255984,
+        "refs": [
+          "retry-backoff"
+        ]
+      },
+      {
+        "id": "a3",
+        "parents": [
+          "a4"
+        ],
+        "subject": "docs: describe the wire log",
+        "author": "ada",
+        "at": 1795254544,
+        "refs": []
+      },
+      {
+        "id": "b1",
+        "parents": [
+          "a4"
+        ],
+        "subject": "test(provider): cover 429 backoff",
+        "author": "grace",
+        "at": 1795252444,
+        "refs": []
+      },
+      {
+        "id": "a4",
+        "parents": [
+          "a5"
+        ],
+        "subject": "refactor(config): split the loader",
+        "author": "ada",
+        "at": 1795244644,
+        "refs": [
+          "tag: v2.38.0"
+        ]
+      },
+      {
+        "id": "a5",
+        "parents": [],
+        "subject": "chore: initial import",
+        "author": "ada",
+        "at": 1795173844,
+        "refs": []
+      }
+    ]
+  },
+  "/workspace/branches": {
+    "repo": true,
+    "branches": [
+      {
+        "name": "main",
+        "current": true
+      },
+      {
+        "name": "studio",
+        "current": false
+      }
+    ]
+  },
+  "/commit/propose": {
+    "message": "fix(provider): back off retries on 429 and drop credentials from logs\n\nHonour Retry-After before the next attempt and stop printing the key.",
+    "fingerprint": "mock",
+    "files": [
+      {
+        "path": "internal/provider/retry.go",
+        "status": "M",
+        "insertions": 14,
+        "deletions": 3
+      },
+      {
+        "path": "internal/config/credentials.go",
+        "status": "M",
+        "insertions": 6,
+        "deletions": 2
+      }
+    ],
+    "truncated": false,
+    "contentSecrets": false
+  },
+  "/git/push": {
+    "remote": "origin",
+    "branch": "main",
+    "upstreamBranch": "main",
+    "scheme": "https",
+    "host": "github.com",
+    "url": "https://github.com/esengine/DeepSeek-Reasonix.git",
+    "head": "0123456789ab",
+    "ahead": 2,
+    "behind": 0
+  },
+  "/changes/diff?path=internal%2Fprovider%2Fretry.go": {
+    "path": "internal/provider/retry.go",
+    "diff": "--- a/internal/provider/retry.go\n+++ b/internal/provider/retry.go\n@@ -1,6 +1,7 @@\n package permission\n \n-func allows(cmd string) bool {\n-\treturn strings.Contains(cmd, \"rm -rf\")\n+func allows(cmd string) bool {\n+\tast, err := shellparse.Parse(cmd)\n+\tif err != nil {\n+\t\treturn false\n+\t}\n }",
+    "truncated": false
+  },
+  "/changes/diff?path=internal%2Fconfig%2Fcredentials.go": {
+    "path": "internal/config/credentials.go",
+    "diff": "--- a/internal/config/credentials.go\n+++ b/internal/config/credentials.go\n@@ -1,6 +1,7 @@\n package permission\n \n-func allows(cmd string) bool {\n-\treturn strings.Contains(cmd, \"rm -rf\")\n+func allows(cmd string) bool {\n+\tast, err := shellparse.Parse(cmd)\n+\tif err != nil {\n+\t\treturn false\n+\t}\n }",
+    "truncated": false
+  },
+  "/changes/diff?path=internal%2Fprovider%2Fopenai%2Fstreaming%2Fchunk_decoder.go": {
+    "path": "internal/provider/openai/streaming/chunk_decoder.go",
+    "diff": "--- a/internal/provider/openai/streaming/chunk_decoder.go\n+++ b/internal/provider/openai/streaming/chunk_decoder.go\n@@ -1,6 +1,7 @@\n package permission\n \n-func allows(cmd string) bool {\n-\treturn strings.Contains(cmd, \"rm -rf\")\n+func allows(cmd string) bool {\n+\tast, err := shellparse.Parse(cmd)\n+\tif err != nil {\n+\t\treturn false\n+\t}\n }",
+    "truncated": false
+  },
+  "/changes/diff?path=docs%2Fnotes.md": {
+    "path": "docs/notes.md",
+    "diff": "--- a/docs/notes.md\n+++ b/docs/notes.md\n@@ -1,6 +1,7 @@\n package permission\n \n-func allows(cmd string) bool {\n-\treturn strings.Contains(cmd, \"rm -rf\")\n+func allows(cmd string) bool {\n+\tast, err := shellparse.Parse(cmd)\n+\tif err != nil {\n+\t\treturn false\n+\t}\n }",
+    "truncated": false
   }
 }

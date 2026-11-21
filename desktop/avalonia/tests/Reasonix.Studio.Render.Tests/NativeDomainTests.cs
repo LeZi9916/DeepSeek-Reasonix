@@ -154,6 +154,13 @@ public sealed partial class NativeDomainTests
                         }
                     }
 
+                    if (target == "workbench")
+                    {
+                        var gitIds = new[] { "class:workbench-changes#0", "class:workbench-history#0", "action:workbench.stage#0", "action:workbench.discard#0", "action:workbench.commit#0", "action:commit.draft#0", "action:push.preview#0" };
+                        Assert.All(gitIds, id => Assert.True(tree.ContainsKey(id), id));
+                        Assert.DoesNotContain(findings, f => f.Kind == "box" && IsWorkbenchGeometry(f.Identity));
+                    }
+
                     _output.WriteLine($"{file}: {mapped} observed nodes, {findings.Count} differences");
 
                     if (!string.IsNullOrEmpty(output))
@@ -176,6 +183,11 @@ public sealed partial class NativeDomainTests
                             findings,
                         };
                         File.WriteAllText(stem + ".json", JsonSerializer.Serialize(report));
+                    }
+
+                    if (target == "workbench" && output is not null)
+                    {
+                        GitScreenProofs(window, output, file);
                     }
 
                     if (target == "onboarding")
@@ -430,7 +442,12 @@ public sealed partial class NativeDomainTests
                 return new HttpResponseMessage(HttpStatusCode.NoContent);
             }
 
-            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Equal(path == "/commit/propose" ? HttpMethod.Post : HttpMethod.Get, request.Method);
+            if (_reads.ContainsKey(request.RequestUri.PathAndQuery))
+            {
+                path = request.RequestUri.PathAndQuery;
+            }
+
             Assert.True(_reads.ContainsKey(path), path);
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
