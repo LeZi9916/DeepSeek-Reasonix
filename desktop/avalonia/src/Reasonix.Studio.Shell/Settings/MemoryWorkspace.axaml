@@ -17,10 +17,18 @@
           <StackPanel Name="Reader" Spacing="8">
             <TextBlock Name="Heading" FontWeight="SemiBold" TextWrapping="Wrap" FontSize="{DynamicResource StudioType16}"/>
             <TextBlock Name="Summary" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
-            <Button Name="Edit" Tag="common.edit" AutomationProperties.AutomationId="action:memory.edit"/>
+            <WrapPanel>
+              <Button Name="Confirm" Tag="memory.thats_right" Margin="0,0,5,0" AutomationProperties.AutomationId="action:memory.confirm"/>
+              <Button Name="Edit" Tag="common.edit" Margin="0,0,5,0" AutomationProperties.AutomationId="action:memory.edit"/>
+              <Button Name="Archive" Tag="common.archived_2" AutomationProperties.AutomationId="action:memory.forget"/>
+            </WrapPanel>
             <Border Background="{DynamicResource PageBrush}" CornerRadius="6" Padding="10">
               <ScrollViewer MaxHeight="220"><SelectableTextBlock Name="Prose" TextWrapping="Wrap"/></ScrollViewer>
             </Border>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+              <StackPanel Spacing="6"><TextBlock Tag="memory.content" FontWeight="SemiBold"/><StackPanel Name="ContentFacts" Spacing="4"/></StackPanel>
+              <StackPanel Grid.Column="1" Spacing="6"><TextBlock Tag="memory.use" FontWeight="SemiBold"/><StackPanel Name="UseFacts" Spacing="4"/></StackPanel>
+            </Grid>
             <TextBlock Name="Facts" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
             <Button Name="History" AutomationProperties.AutomationId="action:memory.history"/>
             <StackPanel Name="Revisions" IsVisible="False" Spacing="6"/>
@@ -28,7 +36,7 @@
           <StackPanel Name="Editor" IsVisible="False" Spacing="7">
             <StackPanel Spacing="3"><TextBlock Tag="memory.titling"/><TextBox Name="Title" AutomationProperties.AutomationId="field:memory.title" /></StackPanel>
             <StackPanel Spacing="3"><TextBlock Tag="memory.one_line_summary"/><TextBox Name="Description" AutomationProperties.AutomationId="field:memory.description" /></StackPanel>
-            <StackPanel Spacing="3"><TextBlock Tag="common.body_text"/><TextBox Name="Body" AutomationProperties.AutomationId="field:memory.body" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="112"/></StackPanel>
+            <StackPanel Spacing="3"><TextBlock Tag="common.body_text"/><TextBox Name="Body" AutomationProperties.AutomationId="field:memory.body" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="148"/></StackPanel>
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
               <StackPanel Spacing="3"><TextBlock Tag="common.type"/><ComboBox Name="Kind" AutomationProperties.AutomationId="field:memory.kind" HorizontalAlignment="Stretch"/></StackPanel>
               <StackPanel Grid.Column="1" Spacing="3"><TextBlock Tag="memory.importance"/><ComboBox Name="Importance" HorizontalAlignment="Stretch"/></StackPanel>

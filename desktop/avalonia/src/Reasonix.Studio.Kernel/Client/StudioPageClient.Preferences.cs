@@ -104,6 +104,18 @@ public sealed partial class StudioPageClient
     /// <returns>The store acknowledgement.</returns>
     public Task SaveMemoryAsync(JsonObject edit, CancellationToken token) => PostAsync("/memory/save", edit, token);
 
+    /// <summary>Confirms a stored fact as correct.</summary>
+    /// <param name="name">Stable fact identity.</param>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The acknowledgement.</returns>
+    public Task ConfirmMemoryAsync(string name, CancellationToken token) => PostAsync("/memory/confirm", new JsonObject { ["name"] = name }, token);
+
+    /// <summary>Archives a fact using the kernel's memory store.</summary>
+    /// <param name="name">Stable fact identity.</param>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The acknowledgement.</returns>
+    public Task ArchiveMemoryAsync(string name, CancellationToken token) => PostAsync("/memory/forget", new JsonObject { ["name"] = name }, token);
+
     /// <summary>Reads the audit history for a named fact.</summary>
     /// <param name="name">The fact identity.</param>
     /// <param name="token">Cancels the request.</param>

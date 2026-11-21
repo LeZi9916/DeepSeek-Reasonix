@@ -79,6 +79,24 @@ public sealed partial class MemoryWorkspace : SettingsFormView
             ShowDetail();
             Title.Focus();
         };
+        Confirm.Click += async (_, _) =>
+        {
+            var name = selected;
+            await WriteAsync(name, () => api.ConfirmMemoryAsync(name, token)).ConfigureAwait(true);
+        };
+        Archive.Click += async (_, _) =>
+        {
+            var name = selected;
+            await WriteAsync(name, async () =>
+            {
+                await api.ArchiveMemoryAsync(name, token).ConfigureAwait(true);
+                if (editing == name)
+                {
+                    editing = null;
+                    editEpoch++;
+                }
+            }).ConfigureAwait(true);
+        };
         Cancel.Click += (_, _) =>
         {
             editing = null;
@@ -244,14 +262,51 @@ public sealed partial class MemoryWorkspace : SettingsFormView
 
             Editor.IsVisible = selected == editing;
             Reader.IsVisible = !Editor.IsVisible;
-            Save.IsEnabled = History.IsEnabled = !flags.Contains(selected);
+            Save.IsEnabled = History.IsEnabled = Confirm.IsEnabled = Archive.IsEnabled = !flags.Contains(selected);
             Heading.Text = (string?)m["title"] ?? selected;
             Summary.Text = (string?)m["description"];
             Prose.Text = (string?)m["body"] ?? Text("memory.no_body");
-            Facts.Text = string.Join(" · ", new[] { types.First(o => o.Id == TypeOf(m)).Label, (string?)m["galaxy"], (string?)m["path"] }.Where(v => !string.IsNullOrWhiteSpace(v)));
+            Facts.Text = (string?)m["path"];
+            ContentFacts.Children.Clear();
+            UseFacts.Children.Clear();
+            Fact(ContentFacts, "common.type", types.First(o => o.Id == TypeOf(m)).Label);
+            Fact(ContentFacts, "memory.galaxy", (string?)m["galaxy"] ?? Text("memory.no_galaxy"));
+            Fact(ContentFacts, "memory.importance", Text((int?)m["importance"] switch
+            {
+                1 => "memory.low",
+                3 => "memory.high",
+                _ => "memory.medium",
+            }));
+            Fact(ContentFacts, "memory.scope", (string?)m["scope"] switch
+            {
+                "project" => Text("session.this_project"),
+                "global" => Text("memory.all_projects"),
+                var scope => scope ?? "—",
+            });
+            Fact(UseFacts, "memory.state", Text((string?)m["state"] switch
+            {
+                "fuzzy" => "memory.a_little_fuzzy_using_it",
+                "faded" => "memory.faded_recalled_after_everything_else",
+                _ => "memory.clear",
+            }));
+            Fact(UseFacts, "session.recent", (string?)m["lastUsedAt"] ?? "—");
+            Fact(UseFacts, "memory.used", Text("memory.n_times", ("n", ((int?)m["uses"] ?? 0).ToString(CultureInfo.CurrentCulture))));
+            Fact(UseFacts, "memory.applies", Text((string?)m["activation"] == "pinned" ? "memory.in_every_turn" : "memory.recalled_when_relevant_2"));
             var revision = (int?)m["revision"] ?? 1;
             History.IsVisible = revision > 1;
             History.Content = Text("memory.revision_n_see_older", ("n", revision.ToString(CultureInfo.CurrentCulture)));
+        }
+
+        void Fact(StackPanel group, string key, string value)
+        {
+            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 6 };
+            var label = Caption(Text(key));
+            label.Bind(TextBlock.ForegroundProperty, label.GetResourceObservable("MutedBrush"));
+            var content = Caption(value);
+            Grid.SetColumn(content, 1);
+            row.Children.Add(label);
+            row.Children.Add(content);
+            group.Children.Add(row);
         }
 
         void Render()

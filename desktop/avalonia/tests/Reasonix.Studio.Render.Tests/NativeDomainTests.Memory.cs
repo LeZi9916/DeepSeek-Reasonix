@@ -36,6 +36,8 @@ public sealed partial class NativeDomainTests
         var refuse = true;
         var saves = 0;
         var restores = 0;
+        var confirmed = 0;
+        var archived = 0;
         reads.Exchange = async request =>
         {
             switch (request.RequestUri!.AbsolutePath)
@@ -55,6 +57,16 @@ public sealed partial class NativeDomainTests
 
                     item["body"] = (string?)edit["body"];
                     item["revision"] = 2;
+                    return new HttpResponseMessage(HttpStatusCode.NoContent);
+                case "/memory/confirm":
+                    Assert.Equal(name, (string?)JsonNode.Parse(await request.Content!.ReadAsStringAsync())?["name"]);
+                    confirmed++;
+                    item["new"] = false;
+                    return new HttpResponseMessage(HttpStatusCode.NoContent);
+                case "/memory/forget":
+                    Assert.Equal(name, (string?)JsonNode.Parse(await request.Content!.ReadAsStringAsync())?["name"]);
+                    archived++;
+                    catalog["memories"]!.AsArray().Remove(item);
                     return new HttpResponseMessage(HttpStatusCode.NoContent);
                 case "/memory/revisions":
                     Assert.Equal("?name=" + name, request.RequestUri.Query);
@@ -96,6 +108,12 @@ public sealed partial class NativeDomainTests
         Assert.Equal(1, restores);
         ClickAt(w, "action:memory.edit");
         Assert.Equal((string?)original["body"], body.Text);
+        ClickAt(w, "action:memory.cancel");
+        ClickAt(w, "action:memory.confirm");
+        Assert.Equal(1, confirmed);
+        ClickAt(w, "action:memory.forget");
+        Assert.Equal(1, archived);
+        Assert.DoesNotContain(w.GetVisualDescendants().OfType<Button>(), b => b.IsEffectivelyVisible && AutomationProperties.GetAutomationId(b) == "action:memory.open");
     });
 
     /// <summary>Runs a scenario on the UI thread through the main settings entry point.</summary>
