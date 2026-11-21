@@ -1,0 +1,18 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.MarketInstall">
+  <Border Classes="settings-card"><StackPanel Spacing="10">
+    <Button Name="Back" Tag="ext.back_to_list" AutomationProperties.AutomationId="action:market.back"/>
+    <TextBlock Name="Heading" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
+    <SelectableTextBlock Name="Description" TextWrapping="Wrap"/>
+    <TextBlock Name="Notice" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+    <StackPanel Name="Actions" Spacing="6"/>
+    <CheckBox Name="Acknowledge" IsVisible="False" AutomationProperties.AutomationId="action:market.confirm-many"/>
+    <SelectableTextBlock Name="Feedback" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}"/>
+    <WrapPanel>
+      <Button Name="Inspect" IsVisible="False" AutomationProperties.AutomationId="action:market.inspect"/>
+      <Button Name="Cancel" Tag="common.back" IsVisible="False" Margin="0,0,6,0" AutomationProperties.AutomationId="action:market.cancel"/>
+      <Button Name="Install" Tag="ext.install" IsVisible="False" AutomationProperties.AutomationId="action:market.install"/>
+      <Button Name="Retry" Tag="common.retry" IsVisible="False" AutomationProperties.AutomationId="action:market.retry"/>
+    </WrapPanel>
+  </StackPanel></Border>
+</local:SettingsFormView>

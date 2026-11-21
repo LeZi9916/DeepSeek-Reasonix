@@ -55,6 +55,35 @@ public sealed partial class StudioPageClient
     /// <returns>The response from the kernel.</returns>
     public Task<JsonObject> MarketAsync(CancellationToken token) => ReadAsync<JsonObject>("/market/packages", token);
 
+    /// <summary>Reads a single marketplace package and its installation state.</summary>
+    /// <param name="slug">Publisher and package separated by a slash.</param>
+    /// <param name="refresh">Bypasses cached details after a retry.</param>
+    /// <param name="token">Cancels the read.</param>
+    /// <returns>The package detail.</returns>
+    public Task<JsonObject> MarketDetailAsync(string slug, bool refresh, CancellationToken token)
+    {
+        var parts = slug.Split('/');
+        if (parts.Length != 2 || Array.Exists(parts, part => part.Length == 0 || part is "." or ".."))
+        {
+            throw new ArgumentException("Invalid marketplace package identity.", nameof(slug));
+        }
+
+        var route = "/market/packages/" + Uri.EscapeDataString(parts[0]) + "/" + Uri.EscapeDataString(parts[1]);
+        return ReadAsync<JsonObject>(refresh ? route + "?refresh=1" : route, token);
+    }
+
+    /// <summary>Reviews or installs one exact marketplace plan.</summary>
+    /// <param name="apply">Whether the user has accepted the displayed plan.</param>
+    /// <param name="request">Package identity and any reviewed version and digest.</param>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The kernel's plan or install result.</returns>
+    public async Task<JsonObject> MarketPlanAsync(bool apply, JsonObject request, CancellationToken token)
+    {
+        using var response = await _http.PostAsJsonAsync(apply ? "/market/install" : "/market/plan", request, token).ConfigureAwait(false);
+        await KernelClient.EnsureAsync(response, token).ConfigureAwait(false);
+        return await BodyAsync<JsonObject>(response, token).ConfigureAwait(false);
+    }
+
     /// <summary>Reads the current question timeout and its allowed range.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The response from the kernel.</returns>

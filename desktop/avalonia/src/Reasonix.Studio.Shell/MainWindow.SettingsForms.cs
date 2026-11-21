@@ -231,7 +231,15 @@ public sealed partial class MainWindow
                 var content = new StackPanel { Spacing = 6 };
                 content.Children.Add(new TextBlock { Text = name, FontWeight = FontWeight.SemiBold });
                 content.Children.Add(Detail(summary));
-                var detail = new Expander { Header = MessageCatalog.Get("ext.details", Language), Content = Detail((string?)package["description"] ?? summary) };
+                var detail = new Button { Content = MessageCatalog.Get("ext.details", Language) };
+                AutomationProperties.SetAutomationId(detail, "action:market.open");
+                detail.Click += async (_, _) =>
+                {
+                    var entry = new Settings.MarketInstall();
+                    find.IsVisible = cards.IsVisible = false;
+                    column.Children.Add(entry);
+                    await entry.OpenAsync(api, (string)package["slug"]!, Language, DescribeError, () => ShowSectionAsync("ext:market"), _closing.Token).ConfigureAwait(true);
+                };
                 content.Children.Add(detail);
                 var card = new Border { Width = 240, Margin = new Thickness(0, 0, 8, 8), Child = content };
                 card.Classes.Add("settings-card");
