@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.State.Transcript;
 using System;
@@ -180,7 +181,7 @@ public sealed partial class SessionPage
         var summary = new SelectableTextBlock
         {
             Text = string.Join(" · ", parts),
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.65,
             TextWrapping = TextWrapping.Wrap,
         };
@@ -189,7 +190,7 @@ public sealed partial class SessionPage
         var toggle = new Button
         {
             Content = MessageCatalog.Get(_workOpen ? "common.collapse" : "common.expand", Language),
-            FontSize = 11,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
             Padding = new Thickness(8, 2, 8, 2),
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
@@ -264,7 +265,7 @@ public sealed partial class SessionPage
         var summary = new SelectableTextBlock
         {
             Text = HeadlineOf(tally),
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.65,
             TextWrapping = TextWrapping.Wrap,
         };
@@ -273,7 +274,7 @@ public sealed partial class SessionPage
         var toggle = new Button
         {
             Content = MessageCatalog.Get(open ? "common.collapse" : "common.expand", Language),
-            FontSize = 11,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
             Padding = new Thickness(8, 2, 8, 2),
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
@@ -356,7 +357,7 @@ public sealed partial class SessionPage
         var head = new SelectableTextBlock
         {
             Text = label,
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.65,
         };
 
@@ -398,7 +399,7 @@ public sealed partial class SessionPage
         var text = new SelectableTextBlock
         {
             Text = MessageCatalog.Get("chat.new_answers_start_here", Language),
-            FontSize = 11,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
             Opacity = 0.55,
             Margin = new Thickness(8, 0, 8, 0),
         };

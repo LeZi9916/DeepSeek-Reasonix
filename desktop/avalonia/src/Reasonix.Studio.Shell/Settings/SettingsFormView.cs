@@ -2,6 +2,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Linq;
@@ -20,7 +21,7 @@ public class SettingsFormView : UserControl
     /// <summary>Creates secondary copy for a data-dependent row.</summary>
     /// <param name="value">Text to display.</param>
     /// <returns>The wrapping text.</returns>
-    protected static TextBlock Caption(string value) => new() { Text = value, TextWrapping = TextWrapping.Wrap, FontSize = 12 };
+    protected static TextBlock Caption(string value) => new() { Text = value, TextWrapping = TextWrapping.Wrap, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };
 
     /// <summary>Applies the translations named by the form's XAML controls.</summary>
     /// <param name="language">The reader's language.</param>

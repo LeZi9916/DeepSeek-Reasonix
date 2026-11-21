@@ -10,7 +10,7 @@
   <Window.Styles>
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Settings.axaml" />
     <Style Selector="Button.file-mode">
-      <Setter Property="Height" Value="26"/><Setter Property="Padding" Value="6,0"/><Setter Property="FontSize" Value="12"/>
+      <Setter Property="Height" Value="26"/><Setter Property="Padding" Value="6,0"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
       <Setter Property="BorderThickness" Value="0"/><Setter Property="CornerRadius" Value="5"/>
       <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
     </Style>
@@ -34,7 +34,7 @@
       <Setter Property="Padding" Value="0" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="CornerRadius" Value="7" />
-      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}" />
       <Setter Property="FontWeight" Value="Normal" />
       <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
       <Setter Property="Background" Value="Transparent" />
@@ -69,9 +69,9 @@
                   <Path Data="M3,5 Q3,4 5,4 H10 L12,7 H20 Q22,7 22,9 V18 Q22,20 20,20 H5 Q3,20 3,18 Z" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.7" StrokeJoin="Round"/>
                 </Canvas></Viewbox>
               </Button>
-              <TextBlock Name="ProjectName" Grid.Column="1" Text="Reasonix Studio" FontSize="13" />
-              <TextBlock Grid.Column="2" Text="/" FontSize="13" Opacity="0.5" />
-              <TextBlock Name="CrumbTitle" Grid.Column="3" FontSize="13" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+              <TextBlock Name="ProjectName" Grid.Column="1" Text="Reasonix Studio" FontSize="{DynamicResource StudioType13}" />
+              <TextBlock Grid.Column="2" Text="/" FontSize="{DynamicResource StudioType13}" Opacity="0.5" />
+              <TextBlock Name="CrumbTitle" Grid.Column="3" FontSize="{DynamicResource StudioType13}" Opacity="0.7" TextTrimming="CharacterEllipsis" />
             </Grid>
           </ctl:StudioCrumb>
           <Grid Grid.Column="2" Width="132" ColumnDefinitions="*,28,4,28">
@@ -147,14 +147,14 @@
               <ctl:StudioComposer HorizontalAlignment="Stretch" Margin="0,0,0,35">
                 <Grid RowDefinitions="30,52,46">
                   <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="16,0">
-                    <TextBlock Name="ComposerHint" FontSize="11" Opacity="0.55" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Name="ComposerHint" FontSize="{DynamicResource StudioType11}" Opacity="0.55" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                     <Button Name="ContextToggle" Grid.Column="1" Padding="4,0" Background="Transparent" BorderThickness="0">
-                      <TextBlock Name="MeterText" FontSize="11" Opacity="0.65" Text="—" />
+                      <TextBlock Name="MeterText" FontSize="{DynamicResource StudioType11}" Opacity="0.65" Text="—" />
                     </Button>
                   </Grid>
                   <TextBox Name="Composer" Grid.Row="1" AcceptsReturn="True" TextWrapping="Wrap"
                            Background="Transparent" BorderThickness="0" CornerRadius="0" Padding="0"
-                           FontSize="14" Foreground="{DynamicResource TextBrush}" VerticalContentAlignment="Top"
+                           FontSize="{DynamicResource StudioType14}" Foreground="{DynamicResource TextBrush}" VerticalContentAlignment="Top"
                            Height="42" Margin="16,10,16,0" AutomationProperties.AutomationId="role:combobox" />
                   <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto">
                     <Button Name="Attach" Classes="icon" Margin="8,0" VerticalAlignment="Center"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.plus}"/></Canvas></Viewbox></Button>
@@ -168,7 +168,7 @@
                       <PathIcon Width="15" Height="15" Data="M2,2 H16 V16 H2 Z" />
                     </Button>
                     <Button Name="Send" Grid.Column="3" Width="32" Height="32" Margin="0,6,8,0"
-                            VerticalAlignment="Top" FontSize="13" FontWeight="SemiBold"
+                            VerticalAlignment="Top" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"
                             Foreground="{DynamicResource FaintBrush}" Background="{DynamicResource OverlayBrush}"
                             BorderThickness="0" CornerRadius="16" Padding="0"
                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
@@ -186,7 +186,7 @@
               <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="4" AutomationProperties.AutomationId="class:workbench-tabs" Background="{DynamicResource PageBrush}">
                 <Button Name="ToggleExplorer" Classes="icon" Margin="7,0" Content="☷"/>
                 <Grid Grid.Column="1" ColumnDefinitions="Auto,*,Auto">
-                  <TextBlock Name="BrowserTabTitle" Margin="4,0,8,0" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                  <TextBlock Name="BrowserTabTitle" Margin="4,0,8,0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"
                              IsVisible="{Binding #ManualBrowserHost.IsVisible}"/>
                   <ScrollViewer Name="TabViewport" Grid.Column="1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" VerticalAlignment="Center"
                                 AutomationProperties.AutomationId="role:tablist">
@@ -204,7 +204,7 @@
               <Grid Name="WorkspaceBody" Grid.Row="1" ColumnDefinitions="Auto,*" AutomationProperties.AutomationId="class:workbench-body">
                 <Grid Name="ExplorerPane" Width="190" RowDefinitions="40,Auto,*" Background="{DynamicResource PageBrush}" AutomationProperties.AutomationId="class:workbench-explorer">
                   <Grid ColumnDefinitions="*,Auto" Margin="12,0,6,0">
-                    <TextBlock Name="ExplorerHeading" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Name="ExplorerHeading" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" VerticalAlignment="Center" />
                     <Button Name="ParentFolder" Grid.Column="1" Classes="icon">↑</Button>
                   </Grid>
                   <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4" Margin="8,0,8,5">
@@ -215,7 +215,7 @@
                 </Grid>
                 <Grid Grid.Column="1" RowDefinitions="40,*" Background="{DynamicResource RaisedBrush}" AutomationProperties.AutomationId="class:workbench-canvas">
                   <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4" AutomationProperties.AutomationId="class:workbench-filebar">
-                    <TextBlock Name="WorkbenchTitle" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Name="WorkbenchTitle" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" TextTrimming="CharacterEllipsis" />
                     <Button Name="EndTerminal" Grid.Column="1" IsVisible="False" />
                     <StackPanel Name="FileModes" Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" IsVisible="False">
                       <Button Name="PreviewFile" Classes="file-mode" IsVisible="False" />
@@ -226,7 +226,7 @@
                     <Border Grid.ColumnSpan="3" Height="1" VerticalAlignment="Bottom" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
                   </Grid>
                   <TextBox Name="FileEditor" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" AcceptsTab="True"
-                           Background="Transparent" BorderThickness="0" Padding="10" FontFamily="monospace" FontSize="13" TextWrapping="NoWrap"
+                           Background="Transparent" BorderThickness="0" Padding="10" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType13}" TextWrapping="NoWrap"
                            ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
                   <ScrollViewer Grid.Row="1" Name="RenderedFile" Padding="10" IsVisible="False"/>
                   <ContentControl Grid.Row="1" Name="TerminalSurface" IsVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
@@ -249,14 +249,14 @@
           <StackPanel Name="BrandLockup" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
             <Image Source="/Assets/wordmark.png" Stretch="Uniform" Margin="5,0,2,0" Width="72" Height="17" />
             <Border BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="5" Padding="6,0">
-              <TextBlock Text="STUDIO" FontSize="10" LetterSpacing="1.2" Foreground="{DynamicResource MutedBrush}"/>
+              <TextBlock Text="STUDIO" FontSize="{DynamicResource StudioType10}" LetterSpacing="1.2" Foreground="{DynamicResource MutedBrush}"/>
             </Border>
           </StackPanel>
           <Button Name="CollapseRail" Classes="icon" Grid.Column="1" AutomationProperties.AutomationId="action:chrome.rail"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.collapse}"/></Canvas></Viewbox></Button>
         </Grid>
         <Button Name="NewSession" Grid.Row="1" Margin="10,8,9,0" Height="32" Padding="12,0"
                 Background="{DynamicResource RaisedBrush}" Foreground="{DynamicResource TextBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" FontSize="13"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" FontSize="{DynamicResource StudioType13}"
                 FontWeight="Medium" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
                 AutomationProperties.AutomationId="action:session.new">
           <Button.Template><ControlTemplate>
@@ -265,14 +265,14 @@
               <Grid ColumnDefinitions="16,*,Auto" ColumnSpacing="8">
                 <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.plus}"/></Canvas></Viewbox>
                 <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" VerticalContentAlignment="Center"/>
-                <TextBlock Grid.Column="2" Text="Alt N" FontSize="11" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="Alt N" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" />
               </Grid>
             </Border>
           </ControlTemplate></Button.Template>
           <TextBlock Name="NewSessionLabel" />
         </Button>
         <Grid Grid.Row="2" Margin="10,6,10,6">
-          <TextBox Name="RailSearch" FontSize="13" Height="30" MinHeight="0" Padding="32,0,8,0" VerticalContentAlignment="Center"
+          <TextBox Name="RailSearch" FontSize="{DynamicResource StudioType13}" Height="30" MinHeight="0" Padding="32,0,8,0" VerticalContentAlignment="Center"
                    BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}" CornerRadius="7"/>
           <Border Margin="10,0" HorizontalAlignment="Left" VerticalAlignment="Center" IsHitTestVisible="False"><Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.search}"/></Canvas></Viewbox></Border>
         </Grid>
@@ -297,7 +297,7 @@
               VerticalAlignment="Center" BorderThickness="0" Background="Transparent" CornerRadius="7">
         <StackPanel Orientation="Horizontal" Spacing="8">
           <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.back}" /></Canvas></Viewbox>
-          <TextBlock Name="BackLabel" FontSize="13" FontWeight="Medium" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+          <TextBlock Name="BackLabel" FontSize="{DynamicResource StudioType13}" FontWeight="Medium" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
         </StackPanel>
       </Button>
       <TextBlock Name="SettingsError" Grid.Column="1" Margin="16,0" VerticalAlignment="Center"
@@ -305,9 +305,9 @@
     </Grid>
     <Grid Name="SettingsSheet" Grid.Row="1" ColumnDefinitions="Auto,*" AutomationProperties.AutomationId="class:prefs-sheet">
       <Grid Name="SettingsRail" Width="240" RowDefinitions="46,32,8,*" Background="{DynamicResource PageBrush}">
-        <TextBlock Name="SettingsTitle" Margin="18,0" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
+        <TextBlock Name="SettingsTitle" Margin="18,0" FontWeight="SemiBold" FontSize="{DynamicResource StudioType14}" VerticalAlignment="Center" />
         <Grid Grid.Row="1" Margin="10,0" AutomationProperties.AutomationId="class:prefs-find">
-          <TextBox Name="SettingsSearch" Height="32" MinHeight="0" CornerRadius="7" Padding="32,0,10,0" FontSize="13"
+          <TextBox Name="SettingsSearch" Height="32" MinHeight="0" CornerRadius="7" Padding="32,0,10,0" FontSize="{DynamicResource StudioType13}"
                    VerticalContentAlignment="Center" BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}" />
           <Border HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0" IsHitTestVisible="False"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.search}" /></Canvas></Viewbox></Border>
         </Grid>
@@ -316,8 +316,8 @@
           <ListBox.ItemTemplate><DataTemplate>
             <Grid ColumnDefinitions="16,*,Auto">
               <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{ReflectionBinding Glyph}" /></Canvas></Viewbox>
-              <TextBlock Grid.Column="1" Margin="9,0,0,0" FontSize="13" Text="{ReflectionBinding Title}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-              <TextBlock Classes="nav-count" Grid.Column="2" Margin="9,0,0,0" FontSize="12" Text="{ReflectionBinding CountText}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="1" Margin="9,0,0,0" FontSize="{DynamicResource StudioType13}" Text="{ReflectionBinding Title}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+              <TextBlock Classes="nav-count" Grid.Column="2" Margin="9,0,0,0" FontSize="{DynamicResource StudioType12}" Text="{ReflectionBinding CountText}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" />
             </Grid>
           </DataTemplate></ListBox.ItemTemplate>
         </ListBox>
@@ -326,9 +326,9 @@
       <ScrollViewer Grid.Column="1" Name="SettingsScroller" AutomationProperties.AutomationId="role:tabpanel" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Name="SettingsBody" Margin="24,24,24,48" HorizontalAlignment="Stretch">
           <StackPanel Name="SettingsHeadingBlock" Spacing="6" Margin="0,0,0,16" AutomationProperties.AutomationId="class:prefs-pagetitle">
-            <TextBlock Name="SettingsHeading" FontSize="22" LineHeight="28.6" FontWeight="SemiBold" />
-            <TextBlock Name="SettingsDescription" FontSize="13" LineHeight="19.5" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
-            <TextBlock Name="SettingsUsual" FontSize="12" LineHeight="16.8" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}" />
+            <TextBlock Name="SettingsHeading" FontSize="{DynamicResource StudioType22}" LineHeight="28.6" FontWeight="SemiBold" />
+            <TextBlock Name="SettingsDescription" FontSize="{DynamicResource StudioType13}" LineHeight="19.5" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
+            <TextBlock Name="SettingsUsual" FontSize="{DynamicResource StudioType12}" LineHeight="16.8" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}" />
           </StackPanel>
           <Border Name="SettingsIndex" IsVisible="False" Padding="0,10" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,14"
                   AutomationProperties.AutomationId="class:page-index">
@@ -345,8 +345,8 @@
       <TextBlock Name="NoSettingsHits" IsVisible="False" Margin="10" Foreground="{DynamicResource MutedBrush}"/>
       <ListBox Name="SettingsHits" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
         <ListBox.ItemTemplate><DataTemplate>
-          <StackPanel Margin="6,2"><TextBlock Text="{ReflectionBinding Page}" FontSize="11" Foreground="{DynamicResource FaintBrush}"/>
-            <TextBlock Text="{ReflectionBinding Title}" FontSize="13" TextWrapping="Wrap"/></StackPanel>
+          <StackPanel Margin="6,2"><TextBlock Text="{ReflectionBinding Page}" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}"/>
+            <TextBlock Text="{ReflectionBinding Title}" FontSize="{DynamicResource StudioType13}" TextWrapping="Wrap"/></StackPanel>
         </DataTemplate></ListBox.ItemTemplate>
       </ListBox>
       </Grid>
@@ -355,7 +355,7 @@
       <Border VerticalAlignment="Center" HorizontalAlignment="Center" BorderBrush="{DynamicResource HairBrush}" BorderThickness="1"
               Background="{DynamicResource RaisedBrush}" CornerRadius="12" Padding="20">
         <StackPanel Spacing="16">
-          <TextBlock Name="LeaveQuestion" FontSize="16" FontWeight="SemiBold"/>
+          <TextBlock Name="LeaveQuestion" FontSize="{DynamicResource StudioType16}" FontWeight="SemiBold"/>
           <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
             <Button Name="KeepSettings"/><Button Name="DiscardSettings"/>
           </StackPanel>
@@ -382,7 +382,7 @@
     <Border Name="SetupTitleBar" AutomationProperties.AutomationId="class:onb-brandbar" Padding="26,0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
       <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
         <Image Source="/Assets/wordmark.png" Stretch="Uniform" Width="76" Height="18" />
-        <TextBlock Text="STUDIO" FontSize="9" LetterSpacing="2" HorizontalAlignment="Right" />
+        <TextBlock Text="STUDIO" FontSize="{DynamicResource StudioType9}" LetterSpacing="2" HorizontalAlignment="Right" />
       </StackPanel>
     </Border>
     <Border Name="WelcomeCard" Grid.Row="1" MaxWidth="900" Height="394" Margin="16,0" Padding="42,36,42,34" CornerRadius="15"
@@ -392,12 +392,12 @@
         <Grid RowDefinitions="*,Auto,*" AutomationProperties.AutomationId="class:onb-welcome">
         <StackPanel Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" Spacing="8">
           <Image Source="/Assets/wordmark.png" Stretch="Uniform" Height="26" Width="120" Margin="0,0,0,24"/>
-          <TextBlock Name="WelcomeTitle" HorizontalAlignment="Center" FontSize="22" FontWeight="SemiBold" AutomationProperties.AutomationId="class:onb-t" />
-          <TextBlock Name="WelcomeDescription" AutomationProperties.AutomationId="class:onb-s" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" FontSize="13"/>
+          <TextBlock Name="WelcomeTitle" HorizontalAlignment="Center" FontSize="{DynamicResource StudioType22}" FontWeight="SemiBold" AutomationProperties.AutomationId="class:onb-t" />
+          <TextBlock Name="WelcomeDescription" AutomationProperties.AutomationId="class:onb-s" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" FontSize="{DynamicResource StudioType13}"/>
           <Button Name="BeginSetup" AutomationProperties.AutomationId="action:onboarding.begin" Width="240" Height="40" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Margin="0,16,0,0"
                   Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource AccentFgBrush}" CornerRadius="10" />
-          <Button Name="SkipWelcome" Height="24" MinHeight="0" Padding="8,0" FontSize="13" AutomationProperties.AutomationId="action:onboarding.skip" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" />
-          <TextBlock Name="SetupTime" AutomationProperties.AutomationId="class:onb-note" HorizontalAlignment="Center" Margin="0,12,0,0" FontSize="12" Foreground="{DynamicResource MutedBrush}"/>
+          <Button Name="SkipWelcome" Height="24" MinHeight="0" Padding="8,0" FontSize="{DynamicResource StudioType13}" AutomationProperties.AutomationId="action:onboarding.skip" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" />
+          <TextBlock Name="SetupTime" AutomationProperties.AutomationId="class:onb-note" HorizontalAlignment="Center" Margin="0,12,0,0" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}"/>
         </StackPanel>
         </Grid>
         <Border Name="SetupDemo" Grid.Column="1" Width="320" Height="270" Padding="18,16" VerticalAlignment="Center"
@@ -405,20 +405,20 @@
                 AutomationProperties.AutomationId="class:onb-demo">
           <StackPanel Spacing="10">
             <Border Background="{DynamicResource OverlayBrush}" CornerRadius="10" Padding="12,6" HorizontalAlignment="Right">
-              <TextBlock Name="DemoAsk" FontSize="12" />
+              <TextBlock Name="DemoAsk" FontSize="{DynamicResource StudioType12}" />
             </Border>
-            <TextBlock Name="DemoThinking" FontSize="12"/>
-            <TextBlock Name="DemoRead" FontFamily="monospace" FontSize="12"/>
-            <TextBlock Name="DemoEdit" FontFamily="monospace" FontSize="12"/>
-            <TextBlock Name="DemoRun" FontFamily="monospace" FontSize="12"/>
+            <TextBlock Name="DemoThinking" FontSize="{DynamicResource StudioType12}"/>
+            <TextBlock Name="DemoRead" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}"/>
+            <TextBlock Name="DemoEdit" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}"/>
+            <TextBlock Name="DemoRun" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}"/>
             <Border Height="1" Background="{DynamicResource BorderBrush}"/>
-            <TextBlock Name="DemoDone" FontSize="12" Foreground="{DynamicResource OkBrush}"/>
+            <TextBlock Name="DemoDone" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource OkBrush}"/>
           </StackPanel>
         </Border>
       </Grid>
     </Border>
     <Border Grid.Row="2" AutomationProperties.AutomationId="class:onb-foot">
-      <TextBlock Name="SetupFoot" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource MutedBrush}" />
+      <TextBlock Name="SetupFoot" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource MutedBrush}" />
     </Border>
     <settings:ProjectChoice Name="ProjectStep" Grid.Row="1" IsVisible="False"/>
     <ScrollViewer Name="SetupForm" Grid.Row="1" IsVisible="False">
@@ -426,7 +426,7 @@
               Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
               BorderThickness="1" CornerRadius="15" Padding="28">
         <StackPanel Spacing="14" MaxWidth="540">
-          <TextBlock Name="SetupTitle" FontSize="25" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <TextBlock Name="SetupTitle" FontSize="{DynamicResource StudioType25}" FontWeight="SemiBold" TextWrapping="Wrap" />
           <TextBlock Name="SetupDescription" TextWrapping="Wrap" />
           <StackPanel Name="ServiceFields" Spacing="8">
             <WrapPanel Name="SetupServices" />

@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
 using System;
@@ -114,7 +115,7 @@ public sealed partial class MainWindow
 
         var tile = new StackPanel { Spacing = 4 };
         tile.Children.Add(art);
-        tile.Children.Add(new TextBlock { Text = name, FontSize = 12 });
+        tile.Children.Add(new TextBlock { Text = name, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) });
         return tile;
     }
 

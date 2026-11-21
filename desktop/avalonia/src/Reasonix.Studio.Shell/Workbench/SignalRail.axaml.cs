@@ -1,5 +1,6 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages;
 using System;
 using System.Collections.Generic;
@@ -68,7 +69,7 @@ public sealed partial class SignalRail : UserControl
             Members.Children.Clear();
             foreach (var entry in group)
             {
-                var button = new Button { Content = entry.Label, FontSize = 12 };
+                var button = new Button { Content = entry.Label, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };
                 AutomationProperties.SetAutomationId(button, "action:analysis.signal-member");
                 button.Click += (_, _) =>
                 {

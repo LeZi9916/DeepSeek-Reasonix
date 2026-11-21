@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Reasonix.Studio.Contracts.Tree;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Collections.Generic;
@@ -149,7 +150,7 @@ public sealed class ProjectRail : UserControl
                 var more = new Button
                 {
                     Content = MessageCatalog.Get(MessageKey.Common.ShowMoreNLeft, Language, ("n", Format.Count(sessions.Count - visible, Language))),
-                    FontSize = 11,
+                    [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
                     Background = Brushes.Transparent,
                     BorderThickness = new Thickness(0),
                 };
@@ -177,7 +178,7 @@ public sealed class ProjectRail : UserControl
         return new TextBlock
         {
             Text = MessageCatalog.Get(MessageKey.Session.AddAProject, Language),
-            FontSize = 11,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
             Opacity = 0.5,
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(6, 8, 6, 0),
@@ -200,14 +201,14 @@ public sealed class ProjectRail : UserControl
         text.Children.Add(new TextBlock
         {
             Text = folded ? "▸" : "▾",
-            FontSize = 10,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(10),
             Opacity = 0.6,
             VerticalAlignment = VerticalAlignment.Center,
         });
         text.Children.Add(new TextBlock
         {
             Text = workspace.Name,
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             FontWeight = FontWeight.SemiBold,
             Opacity = workspace.Missing ? 0.5 : 0.9,
             VerticalAlignment = VerticalAlignment.Center,
@@ -253,7 +254,7 @@ public sealed class ProjectRail : UserControl
             marks.Children.Add(new TextBlock
             {
                 Text = "●",
-                FontSize = 8,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(8),
                 VerticalAlignment = VerticalAlignment.Center,
             });
         }
@@ -263,7 +264,7 @@ public sealed class ProjectRail : UserControl
             marks.Children.Add(new TextBlock
             {
                 Text = "★",
-                FontSize = 9,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(9),
                 Opacity = 0.75,
                 VerticalAlignment = VerticalAlignment.Center,
             });
@@ -274,7 +275,7 @@ public sealed class ProjectRail : UserControl
             marks.Children.Add(new TextBlock
             {
                 Text = "▸",
-                FontSize = 9,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(9),
                 Opacity = 0.5,
                 VerticalAlignment = VerticalAlignment.Center,
             });
@@ -289,7 +290,7 @@ public sealed class ProjectRail : UserControl
         title.Children.Add(new TextBlock
         {
             Text = string.IsNullOrWhiteSpace(session.Title) ? session.Name : session.Title,
-            FontSize = 13,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
             FontWeight = current ? FontWeight.SemiBold : FontWeight.Normal,
             Opacity = session.Archived ? 0.45 : 0.92,
             TextTrimming = TextTrimming.CharacterEllipsis,
@@ -308,7 +309,7 @@ public sealed class ProjectRail : UserControl
 
         var menu = new Button
         {
-            Content = new TextBlock { Text = "⋯", FontSize = 12, Opacity = 0.6 },
+            Content = new TextBlock { Text = "⋯", [!TextBlock.FontSizeProperty] = StudioTypography.Size(12), Opacity = 0.6 },
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
             Padding = new Thickness(4, 0, 4, 0),

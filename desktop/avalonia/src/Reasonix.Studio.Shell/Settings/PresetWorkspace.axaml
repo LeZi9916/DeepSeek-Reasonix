@@ -3,7 +3,7 @@
   <StackPanel Spacing="10" Margin="0,12">
     <StackPanel Name="Catalog" Spacing="9">
       <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Tag="persona.agent_presets" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"/>
+        <TextBlock Tag="persona.agent_presets" FontWeight="SemiBold" FontSize="{DynamicResource StudioType16}" VerticalAlignment="Center"/>
         <Button Name="Create" Grid.Column="1" Tag="persona.new_preset" AutomationProperties.AutomationId="action:agent-preset.create"/>
       </Grid>
       <TextBlock Tag="persona.presets_define_which_capabilities_are" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
@@ -12,7 +12,7 @@
     <StackPanel Name="Editor" IsVisible="False" Spacing="9">
       <Grid ColumnDefinitions="Auto,*">
         <Button Name="Back" AutomationProperties.AutomationId="action:agent-preset.back" Content="←"/>
-        <TextBlock Name="Heading" Grid.Column="1" Margin="10,0" FontWeight="SemiBold" FontSize="18" VerticalAlignment="Center"/>
+        <TextBlock Name="Heading" Grid.Column="1" Margin="10,0" FontWeight="SemiBold" FontSize="{DynamicResource StudioType18}" VerticalAlignment="Center"/>
       </Grid>
       <StackPanel Name="Fields" Spacing="9">
         <StackPanel Spacing="3"><TextBlock Tag="persona.preset_name"/><TextBox Name="PresetName" AutomationProperties.AutomationId="field:agent-preset.name" MaxLength="200"/></StackPanel>

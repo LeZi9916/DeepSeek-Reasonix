@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Host;
@@ -106,7 +107,7 @@ public sealed partial class MainWindow
         Label(back, MessageKey.Panels.BackToTheConversation);
         back.Click += (_, _) => ShowAnalysis(false);
         header.Children.Add(back);
-        var title = new TextBlock { Text = MessageCatalog.Get(MessageKey.Common.RunAnalysis, Language), FontSize = 16, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
+        var title = new TextBlock { Text = MessageCatalog.Get(MessageKey.Common.RunAnalysis, Language), [!TextBlock.FontSizeProperty] = StudioTypography.Size(16), FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center };
         Place(header, title, 1);
         var note = Detail(MessageCatalog.Get("panels.this_turn_from_recorded_events", Language));
         note.VerticalAlignment = VerticalAlignment.Center;
@@ -114,7 +115,7 @@ public sealed partial class MainWindow
         var count = Detail(MessageCatalog.Get("panels.n_records", Language, ("n", Format.Count(timeline.Rows.Count, Language))));
         count.VerticalAlignment = VerticalAlignment.Center;
         Place(header, count, 3);
-        var export = new Button { Content = MessageCatalog.Get(MessageKey.Panels.ExportRunRecord, Language), FontSize = 12, Height = 28, Padding = new Thickness(10, 0) };
+        var export = new Button { Content = MessageCatalog.Get(MessageKey.Panels.ExportRunRecord, Language), [!TextBlock.FontSizeProperty] = StudioTypography.Size(12), Height = 28, Padding = new Thickness(10, 0) };
         export.Click += async (_, _) => await TryAnswerAsync(async () =>
         {
             await new AvaloniaHost(this).SaveTextAsync("reasonix-run.json", trace.ToJsonString(new JsonSerializerOptions { WriteIndented = true })).ConfigureAwait(true);
@@ -164,7 +165,7 @@ public sealed partial class MainWindow
                 bar.ColumnDefinitions.Add(new ColumnDefinition(ms, GridUnitType.Star));
                 var slice = new Border { CornerRadius = new CornerRadius(4) };
                 slice.Bind(Border.BackgroundProperty, slice.GetResourceObservable(brush));
-                slice.Child = new TextBlock { Text = caption + "  " + Seconds(ms), FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+                slice.Child = new TextBlock { Text = caption + "  " + Seconds(ms), [!TextBlock.FontSizeProperty] = StudioTypography.Size(12), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
                 slice.Child.Bind(TextBlock.ForegroundProperty, slice.GetResourceObservable("RaisedBrush"));
                 Place(bar, slice, bar.ColumnDefinitions.Count - 1);
             }
@@ -176,7 +177,7 @@ public sealed partial class MainWindow
 
         var zoom = new Slider { Minimum = 1, Maximum = 16, Value = 1, Width = 130, TickFrequency = 1, IsSnapToTickEnabled = true };
         var scale = Detail("1×");
-        var reset = new Button { Content = MessageCatalog.Get("panels.reset_zoom", Language), Height = 28, FontSize = 12 };
+        var reset = new Button { Content = MessageCatalog.Get("panels.reset_zoom", Language), Height = 28, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };
         AutomationProperties.SetAutomationId(zoom, "action:analysis.zoom");
         AutomationProperties.SetAutomationId(reset, "action:analysis.reset-zoom");
         var controls = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
@@ -188,7 +189,7 @@ public sealed partial class MainWindow
 
         var track = new StackPanel { Spacing = 10 };
         var scroller = new ScrollViewer { Content = track, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
-        var detail = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, IsVisible = false, FontFamily = FontFamily.Parse("monospace"), FontSize = 12 };
+        var detail = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, IsVisible = false, [!TextBlock.FontFamilyProperty] = StudioTypography.Resource("StudioMonoFamily"), [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };
         var signals = new Workbench.SignalRail();
         var points = new System.Collections.Generic.List<RunTimeline.Entry>();
         reset.Click += (_, _) =>
@@ -204,7 +205,7 @@ public sealed partial class MainWindow
                 continue;
             }
 
-            var pick = new Button { Content = entry.Label, FontSize = 12, Margin = new Thickness(0, 0, 4, 2) };
+            var pick = new Button { Content = entry.Label, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12), Margin = new Thickness(0, 0, 4, 2) };
             pick.Click += (_, _) => Inspect(entry);
             if (entry.Duration is not > 0)
             {
@@ -262,7 +263,7 @@ public sealed partial class MainWindow
     {
         var cell = new StackPanel { Spacing = 5, Margin = new Thickness(12), VerticalAlignment = VerticalAlignment.Center };
         cell.Children.Add(Detail(MessageCatalog.Get(key, Language)));
-        cell.Children.Add(new SelectableTextBlock { Text = value, FontSize = 20, FontWeight = FontWeight.SemiBold, FontFamily = FontFamily.Parse("monospace") });
+        cell.Children.Add(new SelectableTextBlock { Text = value, [!TextBlock.FontSizeProperty] = StudioTypography.Size(20), FontWeight = FontWeight.SemiBold, [!TextBlock.FontFamilyProperty] = StudioTypography.Resource("StudioMonoFamily") });
         cell.Children.Add(Detail(note));
         return cell;
     }

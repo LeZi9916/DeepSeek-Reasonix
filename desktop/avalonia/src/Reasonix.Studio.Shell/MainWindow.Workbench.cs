@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages;
 using Reasonix.Studio.Pages.I18n;
@@ -521,11 +522,11 @@ public sealed partial class MainWindow
             {
                 Content = Path.GetFileName(key.Path),
                 IsEnabled = !ReferenceEquals(buffer, _openFile),
-                FontSize = 12,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             };
             ToolTip.SetTip(tab, key.Path);
             tab.Click += async (_, _) => await OpenEntryAsync(new FileEntry(key.Path, false)).ConfigureAwait(true);
-            var close = new Button { Content = "×", Padding = new Avalonia.Thickness(4, 0), FontSize = 12 };
+            var close = new Button { Content = "×", Padding = new Avalonia.Thickness(4, 0), [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };
             Label(close, MessageKey.Workbench.CloseTab);
             close.Click += (_, _) =>
             {

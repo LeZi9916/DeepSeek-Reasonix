@@ -111,6 +111,7 @@ public sealed partial class MainWindow
         zoom = zoom > 0 ? zoom : 1;
         ScaledWindow.LayoutTransform = zoom == 1 ? null : new ScaleTransform(zoom, zoom);
         var language = LanguageResolver.Resolve((string?)look["language"], new[] { CultureInfo.CurrentUICulture.Name });
+        SetWindowTypography(look, language);
         Conversation.ApplyPreferences(language, fold);
         Projects.Language = language;
         Projects.RefreshLabels();
@@ -250,6 +251,9 @@ public sealed partial class MainWindow
                     if (api is not null)
                     {
                         var look = await api.AppearanceAsync(_closing.Token).ConfigureAwait(true);
+                        var type = new Settings.TypographyForm { Tag = "look.typeface" };
+                        Card(column, "look.typeface").Children.Add(type);
+                        type.Open(look, Language, api, accepted => ApplyAppearance(accepted, Conversation.FoldsTurnWork), DescribeError, _closing.Token);
                         ZoomChoice(Card(column, "common.window"), look);
                     }
 

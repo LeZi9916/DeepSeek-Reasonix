@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Markdig;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
+using Reasonix.Studio.Controls;
 using System;
 using System.Globalization;
 using AvInline = Avalonia.Controls.Documents.Inline;
@@ -76,7 +77,7 @@ public static class MarkdownAnswer
                     runs.Add(title);
                     break;
                 case CodeBlock code:
-                    runs.Add(new Run(code.Lines.ToString()) { FontFamily = FontFamily.Parse("monospace") });
+                    runs.Add(new Run(code.Lines.ToString()) { [!TextBlock.FontFamilyProperty] = StudioTypography.Resource("StudioMonoFamily") });
                     break;
                 case QuoteBlock quote:
                     runs.Add(new Run("│  "));
@@ -108,7 +109,7 @@ public static class MarkdownAnswer
                     runs.Add(new Run(entity.Transcoded.ToString()));
                     break;
                 case CodeInline code:
-                    runs.Add(new Run(code.Content) { FontFamily = FontFamily.Parse("monospace") });
+                    runs.Add(new Run(code.Content) { [!TextBlock.FontFamilyProperty] = StudioTypography.Resource("StudioMonoFamily") });
                     break;
                 case LineBreakInline line:
                     runs.Add(line.IsHard ? new LineBreak() : (AvInline)new Run(" "));

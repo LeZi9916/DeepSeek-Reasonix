@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
 using System;
@@ -176,7 +177,7 @@ public sealed partial class RemoteBook : SettingsFormView
             {
                 var name = (string)h["name"]!;
                 var row = new StackPanel { Spacing = 4, Margin = new Thickness(0, 4) };
-                row.Children.Add(new TextBlock { Text = name + "   " + ((string?)h["host"] ?? (string?)h["distro"]), FontSize = 14 });
+                row.Children.Add(new TextBlock { Text = name + "   " + ((string?)h["host"] ?? (string?)h["distro"]), [!TextBlock.FontSizeProperty] = StudioTypography.Size(14) });
                 var actions = new WrapPanel();
                 var edit = new Button { Content = Text("common.edit") };
                 var probe = new Button { Content = Text("common.test_it"), IsEnabled = (bool?)h["disabled"] != true && (string?)h["status"] != "connected" };

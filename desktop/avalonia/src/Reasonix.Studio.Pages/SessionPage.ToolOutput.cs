@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Reasonix.Studio.Contracts.Refusal;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.State.Transcript;
 using System;
@@ -41,7 +42,7 @@ public sealed partial class SessionPage
         return new SelectableTextBlock
         {
             Text = tool.Call.Name + (tool.Running ? " …" : string.Empty),
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.55,
             FontFamily = new FontFamily("Consolas, monospace"),
         };
@@ -75,7 +76,7 @@ public sealed partial class SessionPage
         var note = new SelectableTextBlock
         {
             Text = hidden,
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.65,
             TextWrapping = TextWrapping.Wrap,
             IsVisible = false,
@@ -84,7 +85,7 @@ public sealed partial class SessionPage
         var output = new SelectableTextBlock
         {
             Text = tool.Call.Output,
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.6,
             FontFamily = new FontFamily("Consolas, monospace"),
             TextWrapping = TextWrapping.Wrap,
@@ -94,7 +95,7 @@ public sealed partial class SessionPage
         var toggle = new Button
         {
             Content = MessageCatalog.Get("common.expand", Language),
-            FontSize = 11,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
             Padding = new Thickness(8, 2, 8, 2),
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
@@ -104,7 +105,7 @@ public sealed partial class SessionPage
         var load = new Button
         {
             Content = MessageCatalog.Get("chat.show_full_output", Language),
-            FontSize = 11,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
             Padding = new Thickness(8, 2, 8, 2),
             HorizontalAlignment = HorizontalAlignment.Left,
             IsVisible = false,

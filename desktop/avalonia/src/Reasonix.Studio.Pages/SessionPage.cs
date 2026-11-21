@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Reasonix.Studio.Contracts.Events;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
@@ -280,7 +281,7 @@ public sealed partial class SessionPage : UserControl
             case UserItem user:
                 var bubble = new ContentControl
                 {
-                    FontSize = 14,
+                    [!TextBlock.FontSizeProperty] = StudioTypography.Resource("StudioReadingSize"),
                     FontWeight = FontWeight.Medium,
                     Background = Brush("OverlayBrush"),
                     CornerRadius = new CornerRadius(15),
@@ -298,7 +299,7 @@ public sealed partial class SessionPage : UserControl
                 return new SelectableTextBlock
                 {
                     Text = notice.Text,
-                    FontSize = 12,
+                    [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                     Opacity = 0.7,
                     Foreground = NoticeInk(notice.Level),
                 };
@@ -354,7 +355,7 @@ public sealed partial class SessionPage : UserControl
         return new SelectableTextBlock
         {
             Text = text,
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.6,
             TextWrapping = TextWrapping.Wrap,
         };
@@ -404,7 +405,7 @@ public sealed partial class SessionPage : UserControl
         body.Children.Add(new SelectableTextBlock
         {
             Text = MessageCatalog.Get("chat.ask_user", Language),
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.6,
         });
 
@@ -413,7 +414,7 @@ public sealed partial class SessionPage : UserControl
             body.Children.Add(new SelectableTextBlock
             {
                 Text = string.IsNullOrEmpty(question.Header) ? question.Prompt : question.Header,
-                FontSize = 13,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
                 FontWeight = FontWeight.SemiBold,
                 TextWrapping = TextWrapping.Wrap,
             });
@@ -423,7 +424,7 @@ public sealed partial class SessionPage : UserControl
                 body.Children.Add(new SelectableTextBlock
                 {
                     Text = question.Prompt,
-                    FontSize = 12,
+                    [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                     Opacity = 0.75,
                     TextWrapping = TextWrapping.Wrap,
                 });
@@ -434,7 +435,7 @@ public sealed partial class SessionPage : UserControl
                 body.Children.Add(new SelectableTextBlock
                 {
                     Text = string.Join("  ·  ", question.Options.Select(option => option.Label)),
-                    FontSize = 12,
+                    [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                     Opacity = 0.7,
                     TextWrapping = TextWrapping.Wrap,
                 });
@@ -451,7 +452,7 @@ public sealed partial class SessionPage : UserControl
             body.Children.Add(new SelectableTextBlock
             {
                 Text = string.Join("  ·  ", answers.Select(answer => string.Join(", ", answer))),
-                FontSize = 12,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                 Opacity = 0.55,
             });
         }
@@ -470,7 +471,7 @@ public sealed partial class SessionPage : UserControl
         body.Children.Add(new SelectableTextBlock
         {
             Text = MessageCatalog.Get("chat.compaction_brief", Language),
-            FontSize = 13,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
             FontWeight = FontWeight.SemiBold,
         });
 
@@ -479,7 +480,7 @@ public sealed partial class SessionPage : UserControl
             body.Children.Add(new SelectableTextBlock
             {
                 Text = MessageCatalog.Get("chat.folding_into_a_digest", Language),
-                FontSize = 12,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                 Opacity = 0.7,
             });
         }
@@ -489,7 +490,7 @@ public sealed partial class SessionPage : UserControl
             body.Children.Add(new SelectableTextBlock
             {
                 Text = item.Compaction.Summary,
-                FontSize = 12,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                 Opacity = 0.75,
                 TextWrapping = TextWrapping.Wrap,
                 MaxHeight = 160,
@@ -510,7 +511,7 @@ public sealed partial class SessionPage : UserControl
         body.Children.Add(new SelectableTextBlock
         {
             Text = MessageCatalog.Get("data.memory", Language) + " · " + fact.Title,
-            FontSize = 13,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
             FontWeight = FontWeight.SemiBold,
             TextWrapping = TextWrapping.Wrap,
         });
@@ -520,7 +521,7 @@ public sealed partial class SessionPage : UserControl
             body.Children.Add(new SelectableTextBlock
             {
                 Text = fact.Description,
-                FontSize = 12,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                 Opacity = 0.75,
                 TextWrapping = TextWrapping.Wrap,
             });
@@ -543,7 +544,7 @@ public sealed partial class SessionPage : UserControl
                 "chat.extension_id",
                 Language,
                 ("id", string.IsNullOrEmpty(item.Surface.PluginID) ? item.Surface.SurfaceID : item.Surface.PluginID)),
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.6,
         });
 
@@ -552,7 +553,7 @@ public sealed partial class SessionPage : UserControl
             body.Children.Add(new SelectableTextBlock
             {
                 Text = item.Surface.Status.Label,
-                FontSize = 13,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
                 FontWeight = FontWeight.SemiBold,
                 TextWrapping = TextWrapping.Wrap,
             });
@@ -563,7 +564,7 @@ public sealed partial class SessionPage : UserControl
             body.Children.Add(new SelectableTextBlock
             {
                 Text = item.Surface.Status.Detail,
-                FontSize = 12,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                 Opacity = 0.75,
                 TextWrapping = TextWrapping.Wrap,
             });
@@ -609,7 +610,7 @@ public sealed partial class SessionPage : UserControl
         body.Children.Add(new SelectableTextBlock
         {
             Text = string.IsNullOrEmpty(item.Approval.Subject) ? item.Approval.Tool : item.Approval.Subject,
-            FontSize = 13,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
             FontWeight = FontWeight.SemiBold,
             TextWrapping = TextWrapping.Wrap,
         });
@@ -619,7 +620,7 @@ public sealed partial class SessionPage : UserControl
             body.Children.Add(new SelectableTextBlock
             {
                 Text = item.Approval.Reason,
-                FontSize = 12,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                 Opacity = 0.7,
                 TextWrapping = TextWrapping.Wrap,
             });
@@ -641,7 +642,7 @@ public sealed partial class SessionPage : UserControl
                     "deny" or "recovery_revise" => MessageCatalog.Get(MessageKey.Chat.Denied, Language),
                     _ => item.Verdict,
                 },
-                FontSize = 12,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                 Opacity = 0.55,
             });
         }
@@ -669,7 +670,7 @@ public sealed partial class SessionPage : UserControl
         var button = new Button
         {
             Content = label,
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Padding = new Thickness(10, 4, 10, 4),
         };
 
@@ -701,7 +702,7 @@ public sealed partial class SessionPage : UserControl
             _rows.Children.Add(new TextBlock
             {
                 Text = MessageCatalog.Get(MessageKey.Composer.DescribeATaskQuestionOr, Language),
-                FontSize = 13,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
                 Opacity = 0.55,
             });
             return;

@@ -1,7 +1,7 @@
 <local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.MemoryWorkspace">
   <StackPanel Spacing="8">
-    <TextBlock Tag="data.memory" FontWeight="SemiBold" FontSize="15"/>
+    <TextBlock Tag="data.memory" FontWeight="SemiBold" FontSize="{DynamicResource StudioType15}"/>
     <TextBlock Tag="settings.what_it_remembers" Foreground="{DynamicResource MutedBrush}"/>
     <StackPanel Name="Warnings"/>
     <TextBlock Name="Failure" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}" IsVisible="False"/>
@@ -15,13 +15,13 @@
         </StackPanel>
         <StackPanel Name="DetailPane" Grid.Column="2" Margin="12" Spacing="9">
           <StackPanel Name="Reader" Spacing="8">
-            <TextBlock Name="Heading" FontWeight="SemiBold" TextWrapping="Wrap" FontSize="16"/>
+            <TextBlock Name="Heading" FontWeight="SemiBold" TextWrapping="Wrap" FontSize="{DynamicResource StudioType16}"/>
             <TextBlock Name="Summary" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
             <Button Name="Edit" Tag="common.edit" AutomationProperties.AutomationId="action:memory.edit"/>
             <Border Background="{DynamicResource PageBrush}" CornerRadius="6" Padding="10">
               <ScrollViewer MaxHeight="220"><SelectableTextBlock Name="Prose" TextWrapping="Wrap"/></ScrollViewer>
             </Border>
-            <TextBlock Name="Facts" FontSize="12" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+            <TextBlock Name="Facts" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
             <Button Name="History" AutomationProperties.AutomationId="action:memory.history"/>
             <StackPanel Name="Revisions" IsVisible="False" Spacing="6"/>
           </StackPanel>

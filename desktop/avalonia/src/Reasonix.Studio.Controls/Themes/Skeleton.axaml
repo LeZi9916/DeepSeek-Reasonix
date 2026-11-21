@@ -12,7 +12,7 @@
     <ControlTheme x:Key="{x:Type ctl:StudioRail}" TargetType="ctl:StudioRail">
       <Setter Property="Background" Value="{DynamicResource PageBrush}" />
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
-      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontSize" Value="{DynamicResource StudioType14}" />
       <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Padding" Value="0" />
       <Setter Property="Template">
@@ -31,7 +31,7 @@
       <Setter Property="Height" Value="48" />
       <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
-      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontSize" Value="{DynamicResource StudioType14}" />
       <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Padding" Value="20,0,12,0" />
       <Setter Property="Template">
@@ -46,7 +46,7 @@
     <ControlTheme x:Key="{x:Type ctl:StudioPane}" TargetType="ctl:StudioPane">
       <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
-      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontSize" Value="{DynamicResource StudioType14}" />
       <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Template">
         <ControlTemplate>
@@ -104,7 +104,7 @@
 
     <ControlTheme x:Key="{x:Type ctl:StudioCrumb}" TargetType="ctl:StudioCrumb">
       <Setter Property="Foreground" Value="{DynamicResource FaintBrush}" />
-      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}" />
       <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Template">
         <ControlTemplate>

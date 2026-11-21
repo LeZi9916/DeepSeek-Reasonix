@@ -5,6 +5,7 @@ using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Host;
 using System;
@@ -50,7 +51,7 @@ public sealed partial class MainWindow
         {
             Text = MessageCatalog.Get(key, Language),
             FontWeight = FontWeight.SemiBold,
-            FontSize = 16,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(16),
             Margin = new Thickness(0, 0, 0, 14),
         });
         column.Children.Add(card);
@@ -62,7 +63,7 @@ public sealed partial class MainWindow
     /// <returns>The wrapping label.</returns>
     private TextBlock Detail(string text)
     {
-        var label = new TextBlock { Text = text, FontSize = 12, TextWrapping = TextWrapping.Wrap };
+        var label = new TextBlock { Text = text, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12), TextWrapping = TextWrapping.Wrap };
         label.Bind(TextBlock.ForegroundProperty, label.GetResourceObservable("FaintBrush"));
         return label;
     }
@@ -79,7 +80,7 @@ public sealed partial class MainWindow
         row.Classes.Add("setting-row");
         AutomationProperties.SetAutomationId(row, "class:srow");
         AutomationProperties.SetName(control, label);
-        var name = new TextBlock { Text = label, FontSize = 13, FontWeight = FontWeight.Medium, TextWrapping = TextWrapping.Wrap };
+        var name = new TextBlock { Text = label, [!TextBlock.FontSizeProperty] = StudioTypography.Size(13), FontWeight = FontWeight.Medium, TextWrapping = TextWrapping.Wrap };
         AutomationProperties.SetAutomationId(name, "class:srow-name");
         var copy = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Spacing = 2 };
         copy.Children.Add(name);
@@ -138,7 +139,7 @@ public sealed partial class MainWindow
         SettingsLinks.Children.Add(new TextBlock
         {
             Text = MessageCatalog.Get("settings.on_this_page", Language),
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 8, 0),
         });

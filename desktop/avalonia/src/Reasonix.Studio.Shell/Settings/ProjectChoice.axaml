@@ -2,7 +2,7 @@
  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.ProjectChoice">
  <Border MaxWidth="670" Margin="16" Padding="28" CornerRadius="15" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" VerticalAlignment="Center">
   <StackPanel Spacing="12">
-   <TextBlock Tag="onboarding.which_project" FontSize="25" FontWeight="SemiBold"/>
+   <TextBlock Tag="onboarding.which_project" FontSize="{DynamicResource StudioType25}" FontWeight="SemiBold"/>
    <TextBlock Tag="onboarding.drop_to_choose" TextWrapping="Wrap"/>
    <Border Name="DropZone" DragDrop.AllowDrop="True" MinHeight="110" Padding="15" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="9">
     <StackPanel Spacing="8" VerticalAlignment="Center">

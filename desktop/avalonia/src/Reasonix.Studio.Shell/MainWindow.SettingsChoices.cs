@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
 using System;
@@ -103,7 +104,7 @@ public sealed partial class MainWindow
             (MessageKey.Common.Settings, primary + ","),
         })
         {
-            AddRow(card, label, new TextBlock { Text = chord, FontSize = 12 });
+            AddRow(card, label, new TextBlock { Text = chord, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) });
         }
     }
 

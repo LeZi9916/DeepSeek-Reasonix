@@ -1,0 +1,16 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.TypographyForm">
+ <StackPanel Spacing="9">
+  <TextBlock Tag="look.enter_a_typeface_name_or" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+  <StackPanel Spacing="3"><TextBlock Tag="look.interface"/><TextBox Name="UiFont" AutomationProperties.AutomationId="field:appearance.ui"/></StackPanel>
+  <StackPanel Spacing="3"><TextBlock Tag="look.monospace_font"/><TextBox Name="CodeFont" AutomationProperties.AutomationId="field:appearance.mono"/></StackPanel>
+  <WrapPanel><ComboBox Name="Fonts" MinWidth="180"/><Button Name="ApplyFonts" Tag="common.save" Margin="6,0" AutomationProperties.AutomationId="action:appearance.apply-font"/></WrapPanel>
+  <TextBlock Name="UiSample" Tag="look.typeface_preview_aa_bb_0123" TextWrapping="Wrap"/>
+  <TextBlock Name="CodeSample" FontFamily="{DynamicResource StudioMonoFamily}" Text="func main() { fmt.Println(0O1lI) }"/>
+  <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+   <StackPanel Spacing="3"><TextBlock Tag="look.interface_text"/><ComboBox Name="UiScale" HorizontalAlignment="Stretch" AutomationProperties.AutomationId="action:appearance.text-size"/></StackPanel>
+   <StackPanel Grid.Column="1" Spacing="3"><TextBlock Tag="common.body_text"/><ComboBox Name="ReadSize" HorizontalAlignment="Stretch" AutomationProperties.AutomationId="action:appearance.reading-size"/></StackPanel>
+  </Grid>
+  <TextBlock Name="Error" Foreground="{DynamicResource ErrBrush}" IsVisible="False" TextWrapping="Wrap"/>
+ </StackPanel>
+</local:SettingsFormView>

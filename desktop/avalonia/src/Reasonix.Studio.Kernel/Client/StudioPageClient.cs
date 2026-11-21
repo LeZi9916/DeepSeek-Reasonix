@@ -19,6 +19,9 @@ public sealed partial class StudioPageClient
     /// <summary>The connection shared with the session stream.</summary>
     private readonly HttpClient _http;
 
+    /// <summary>Serializes read-modify-write patches sent by appearance controls.</summary>
+    private readonly SemaphoreSlim _appearanceWrites = new(1, 1);
+
     /// <summary>Initializes a new instance of the <see cref="StudioPageClient"/> class.</summary>
     /// <param name="http">Authenticated client with a loopback base address.</param>
     public StudioPageClient(HttpClient http)
@@ -234,31 +237,18 @@ public sealed partial class StudioPageClient
     /// <param name="zoom">Requested zoom, or null to keep.</param>
     /// <param name="token">Cancels the write.</param>
     /// <returns>The normalized appearance.</returns>
-    public async Task<JsonObject> SetAppearanceAsync(string? language, double? zoom, CancellationToken token)
-    {
-        var current = await AppearanceAsync(token).ConfigureAwait(false);
-        var paper = current["wallpaper"] as JsonObject;
-        var patch = new
-        {
-            language = language ?? current["language"]?.GetValue<string>() ?? string.Empty,
-            zoom = zoom ?? (double?)current["zoom"] ?? 0,
-            readSize = (double?)current["readSize"] ?? 0,
-            textSize = (double?)current["textSize"] ?? 0,
-            fontUi = (string?)current["fontUi"] ?? string.Empty,
-            fontMono = (string?)current["fontMono"] ?? string.Empty,
-            width = (string?)current["width"] ?? string.Empty,
-            widthPercent = (int?)current["widthPercent"] ?? 0,
-            opacity = (double?)paper?["opacity"] ?? 0,
-            dim = (double?)paper?["dim"] ?? 0,
-            focusX = (double?)paper?["focusX"] ?? 0.5,
-            focusY = (double?)paper?["focusY"] ?? 0.5,
-            muted = (bool?)paper?["muted"] ?? false,
-            volume = (double?)paper?["volume"] ?? 1,
-        };
-        using var response = await _http.PostAsJsonAsync("/appearance", patch, token).ConfigureAwait(false);
-        await KernelClient.EnsureAsync(response, token).ConfigureAwait(false);
-        return await BodyAsync<JsonObject>(response, token).ConfigureAwait(false);
-    }
+    public Task<JsonObject> SetAppearanceAsync(string? language, double? zoom, CancellationToken token) =>
+        PatchAppearanceAsync(language, zoom, null, null, null, null, token);
+
+    /// <summary>Changes just the chosen typography fields, retaining other appearance settings.</summary>
+    /// <param name="ui">UI font or null to retain it.</param>
+    /// <param name="mono">Monospace font or null to retain it.</param>
+    /// <param name="scale">UI text scale or null to retain it.</param>
+    /// <param name="read">Reading size or null to retain it.</param>
+    /// <param name="token">Cancels the write.</param>
+    /// <returns>The normalized appearance.</returns>
+    public Task<JsonObject> SetTypographyAsync(string? ui, string? mono, double? scale, double? read, CancellationToken token) =>
+        PatchAppearanceAsync(null, null, ui, mono, scale, read, token);
 
     /// <summary>Reads first-run setup for this session.</summary>
     /// <param name="token">Cancels the request.</param>
@@ -297,6 +287,49 @@ public sealed partial class StudioPageClient
     {
         return await response.Content.ReadFromJsonAsync<T>(cancellationToken: token).ConfigureAwait(false)
             ?? throw new JsonException("Expected a JSON object from the kernel.");
+    }
+
+    /// <summary>Applies a partial user edit to the server's full replacement payload.</summary>
+    /// <param name="language">Language tag.</param>
+    /// <param name="zoom">Window zoom.</param>
+    /// <param name="ui">UI font.</param>
+    /// <param name="mono">Code font.</param>
+    /// <param name="scale">UI text scale.</param>
+    /// <param name="read">Reading size.</param>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The acknowledged values.</returns>
+    private async Task<JsonObject> PatchAppearanceAsync(string? language, double? zoom, string? ui, string? mono, double? scale, double? read, CancellationToken token)
+    {
+        await _appearanceWrites.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            var current = await AppearanceAsync(token).ConfigureAwait(false);
+            var paper = current["wallpaper"] as JsonObject;
+            var patch = new
+            {
+                language = language ?? current["language"]?.GetValue<string>() ?? string.Empty,
+                zoom = zoom ?? (double?)current["zoom"] ?? 0,
+                readSize = read ?? (double?)current["readSize"] ?? 0,
+                textSize = scale ?? (double?)current["textSize"] ?? 0,
+                fontUi = ui ?? (string?)current["fontUi"] ?? string.Empty,
+                fontMono = mono ?? (string?)current["fontMono"] ?? string.Empty,
+                width = (string?)current["width"] ?? string.Empty,
+                widthPercent = (int?)current["widthPercent"] ?? 0,
+                opacity = (double?)paper?["opacity"] ?? 0,
+                dim = (double?)paper?["dim"] ?? 0,
+                focusX = (double?)paper?["focusX"] ?? 0.5,
+                focusY = (double?)paper?["focusY"] ?? 0.5,
+                muted = (bool?)paper?["muted"] ?? false,
+                volume = (double?)paper?["volume"] ?? 1,
+            };
+            using var response = await _http.PostAsJsonAsync("/appearance", patch, token).ConfigureAwait(false);
+            await KernelClient.EnsureAsync(response, token).ConfigureAwait(false);
+            return await BodyAsync<JsonObject>(response, token).ConfigureAwait(false);
+        }
+        finally
+        {
+            _appearanceWrites.Release();
+        }
     }
 
     /// <summary>Reads a typed JSON endpoint.</summary>

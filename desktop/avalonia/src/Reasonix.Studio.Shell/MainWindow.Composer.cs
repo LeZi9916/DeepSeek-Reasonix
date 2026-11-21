@@ -4,6 +4,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Reasonix.Studio.Contracts.Queue;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.Composer;
 using Reasonix.Studio.Pages.I18n;
@@ -207,13 +208,13 @@ public sealed partial class MainWindow
         text.Children.Add(new TextBlock
         {
             Text = row.Label,
-            FontSize = 11,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
             Opacity = 0.7,
         });
         text.Children.Add(new TextBlock
         {
             Text = row.Preview,
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             TextTrimming = TextTrimming.CharacterEllipsis,
         });
 
@@ -222,7 +223,7 @@ public sealed partial class MainWindow
             text.Children.Add(new TextBlock
             {
                 Text = why,
-                FontSize = 11,
+                [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
                 Opacity = 0.55,
                 TextWrapping = TextWrapping.Wrap,
             });
@@ -277,7 +278,7 @@ public sealed partial class MainWindow
         var button = new Button
         {
             Content = MessageCatalog.Get(key, Language),
-            FontSize = 11,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
             Padding = new Thickness(6, 2, 6, 2),
             Background = Brushes.Transparent,
         };

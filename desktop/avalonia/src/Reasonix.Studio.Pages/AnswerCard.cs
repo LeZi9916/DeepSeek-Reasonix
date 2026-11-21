@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.State.Transcript;
 using System;
@@ -40,8 +41,8 @@ internal sealed class AnswerCard : StackPanel
     internal AnswerCard(SayItem item, InterfaceLanguage language, Action<string> quote)
     {
         var heading = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Height = 25 };
-        heading.Children.Add(new TextBlock { Text = "◉", FontSize = 16, VerticalAlignment = VerticalAlignment.Center });
-        heading.Children.Add(new TextBlock { Text = "reasonix", FontWeight = FontWeight.SemiBold, FontSize = 13, VerticalAlignment = VerticalAlignment.Center });
+        heading.Children.Add(new TextBlock { Text = "◉", [!TextBlock.FontSizeProperty] = StudioTypography.Size(16), VerticalAlignment = VerticalAlignment.Center });
+        heading.Children.Add(new TextBlock { Text = "reasonix", FontWeight = FontWeight.SemiBold, [!TextBlock.FontSizeProperty] = StudioTypography.Size(13), VerticalAlignment = VerticalAlignment.Center });
         Children.Add(heading);
         _thought = ActionButton("›", MessageCatalog.Get(MessageKey.Chat.Thinking, language));
         _thought.Margin = new Thickness(0, 8, 0, 0);
@@ -55,9 +56,9 @@ internal sealed class AnswerCard : StackPanel
         };
         _answer = new SelectableTextBlock
         {
-            FontSize = 14,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Resource("StudioReadingSize"),
             FontWeight = FontWeight.Medium,
-            LineHeight = 24,
+            [!TextBlock.LineHeightProperty] = StudioTypography.Resource("StudioReadingHeight"),
             TextWrapping = TextWrapping.Wrap,
         };
         AutomationProperties.SetAutomationId(_answer, "class:txt");
@@ -138,7 +139,7 @@ internal sealed class AnswerCard : StackPanel
             Padding = new Thickness(3, 0),
             Background = Brushes.Transparent,
             BorderThickness = new Thickness(0),
-            FontSize = 12,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             HorizontalAlignment = HorizontalAlignment.Left,
         };
         AutomationProperties.SetName(button, label);
