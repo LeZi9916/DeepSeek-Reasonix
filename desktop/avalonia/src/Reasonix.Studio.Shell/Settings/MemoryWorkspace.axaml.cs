@@ -42,36 +42,50 @@ public sealed partial class MemoryWorkspace : SettingsFormView
     {
         Translate(language);
         PolicyRow.IsVisible = policy is not null;
-        Policy.ItemsSource = new[] { new Option("off", Text("memory.proactive_off")), new Option("ask", Text("memory.proactive_ask")), new Option("auto", Text("memory.proactive_auto")) };
-        Select(Policy, policy ?? "off");
-        Policy.SelectionChanged += async (_, _) =>
+        ManualHint.Text = Text("memory.to_write_one_yourself_use", ("cmd", "/remember"));
+        Decorate(Confirm, "check", Text("memory.thats_right"));
+        Decorate(Edit, "edit", Text("common.edit"));
+        Decorate(Archive, "archive", string.Empty);
+        PolicyChoices.Children.Clear();
+        foreach (var (id, key) in new[] { ("off", "memory.proactive_off"), ("ask", "memory.proactive_ask"), ("auto", "memory.proactive_auto") })
         {
-            if (!Policy.IsEnabled || Policy.SelectedItem is not Option option || option.Id == policy)
+            var button = new RadioButton { Content = Text(key), Tag = id, IsChecked = id == policy, Height = 29, MinWidth = 0, Margin = default, Padding = new Thickness(12, 0), FontSize = 12 };
+            button.Classes.Add("segmented");
+            AutomationProperties.SetAutomationId(button, "action:memory.proactive");
+            button.Click += async (_, _) =>
             {
-                return;
-            }
-
-            Policy.IsEnabled = false;
-            try
-            {
-                await api.SetMemoryPolicyAsync(option.Id, token).ConfigureAwait(true);
-                policy = await api.MemoryPolicyAsync(token).ConfigureAwait(true);
-                PolicyRow.IsVisible = policy is not null;
-                Select(Policy, policy ?? "off");
-            }
-            catch (Exception error)
-            {
-                if (!token.IsCancellationRequested)
+                if (policy == id || !PolicyChoices.IsEnabled)
                 {
-                    Select(Policy, policy ?? "off");
+                    return;
+                }
+
+                PolicyChoices.IsEnabled = false;
+                try
+                {
+                    await api.SetMemoryPolicyAsync(id, token).ConfigureAwait(true);
+                    policy = await api.MemoryPolicyAsync(token).ConfigureAwait(true);
+                    PolicyRow.IsVisible = policy is not null;
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                }
+                catch (Exception error)
+                {
                     Error(describe(error));
                 }
-            }
-            finally
-            {
-                Policy.IsEnabled = true;
-            }
-        };
+                finally
+                {
+                    foreach (var choice in PolicyChoices.Children.OfType<RadioButton>())
+                    {
+                        choice.IsChecked = Equals(choice.Tag, policy);
+                    }
+
+                    PolicyChoices.IsEnabled = true;
+                }
+            };
+            PolicyChoices.Children.Add(button);
+        }
+
         var flags = new HashSet<string>(StringComparer.Ordinal);
         var selected = string.Empty;
         string? editing = null;
@@ -299,6 +313,7 @@ public sealed partial class MemoryWorkspace : SettingsFormView
             Summary.Text = (string?)m["description"];
             Prose.Text = (string?)m["body"] ?? Text("memory.no_body");
             Facts.Text = (string?)m["path"];
+            Facts.IsVisible = !string.IsNullOrEmpty(Facts.Text);
             ContentFacts.Children.Clear();
             UseFacts.Children.Clear();
             Fact(ContentFacts, "common.type", types.First(o => o.Id == TypeOf(m)).Label);
@@ -315,13 +330,16 @@ public sealed partial class MemoryWorkspace : SettingsFormView
                 "global" => Text("memory.all_projects"),
                 var scope => scope ?? "—",
             });
-            Fact(UseFacts, "memory.state", Text((string?)m["state"] switch
+            var stateKey = (string?)m["state"] switch
             {
                 "fuzzy" => "memory.a_little_fuzzy_using_it",
                 "faded" => "memory.faded_recalled_after_everything_else",
+                _ when (bool?)m["noDecay"] == true => "memory.clear_and_it_never_fades",
+                _ when (int?)m["clearForDays"] > 0 => "memory.clear_for_about_n_more",
                 _ => "memory.clear",
-            }));
-            Fact(UseFacts, "session.recent", (string?)m["lastUsedAt"] ?? "—");
+            };
+            Fact(UseFacts, "memory.state", Text(stateKey, ("n", ((int?)m["clearForDays"] ?? 0).ToString(CultureInfo.CurrentCulture))));
+            Fact(UseFacts, "session.recent", (string?)m["lastUsedAt"] ?? Text("memory.not_recalled_yet"));
             Fact(UseFacts, "memory.used", Text("memory.n_times", ("n", ((int?)m["uses"] ?? 0).ToString(CultureInfo.CurrentCulture))));
             Fact(UseFacts, "memory.applies", Text((string?)m["activation"] == "pinned" ? "memory.in_every_turn" : "memory.recalled_when_relevant_2"));
             var revision = (int?)m["revision"] ?? 1;
@@ -331,10 +349,10 @@ public sealed partial class MemoryWorkspace : SettingsFormView
 
         void Fact(StackPanel group, string key, string value)
         {
-            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 6 };
-            var label = Caption(Text(key));
+            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("56,*"), ColumnSpacing = 10 };
+            var label = new DataParagraph { Text = Text(key), FontSize = 12, LineHeight = 17.390625, TextWrapping = TextWrapping.Wrap };
             label.Bind(TextBlock.ForegroundProperty, label.GetResourceObservable("MutedBrush"));
-            var content = Caption(value);
+            var content = new DataParagraph { Text = value, FontSize = 12, LineHeight = 17.390625, TextWrapping = TextWrapping.Wrap };
             Grid.SetColumn(content, 1);
             row.Children.Add(label);
             row.Children.Add(content);
@@ -355,7 +373,7 @@ public sealed partial class MemoryWorkspace : SettingsFormView
                 ("all", Text("common.all"), _ => true), ("new", Text("memory.new"), m => (bool?)m["new"] == true),
             };
             options.AddRange(types.Select(o => (o.Id, o.Label, (Func<JsonObject, bool>)(m => TypeOf(m) == o.Id))));
-            foreach (var g in items.Select(m => (string?)m["galaxy"]).Where(g => !string.IsNullOrEmpty(g)).Distinct().OrderBy(g => g))
+            foreach (var g in items.Select(m => (string?)m["galaxy"]).Where(g => !string.IsNullOrEmpty(g)).GroupBy(g => g).OrderByDescending(g => g.Count()).ThenBy(g => g.Key, StringComparer.CurrentCulture).Select(g => g.Key))
             {
                 options.Add(("galaxy:" + g, g!, m => (string?)m["galaxy"] == g));
             }
@@ -371,8 +389,39 @@ public sealed partial class MemoryWorkspace : SettingsFormView
             Categories.Children.Clear();
             foreach (var o in options)
             {
-                var option = new RadioButton { Content = o.Label + "  " + items.Count(o.Matches), IsChecked = o.Id == filter, HorizontalAlignment = HorizontalAlignment.Stretch };
-                option.Classes.Add("segmented");
+                if (o.Id == "user" || o.Id == "faded" || (o.Id.StartsWith("galaxy:", StringComparison.Ordinal) && !Categories.Children.OfType<TextBlock>().Any(c => Equals(c.Tag, "galaxies"))))
+                {
+                    Categories.Children.Add(new TextBlock
+                    {
+                        Text = o.Id == "user" ? Text("common.type") : o.Id == "faded" ? string.Empty : Text("memory.galaxy"),
+                        Tag = o.Id == "user" ? "types" : o.Id == "faded" ? "end" : "galaxies",
+                        Height = o.Id == "faded" ? 10 : 28,
+                        Padding = new Thickness(10, 8, 0, 0),
+                        FontSize = 11,
+                    });
+                }
+
+                var icon = o.Id.StartsWith("galaxy:", StringComparison.Ordinal)
+                    ? "galaxy"
+                    : o.Id switch
+                    {
+                        "new" => "fresh",
+                        "user" => "account",
+                        "project" => "folder",
+                        _ => o.Id,
+                    };
+                var content = new Grid { ColumnDefinitions = new ColumnDefinitions("16,*,Auto"), ColumnSpacing = 8 };
+                content.Children.Add(Glyph(icon, 16));
+                var label = new TextBlock { Text = o.Label, FontSize = 13, VerticalAlignment = VerticalAlignment.Center };
+                Grid.SetColumn(label, 1);
+                content.Children.Add(label);
+                var count = new TextBlock { Text = items.Count(o.Matches).ToString(CultureInfo.CurrentCulture), FontSize = 12, VerticalAlignment = VerticalAlignment.Center };
+                count.MinWidth = count.Text!.Length * 7.78125;
+                Grid.SetColumn(count, 2);
+                content.Children.Add(count);
+                var option = new RadioButton { Content = content, IsChecked = o.Id == filter, HorizontalAlignment = HorizontalAlignment.Stretch };
+                option.Classes.Add("memory-nav");
+                AutomationProperties.SetName(option, o.Label);
                 AutomationProperties.SetAutomationId(option, "action:memory.filter");
                 option.Click += (_, _) =>
                 {
@@ -383,6 +432,11 @@ public sealed partial class MemoryWorkspace : SettingsFormView
                 Categories.Children.Add(option);
             }
 
+            FormatRail();
+            var query = (string?)catalog["recallQuery"];
+            var used = items.Count(m => (bool?)m["usedLastTurn"] == true);
+            Recall.IsVisible = !string.IsNullOrWhiteSpace(query);
+            Recall.Text = Text("memory.last_turn_searched_memory_from", ("q", query ?? string.Empty)) + Text(used > 0 ? "memory.n_of_them_used" : "memory.none_of_them_used", ("n", used.ToString(CultureInfo.CurrentCulture)));
             var terms = (Search.Text ?? string.Empty).Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
             var matching = items.Where(currentFilter.Matches).Where(m =>
             {
@@ -400,10 +454,28 @@ public sealed partial class MemoryWorkspace : SettingsFormView
             {
                 var name = (string)m["name"]!;
                 var copy = new StackPanel { Spacing = 2 };
-                copy.Children.Add(new TextBlock { Text = (string?)m["title"] ?? name, FontWeight = FontWeight.Medium, TextWrapping = TextWrapping.Wrap });
-                copy.Children.Add(Caption(types.First(o => o.Id == TypeOf(m)).Label + " · " + ((string?)m["galaxy"] ?? Text("memory.no_galaxy"))));
-                var button = new Button { Content = copy, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(8, 6) };
-                button.Bind(Button.BackgroundProperty, button.GetResourceObservable(name == selected ? "RaisedBrush" : "SurfaceBrush"));
+                var titleLine = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 18.1875 };
+                titleLine.Children.Add(new TextBlock { Text = (string?)m["title"] ?? name, FontSize = 14, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
+                var badge = (bool?)m["new"] == true
+                    ? "common.new"
+                    : (string?)m["state"] switch
+                    {
+                        "fuzzy" => "memory.fading",
+                        "faded" => "memory.faded",
+                        _ => null,
+                    };
+                if (badge is not null)
+                {
+                    var status = Caption(Text(badge));
+                    Grid.SetColumn(status, 1);
+                    titleLine.Children.Add(status);
+                }
+
+                copy.Children.Add(titleLine);
+                copy.Children.Add(new TextBlock { Text = types.First(o => o.Id == TypeOf(m)).Label + " · " + ((string?)m["galaxy"] ?? Text("memory.no_galaxy")), FontSize = 11, Height = 16, TextTrimming = TextTrimming.CharacterEllipsis });
+                var button = new Button { Content = copy, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch, Padding = new Thickness(12, 9), Margin = new Thickness(0, 0, 8, 0) };
+                button.Classes.Add("memory-entry");
+                button.Bind(Button.BackgroundProperty, button.GetResourceObservable(name == selected ? "AccentWashBrush" : "SurfaceBrush"));
                 AutomationProperties.SetAutomationId(button, "action:memory.open");
                 AutomationProperties.SetName(button, (string?)m["title"] ?? name);
                 button.Click += (_, _) =>
@@ -438,6 +510,52 @@ public sealed partial class MemoryWorkspace : SettingsFormView
     /// <param name="id">Stored identity.</param>
     private static void Select(ComboBox box, string id) => box.SelectedItem = box.Items.OfType<Option>().FirstOrDefault(o => o.Id == id);
 
+    /// <summary>Uses the full category column on desktop and wraps the individual choices on compact windows.</summary>
+    private void FormatRail()
+    {
+        var width = Columns.Bounds.Width;
+        var compact = width <= 620;
+        foreach (var child in Categories.Children)
+        {
+            child.IsVisible = !compact || child is RadioButton;
+            child.Width = compact ? double.NaN : (width <= 900 ? 170 : 190) - 17;
+            child.Margin = compact ? new Thickness(0, 0, 4, 4) : default;
+        }
+
+        Categories.Margin = compact ? new Thickness(8, 12, 4, 8) : new Thickness(8, 12);
+    }
+
+    /// <summary>Draws a reference icon from the existing Lucide resources.</summary>
+    /// <param name="key">Icon name.</param>
+    /// <param name="size">Displayed size.</param>
+    /// <returns>The stroked icon.</returns>
+    private Control Glyph(string key, double size)
+    {
+        var path = new Avalonia.Controls.Shapes.Path { StrokeThickness = 1.7, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round };
+        path.Bind(Avalonia.Controls.Shapes.Path.DataProperty, this.GetResourceObservable("Glyph." + key));
+        path.Bind(Avalonia.Controls.Shapes.Shape.StrokeProperty, this.GetResourceObservable("MutedBrush"));
+        var canvas = new Canvas { Width = 24, Height = 24 };
+        canvas.Children.Add(path);
+        return new Viewbox { Width = size, Height = size, Child = canvas };
+    }
+
+    /// <summary>Labels an icon action and sizes its contents like the corresponding Electron button.</summary>
+    /// <param name="button">Native action.</param>
+    /// <param name="key">Icon name.</param>
+    /// <param name="label">Optional visible text.</param>
+    private void Decorate(Button button, string key, string label)
+    {
+        var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        content.Children.Add(Glyph(key, 14));
+        if (label.Length > 0)
+        {
+            content.Children.Add(new TextBlock { Text = label, FontSize = 12, VerticalAlignment = VerticalAlignment.Center });
+            button.MinWidth = 64;
+        }
+
+        button.Content = content;
+    }
+
     /// <summary>Matches the reference memory panel's two container breakpoints.</summary>
     /// <param name="width">Available panel width.</param>
     private void LayoutColumns(double width)
@@ -451,7 +569,10 @@ public sealed partial class MemoryWorkspace : SettingsFormView
             Columns.ColumnDefinitions[1].MaxWidth = 340;
         }
 
-        Categories.Orientation = narrow ? Orientation.Horizontal : Orientation.Vertical;
+        CategoryBorder.BorderThickness = narrow ? new Thickness(0, 0, 0, 1) : new Thickness(0, 0, 1, 0);
+        Catalog.BorderThickness = stacked ? default : new Thickness(0, 0, 1, 0);
+        DetailPane.Margin = new Thickness(22, stacked ? 19 : 18, 22, 18);
+        FormatRail();
         Grid.SetColumn(Catalog, narrow ? 0 : 1);
         Grid.SetRow(Catalog, narrow ? 1 : 0);
         Grid.SetColumn(DetailPane, stacked ? 0 : 2);

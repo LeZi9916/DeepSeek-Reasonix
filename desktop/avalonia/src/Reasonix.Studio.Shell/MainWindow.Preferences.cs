@@ -176,7 +176,7 @@ public sealed partial class MainWindow
         SettingsSearch.PlaceholderText = MessageCatalog.Get(MessageKey.Settings.SearchSettings, Language);
         SettingsSearch.Text = string.Empty;
         FilterPreferences();
-        SettingsSearch.Focus();
+        SettingsPanel.Focus();
     }
 
     /// <summary>Restores the existing session and draft after closing a full-window sheet.</summary>
@@ -235,6 +235,9 @@ public sealed partial class MainWindow
         _shownSettings = section;
         var ticket = ++_settingsRead;
         var parent = section.Split(':')[0];
+        SettingsBody.UseLayoutRounding = parent != "storage";
+        SettingsIndex.Padding = new Thickness(0, parent == "storage" ? 12 : 10);
+        SettingsPanel.Classes.Set("data-page", parent == "storage");
         SettingsHeadingBlock.IsVisible = true;
         SettingsHeading.Text = MessageCatalog.Get(s_sections.First(s => s.Id == parent).Title, Language);
         SettingsDescription.Text = SectionDescription(parent);
@@ -372,17 +375,9 @@ public sealed partial class MainWindow
                 case "storage":
                     if (api is not null)
                     {
-                        var catalog = await api.MemoriesAsync(_closing.Token).ConfigureAwait(true);
-                        var memories = new Settings.MemoryWorkspace { Tag = "data.memory" };
-                        Card(column, "data.memory_and_usage").Children.Add(memories);
-                        memories.Open(api, Language, catalog, await api.MemoryPolicyAsync(_closing.Token).ConfigureAwait(true), DescribeError, _closing.Token);
-                        if (TopLevel.GetTopLevel(memories) == this)
-                        {
-                            _unsavedSettings = () => memories.HasChanges;
-                        }
+                        await BuildDataPageAsync(column, api).ConfigureAwait(true);
                     }
 
-                    await ArchiveSettingsAsync(Card(column, "data.session_storage")).ConfigureAwait(true);
                     break;
                 case "ext" or "ext:market" when api is not null:
                     await PackageSettingsAsync(column, api, section == "ext:market").ConfigureAwait(true);

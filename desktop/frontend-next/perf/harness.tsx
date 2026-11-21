@@ -656,6 +656,8 @@ window.__nativeReference = async () => {
     "/auto-archive": port.autoArchive(), "/observability": port.observabilitySettings(),
     "/ask-timeout": port.askTimeout(), "/persona": port.persona(), "/network": port.network(),
     "/remotes": hub.remoteHosts(), "/remotes/wsl": hub.wslDistros(), "/remotes/candidates": hub.remoteCandidates(),
+    "/usage": port.usage({ days: 30 }), "/usage/upload": port.uploadUsage(30), "/storage": port.storage(),
+    "/display-currency": port.displayCurrency(), "/backups/file": port.backupFileCatalog(),
     "/memory/proactive": port.memoryProactive().then(mode => ({ mode })), "/memory/suggestions": port.memorySuggestions().then(suggestions => ({ suggestions })),
     "/memory": port.memories(), "/agent-presets": port.agentPresets(), "/agent-composition": port.agentComposition(), "/themes": port.themes(),
     "/account": port.account(), "/plugins": port.plugins(), "/market/packages": port.marketList({}),

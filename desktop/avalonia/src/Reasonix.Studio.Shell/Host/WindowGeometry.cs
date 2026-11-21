@@ -13,4 +13,5 @@ namespace Reasonix.Studio.Shell.Host;
 /// <param name="ReducedEffects">Whether to suppress decorative motion and shadows.</param>
 /// <param name="QueueDuringRun">Whether to queue a follow-up when a turn is running.</param>
 /// <param name="NewTaskPreset">Device-local default composition for new tasks.</param>
-public sealed record WindowGeometry(double? X, double? Y, double Width, double Height, bool Maximised, double RailWidth = 264, string? Theme = null, bool ReducedEffects = false, bool QueueDuringRun = false, string? NewTaskPreset = null);
+/// <param name="HideLegacySessions">Whether the project rail hides migrated sessions.</param>
+public sealed record WindowGeometry(double? X, double? Y, double Width, double Height, bool Maximised, double RailWidth = 264, string? Theme = null, bool ReducedEffects = false, bool QueueDuringRun = false, string? NewTaskPreset = null, bool HideLegacySessions = false);

@@ -37,6 +37,13 @@ public sealed record SessionStatus
     [JsonPropertyName("workspaceRoot")]
     public string WorkspaceRoot { get; init; } = string.Empty;
 
+    /// <summary>Gets the active session's working directory.</summary>
+    [JsonPropertyName("cwd")]
+    public string? Cwd
+    {
+        get; init;
+    }
+
     /// <summary>
     /// Gets the transcript the session writes to.
     /// </summary>

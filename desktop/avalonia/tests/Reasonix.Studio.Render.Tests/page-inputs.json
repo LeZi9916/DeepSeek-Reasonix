@@ -1409,5 +1409,463 @@
   },
   "/memory/suggestions": {
     "suggestions": []
+  },
+  "/usage": {
+    "from": "2026-11-09",
+    "to": "2026-11-21",
+    "tokens": 265921465,
+    "requests": 13296,
+    "turns": 1773,
+    "cache_hit": 244647749,
+    "cache_miss": 21273716,
+    "cost": [
+      {
+        "amount": "10.4882",
+        "currency": "CNY"
+      }
+    ],
+    "estimateCost": [
+      {
+        "amount": "6.3",
+        "currency": "CNY"
+      }
+    ],
+    "active_days": 11,
+    "top_model": "deepseek/deepseek-flash",
+    "top_provider": "deepseek",
+    "daily": [
+      {
+        "day": "2026-11-09",
+        "total": 0,
+        "byModel": {},
+        "byProvider": {},
+        "requests": 0,
+        "turns": 0,
+        "cacheHit": 0,
+        "cacheMiss": 0
+      },
+      {
+        "day": "2026-11-10",
+        "total": 34429281,
+        "byModel": {
+          "deepseek/deepseek-flash": 34429281
+        },
+        "byProvider": {
+          "deepseek": 34429281
+        },
+        "requests": 1721,
+        "turns": 230,
+        "cacheHit": 31674939,
+        "cacheMiss": 2754342
+      },
+      {
+        "day": "2026-11-11",
+        "total": 106429066,
+        "byModel": {
+          "deepseek/deepseek-flash": 106429066
+        },
+        "byProvider": {
+          "deepseek": 106429066
+        },
+        "requests": 5321,
+        "turns": 710,
+        "cacheHit": 97914741,
+        "cacheMiss": 8514325
+      },
+      {
+        "day": "2026-11-12",
+        "total": 45257473,
+        "byModel": {
+          "deepseek/deepseek-flash": 45257473
+        },
+        "byProvider": {
+          "deepseek": 45257473
+        },
+        "requests": 2263,
+        "turns": 302,
+        "cacheHit": 41636875,
+        "cacheMiss": 3620598
+      },
+      {
+        "day": "2026-11-13",
+        "total": 0,
+        "byModel": {},
+        "byProvider": {},
+        "requests": 0,
+        "turns": 0,
+        "cacheHit": 0,
+        "cacheMiss": 0
+      },
+      {
+        "day": "2026-11-14",
+        "total": 178805,
+        "byModel": {
+          "deepseek/deepseek-flash": 178805
+        },
+        "byProvider": {
+          "deepseek": 178805
+        },
+        "requests": 9,
+        "turns": 1,
+        "cacheHit": 164501,
+        "cacheMiss": 14304,
+        "cost": [
+          {
+            "amount": "0.028",
+            "currency": "CNY"
+          }
+        ]
+      },
+      {
+        "day": "2026-11-15",
+        "total": 795413,
+        "byModel": {
+          "deepseek/deepseek-flash": 795413
+        },
+        "byProvider": {
+          "deepseek": 795413
+        },
+        "requests": 40,
+        "turns": 5,
+        "cacheHit": 731780,
+        "cacheMiss": 63633,
+        "cost": [
+          {
+            "amount": "0.204",
+            "currency": "CNY"
+          }
+        ]
+      },
+      {
+        "day": "2026-11-16",
+        "total": 5910837,
+        "byModel": {
+          "deepseek/deepseek-flash": 5910837
+        },
+        "byProvider": {
+          "deepseek": 5910837
+        },
+        "requests": 296,
+        "turns": 39,
+        "cacheHit": 5437970,
+        "cacheMiss": 472867,
+        "cost": [
+          {
+            "amount": "1.107",
+            "currency": "CNY"
+          }
+        ]
+      },
+      {
+        "day": "2026-11-17",
+        "total": 27075946,
+        "byModel": {
+          "deepseek/deepseek-flash": 27075946
+        },
+        "byProvider": {
+          "deepseek": 27075946
+        },
+        "requests": 1354,
+        "turns": 181,
+        "cacheHit": 24909870,
+        "cacheMiss": 2166076,
+        "cost": [
+          {
+            "amount": "1.778",
+            "currency": "CNY"
+          }
+        ]
+      },
+      {
+        "day": "2026-11-18",
+        "total": 8447084,
+        "byModel": {
+          "deepseek/deepseek-flash": 8447084
+        },
+        "byProvider": {
+          "deepseek": 8447084
+        },
+        "requests": 422,
+        "turns": 56,
+        "cacheHit": 7771317,
+        "cacheMiss": 675767,
+        "cost": [
+          {
+            "amount": "0.440",
+            "currency": "CNY"
+          }
+        ]
+      },
+      {
+        "day": "2026-11-19",
+        "total": 31405730,
+        "byModel": {
+          "deepseek/deepseek-flash": 31405730
+        },
+        "byProvider": {
+          "deepseek": 31405730
+        },
+        "requests": 1570,
+        "turns": 209,
+        "cacheHit": 28893272,
+        "cacheMiss": 2512458,
+        "cost": [
+          {
+            "amount": "5.749",
+            "currency": "CNY"
+          }
+        ]
+      },
+      {
+        "day": "2026-11-20",
+        "total": 1672731,
+        "byModel": {
+          "deepseek/deepseek-flash": 1672731
+        },
+        "byProvider": {
+          "deepseek": 1672731
+        },
+        "requests": 84,
+        "turns": 11,
+        "cacheHit": 1538913,
+        "cacheMiss": 133818,
+        "cost": [
+          {
+            "amount": "0.330",
+            "currency": "CNY"
+          }
+        ],
+        "estimateCost": [
+          {
+            "amount": "3.5",
+            "currency": "CNY"
+          }
+        ]
+      },
+      {
+        "day": "2026-11-21",
+        "total": 4319099,
+        "byModel": {
+          "deepseek/deepseek-flash": 4319099
+        },
+        "byProvider": {
+          "deepseek": 4319099
+        },
+        "requests": 216,
+        "turns": 29,
+        "cacheHit": 3973571,
+        "cacheMiss": 345528,
+        "cost": [
+          {
+            "amount": "0.853",
+            "currency": "CNY"
+          }
+        ],
+        "estimateCost": [
+          {
+            "amount": "2.8",
+            "currency": "CNY"
+          }
+        ]
+      }
+    ],
+    "models": [
+      {
+        "model": "deepseek/deepseek-flash",
+        "provider": "deepseek",
+        "tokens": 158755115,
+        "percent": 59.7
+      },
+      {
+        "model": "deepseek-flash/deepseek-flash",
+        "provider": "deepseek-flash",
+        "tokens": 106634507,
+        "percent": 40.1
+      },
+      {
+        "model": "deepseek/deepseek-v4-pro",
+        "provider": "deepseek",
+        "tokens": 531843,
+        "percent": 0.2
+      }
+    ],
+    "providers": [
+      {
+        "provider": "deepseek",
+        "tokens": 159286958,
+        "percent": 59.9
+      },
+      {
+        "provider": "deepseek-flash",
+        "tokens": 106634507,
+        "percent": 40.1
+      }
+    ]
+  },
+  "/usage/upload": {
+    "from": "2026-11-08",
+    "to": "2026-11-21",
+    "bytes": 2373000000,
+    "requests": 1280,
+    "daily": [
+      {
+        "day": "2026-11-08",
+        "bytes": 0
+      },
+      {
+        "day": "2026-11-09",
+        "bytes": 18000000
+      },
+      {
+        "day": "2026-11-10",
+        "bytes": 240000000
+      },
+      {
+        "day": "2026-11-11",
+        "bytes": 410000000
+      },
+      {
+        "day": "2026-11-12",
+        "bytes": 95000000
+      },
+      {
+        "day": "2026-11-13",
+        "bytes": 0
+      },
+      {
+        "day": "2026-11-14",
+        "bytes": 0
+      },
+      {
+        "day": "2026-11-15",
+        "bytes": 120000000
+      },
+      {
+        "day": "2026-11-16",
+        "bytes": 760000000
+      },
+      {
+        "day": "2026-11-17",
+        "bytes": 330000000
+      },
+      {
+        "day": "2026-11-18",
+        "bytes": 40000000
+      },
+      {
+        "day": "2026-11-19",
+        "bytes": 0
+      },
+      {
+        "day": "2026-11-20",
+        "bytes": 210000000
+      },
+      {
+        "day": "2026-11-21",
+        "bytes": 150000000
+      }
+    ],
+    "providers": [
+      {
+        "provider": "deepseek",
+        "bytes": 2040780000,
+        "requests": 1100,
+        "percent": 86
+      },
+      {
+        "provider": "relay-work",
+        "bytes": 332220000,
+        "requests": 180,
+        "percent": 14
+      }
+    ]
+  },
+  "/storage": {
+    "editable": true,
+    "roots": [
+      {
+        "id": "state",
+        "dir": "C:/Users/you/AppData/Roaming/reasonix",
+        "bytes": 6800000000,
+        "files": 9612,
+        "relocatable": true,
+        "volume": "C:",
+        "volumeFree": 3100000000,
+        "volumeTotal": 476000000000
+      },
+      {
+        "id": "cache",
+        "dir": "C:/Users/you/AppData/Local/reasonix",
+        "bytes": 1900000000,
+        "files": 42,
+        "relocatable": true,
+        "volume": "C:",
+        "volumeFree": 3100000000,
+        "volumeTotal": 476000000000
+      },
+      {
+        "id": "worktrees",
+        "dir": "C:/Users/you/AppData/Local/reasonix/worktrees",
+        "bytes": 412000000,
+        "files": 1204,
+        "relocatable": true,
+        "volume": "C:",
+        "volumeFree": 3100000000,
+        "volumeTotal": 476000000000
+      },
+      {
+        "id": "home",
+        "dir": "C:/Users/you/AppData/Roaming/reasonix",
+        "bytes": 12288,
+        "files": 3,
+        "relocatable": false,
+        "volume": "C:",
+        "volumeFree": 3100000000,
+        "volumeTotal": 476000000000
+      },
+      {
+        "id": "locks",
+        "dir": "C:/Users/you/AppData/Local/reasonix",
+        "bytes": 0,
+        "files": 0,
+        "relocatable": false,
+        "missing": true
+      }
+    ]
+  },
+  "/display-currency": {
+    "mode": "auto",
+    "path": "/Users/you/.reasonix/config.toml",
+    "unconverted": []
+  },
+  "/backups/file": {
+    "categories": [
+      {
+        "id": "settings",
+        "defaultOn": true,
+        "consent": false
+      },
+      {
+        "id": "extensions",
+        "defaultOn": true,
+        "consent": false
+      },
+      {
+        "id": "memory",
+        "defaultOn": true,
+        "consent": false
+      },
+      {
+        "id": "automation",
+        "defaultOn": true,
+        "consent": true
+      },
+      {
+        "id": "secrets",
+        "defaultOn": false,
+        "consent": false
+      }
+    ],
+    "minPassphrase": 10
   }
 }

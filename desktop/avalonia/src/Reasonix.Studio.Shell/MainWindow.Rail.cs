@@ -68,7 +68,7 @@ public sealed partial class MainWindow
         var ticket = ++_treeRead;
         try
         {
-            var query = new TreeWindow { Query = RailSearch.Text?.Trim() ?? string.Empty };
+            var query = new TreeWindow { Query = RailSearch.Text?.Trim() ?? string.Empty, HideLegacy = HideLegacySessions };
             var tree = await _engine.TreeAsync(query, _closing.Token).ConfigureAwait(true);
             if (ticket == _treeRead)
             {

@@ -1,0 +1,66 @@
+{
+  "page": "settings-storage",
+  "toleranceDip": 0.5,
+  "results": [
+    {
+      "file": "1440x900-light.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "light",
+      "referenceNodes": 490,
+      "observedNodes": 77,
+      "counts": {
+        "box": 0,
+        "style": 375,
+        "missing": 414,
+        "extra": 1,
+        "token": 0
+      }
+    },
+    {
+      "file": "1440x900-dark.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "dark",
+      "referenceNodes": 490,
+      "observedNodes": 77,
+      "counts": {
+        "box": 0,
+        "style": 377,
+        "missing": 414,
+        "extra": 1,
+        "token": 0
+      }
+    },
+    {
+      "file": "760x480-light.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "light",
+      "referenceNodes": 476,
+      "observedNodes": 77,
+      "counts": {
+        "box": 0,
+        "style": 377,
+        "missing": 400,
+        "extra": 1,
+        "token": 0
+      }
+    },
+    {
+      "file": "760x480-dark.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "dark",
+      "referenceNodes": 476,
+      "observedNodes": 77,
+      "counts": {
+        "box": 0,
+        "style": 379,
+        "missing": 400,
+        "extra": 1,
+        "token": 0
+      }
+    }
+  ]
+}

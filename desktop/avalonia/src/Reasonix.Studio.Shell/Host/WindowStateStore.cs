@@ -59,7 +59,7 @@ public sealed class WindowStateStore
                 return Default();
             }
 
-            return new WindowGeometry(stored.X, stored.Y, stored.Width, stored.Height, stored.Maximised, stored.RailWidth, stored.Theme, stored.ReducedEffects, stored.QueueDuringRun, stored.NewTaskPreset);
+            return new WindowGeometry(stored.X, stored.Y, stored.Width, stored.Height, stored.Maximised, stored.RailWidth, stored.Theme, stored.ReducedEffects, stored.QueueDuringRun, stored.NewTaskPreset, stored.HideLegacySessions);
         }
         catch (Exception)
         {
@@ -100,6 +100,7 @@ public sealed class WindowStateStore
             ReducedEffects = geometry.ReducedEffects,
             QueueDuringRun = geometry.QueueDuringRun,
             NewTaskPreset = geometry.NewTaskPreset,
+            HideLegacySessions = geometry.HideLegacySessions,
         };
         var temporary = _path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
@@ -128,6 +129,12 @@ public sealed class WindowStateStore
     /// </summary>
     private sealed record Stored
     {
+        /// <summary>Gets a value indicating whether migrated sessions are hidden.</summary>
+        public bool HideLegacySessions
+        {
+            get; init;
+        }
+
         /// <summary>Gets the saved new-task composition.</summary>
         public string? NewTaskPreset
         {

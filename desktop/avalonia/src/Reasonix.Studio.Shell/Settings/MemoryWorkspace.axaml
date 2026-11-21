@@ -1,37 +1,53 @@
 <local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.MemoryWorkspace">
-  <StackPanel Spacing="8">
-    <TextBlock Tag="data.memory" FontWeight="SemiBold" FontSize="{DynamicResource StudioType15}"/>
-    <TextBlock Tag="settings.what_it_remembers" Foreground="{DynamicResource MutedBrush}"/>
-    <Grid Name="PolicyRow" ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,6">
-      <StackPanel Spacing="3"><TextBlock Tag="memory.proactive_title" FontWeight="Medium"/><TextBlock Tag="memory.proactive_hint" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/></StackPanel>
-      <ComboBox Name="Policy" Grid.Column="1" VerticalAlignment="Center" AutomationProperties.AutomationId="action:memory.proactive"/>
+  <local:SettingsFormView.Styles>
+    <Style Selector="RadioButton.memory-nav"><Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/><Setter Property="Height" Value="30"/><Setter Property="Padding" Value="10,0"/>
+      <Setter Property="Template"><ControlTemplate><Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="6"><ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Stretch" Content="{TemplateBinding Content}"/></Border></ControlTemplate></Setter>
+      <Setter Property="Background" Value="Transparent"/></Style>
+    <Style Selector="RadioButton.memory-nav:checked, RadioButton.memory-nav:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    <Style Selector="Button.memory-entry"><Setter Property="MinHeight" Value="0"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Template"><ControlTemplate><Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Stretch" VerticalAlignment="Center"/></Border></ControlTemplate></Setter></Style>
+    <Style Selector="Button.memory-entry:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  </local:SettingsFormView.Styles>
+  <StackPanel>
+    <StackPanel Orientation="Horizontal" Spacing="8"><TextBlock Tag="data.memory" FontWeight="SemiBold" Height="18.1875" FontSize="{DynamicResource StudioType14}"/><TextBlock Tag="settings.you_choose_where" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}"/></StackPanel>
+    <TextBlock Tag="settings.what_it_remembers" Height="16.796875" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" Margin="0,0,0,10"/>
+    <Grid Name="PolicyRow" MinHeight="61" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+      <StackPanel VerticalAlignment="Center" Spacing="3"><TextBlock Tag="memory.proactive_title" FontWeight="Medium"/><TextBlock Tag="memory.proactive_hint" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/></StackPanel>
+      <Border Grid.Column="1" VerticalAlignment="Top" Margin="0,13,0,0" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="7" ClipToBounds="True">
+        <StackPanel Name="PolicyChoices" Orientation="Horizontal"/>
+      </Border>
     </Grid>
     <StackPanel Name="Warnings"/>
     <TextBlock Name="Failure" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}" IsVisible="False"/>
     <Button Name="Reload" Tag="common.reload" IsVisible="False"/>
-    <Border BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}" CornerRadius="9" ClipToBounds="True">
-      <Grid Name="Columns" ColumnDefinitions="190,300,*" RowDefinitions="Auto,Auto,Auto" AutomationProperties.AutomationId="class:memgrid">
-        <WrapPanel Name="Categories" Orientation="Vertical" Margin="8,12"/>
-        <StackPanel Name="Catalog" Grid.Column="1" Spacing="4" Margin="10,12">
-          <TextBox Name="Search" Tag="memory.search_memory" AutomationProperties.AutomationId="action:memory.search"/>
+    <TextBlock Name="Recall" FontSize="{DynamicResource StudioType12}" LineHeight="18" TextWrapping="Wrap" Margin="0,0,0,12" Foreground="{DynamicResource FaintBrush}"/>
+    <Border AutomationProperties.AutomationId="class:memgrid" BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}" CornerRadius="9" ClipToBounds="True">
+      <Grid Name="Columns" ColumnDefinitions="190,300,*" RowDefinitions="Auto,Auto,Auto">
+        <Border Name="CategoryBorder" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,1,0"><WrapPanel Name="Categories" Orientation="Horizontal" Margin="8,12"/></Border>
+        <Border Name="Catalog" Grid.Column="1" Padding="8,12" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,1,0"><StackPanel Spacing="2">
+          <Border Margin="4,0,4,6" Padding="10,0" Height="30" BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" CornerRadius="5">
+            <Grid ColumnDefinitions="14,*" ColumnSpacing="8">
+              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.search}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="2"/></Canvas></Viewbox>
+              <TextBox Grid.Column="1" Name="Search" Tag="memory.search_memory" MinHeight="0" Height="17" FontSize="{DynamicResource StudioType12}" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Padding="0" AutomationProperties.AutomationId="action:memory.search"/>
+            </Grid>
+          </Border>
           <StackPanel Name="Entries" Spacing="2"/>
-        </StackPanel>
-        <StackPanel Name="DetailPane" Grid.Column="2" Margin="12" Spacing="9">
-          <StackPanel Name="Reader" Spacing="8">
-            <TextBlock Name="Heading" FontWeight="SemiBold" TextWrapping="Wrap" FontSize="{DynamicResource StudioType16}"/>
-            <TextBlock Name="Summary" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
-            <WrapPanel>
-              <Button Name="Confirm" Tag="memory.thats_right" Margin="0,0,5,0" AutomationProperties.AutomationId="action:memory.confirm"/>
-              <Button Name="Edit" Tag="common.edit" Margin="0,0,5,0" AutomationProperties.AutomationId="action:memory.edit"/>
-              <Button Name="Archive" Tag="common.archived_2" AutomationProperties.AutomationId="action:memory.forget"/>
-            </WrapPanel>
-            <Border Background="{DynamicResource PageBrush}" CornerRadius="6" Padding="10">
-              <ScrollViewer MaxHeight="220"><SelectableTextBlock Name="Prose" TextWrapping="Wrap"/></ScrollViewer>
+        </StackPanel></Border>
+        <StackPanel Name="DetailPane" Grid.Column="2" Margin="22,18" Spacing="14">
+          <StackPanel Name="Reader" Spacing="14">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"><StackPanel Spacing="3"><TextBlock Name="Heading" FontWeight="SemiBold" TextWrapping="Wrap" FontSize="17" LineHeight="22.9375"/>
+            <TextBlock Name="Summary" FontSize="12" LineHeight="18" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+            </StackPanel><StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+              <Button Name="Confirm" Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource AccentFgBrush}" CornerRadius="8" Tag="memory.thats_right" MinHeight="24" Height="24" Padding="8,0" VerticalAlignment="Top" AutomationProperties.AutomationId="action:memory.confirm"/>
+              <Button Name="Edit" CornerRadius="8" Tag="common.edit" MinHeight="24" Height="24" Padding="8,0" VerticalAlignment="Top" AutomationProperties.AutomationId="action:memory.edit"/>
+              <Button Name="Archive" Background="Transparent" BorderThickness="0" Tag="common.archived_2" MinHeight="0" MinWidth="0" Width="28" Height="28" Padding="4" VerticalAlignment="Top" AutomationProperties.AutomationId="action:memory.forget"/>
+            </StackPanel></Grid>
+            <Border Background="{DynamicResource PageBrush}" CornerRadius="6" Padding="12,10">
+              <ScrollViewer MaxHeight="220"><SelectableTextBlock Name="Prose" FontWeight="Medium" FontFamily="{DynamicResource DataReadingFamily}" FontSize="13" LineHeight="22.09375" TextWrapping="Wrap"/></ScrollViewer>
             </Border>
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
-              <StackPanel Spacing="6"><TextBlock Tag="memory.content" FontWeight="SemiBold"/><StackPanel Name="ContentFacts" Spacing="4"/></StackPanel>
-              <StackPanel Grid.Column="1" Spacing="6"><TextBlock Tag="memory.use" FontWeight="SemiBold"/><StackPanel Name="UseFacts" Spacing="4"/></StackPanel>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="20">
+              <StackPanel Spacing="6"><TextBlock Tag="memory.content" Height="16" FontSize="11" FontWeight="SemiBold"/><StackPanel Name="ContentFacts" Spacing="6"/></StackPanel>
+              <StackPanel Grid.Column="1" Spacing="6"><TextBlock Tag="memory.use" Height="16" FontSize="11" FontWeight="SemiBold"/><StackPanel Name="UseFacts" Spacing="6"/></StackPanel>
             </Grid>
             <TextBlock Name="Facts" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
             <Button Name="History" AutomationProperties.AutomationId="action:memory.history"/>
@@ -55,5 +71,6 @@
         </StackPanel>
       </Grid>
     </Border>
+    <TextBlock Name="ManualHint" FontSize="{DynamicResource StudioType13}" LineHeight="21.4375" MaxWidth="520.27" HorizontalAlignment="Left" Margin="0,11,0,0" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}"/>
   </StackPanel>
 </local:SettingsFormView>

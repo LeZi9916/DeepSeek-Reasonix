@@ -148,6 +148,10 @@ Open `editors.html` for four additional screenshot pairs covering memory editing
 
 The React capture also exports `page-inputs.json`. The native tests replay those same responses from their checked-in fixture. Refresh the fixture alongside an intentional reference change.
 
+The [data settings review](reviews/settings-storage/report.json) records the measured geometries for all four size/theme combinations. Its adjacent PNGs show Electron on the left and Avalonia on the right.
+
+To regenerate a page review after running the native render tests, run `node tools/baseline/review-page.mjs settings-storage` from `desktop/frontend-next` with the reference harness running.
+
 ### Parity checks and remaining verification
 
 | Area | Next implementation and acceptance check |

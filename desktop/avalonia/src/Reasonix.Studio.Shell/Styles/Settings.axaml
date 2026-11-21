@@ -59,4 +59,6 @@
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     <Setter Property="FontWeight" Value="Medium"/>
   </Style>
+  <Style Selector="Grid#SettingsPanel.data-page Border#SettingsIndex"><Setter Property="Padding" Value="0,12"/></Style>
+  <Style Selector="Grid#SettingsPanel.data-page Button.page-link"><Setter Property="Margin" Value="0,0,6,6"/><Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/></Style>
 </Styles>

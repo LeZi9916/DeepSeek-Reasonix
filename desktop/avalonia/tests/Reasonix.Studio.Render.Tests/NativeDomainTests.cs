@@ -210,6 +210,13 @@ public sealed partial class NativeDomainTests
 
                     if (target == "settings-storage")
                     {
+                        // Keep every previously observed box present while closing the original 32 discrepancies.
+                        var required = new[] { "class:prefs-pagetitle#0", "class:prefs-col#0", "class:prefs-card#0", "class:prefs-card#1", "class:memgrid#0", "action:memory.proactive#0", "action:memory.search#0", "action:memory.confirm#0", "action:memory.edit#0", "action:memory.forget#0", "class:srow#0", "class:srow-name#0", "class:srow-desc#0" }
+                            .Concat(Enumerable.Range(0, 12).Select(i => "action:memory.filter#" + i))
+                            .Concat(Enumerable.Range(0, 7).Select(i => "action:memory.open#" + i)).ToArray();
+                        Assert.All(required, key => Assert.True(tree.ContainsKey(key), key));
+                        Assert.DoesNotContain(findings, issue => issue.Kind == "box");
+
                         var page = window.FindControl<StackPanel>("SettingsBody")!;
                         var search = page.GetVisualDescendants().OfType<TextBox>().Single(c => AutomationProperties.GetAutomationId(c) == "action:memory.search");
                         search.Text = "no-coauthored-by";

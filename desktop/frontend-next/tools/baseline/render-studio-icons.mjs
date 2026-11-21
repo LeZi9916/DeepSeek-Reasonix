@@ -10,6 +10,8 @@ const icons = {
   common:"settings", model:"brain", session:"message-square", tools:"shield", ext:"plug", display:"monitor",
   controls:"keyboard", appearance:"palette", storage:"hard-drive", network:"globe", account:"user-round",
   advanced:"sliders-horizontal", back:"arrow-left", search:"search", folder:"folder", plus:"plus",
+  all:"layout-grid", fresh:"sparkle", constraint:"lock", feedback:"message-square-text", reference:"link",
+  galaxy:"orbit", faded:"circle-dashed", edit:"pencil", archive:"archive", check:"check",
   collapse:"panel-left-close", expand:"panel-left-open", agent:"bot",
 };
 

@@ -95,8 +95,8 @@ public sealed partial class NativeDomainTests
                     return null;
             }
         };
-        var policy = ControlAt<ComboBox>(w, "action:memory.proactive");
-        policy.SelectedIndex = policy.SelectedIndex == 2 ? 0 : 2;
+        var policy = w.GetVisualDescendants().OfType<RadioButton>().First(c => AutomationProperties.GetAutomationId(c) == "action:memory.proactive" && c.IsChecked != true);
+        policy.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Dispatcher.UIThread.RunJobs();
         Assert.Equal(1, policyWrites);
         ControlAt<TextBox>(w, "action:memory.search").Text = name;

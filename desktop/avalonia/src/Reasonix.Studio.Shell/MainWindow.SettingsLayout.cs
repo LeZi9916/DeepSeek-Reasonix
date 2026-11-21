@@ -129,6 +129,13 @@ public sealed partial class MainWindow
         var targets = column.GetLogicalDescendants().OfType<Control>()
             .Where(c => c.Tag is string key && s_destinations.Values.Any(keys => keys.Contains(key, StringComparer.Ordinal)))
             .DistinctBy(c => c.Tag).ToArray();
+        if (_shownSettings == "storage")
+        {
+            IndexDataSettings(targets);
+            return;
+        }
+
+        SettingsLinks.Margin = default;
         SettingsLinks.Children.Clear();
         SettingsIndex.IsVisible = targets.Length >= 3;
         if (!SettingsIndex.IsVisible)

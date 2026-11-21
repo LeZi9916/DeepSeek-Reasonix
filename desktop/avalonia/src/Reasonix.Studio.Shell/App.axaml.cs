@@ -108,6 +108,7 @@ public sealed partial class App : Application
             ReducedEffects = window.ReducedEffects,
             QueueDuringRun = window.QueueDuringRun,
             NewTaskPreset = window.NewTaskPreset,
+            HideLegacySessions = window.HideLegacySessions,
             Theme = window.RequestedThemeVariant?.Key as string,
         };
     }
@@ -167,6 +168,7 @@ public sealed partial class App : Application
         var geometry = store.Load();
         window.QueueDuringRun = geometry.QueueDuringRun;
         window.NewTaskPreset = geometry.NewTaskPreset;
+        window.HideLegacySessions = geometry.HideLegacySessions;
         window.SaveWindowPreferences = () => store.Save(GeometryOf(window));
         window.RestoreChrome(geometry.RailWidth, geometry.Theme, geometry.ReducedEffects);
 
