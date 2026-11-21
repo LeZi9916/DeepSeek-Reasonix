@@ -74,6 +74,7 @@ public sealed partial class NativeDomainTests
         ControlAt<TextBox>(w, "action:memory.search").Text = name;
         Dispatcher.UIThread.RunJobs();
         ClickAt(w, "action:memory.edit");
+        CaptureFlow(w, "memory-edit");
         var body = ControlAt<TextBox>(w, "field:memory.body");
         body.Text = "discarded";
         ClickAt(w, "action:memory.cancel");
@@ -90,6 +91,7 @@ public sealed partial class NativeDomainTests
         Assert.Equal(2, saves);
         Assert.False(body.IsEffectivelyVisible);
         ClickAt(w, "action:memory.history");
+        CaptureFlow(w, "memory-history");
         ClickAt(w, "action:memory.restore");
         Assert.Equal(1, restores);
         ClickAt(w, "action:memory.edit");
@@ -109,7 +111,7 @@ public sealed partial class NativeDomainTests
             using var reads = new ReferenceReads();
             using var http = new HttpClient(reads) { BaseAddress = new Uri("http://127.0.0.1:4000") };
             var engine = new SessionEngine(new KernelClient(http), new SseEventTransport(http.BaseAddress.ToString(), http));
-            var window = new MainWindow(false, engine, InterfaceLanguage.Zh, _ => Task.FromResult(false));
+            var window = new MainWindow(false, engine, InterfaceLanguage.Zh, _ => Task.FromResult(false)) { Width = 1440, Height = 900, RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light };
             window.Show();
             try
             {
@@ -122,6 +124,23 @@ public sealed partial class NativeDomainTests
             }
         },
             default);
+    }
+
+    /// <summary>Renders the settings state reached through the ordinary controls.</summary>
+    /// <param name="window">The active window.</param>
+    /// <param name="scene">The editor state.</param>
+    private static void CaptureFlow(MainWindow window, string scene)
+    {
+        var output = Environment.GetEnvironmentVariable("STUDIO_PARITY_OUTPUT");
+        if (string.IsNullOrEmpty(output))
+        {
+            return;
+        }
+
+        System.IO.Directory.CreateDirectory(output);
+        using var image = new Avalonia.Media.Imaging.RenderTargetBitmap(Avalonia.PixelSize.FromSize(window.ClientSize, 1), new Avalonia.Vector(96, 96));
+        image.Render(window);
+        image.Save(System.IO.Path.Combine(output, scene + ".light.png"), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
     }
 
     /// <summary>Gets one visible action or field from the mounted page.</summary>

@@ -60,7 +60,7 @@ section{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}figca
 img{display:block;width:100%;height:auto;border:1px solid #8885;box-sizing:border-box}a{color:inherit}
 </style><header><h1>Reasonix Studio 全部页面</h1><nav><label>主题 <select id="scheme"><option value="light">浅色</option><option value="dark">深色</option></select></label>
 <label>窗口 <select id="size"><option value="">1440 × 900</option><option value="-760x480">760 × 480</option></select></label>
-<a href="index.html">逐页查看尺寸和样式差异</a></nav></header><main></main><script>
+<a href="editors.html">记忆与代理预设</a><a href="index.html">逐页查看尺寸和样式差异</a></nav></header><main></main><script>
 const rows=${data}, pages=${JSON.stringify(pageNames)}, main=document.querySelector("main"), scheme=document.getElementById("scheme"), size=document.getElementById("size");
 function element(tag, content){const node=document.createElement(tag);if(content)node.textContent=content;return node;}
 function render(){
@@ -80,4 +80,16 @@ function render(){
 }
 scheme.onchange=size.onchange=render;render();</script></html>`;
 await writeFile(join(root, "overview.html"), overview);
+
+const flows = [
+  ["memory-edit", "编辑记忆"], ["memory-history", "记忆历史与恢复"],
+  ["preset-create", "创建代理预设"], ["preset-copy", "复制代理预设"],
+];
+for (const [name] of flows) {
+  await Promise.all(["native", "reference"].map(folder => access(join(root, folder, name + ".light.png"))));
+}
+const panels = flows.map(([name,title]) => `<article><h2>${title}</h2><section>${[["reference","Electron"],["native","Avalonia"]].map(([dir,label]) => `<figure><figcaption>${label}</figcaption><a href="${dir}/${name}.light.png"><img alt="${title} · ${label}" src="${dir}/${name}.light.png" width="1440" height="900"></a></figure>`).join("")}</section></article>`).join("");
+await writeFile(join(root, "editors.html"), `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>记忆与代理预设对照</title><style>:root{font:15px system-ui;color-scheme:light dark}body{margin:24px}h1{font-size:23px}h2{font-size:18px}section{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}figure{margin:0}figcaption{margin:0 0 6px}img{width:100%;height:auto}a{color:inherit}article{margin:24px 0}@media(max-width:760px){section{grid-template-columns:1fr}}</style>
+<a href="overview.html">全部页面</a><h1>记忆与代理预设</h1>${panels}</html>`);
 console.log(`${rows.length} paired renders in ${join(root, "index.html")}`);

@@ -138,6 +138,7 @@ To capture the React side, serve the production `perf.html` bundle following the
 STUDIO_PARITY_SHOTS="$PWD/../avalonia/bin/parity/reference" \
   STUDIO_BASELINE_OUT="$PWD/../avalonia/bin/parity/geometry" \
   PERF_CHANNEL=bundled node tools/baseline/collect.mjs
+PERF_CHANNEL=bundled node tools/baseline/capture-settings-flows.mjs
 node ../avalonia/tools/compare-pages.mjs
 ```
 

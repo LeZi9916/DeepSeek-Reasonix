@@ -61,6 +61,7 @@ public sealed partial class NativeDomainTests
                 return JsonReply(version);
             };
             ClickAt(w, "action:agent-preset.create");
+            CaptureFlow(w, "preset-create");
             var name = ControlAt<TextBox>(w, "field:agent-preset.name");
             Assert.False(ControlAt<Button>(w, "action:agent-preset.save").IsEnabled);
             name.Text = "personal review";
@@ -94,6 +95,7 @@ public sealed partial class NativeDomainTests
             Assert.Equal("version-3", expected);
             Assert.Equal("personal review", (string?)versions.Single(v => (string?)v?["definition"]?["id"] == "user:custom")!["definition"]!["name"]);
             ClickOn("action:agent-preset.copy", (string)source["id"]!);
+            CaptureFlow(w, "preset-copy");
             name.Text = "discard me";
             ClickAt(w, "action:agent-preset.back");
             w.FindControl<Button>("DiscardSettings")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
