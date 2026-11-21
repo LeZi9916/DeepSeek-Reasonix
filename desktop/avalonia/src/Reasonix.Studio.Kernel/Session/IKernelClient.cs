@@ -17,6 +17,12 @@ namespace Reasonix.Studio.Kernel.Session;
 /// </remarks>
 public interface IKernelClient
 {
+    /// <summary>Gets the endpoints backing native desktop pages.</summary>
+    StudioPageClient Pages
+    {
+        get;
+    }
+
     /// <summary>
     /// Reads the open session's status.
     /// </summary>

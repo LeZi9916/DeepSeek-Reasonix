@@ -8,6 +8,7 @@ using Reasonix.Studio.State.Transcript;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -205,6 +206,9 @@ public sealed class SessionEngine : IAsyncDisposable
     /// </remarks>
     public string Host => _host;
 
+    /// <summary>Gets the authenticated endpoints backing native pages.</summary>
+    public StudioPageClient Pages => _client.Pages;
+
     /// <summary>
     /// Gets the state as it stands.
     /// </summary>
@@ -223,6 +227,32 @@ public sealed class SessionEngine : IAsyncDisposable
     /// Gets the number of holes the stream could not close, for a diagnostic line.
     /// </summary>
     public int Gaps => Volatile.Read(ref _gaps);
+
+    /// <summary>Sends the answers and retains them on the same prompt when the kernel accepts them.</summary>
+    /// <param name="id">Kernel ask id.</param>
+    /// <param name="answers">Selections in question order.</param>
+    /// <param name="token">Cancels the write.</param>
+    /// <returns>The kernel acknowledgement.</returns>
+    public async Task AnswerAsync(string id, IReadOnlyList<QuestionSelection> answers, CancellationToken token)
+    {
+        await Pages.AnswerAsync(id, answers, token).ConfigureAwait(false);
+        SessionState next;
+        lock (_sync)
+        {
+            next = PromptDecisions.Answer(_state, id, answers.Select(answer => answer.Selected).ToArray());
+            _state = next;
+        }
+
+        Changed?.Invoke(next);
+    }
+
+    /// <summary>Requests cancellation of the active turn independently of the queue.</summary>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>The kernel acknowledgement.</returns>
+    public Task CancelTurnAsync(CancellationToken cancellationToken = default)
+    {
+        return _client.CancelTurnAsync(cancellationToken);
+    }
 
     /// <summary>
     /// Reads what the kernel says about the session before anything is folded.

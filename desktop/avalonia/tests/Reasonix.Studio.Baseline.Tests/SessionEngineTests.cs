@@ -245,6 +245,9 @@ public sealed class SessionEngineTests
     /// </summary>
     private sealed class FakeClient : IKernelClient
     {
+        /// <inheritdoc/>
+        public StudioPageClient Pages => throw new NotSupportedException();
+
         /// <summary>
         /// Gets or sets the messages a history read answers.
         /// </summary>

@@ -32,6 +32,19 @@ public sealed class SessionReducerRowTests
         Assert.Equal("allow", row.Assessment.Outcome);
     }
 
+    /// <summary>A question answered in another window stays closed when its request is replayed.</summary>
+    /// <returns>The replay check.</returns>
+    [Fact]
+    public async Task AReceiptSealsTheQuestionAcrossReplay()
+    {
+        var (reducer, _) = New();
+        const string Request = """{"kind":"ask_request","ask":{"id":"q1","questions":[]}}""";
+        var state = await Fold(reducer, new SessionState(), Request);
+        state = await Fold(reducer, state, """{"kind":"notice","code":"decision_receipt","decisionReceipt":{"id":"q1","kind":"ask","outcome":"answered","subject":"chosen"}}""");
+        state = await Fold(reducer, state, Request);
+        Assert.NotNull(Assert.Single(state.Items.OfType<AskItem>()).Answered);
+    }
+
     /// <summary>
     /// Checks that a question becomes its own row and says the turn is waiting.
     /// </summary>

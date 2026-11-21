@@ -44,7 +44,7 @@ public sealed class CredentialHandler : DelegatingHandler
     /// <param name="inner">The handler that sends the request, or null to send it directly.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="cookie"/> is null.</exception>
     public CredentialHandler(LaunchCookie cookie, HttpMessageHandler? inner = null)
-        : base(inner ?? new HttpClientHandler())
+        : base(inner ?? new HttpClientHandler { UseProxy = false })
     {
         _cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
         _origin = cookie.Origin;

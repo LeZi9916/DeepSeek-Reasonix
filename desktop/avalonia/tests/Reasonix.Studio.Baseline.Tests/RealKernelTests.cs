@@ -3,6 +3,7 @@ using Reasonix.Studio.Kernel.Session;
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -14,16 +15,8 @@ namespace Reasonix.Studio.Baseline.Tests;
 /// announcing a real origin and a real credential.
 /// </summary>
 /// <remarks>
-/// Every other case in this suite fakes one side. This one fakes nothing: the
-/// handshake is the kernel's own line, the socket is its own listener, and the gate
-/// that admits or refuses each request is the kernel's own code. It is skipped rather
-/// than failed when the binary is not beside the tests, because a machine without a
-/// built kernel proves nothing about this shell — and a test that fails there would be
-/// switched off everywhere.
-///
-/// The kernel is started with no page and no provider configured. That is deliberate:
-/// what is being proven is the boundary and the read path, and a provider would make
-/// the case depend on a network and a key nobody supplied.
+/// CI supplies the host beside the test assembly. Reads, terminal I/O and the
+/// credential check run locally without a provider key.
 /// </remarks>
 public sealed class RealKernelTests
 {
@@ -38,6 +31,7 @@ public sealed class RealKernelTests
         var binary = HostLauncher.Locate();
         if (binary is null)
         {
+            Assert.NotEqual("1", Environment.GetEnvironmentVariable("STUDIO_TEST_HOST_REQUIRED"));
             return;
         }
 
@@ -61,10 +55,50 @@ public sealed class RealKernelTests
         // it answered at all, through a gate that accepted this launch's credential.
         Assert.NotNull(status);
 
+        var appearance = await client.Pages.AppearanceAsync(launchTimeout.Token);
+        Assert.NotNull(appearance["zoomRange"]);
+        var tree = await client.Pages.FilesAsync(string.Empty, string.Empty, launchTimeout.Token);
+        Assert.NotNull(tree.Files);
+        Assert.NotNull(await client.Pages.ModelsAsync(launchTimeout.Token));
+        await CheckTerminalAsync(client.Pages, launchTimeout.Token);
+
         // The same read without the credential is the gate refusing it, which is what
         // makes the first answer mean something.
         using var anonymous = new HttpClient { BaseAddress = kernel.Origin };
         using var refused = await anonymous.GetAsync("/status", launchTimeout.Token);
         Assert.Equal(HttpStatusCode.Forbidden, refused.StatusCode);
+    }
+
+    /// <summary>Checks real PTY input, resize, streamed output and close over the same authenticated client.</summary>
+    /// <param name="api">The session page endpoints.</param>
+    /// <param name="token">Cancels the smoke test.</param>
+    /// <returns>The observed output.</returns>
+    private static async Task CheckTerminalAsync(StudioPageClient api, CancellationToken token)
+    {
+        var id = await api.OpenTerminalAsync(token);
+        try
+        {
+            await api.TerminalSizeAsync(id, 90, 30, token);
+            const string Marker = "reasonix-terminal-check";
+            await api.TerminalInputAsync(id, "echo " + Marker + "\r", token);
+            var received = new StringBuilder();
+            await foreach (var frame in api.TerminalOutputAsync(id, token))
+            {
+                if (frame.Data is { Length: > 0 } data)
+                {
+                    received.Append(Encoding.UTF8.GetString(Convert.FromBase64String(data)));
+                    if (received.ToString().Contains(Marker, StringComparison.Ordinal))
+                    {
+                        return;
+                    }
+                }
+            }
+
+            Assert.Fail("The PTY stream ended before reporting the submitted input.");
+        }
+        finally
+        {
+            await api.CloseTerminalAsync(id, token);
+        }
     }
 }

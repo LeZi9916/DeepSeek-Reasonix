@@ -40,6 +40,13 @@ public sealed partial class KernelClient : Session.IKernelClient, IDisposable
     public KernelClient(HttpClient http)
     {
         _http = http ?? throw new ArgumentNullException(nameof(http));
+        Pages = new StudioPageClient(_http);
+    }
+
+    /// <inheritdoc/>
+    public StudioPageClient Pages
+    {
+        get;
     }
 
     /// <summary>
@@ -297,7 +304,7 @@ public sealed partial class KernelClient : Session.IKernelClient, IDisposable
     /// <param name="cancellationToken">Cancels the body read.</param>
     /// <returns>A task that completes when the answer was successful.</returns>
     /// <exception cref="KernelRefusal">Thrown with the status, code and detail the kernel sent.</exception>
-    private static async Task EnsureAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    internal static async Task EnsureAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         if (response.IsSuccessStatusCode)
         {

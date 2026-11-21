@@ -3,6 +3,7 @@ using Reasonix.Studio.Contracts.Wire;
 using Reasonix.Studio.State.Transcript;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 
 namespace Reasonix.Studio.State;
@@ -102,7 +103,8 @@ public sealed class SessionReducer
             return state;
         }
 
-        var next = Apply(state, payload);
+        var sealedState = payload.DecisionReceipt is { } receipt ? PromptDecisions.Receipt(state, receipt) : state;
+        var next = payload.Kind == "notice" && payload.Code == "decision_receipt" ? sealedState : Apply(sealedState, payload);
         if (ReferenceEquals(next.Items, state.Items))
         {
             return next;
@@ -628,7 +630,7 @@ public sealed class SessionReducer
                 return ApplySteer(state, payload);
 
             case "approval_request":
-                return payload.Approval is null
+                return payload.Approval is null || state.Items.OfType<ApprovalItem>().Any(item => item.Approval.ID == payload.Approval.ID)
                     ? state
                     : state with
                     {
@@ -641,7 +643,7 @@ public sealed class SessionReducer
                     };
 
             case "ask_request":
-                return payload.Ask is null
+                return payload.Ask is null || state.Items.OfType<AskItem>().Any(item => item.Ask.ID == payload.Ask.ID)
                     ? state
                     : state with
                     {
@@ -874,7 +876,8 @@ public sealed class SessionReducer
             ? Array.Empty<PlanStep>()
             : state.Plan;
 
-        var items = _text.Seal(state.Items, all: true, ThoughtCutFor(payload));
+        IReadOnlyList<TranscriptItem> items = _text.Seal(state.Items, all: true, ThoughtCutFor(payload))
+            .Where(item => item is not AskItem { Answered: null } and not ApprovalItem { Open: true }).ToArray();
 
         // The kernel's own figure, not this screen's clock: a local one would
         // disagree with a reload. Under half a second it rounds to nothing worth

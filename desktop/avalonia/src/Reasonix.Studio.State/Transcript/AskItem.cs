@@ -20,6 +20,18 @@ public sealed record AskItem : TranscriptItem
         get; init;
     }
 
+    /// <summary>Gets the recorded outcome, including a timed-out request.</summary>
+    public string? Outcome
+    {
+        get; init;
+    }
+
+    /// <summary>Gets the receipt's summary when another window answered.</summary>
+    public string? Subject
+    {
+        get; init;
+    }
+
     /// <summary>
     /// Gets the answers already given, one set per question, or null while it is open.
     /// </summary>
