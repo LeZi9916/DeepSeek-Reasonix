@@ -354,6 +354,21 @@ public sealed partial class MainWindow
                     break;
                 case "network" when api is not null:
                     await NetworkSettingsAsync(Card(column, "common.network"), api).ConfigureAwait(true);
+                    var remotes = await api.RemoteHostsAsync(_closing.Token).ConfigureAwait(true);
+                    if (remotes is not null)
+                    {
+                        var aliases = await api.RemoteCandidatesAsync(_closing.Token).ConfigureAwait(true);
+                        var distros = await api.RemoteDistrosAsync(_closing.Token).ConfigureAwait(true);
+                        var book = new Settings.RemoteBook { Tag = "remote.add_a_machine" };
+                        Card(column, "remote.machine").Children.Add(book);
+                        book.Open(api, remotes, aliases, distros, Language, DescribeError, _closing.Token);
+                        if (TopLevel.GetTopLevel(book) == this)
+                        {
+                            var proxyDirty = _unsavedSettings;
+                            _unsavedSettings = () => book.HasChanges || proxyDirty?.Invoke() == true;
+                        }
+                    }
+
                     break;
                 case "account" when api is not null:
                     var account = await api.AccountAsync(_closing.Token).ConfigureAwait(true);

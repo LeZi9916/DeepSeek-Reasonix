@@ -655,6 +655,7 @@ window.__nativeReference = async () => {
     "/providers/health/settings": port.providerHealthSettings(), "/browser-tools": port.browserTools(),
     "/auto-archive": port.autoArchive(), "/observability": port.observabilitySettings(),
     "/ask-timeout": port.askTimeout(), "/persona": port.persona(), "/network": port.network(),
+    "/remotes": hub.remoteHosts(), "/remotes/wsl": hub.wslDistros(), "/remotes/candidates": hub.remoteCandidates(),
     "/memory": port.memories(), "/agent-presets": port.agentPresets(), "/themes": port.themes(),
     "/account": port.account(), "/plugins": port.plugins(), "/market/packages": port.marketList({}),
   };

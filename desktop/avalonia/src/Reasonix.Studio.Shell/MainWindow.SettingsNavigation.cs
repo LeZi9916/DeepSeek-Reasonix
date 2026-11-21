@@ -26,7 +26,7 @@ public sealed partial class MainWindow
         ["controls"] = ["settings.keyboard_shortcuts", "composer.send_shortcut", "settings.messages_sent_while_running"],
         ["appearance"] = ["settings.light_and_dark", "look.interface_theme", "look.visual_effects", "look.interface_size"],
         ["storage"] = ["data.memory", "data.auto_archive_inactive_conversations"],
-        ["network"] = ["models.proxy_mode", "models.test_saved_settings"],
+        ["network"] = ["models.proxy_mode", "models.test_saved_settings", "remote.add_a_machine"],
         ["account"] = ["settings.account", "about.current_version", "data.trace_export", "feedback.open_logs_folder"],
         ["advanced"] = ["settings.not_in_this_version_yet", "feedback.open_logs_folder"],
     };

@@ -1,0 +1,29 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.RemoteBook">
+ <StackPanel Spacing="8">
+  <StackPanel Name="List" Spacing="6"><StackPanel Name="Rows" Spacing="4"/><WrapPanel>
+   <Button Name="Add" Tag="remote.add_a_machine" AutomationProperties.AutomationId="action:remote.add"/>
+   <ComboBox Name="Aliases" Margin="6,0,0,0" MaxWidth="300" IsVisible="False"/>
+  </WrapPanel></StackPanel>
+  <StackPanel Name="Editor" IsVisible="False" MaxWidth="700" HorizontalAlignment="Stretch" Spacing="6">
+   <StackPanel Spacing="2"><TextBlock Tag="common.name"/><TextBox Name="MachineName" AutomationProperties.AutomationId="field:remote.name" /></StackPanel>
+   <ComboBox Name="Kind" HorizontalAlignment="Stretch"/>
+   <ComboBox Name="Distro" HorizontalAlignment="Stretch"/>
+   <StackPanel Name="Ssh" Spacing="6">
+    <StackPanel Spacing="2"><TextBlock Tag="remote.address"/><TextBox Name="Host" AutomationProperties.AutomationId="field:remote.host" /></StackPanel>
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="10"><StackPanel Spacing="2"><TextBlock Tag="common.port"/><NumericUpDown Name="Port" Minimum="0" Maximum="65535" FormatString="0"/></StackPanel><StackPanel Grid.Column="1" Spacing="2"><TextBlock Tag="remote.user"/><TextBox Name="User"/></StackPanel></Grid>
+    <CheckBox Name="SshConfig" Tag="remote.take_anything_left_blank_from"/>
+    <StackPanel Spacing="2"><TextBlock Tag="remote.private_key_file"/><TextBox Name="Identity" AutomationProperties.AutomationId="field:remote.identity" /></StackPanel>
+    <StackPanel Spacing="2"><TextBlock Tag="remote.jump_host"/><TextBox Name="Jump" AutomationProperties.AutomationId="field:remote.jump" /></StackPanel>
+    <StackPanel Spacing="2"><TextBlock Tag="remote.env_var_holding_the_key"/><TextBox Name="Passphrase" AutomationProperties.AutomationId="field:remote.passphrase" /></StackPanel>
+    <StackPanel Spacing="2"><TextBlock Tag="remote.env_var_with_the_password"/><TextBox Name="PasswordEnv" AutomationProperties.AutomationId="field:remote.passwordenv" /></StackPanel>
+   </StackPanel>
+   <StackPanel Spacing="2"><TextBlock Tag="remote.projects_on_this_machine"/><TextBox Name="Paths" AutomationProperties.AutomationId="field:remote.paths" AcceptsReturn="True" MinHeight="56"/></StackPanel>
+   <StackPanel Spacing="2"><TextBlock Tag="remote.model_credentials"/><ComboBox Name="Provider" HorizontalAlignment="Stretch"/></StackPanel>
+   <StackPanel Spacing="2"><TextBlock Tag="remote.installing"/><ComboBox Name="Installer" HorizontalAlignment="Stretch"/></StackPanel>
+   <CheckBox Name="Disabled" Tag="common.suspended"/>
+   <WrapPanel><Button Name="Save" Tag="common.save" AutomationProperties.AutomationId="action:remote.save"/><Button Name="Cancel" Tag="common.cancel" Margin="6,0" AutomationProperties.AutomationId="action:remote.cancel"/></WrapPanel>
+  </StackPanel>
+  <TextBlock Name="Result" IsVisible="False" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+ </StackPanel>
+</local:SettingsFormView>

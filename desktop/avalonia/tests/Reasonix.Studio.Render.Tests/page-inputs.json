@@ -1350,5 +1350,57 @@
         }
       }
     }
+  ],
+  "/remotes": [
+    {
+      "name": "gpu-box",
+      "target": "ada@10.0.0.4",
+      "workspace": "/srv/training",
+      "workspaces": [
+        "/srv/training",
+        "/srv/eval",
+        "/home/ada/notes"
+      ],
+      "status": "connected",
+      "panes": 1
+    },
+    {
+      "name": "builder",
+      "target": "ada@build.internal",
+      "workspace": "~/work",
+      "workspaces": [
+        "~/work"
+      ],
+      "status": "connecting",
+      "step": "install",
+      "detail": "npm"
+    },
+    {
+      "name": "spare",
+      "target": "10.0.0.9",
+      "status": "idle"
+    }
+  ],
+  "/remotes/wsl": {
+    "available": true,
+    "distros": [
+      {
+        "name": "Ubuntu-24.04",
+        "version": 2,
+        "default": true
+      },
+      {
+        "name": "Debian",
+        "version": 2
+      },
+      {
+        "name": "Alpine-legacy",
+        "version": 1
+      }
+    ]
+  },
+  "/remotes/candidates": [
+    "attic",
+    "old-laptop"
   ]
 }
