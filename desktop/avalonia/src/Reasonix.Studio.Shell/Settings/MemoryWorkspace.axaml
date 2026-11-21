@@ -1,0 +1,47 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.MemoryWorkspace">
+  <StackPanel Spacing="8">
+    <TextBlock Tag="data.memory" FontWeight="SemiBold" FontSize="15"/>
+    <TextBlock Tag="settings.what_it_remembers" Foreground="{DynamicResource MutedBrush}"/>
+    <StackPanel Name="Warnings"/>
+    <TextBlock Name="Failure" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}" IsVisible="False"/>
+    <Button Name="Reload" Tag="common.reload" IsVisible="False"/>
+    <Border BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}" CornerRadius="9" ClipToBounds="True">
+      <Grid Name="Columns" ColumnDefinitions="190,300,*" RowDefinitions="Auto,Auto,Auto" AutomationProperties.AutomationId="class:memgrid">
+        <WrapPanel Name="Categories" Orientation="Vertical" Margin="8,12"/>
+        <StackPanel Name="Catalog" Grid.Column="1" Spacing="4" Margin="10,12">
+          <TextBox Name="Search" Tag="memory.search_memory" AutomationProperties.AutomationId="action:memory.search"/>
+          <StackPanel Name="Entries" Spacing="2"/>
+        </StackPanel>
+        <StackPanel Name="DetailPane" Grid.Column="2" Margin="12" Spacing="9">
+          <StackPanel Name="Reader" Spacing="8">
+            <TextBlock Name="Heading" FontWeight="SemiBold" TextWrapping="Wrap" FontSize="16"/>
+            <TextBlock Name="Summary" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+            <Button Name="Edit" Tag="common.edit" AutomationProperties.AutomationId="action:memory.edit"/>
+            <Border Background="{DynamicResource PageBrush}" CornerRadius="6" Padding="10">
+              <ScrollViewer MaxHeight="220"><SelectableTextBlock Name="Prose" TextWrapping="Wrap"/></ScrollViewer>
+            </Border>
+            <TextBlock Name="Facts" FontSize="12" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+            <Button Name="History" AutomationProperties.AutomationId="action:memory.history"/>
+            <StackPanel Name="Revisions" IsVisible="False" Spacing="6"/>
+          </StackPanel>
+          <StackPanel Name="Editor" IsVisible="False" Spacing="7">
+            <StackPanel Spacing="3"><TextBlock Tag="memory.titling"/><TextBox Name="Title" AutomationProperties.AutomationId="field:memory.title" /></StackPanel>
+            <StackPanel Spacing="3"><TextBlock Tag="memory.one_line_summary"/><TextBox Name="Description" AutomationProperties.AutomationId="field:memory.description" /></StackPanel>
+            <StackPanel Spacing="3"><TextBlock Tag="common.body_text"/><TextBox Name="Body" AutomationProperties.AutomationId="field:memory.body" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="112"/></StackPanel>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+              <StackPanel Spacing="3"><TextBlock Tag="common.type"/><ComboBox Name="Kind" AutomationProperties.AutomationId="field:memory.kind" HorizontalAlignment="Stretch"/></StackPanel>
+              <StackPanel Grid.Column="1" Spacing="3"><TextBlock Tag="memory.importance"/><ComboBox Name="Importance" HorizontalAlignment="Stretch"/></StackPanel>
+            </Grid>
+            <StackPanel Spacing="3"><TextBlock Tag="memory.galaxy"/><TextBox Name="Galaxy" AutomationProperties.AutomationId="field:memory.galaxy" /></StackPanel>
+            <StackPanel Spacing="3"><TextBlock Tag="memory.when_it_applies"/><ComboBox Name="Activation" AutomationProperties.AutomationId="field:memory.activation" HorizontalAlignment="Stretch"/></StackPanel>
+            <WrapPanel>
+              <Button Name="Save" Tag="common.save" Margin="0,0,6,0" AutomationProperties.AutomationId="action:memory.save"/>
+              <Button Name="Cancel" Tag="common.cancel" AutomationProperties.AutomationId="action:memory.cancel"/>
+            </WrapPanel>
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+    </Border>
+  </StackPanel>
+</local:SettingsFormView>

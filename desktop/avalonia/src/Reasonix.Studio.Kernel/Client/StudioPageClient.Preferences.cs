@@ -81,6 +81,30 @@ public sealed partial class StudioPageClient
     /// <returns>The memory catalog.</returns>
     public Task<JsonObject> MemoriesAsync(CancellationToken token) => ReadAsync<JsonObject>("/memory", token);
 
+    /// <summary>Saves the editable fields of an existing memory.</summary>
+    /// <param name="edit">The fact name and editable fields.</param>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The store acknowledgement.</returns>
+    public Task SaveMemoryAsync(JsonObject edit, CancellationToken token) => PostAsync("/memory/save", edit, token);
+
+    /// <summary>Reads the audit history for a named fact.</summary>
+    /// <param name="name">The fact identity.</param>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The stored revisions.</returns>
+    public async Task<JsonArray> MemoryRevisionsAsync(string name, CancellationToken token)
+    {
+        var history = await ReadAsync<JsonObject>("/memory/revisions?name=" + System.Uri.EscapeDataString(name), token).ConfigureAwait(false);
+        return history["revisions"]?.AsArray() ?? new JsonArray();
+    }
+
+    /// <summary>Appends a new current revision from an earlier version.</summary>
+    /// <param name="name">The fact identity.</param>
+    /// <param name="revision">The recorded revision number.</param>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The store acknowledgement.</returns>
+    public Task RestoreMemoryAsync(string name, int revision, CancellationToken token) =>
+        PostAsync("/memory/restore", new JsonObject { ["name"] = name, ["revision"] = revision }, token);
+
     /// <summary>Reads the agent preset definitions available to this workspace.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The preset catalog.</returns>

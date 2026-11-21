@@ -32,7 +32,7 @@ using Xunit.Abstractions;
 namespace Reasonix.Studio.Render.Tests;
 
 /// <summary>Opens each indexed reference screen through the native window and compares its visible tree.</summary>
-public sealed class NativeDomainTests
+public sealed partial class NativeDomainTests
 {
     /// <summary>Per-case gate output.</summary>
     private readonly ITestOutputHelper _output;
@@ -214,10 +214,10 @@ public sealed class NativeDomainTests
                         var search = page.GetVisualDescendants().OfType<TextBox>().Single(c => AutomationProperties.GetAutomationId(c) == "action:memory.search");
                         search.Text = "no-coauthored-by";
                         Dispatcher.UIThread.RunJobs();
-                        Assert.Single(page.GetVisualDescendants().OfType<Expander>(), c => AutomationProperties.GetAutomationId(c) == "action:memory.open");
+                        Assert.Single(page.GetVisualDescendants().OfType<Button>(), c => AutomationProperties.GetAutomationId(c) == "action:memory.open");
                         search.Text = "absent-in-the-captured-memory";
                         Dispatcher.UIThread.RunJobs();
-                        Assert.DoesNotContain(page.GetVisualDescendants().OfType<Expander>(), c => AutomationProperties.GetAutomationId(c) == "action:memory.open");
+                        Assert.DoesNotContain(page.GetVisualDescendants().OfType<Button>(), c => AutomationProperties.GetAutomationId(c) == "action:memory.open");
                     }
                 }
                 finally
@@ -388,6 +388,12 @@ public sealed class NativeDomainTests
         /// <summary>Responses by endpoint.</summary>
         private readonly JsonObject _reads = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "page-inputs.json")))!.AsObject();
 
+        /// <summary>Gets or sets the test's stateful endpoint handler.</summary>
+        internal Func<HttpRequestMessage, Task<HttpResponseMessage?>>? Exchange
+        {
+            get; set;
+        }
+
         /// <summary>Reads one captured endpoint for initial window state.</summary>
         /// <typeparam name="T">DTO supplied by the kernel.</typeparam>
         /// <param name="path">Captured endpoint.</param>
@@ -398,6 +404,11 @@ public sealed class NativeDomainTests
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var path = request.RequestUri!.AbsolutePath;
+            if (Exchange is not null && await Exchange(request).ConfigureAwait(false) is { } response)
+            {
+                return response;
+            }
+
             if (request.Method == HttpMethod.Post && path == "/themes")
             {
                 var choice = JsonNode.Parse(await request.Content!.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));

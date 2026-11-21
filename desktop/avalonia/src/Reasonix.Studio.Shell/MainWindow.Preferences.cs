@@ -331,7 +331,13 @@ public sealed partial class MainWindow
                     if (api is not null)
                     {
                         var catalog = await api.MemoriesAsync(_closing.Token).ConfigureAwait(true);
-                        ShowMemoryCatalog(Card(column, "data.memory_and_usage"), catalog);
+                        var memories = new Settings.MemoryWorkspace { Tag = "data.memory" };
+                        Card(column, "data.memory_and_usage").Children.Add(memories);
+                        memories.Open(api, Language, catalog, DescribeError, _closing.Token);
+                        if (TopLevel.GetTopLevel(memories) == this)
+                        {
+                            _unsavedSettings = () => memories.HasChanges;
+                        }
                     }
 
                     await ArchiveSettingsAsync(Card(column, "data.session_storage")).ConfigureAwait(true);
