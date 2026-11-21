@@ -35,11 +35,10 @@ public sealed class RailTests
     }
 
     /// <summary>
-    /// Checks that pinned conversations come first, then the newest, then the
-    /// archived ones.
+    /// Checks that pinning is a stable partition of the server-ordered tree.
     /// </summary>
     [Fact]
-    public void TheOrderIsPinnedThenNewestThenArchived()
+    public void PinningPreservesTheManualOrderOfOtherSessions()
     {
         var rows = RailPresenter.Rows(
             Tree(Project(
@@ -53,20 +52,19 @@ public sealed class RailTests
 
         var order = rows
             .Where(row => row.Kind == RailRowKind.Session)
-            .Select(row => System.IO.Path.GetFileName(row.Path))
+            .Select(row => row.Title)
             .ToList();
 
         Assert.Equal(
-            new[] { "pinned-old.jsonl", "new.jsonl", "old.jsonl", "archived.jsonl" },
+            new[] { "pinned-old.jsonl", "old.jsonl", "archived.jsonl", "new.jsonl" },
             order);
     }
 
     /// <summary>
-    /// Checks that unknown last-write times sort last rather than first, so a row
-    /// the kernel has not counted does not push counted work down.
+    /// Checks that a missing timestamp does not move a manually ordered row.
     /// </summary>
     [Fact]
-    public void ARowWithNoTimestampSortsAfterCountedOnes()
+    public void ManualOrderSurvivesMissingTimestamps()
     {
         var rows = RailPresenter.Rows(
             Tree(Project("C:\\work", Session("unknown.jsonl", null), Session("known.jsonl", 1))),
@@ -74,9 +72,9 @@ public sealed class RailTests
             InterfaceLanguage.Zh);
 
         Assert.Equal(
-            new[] { "known.jsonl", "unknown.jsonl" },
+            new[] { "unknown.jsonl", "known.jsonl" },
             rows.Where(row => row.Kind == RailRowKind.Session)
-                .Select(row => System.IO.Path.GetFileName(row.Path)));
+                .Select(row => row.Title));
     }
 
     /// <summary>

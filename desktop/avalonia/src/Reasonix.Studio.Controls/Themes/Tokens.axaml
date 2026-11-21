@@ -326,7 +326,7 @@
   <x:String x:Key="Press">translateY(1px) scale(.985)</x:String>
   <x:String x:Key="token:--press">translateY(1px) scale(.985)</x:String>
   <!-- token press-wash -->
-  <Color x:Key="PressWash">#2A2A2A12</Color>
+  <Color x:Key="PressWash">#122A2A2A</Color>
   <SolidColorBrush x:Key="PressWashBrush" Color="{StaticResource PressWash}" />
   <x:String x:Key="token:--press-wash">rgba(42, 42, 42, 0.071)</x:String>
   <!-- token r-lg -->
@@ -405,19 +405,19 @@
   <x:Double x:Key="SrailW">54</x:Double>
   <x:String x:Key="token:--srail-w">54px</x:String>
   <!-- token studio-grid -->
-  <Color x:Key="StudioGrid">#465D8B0B</Color>
+  <Color x:Key="StudioGrid">#0B465D8B</Color>
   <SolidColorBrush x:Key="StudioGridBrush" Color="{StaticResource StudioGrid}" />
   <x:String x:Key="token:--studio-grid">rgba(70, 93, 139, 0.043)</x:String>
   <!-- token studio-light-primary -->
-  <Color x:Key="StudioLightPrimary">#6380D524</Color>
+  <Color x:Key="StudioLightPrimary">#246380D5</Color>
   <SolidColorBrush x:Key="StudioLightPrimaryBrush" Color="{StaticResource StudioLightPrimary}" />
   <x:String x:Key="token:--studio-light-primary">rgba(99, 128, 213, 0.141)</x:String>
   <!-- token studio-light-secondary -->
-  <Color x:Key="StudioLightSecondary">#5EA19413</Color>
+  <Color x:Key="StudioLightSecondary">#135EA194</Color>
   <SolidColorBrush x:Key="StudioLightSecondaryBrush" Color="{StaticResource StudioLightSecondary}" />
   <x:String x:Key="token:--studio-light-secondary">rgba(94, 161, 148, 0.075)</x:String>
   <!-- token studio-light-warm -->
-  <Color x:Key="StudioLightWarm">#DD99550F</Color>
+  <Color x:Key="StudioLightWarm">#0FDD9955</Color>
   <SolidColorBrush x:Key="StudioLightWarmBrush" Color="{StaticResource StudioLightWarm}" />
   <x:String x:Key="token:--studio-light-warm">rgba(221, 153, 85, 0.059)</x:String>
   <!-- token sunk -->
@@ -838,7 +838,7 @@
   <x:String x:Key="Press">translateY(1px) scale(.985)</x:String>
   <x:String x:Key="token:--press">translateY(1px) scale(.985)</x:String>
   <!-- token press-wash -->
-  <Color x:Key="PressWash">#E3E3E312</Color>
+  <Color x:Key="PressWash">#12E3E3E3</Color>
   <SolidColorBrush x:Key="PressWashBrush" Color="{StaticResource PressWash}" />
   <x:String x:Key="token:--press-wash">rgba(227, 227, 227, 0.071)</x:String>
   <!-- token r-lg -->
@@ -913,19 +913,19 @@
   <x:Double x:Key="SrailW">54</x:Double>
   <x:String x:Key="token:--srail-w">54px</x:String>
   <!-- token studio-grid -->
-  <Color x:Key="StudioGrid">#AAAAE309</Color>
+  <Color x:Key="StudioGrid">#09AAAAE3</Color>
   <SolidColorBrush x:Key="StudioGridBrush" Color="{StaticResource StudioGrid}" />
   <x:String x:Key="token:--studio-grid">rgba(170, 170, 227, 0.035)</x:String>
   <!-- token studio-light-primary -->
-  <Color x:Key="StudioLightPrimary">#5974D82E</Color>
+  <Color x:Key="StudioLightPrimary">#2E5974D8</Color>
   <SolidColorBrush x:Key="StudioLightPrimaryBrush" Color="{StaticResource StudioLightPrimary}" />
   <x:String x:Key="token:--studio-light-primary">rgba(89, 116, 216, 0.18)</x:String>
   <!-- token studio-light-secondary -->
-  <Color x:Key="StudioLightSecondary">#59A69B17</Color>
+  <Color x:Key="StudioLightSecondary">#1759A69B</Color>
   <SolidColorBrush x:Key="StudioLightSecondaryBrush" Color="{StaticResource StudioLightSecondary}" />
   <x:String x:Key="token:--studio-light-secondary">rgba(89, 166, 155, 0.09)</x:String>
   <!-- token studio-light-warm -->
-  <Color x:Key="StudioLightWarm">#C8925B0E</Color>
+  <Color x:Key="StudioLightWarm">#0EC8925B</Color>
   <SolidColorBrush x:Key="StudioLightWarmBrush" Color="{StaticResource StudioLightWarm}" />
   <x:String x:Key="token:--studio-light-warm">rgba(200, 146, 91, 0.055)</x:String>
   <!-- token sunk -->

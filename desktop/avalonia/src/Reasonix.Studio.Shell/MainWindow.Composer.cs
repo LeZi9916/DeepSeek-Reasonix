@@ -33,7 +33,7 @@ public sealed partial class MainWindow
     /// <summary>
     /// The key that sends, as this machine last chose it.
     /// </summary>
-    private readonly SendShortcut _shortcut = SendShortcutStore.Load();
+    private SendShortcut _shortcut = SendShortcutStore.Load();
 
     /// <summary>
     /// The draft key of the conversation on screen, or empty before one is known.
@@ -50,6 +50,12 @@ public sealed partial class MainWindow
     /// </summary>
     private QueueSnapshot? _queue;
 
+    /// <summary>Gets or sets a value indicating whether messages during a run are queued.</summary>
+    internal bool QueueDuringRun
+    {
+        get; set;
+    }
+
     /// <summary>
     /// Gets the language this window draws its own labels in.
     /// </summary>
@@ -59,9 +65,16 @@ public sealed partial class MainWindow
     /// Takes on the conversation's draft and meter once the status is known.
     /// </summary>
     /// <param name="status">What the kernel said about the open session.</param>
-    private void AdoptComposer(SessionStatus status)
+    internal void AdoptComposer(SessionStatus status)
     {
+        BindWorkspace(status.WorkspaceRoot);
         _window = status.Window;
+        SetModelLabel(status);
+        if (!string.IsNullOrEmpty(status.WorkspaceRoot))
+        {
+            ProjectName.Text = System.IO.Path.GetFileName(System.IO.Path.TrimEndingDirectorySeparator(status.WorkspaceRoot));
+            ToolTip.SetTip(ProjectName, status.WorkspaceRoot);
+        }
 
         if (_engine is null)
         {
@@ -71,6 +84,14 @@ public sealed partial class MainWindow
         _draftKey = DraftStore.KeyFor(_engine.Host, status.WorkspaceRoot, status.SessionPath);
         Composer.Text = DraftStore.Read(_drafts, _draftKey);
         Composer.CaretIndex = Composer.Text?.Length ?? 0;
+    }
+
+    /// <summary>Shows the model the kernel reported.</summary>
+    /// <param name="status">The current session status.</param>
+    private void SetModelLabel(SessionStatus status)
+    {
+        ModelButton.Content = string.IsNullOrEmpty(status.ModelRef) ? MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language) : status.ModelRef[(status.ModelRef.IndexOf('/') + 1)..];
+        ToolTip.SetTip(ModelButton, string.IsNullOrEmpty(status.ModelRef) ? MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language) : status.ModelRef);
     }
 
     /// <summary>
@@ -92,12 +113,28 @@ public sealed partial class MainWindow
         // While a turn runs, a line is guidance unless the person chose to queue.
         // The preference is steer, which is the reading the reference frontend
         // starts from too.
-        var intent = SendKey.IntentFor(running, SendKey.Intent.Steer);
+        var intent = SendKey.IntentFor(running, QueueDuringRun ? SendKey.Intent.FollowUp : SendKey.Intent.Steer);
         ComposerHint.Text = SendKey.Hint(_shortcut, running, Language, intent);
         MeterText.Text = ContextMeter.Readout(state.ContextUsed, _window, Language);
-        Send.Content = running
-            ? MessageCatalog.Get(MessageKey.Common.Steer, Language)
-            : MessageCatalog.Get(MessageKey.Common.Send, Language);
+        ContextReadout.Text = MeterText.Text;
+        Composer.PlaceholderText = MessageCatalog.Get(
+            running ? MessageKey.Composer.YouCanKeepTypingWhile : MessageKey.Composer.DescribeATaskQuestionOr,
+            Language);
+        var runLabel = QueueDuringRun ? MessageKey.Composer.Queue : MessageKey.Common.Steer;
+        Label(Send, running ? runLabel : MessageKey.Common.Send);
+        Stop.IsVisible = running;
+        if (!running)
+        {
+            Stop.IsEnabled = true;
+        }
+
+        Label(Stop, Stop.IsEnabled ? MessageKey.Common.Stop : MessageKey.Common.Stopping);
+        if (AnalysisPanel.IsVisible && _analysisWasRunning && !running)
+        {
+            _ = LoadAnalysisAsync();
+        }
+
+        _analysisWasRunning = running;
 
         DrawQueue(state);
     }
@@ -140,7 +177,7 @@ public sealed partial class MainWindow
         QueueStrip.Children.Clear();
 
         var rows = QueuePresenter.Rows(_queue, state.Running, Language);
-        QueueStrip.IsVisible = rows.Count > 0;
+        QueueScroll.IsVisible = rows.Count > 0;
         foreach (var row in rows)
         {
             QueueStrip.Children.Add(Row(row));

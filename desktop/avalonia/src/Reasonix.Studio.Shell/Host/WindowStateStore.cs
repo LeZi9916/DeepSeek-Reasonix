@@ -59,7 +59,7 @@ public sealed class WindowStateStore
                 return Default();
             }
 
-            return new WindowGeometry(stored.X, stored.Y, stored.Width, stored.Height, stored.Maximised);
+            return new WindowGeometry(stored.X, stored.Y, stored.Width, stored.Height, stored.Maximised, stored.RailWidth, stored.Theme, stored.ReducedEffects, stored.QueueDuringRun);
         }
         catch (Exception)
         {
@@ -95,6 +95,10 @@ public sealed class WindowStateStore
             Width = geometry.Width,
             Height = geometry.Height,
             Maximised = geometry.Maximised,
+            RailWidth = geometry.RailWidth,
+            Theme = geometry.Theme,
+            ReducedEffects = geometry.ReducedEffects,
+            QueueDuringRun = geometry.QueueDuringRun,
         };
         File.WriteAllText(_path, JsonSerializer.Serialize(stored));
     }
@@ -114,6 +118,27 @@ public sealed class WindowStateStore
     /// </summary>
     private sealed record Stored
     {
+        /// <summary>Gets a value indicating whether messages sent during a run are queued.</summary>
+        public bool QueueDuringRun
+        {
+            get; init;
+        }
+
+        /// <summary>Gets a value indicating whether to reduce visual effects.</summary>
+        public bool ReducedEffects
+        {
+            get; init;
+        }
+
+        /// <summary>Gets the preferred width of the expanded workspace.</summary>
+        public double RailWidth { get; init; } = 264;
+
+        /// <summary>Gets the explicit theme, or null when following the system.</summary>
+        public string? Theme
+        {
+            get; init;
+        }
+
         /// <summary>
         /// Gets the window's left edge.
         /// </summary>

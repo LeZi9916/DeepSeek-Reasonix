@@ -99,9 +99,16 @@ public sealed partial class App : Application
     private static WindowGeometry GeometryOf(MainWindow window)
     {
         var maximised = window.WindowState == WindowState.Maximized;
-        return maximised
+        var bounds = maximised
             ? new WindowGeometry(null, null, window.Width, window.Height, Maximised: true)
             : new WindowGeometry(window.Position.X, window.Position.Y, window.Width, window.Height, Maximised: false);
+        return bounds with
+        {
+            RailWidth = window.RailWidth,
+            ReducedEffects = window.ReducedEffects,
+            QueueDuringRun = window.QueueDuringRun,
+            Theme = window.RequestedThemeVariant?.Key as string,
+        };
     }
 
     /// <summary>
@@ -154,8 +161,11 @@ public sealed partial class App : Application
     private MainWindow CreateWindow()
     {
         var window = new MainWindow();
+        window.ConfigureNativeTitleBar();
         var store = new WindowStateStore(GeometryPath());
         var geometry = store.Load();
+        window.QueueDuringRun = geometry.QueueDuringRun;
+        window.RestoreChrome(geometry.RailWidth, geometry.Theme, geometry.ReducedEffects);
 
         // Size now, position when the platform can answer which screens exist.
         window.Width = geometry.Width;
@@ -204,6 +214,7 @@ public sealed partial class App : Application
                 IsVisible = true,
             };
 
+            window.AttachTray(tray, () => Raise(window));
             tray.Clicked += (_, _) => Raise(window);
 
             var icons = new TrayIcons();
@@ -213,6 +224,7 @@ public sealed partial class App : Application
         }
         catch (Exception error)
         {
+            window.DetachTray();
             ShellLog.Line("tray unavailable: " + error.Message);
             return null;
         }

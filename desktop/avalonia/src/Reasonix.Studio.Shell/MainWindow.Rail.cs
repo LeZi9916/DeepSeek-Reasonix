@@ -27,6 +27,9 @@ public sealed partial class MainWindow
     /// </summary>
     private readonly SessionSwitch _switch = new SessionSwitch();
 
+    /// <summary>Only the most recent tree query may update the rail.</summary>
+    private long _treeRead;
+
     /// <summary>
     /// The transcript this window has open, or empty before one is known.
     /// </summary>
@@ -62,10 +65,15 @@ public sealed partial class MainWindow
             return;
         }
 
+        var ticket = ++_treeRead;
         try
         {
-            var tree = await _engine.TreeAsync(null, _closing.Token).ConfigureAwait(true);
-            ShowTree(tree);
+            var query = new TreeWindow { Query = RailSearch.Text?.Trim() ?? string.Empty };
+            var tree = await _engine.TreeAsync(query, _closing.Token).ConfigureAwait(true);
+            if (ticket == _treeRead)
+            {
+                ShowTree(tree);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -144,7 +152,7 @@ public sealed partial class MainWindow
             var status = await _engine.StatusAsync(_closing.Token).ConfigureAwait(true);
             if (status is not null)
             {
-                CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? "新会话" : status.Label;
+                CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? MessageCatalog.Get(MessageKey.Common.NewSession, Language) : status.Label;
                 ContextReadout.Text = Reasonix.Studio.Pages.Composer.ContextMeter.Readout(
                     status.Used,
                     status.Window,
@@ -284,7 +292,7 @@ public sealed partial class MainWindow
             }
 
             _sessionPath = string.Empty;
-            CrumbTitle.Text = "新会话";
+            CrumbTitle.Text = MessageCatalog.Get(MessageKey.Common.NewSession, Language);
             ContextReadout.Text = "—";
             Composer.Text = string.Empty;
             Conversation.Show(_engine.State);

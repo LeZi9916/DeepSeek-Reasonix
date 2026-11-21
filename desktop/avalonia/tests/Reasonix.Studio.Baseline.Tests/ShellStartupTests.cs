@@ -2,6 +2,7 @@ using Avalonia;
 using Reasonix.Studio.Shell.Host;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Reasonix.Studio.Baseline.Tests;
@@ -125,6 +126,19 @@ public sealed class ShellStartupTests
         Assert.Equal(first, second);
         Assert.Equal(16, first.Length);
         Assert.Equal(first.ToLowerInvariant(), first);
+    }
+
+    /// <summary>A second process's activation request reaches the already-running shell.</summary>
+    /// <returns>The delivered activation.</returns>
+    [Fact]
+    public async Task AnotherLaunchRaisesTheListener()
+    {
+        var id = Guid.NewGuid().ToString("N");
+        using var listener = new InstanceActivation(id, listen: true);
+        var received = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        listener.Activated += () => received.TrySetResult();
+        InstanceActivation.Raise(id);
+        await received.Task.WaitAsync(TimeSpan.FromSeconds(3));
     }
 
     /// <summary>

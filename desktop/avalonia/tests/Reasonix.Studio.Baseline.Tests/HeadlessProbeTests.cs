@@ -71,6 +71,8 @@ public sealed class HeadlessProbeTests
                     return false;
                 }
 
+                Assert.True(app.TryGetResource("StudioLightPrimaryBrush", Avalonia.Styling.ThemeVariant.Light, out var light));
+                Assert.Equal(Avalonia.Media.Color.FromArgb(36, 99, 128, 213), Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(light).Color);
                 return app.TryGetResource("RailW", app.ActualThemeVariant, out var value) && value is not null;
             },
             default);

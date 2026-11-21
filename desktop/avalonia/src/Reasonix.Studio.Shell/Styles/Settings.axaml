@@ -1,0 +1,62 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Style Selector="ListBox#SettingsNav ListBoxItem">
+    <Setter Property="AutomationProperties.AutomationId" Value="action:settings.section"/>
+    <Setter Property="Height" Value="30"/><Setter Property="MinHeight" Value="0"/><Setter Property="Margin" Value="0,0,0,2"/>
+    <Setter Property="Padding" Value="10,0"/><Setter Property="CornerRadius" Value="7"/><Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="FontSize" Value="13"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Template"><ControlTemplate>
+      <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                          HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/>
+      </Border>
+    </ControlTemplate></Setter>
+  </Style>
+  <Style Selector="ListBox#SettingsNav ListBoxItem:pointerover"><Setter Property="Background" Value="{DynamicResource RaisedBrush}"/></Style>
+  <Style Selector="ListBox#SettingsNav ListBoxItem:selected">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="ListBox#SettingsNav">
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+  </Style>
+  <Style Selector="Grid#SettingsPanel.compact ListBox#SettingsNav">
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+  </Style>
+  <Style Selector="Grid#SettingsPanel.compact StackPanel.nav-strip">
+    <Setter Property="Orientation" Value="Horizontal"/><Setter Property="VerticalAlignment" Value="Top"/>
+  </Style>
+  <Style Selector="Grid#SettingsPanel.compact ListBox#SettingsNav ListBoxItem">
+    <Setter Property="Margin" Value="0,0,2,0"/><Setter Property="VerticalAlignment" Value="Top"/>
+  </Style>
+  <Style Selector="Grid#SettingsPanel.compact TextBlock.nav-count"><Setter Property="IsVisible" Value="False"/></Style>
+  <Style Selector="Border.settings-card">
+    <Setter Property="Padding" Value="20,18,20,8"/><Setter Property="CornerRadius" Value="15"/>
+    <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+  </Style>
+  <Style Selector="Border.setting-row">
+    <Setter Property="BorderThickness" Value="0,1,0,0"/><Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="MinHeight" Value="52"/><Setter Property="Padding" Value="0,9"/>
+  </Style>
+  <Style Selector="Button.page-link">
+    <Setter Property="Height" Value="26"/><Setter Property="Padding" Value="10,0"/><Setter Property="Margin" Value="0,2,6,2"/>
+    <Setter Property="CornerRadius" Value="13"/><Setter Property="FontSize" Value="12"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style Selector="RadioButton.segmented">
+    <Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/><Setter Property="Height" Value="26"/>
+    <Setter Property="Padding" Value="10,0"/><Setter Property="Margin" Value="1,0"/><Setter Property="FontSize" Value="12"/>
+    <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="Template"><ControlTemplate>
+      <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+        <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+      </Border>
+    </ControlTemplate></Setter>
+  </Style>
+  <Style Selector="RadioButton.segmented:checked">
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+  </Style>
+</Styles>

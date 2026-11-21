@@ -7,6 +7,7 @@ using Reasonix.Studio.Contracts.Tree;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Reasonix.Studio.Pages.Rail;
 
@@ -20,10 +21,6 @@ namespace Reasonix.Studio.Pages.Rail;
 /// not get rows: they are reached from the row that owns them, so one
 /// conversation cannot fill the column with files the person never made.
 ///
-/// Nothing here declares an automation identity. The captured baseline records
-/// the rail's rows as a gap the shell has not drawn yet, and a control that both
-/// claims a recorded gap and is counted against it fails the coverage gate; the
-/// rows are scaffolding until that step of the plan replaces the record.
 /// </remarks>
 public sealed class ProjectRail : UserControl
 {
@@ -31,6 +28,9 @@ public sealed class ProjectRail : UserControl
     /// The column's rows.
     /// </summary>
     private readonly StackPanel _rows;
+
+    /// <summary>Projects whose hidden session rows have been requested.</summary>
+    private readonly HashSet<string> _expanded = new(StringComparer.Ordinal);
 
     /// <summary>
     /// The projects the reader folded shut, by root.
@@ -88,11 +88,6 @@ public sealed class ProjectRail : UserControl
     public event Action<string>? MarkedViewed;
 
     /// <summary>
-    /// Raised when the person asks for a conversation with nothing in it.
-    /// </summary>
-    public event Action? NewRequested;
-
-    /// <summary>
     /// Gets or sets the language the rail's own words are drawn in.
     /// </summary>
     /// <remarks>
@@ -103,6 +98,9 @@ public sealed class ProjectRail : UserControl
     {
         get; set;
     } = InterfaceLanguage.Zh;
+
+    /// <summary>Updates the visible row labels using the selected language.</summary>
+    public void RefreshLabels() => Rebuild();
 
     /// <summary>
     /// Draws one tree.
@@ -122,7 +120,6 @@ public sealed class ProjectRail : UserControl
     private void Rebuild()
     {
         _rows.Children.Clear();
-        _rows.Children.Add(NewSessionButton());
 
         if (_tree.Count == 0)
         {
@@ -138,35 +135,32 @@ public sealed class ProjectRail : UserControl
                 continue;
             }
 
-            foreach (var session in RailPresenter.Sorted(workspace.Sessions))
+            var sessions = RailPresenter.Sorted(workspace.Sessions);
+            var showAll = _expanded.Contains(workspace.Root) || sessions.Skip(5).Any(s => RailPresenter.Same(s.Path, _current));
+            var visible = showAll ? sessions.Count : 5;
+
+            foreach (var session in sessions.Take(visible))
             {
                 _rows.Children.Add(SessionRow(session));
             }
-        }
-    }
 
-    /// <summary>
-    /// Builds the column's way to start a conversation with nothing in it.
-    /// </summary>
-    /// <returns>The button.</returns>
-    private Control NewSessionButton()
-    {
-        var button = new Button
-        {
-            Content = new TextBlock
+            if (sessions.Count > visible)
             {
-                Text = MessageCatalog.Get(MessageKey.Common.NewSession, Language),
-                FontSize = 12,
-            },
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Padding = new Thickness(6, 6, 6, 6),
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Left,
-            Opacity = 0.85,
-        };
-        button.Click += (_, _) => NewRequested?.Invoke();
-        return button;
+                var more = new Button
+                {
+                    Content = MessageCatalog.Get(MessageKey.Common.ShowMoreNLeft, Language, ("n", Format.Count(sessions.Count - visible, Language))),
+                    FontSize = 11,
+                    Background = Brushes.Transparent,
+                    BorderThickness = new Thickness(0),
+                };
+                more.Click += (_, _) =>
+                {
+                    _expanded.Add(workspace.Root);
+                    Rebuild();
+                };
+                _rows.Children.Add(more);
+            }
+        }
     }
 
     /// <summary>
@@ -252,7 +246,7 @@ public sealed class ProjectRail : UserControl
             Orientation = Orientation.Horizontal,
             Spacing = 4,
             VerticalAlignment = VerticalAlignment.Center,
-            Width = 26,
+            Width = 18,
         };
         if (session.Unread)
         {
@@ -295,30 +289,11 @@ public sealed class ProjectRail : UserControl
         title.Children.Add(new TextBlock
         {
             Text = string.IsNullOrWhiteSpace(session.Title) ? session.Name : session.Title,
-            FontSize = 12,
+            FontSize = 13,
             FontWeight = current ? FontWeight.SemiBold : FontWeight.Normal,
             Opacity = session.Archived ? 0.45 : 0.92,
             TextTrimming = TextTrimming.CharacterEllipsis,
         });
-
-        var subtitle = RailPresenter.SessionSubtitle(session, Language);
-        if (session.Archived)
-        {
-            subtitle = subtitle.Length == 0
-                ? MessageCatalog.Get(MessageKey.Common.Archived2, Language)
-                : MessageCatalog.Get(MessageKey.Common.Archived2, Language) + " · " + subtitle;
-        }
-
-        if (subtitle.Length > 0)
-        {
-            title.Children.Add(new TextBlock
-            {
-                Text = subtitle,
-                FontSize = 10,
-                Opacity = 0.5,
-                TextTrimming = TextTrimming.CharacterEllipsis,
-            });
-        }
 
         var open = new Button
         {

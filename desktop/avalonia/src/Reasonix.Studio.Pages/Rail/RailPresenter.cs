@@ -2,6 +2,7 @@ using Reasonix.Studio.Contracts.Tree;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Reasonix.Studio.Pages.Rail;
 
@@ -79,7 +80,7 @@ public static class RailPresenter
     /// Orders one project's conversations for the sidebar.
     /// </summary>
     /// <param name="sessions">The conversations the project listed.</param>
-    /// <returns>Pinned and active rows first, newest-first, archived last.</returns>
+    /// <returns>Pinned rows first, preserving the order supplied by the tree within each group.</returns>
     public static IReadOnlyList<TreeSession> Sorted(IReadOnlyList<TreeSession>? sessions)
     {
         if (sessions is null || sessions.Count == 0)
@@ -87,9 +88,7 @@ public static class RailPresenter
             return Array.Empty<TreeSession>();
         }
 
-        var ordered = new List<TreeSession>(sessions);
-        ordered.Sort(Compare);
-        return ordered;
+        return sessions.OrderByDescending(session => session.Pinned).ToArray();
     }
 
     /// <summary>
@@ -122,33 +121,6 @@ public static class RailPresenter
         return !string.IsNullOrEmpty(left)
             && !string.IsNullOrEmpty(right)
             && string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>
-    /// Orders two conversations: pinned, then active, then newest, then archived.
-    /// </summary>
-    /// <param name="left">One conversation.</param>
-    /// <param name="right">The other.</param>
-    /// <returns>A negative, zero or positive number, as a comparison returns.</returns>
-    private static int Compare(TreeSession left, TreeSession right)
-    {
-        if (left.Pinned != right.Pinned)
-        {
-            return left.Pinned ? -1 : 1;
-        }
-
-        if (left.Archived != right.Archived)
-        {
-            return left.Archived ? 1 : -1;
-        }
-
-        var newest = (right.LastActiveAt ?? 0).CompareTo(left.LastActiveAt ?? 0);
-        if (newest != 0)
-        {
-            return newest;
-        }
-
-        return string.Compare(left.Path, right.Path, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

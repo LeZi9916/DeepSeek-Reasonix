@@ -1,7 +1,9 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Refusal;
 using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages;
@@ -12,6 +14,7 @@ using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -67,20 +70,50 @@ public sealed partial class MainWindow : Window
     /// whatever that kernel answered, including the notice that there is none.
     /// </param>
     public MainWindow(bool connectOnOpen)
+        : this(connectOnOpen, null, LanguageResolver.FromMachine())
     {
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="MainWindow"/> class with an existing transport.</summary>
+    /// <param name="connectOnOpen">Whether to launch the desktop host on opening.</param>
+    /// <param name="engine">Session already connected to a host, if any.</param>
+    /// <param name="language">Window language on first paint.</param>
+    /// <param name="systemAllowsMotion">Optional platform preference provider.</param>
+    internal MainWindow(bool connectOnOpen, SessionEngine? engine, InterfaceLanguage language, Func<CancellationToken, Task<bool>>? systemAllowsMotion = null)
+    {
+        _systemAllowsMotion = systemAllowsMotion ?? SystemAllowsMotionAsync;
         InitializeComponent();
+        _engine = engine;
 
         _connectOnOpen = connectOnOpen;
 
+        Conversation.Language = language;
+        Projects.Language = Language;
+        CrumbTitle.Text = MessageCatalog.Get(MessageKey.Common.NewSession, Language);
+        InitializeChrome();
+        InitializeIntake();
+        InitializePreferences();
+        Conversation.SubmitAnswers = (id, answers) => TryAnswerAsync(() => _engine!.AnswerAsync(id, answers, _closing.Token));
+        Conversation.EngageQuestion = id => TryAnswerAsync(() => _engine!.Pages.EngageAsync(id, _closing.Token));
+        Label(DismissError, MessageKey.Common.Close);
+        DismissError.Click += (_, _) => ErrorBar.IsVisible = false;
+        ShowComposerState(Conversation.State);
         Send.Click += OnSend;
-        Composer.KeyDown += OnComposerKey;
+        Stop.Click += OnStop;
+        Composer.AddHandler(KeyDownEvent, OnComposerKey, RoutingStrategies.Tunnel);
         Composer.TextChanged += OnComposerTextChanged;
         Conversation.Answered += OnAnswered;
+        Conversation.QuoteRequested += passage =>
+        {
+            var quote = string.Join(Environment.NewLine, passage.Split('\n').Select(line => "> " + line));
+            Composer.SelectedText = quote + Environment.NewLine + Environment.NewLine;
+            Composer.Focus();
+        };
         Projects.Opened += OnProjectOpened;
         Projects.Pinned += OnProjectPinned;
         Projects.Archived += OnProjectArchived;
         Projects.MarkedViewed += OnProjectViewed;
-        Projects.NewRequested += OnNewRequested;
+        NewSession.Click += (_, _) => OnNewRequested();
         Closed += OnClosed;
 
         // The status line says what the next press does before anything is
@@ -105,6 +138,60 @@ public sealed partial class MainWindow : Window
     public void ShowState(SessionState state)
     {
         Conversation.Show(state);
+        ShowComposerState(state);
+    }
+
+    /// <summary>Keeps a refused question editable and presents the kernel's reason.</summary>
+    /// <param name="action">The kernel write.</param>
+    /// <returns>Whether the kernel accepted the interaction.</returns>
+    private async Task<bool> TryAnswerAsync(Func<Task> action)
+    {
+        if (_engine is null || _closing.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        try
+        {
+            await action().ConfigureAwait(true);
+            return true;
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+            return false;
+        }
+        catch (Exception error)
+        {
+            ShowRefusal(error);
+            return false;
+        }
+    }
+
+    /// <summary>Cancels the active turn while leaving any queued follow-ups alone.</summary>
+    /// <param name="sender">The stop button.</param>
+    /// <param name="e">The click.</param>
+    private async void OnStop(object? sender, RoutedEventArgs e)
+    {
+        if (_engine is null || !Conversation.State.Running || !Stop.IsEnabled)
+        {
+            return;
+        }
+
+        Stop.IsEnabled = false;
+        Label(Stop, MessageKey.Common.Stopping);
+        try
+        {
+            await _engine.CancelTurnAsync(_closing.Token).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            Stop.IsEnabled = true;
+            Label(Stop, MessageKey.Common.Stop);
+            ShowRefusal(error);
+        }
     }
 
     /// <summary>
@@ -122,6 +209,7 @@ public sealed partial class MainWindow : Window
         }
 
         _engine = launch.Engine;
+        _ = RefreshTrayAsync();
         _engine!.Changed += OnChanged;
         _engine.QueueChanged += OnQueueChanged;
         _engine.TreeChanged += OnTreeChanged;
@@ -138,7 +226,7 @@ public sealed partial class MainWindow : Window
             var status = await _engine.StatusAsync(_closing.Token).ConfigureAwait(true);
             if (status is not null)
             {
-                CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? "新会话" : status.Label;
+                CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? MessageCatalog.Get(MessageKey.Common.NewSession, Language) : status.Label;
                 ContextReadout.Text = ContextMeter.Readout(status.Used, status.Window, Conversation.Language);
 
                 // The draft and the meter both need what only the status carries:
@@ -159,6 +247,7 @@ public sealed partial class MainWindow : Window
             await LoadTreeAsync().ConfigureAwait(true);
 
             // The stream is awaited last and never returns: it is the window's life.
+            _ = LoadStartupPreferencesAsync();
             await _engine.StartAsync().ConfigureAwait(true);
         }
         catch (OperationCanceledException)
@@ -187,10 +276,12 @@ public sealed partial class MainWindow : Window
         {
             _engine.Changed -= OnChanged;
             _engine.QueueChanged -= OnQueueChanged;
+            _engine.TreeChanged -= OnTreeChanged;
             await _engine.DisposeAsync().ConfigureAwait(true);
             _engine = null;
         }
 
+        await _sending.WaitAsync().ConfigureAwait(true);
         _sending.Dispose();
         _closing.Dispose();
     }
@@ -208,8 +299,7 @@ public sealed partial class MainWindow : Window
     {
         Dispatcher.UIThread.Post(() =>
         {
-            Conversation.Show(state);
-            ShowComposerState(state);
+            ShowState(state);
         });
     }
 
@@ -273,6 +363,16 @@ public sealed partial class MainWindow : Window
     /// <param name="e">The key event.</param>
     private async void OnComposerKey(object? sender, KeyEventArgs e)
     {
+        if (Composer.GetVisualDescendants().OfType<TextPresenter>().FirstOrDefault()?.PreeditText is { Length: > 0 })
+        {
+            return;
+        }
+
+        if (HandleSuggestionKey(e))
+        {
+            return;
+        }
+
         var enter = e.Key == Key.Enter;
         var shift = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
         var control = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
@@ -325,29 +425,40 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        var steer = Conversation.State.Running;
+        var draft = _draftKey;
+        var steer = Conversation.State.Running && !QueueDuringRun;
+        Composer.IsReadOnly = true;
         try
         {
-            Composer.Text = string.Empty;
-            DraftStore.Write(_drafts, _draftKey, string.Empty);
             await _engine.SendAsync(line, steer, _closing.Token).ConfigureAwait(true);
-            await RefreshQueueAsync().ConfigureAwait(true);
+            if (draft == _draftKey && Composer.Text == line)
+            {
+                Composer.Text = string.Empty;
+            }
+
+            if (DraftStore.Read(_drafts, draft) == line)
+            {
+                DraftStore.Write(_drafts, draft, string.Empty);
+            }
+
+            if (draft == _draftKey)
+            {
+                await RefreshQueueAsync().ConfigureAwait(true);
+            }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
         {
-            // Closing is the outcome asked for.
         }
         catch (Exception error)
         {
-            // The line is put back rather than lost: a refused send holds the
-            // person's own words, and dropping them is the worse failure.
-            Composer.Text = line;
-            Composer.CaretIndex = Composer.Text?.Length ?? 0;
-            SaveDraft();
-            ShowRefusal(error);
+            if (draft == _draftKey)
+            {
+                ShowRefusal(error);
+            }
         }
         finally
         {
+            Composer.IsReadOnly = false;
             _sending.Release();
         }
     }
@@ -358,7 +469,7 @@ public sealed partial class MainWindow : Window
     /// <param name="problem">The reason, in the person's terms.</param>
     private void ShowProblem(string problem)
     {
-        CrumbTitle.Text = "未连接";
+        CrumbTitle.Text = MessageCatalog.Get(MessageKey.Common.NotConnected, Language);
         Conversation.Show(new SessionState
         {
             Items = new TranscriptItem[]
@@ -385,8 +496,17 @@ public sealed partial class MainWindow : Window
     /// </remarks>
     private void ShowRefusal(Exception error)
     {
-        ShowProblem(error is IRefusal refusal
+        ErrorBar.IsVisible = true;
+        ErrorText.Text = DescribeError(error);
+    }
+
+    /// <summary>Translates a host refusal for any window surface.</summary>
+    /// <param name="error">The request failure.</param>
+    /// <returns>The reason to present.</returns>
+    private string DescribeError(Exception error)
+    {
+        return error is IRefusal refusal
             ? RefusalText.Say(refusal.Reason, refusal.Status, refusal.Detail, Conversation.Language)
-            : error.Message);
+            : error.Message;
     }
 }

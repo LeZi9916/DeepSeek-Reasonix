@@ -12,6 +12,7 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="avares://Reasonix.Studio.Controls/Themes/Tokens.axaml" />
+        <ResourceInclude Source="avares://Reasonix.Studio.Controls/Themes/StudioIcons.axaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>

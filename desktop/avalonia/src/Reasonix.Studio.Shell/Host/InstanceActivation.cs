@@ -1,5 +1,7 @@
 using System;
 using System.Globalization;
+using System.IO;
+using System.IO.Pipes;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -12,19 +14,8 @@ namespace Reasonix.Studio.Shell.Host;
 /// first.
 /// </summary>
 /// <remarks>
-/// A named event rather than a socket or a file: the first process creates it and
-/// waits, a second launch sets it and exits, and the operating system destroys it
-/// when the owner dies. A file would need a stale-claim policy and a socket would
-/// need a port nobody reserved; neither is worth it for one bit.
-///
-/// Named events exist on Windows only. Elsewhere this class carries nothing: the
-/// claim still keeps one shell per machine, but a second launch has no way to
-/// raise the first and closes. That is the honest answer on a platform with no
-/// such surface, rather than a channel that looks present and never fires.
-///
-/// The wait runs on a background thread and reports through
-/// <see cref="Activated"/>, which the window marshals to its own thread. A shell
-/// that is shutting down stops waiting with <see cref="Dispose"/>.
+/// Windows uses a named event. The Unix listener accepts an activation connection
+/// from the same user and never reads commands or data from it.
 /// </remarks>
 public sealed class InstanceActivation : IDisposable
 {
@@ -64,6 +55,11 @@ public sealed class InstanceActivation : IDisposable
 
         if (!OperatingSystem.IsWindows())
         {
+            if (listen)
+            {
+                _waiting = ListenPipeAsync(PipeName(identity), _stopping.Token);
+            }
+
             return;
         }
 
@@ -128,6 +124,18 @@ public sealed class InstanceActivation : IDisposable
 
         if (!OperatingSystem.IsWindows())
         {
+            try
+            {
+                using var pipe = new NamedPipeClientStream(".", PipeName(identity), PipeDirection.Out, PipeOptions.CurrentUserOnly);
+                pipe.Connect(350);
+            }
+            catch (TimeoutException)
+            {
+            }
+            catch (IOException)
+            {
+            }
+
             return;
         }
 
@@ -144,8 +152,7 @@ public sealed class InstanceActivation : IDisposable
         }
     }
 
-    /// <summary>
-    /// Stops waiting for later launches.
+    /// <summary>Stops waiting for later launches.
     /// </summary>
     public void Dispose()
     {
@@ -156,6 +163,36 @@ public sealed class InstanceActivation : IDisposable
         // The loop notices the cancellation on its next poll; waiting for it here
         // would block the interface thread that closes the window.
         _ = _waiting;
+    }
+
+    /// <summary>Uses a short socket name independent of the length of the temporary directory.</summary>
+    /// <param name="identity">Installation id.</param>
+    /// <returns>The current user's activation endpoint.</returns>
+    private static string PipeName(string identity)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(Environment.UserName + "/" + identity));
+        return "/tmp/rx-studio-" + Convert.ToHexString(bytes, 0, 12);
+    }
+
+    /// <summary>Accepts same-user activation connections for the life of this window.</summary>
+    /// <param name="pipeName">The local socket.</param>
+    /// <param name="token">Stops accepting when the shell closes.</param>
+    /// <returns>The lifetime of the listener.</returns>
+    private async Task ListenPipeAsync(string pipeName, CancellationToken token)
+    {
+        using var pipe = new NamedPipeServerStream(pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                await pipe.WaitForConnectionAsync(token).ConfigureAwait(false);
+                pipe.Disconnect();
+                Activated?.Invoke();
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
     }
 
     /// <summary>

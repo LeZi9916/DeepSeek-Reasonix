@@ -4,11 +4,14 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>Reasonix.Studio.Shell</RootNamespace>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.1.6" />
+    <PackageReference Include="AvaloniaTerminal" Version="1.0.0" />
+    <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.2" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.6" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.6" />
@@ -22,4 +25,10 @@
     <ProjectReference Include="..\Reasonix.Studio.Pages\Reasonix.Studio.Pages.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Reasonix.Studio.Baseline.Tests" />
+    <InternalsVisibleTo Include="Reasonix.Studio.Render.Tests" />
+    <InternalsVisibleTo Include="Reasonix.Studio.WebView.Smoke" />
+    <AvaloniaResource Include="Assets/wordmark.png" />
+  </ItemGroup>
 </Project>

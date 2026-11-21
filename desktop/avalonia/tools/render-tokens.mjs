@@ -43,12 +43,9 @@ function resourceOf(name, value) {
   const color = COLOR.exec(value);
   if (color) {
     const [, r, g, b, a] = color;
-    const hex =
-      "#" +
-      [r, g, b].map((c) => Number(c).toString(16).padStart(2, "0")).join("").toUpperCase() +
-      (a === undefined || Number(a) >= 1
-        ? ""
-        : Math.round(Number(a) * 255).toString(16).padStart(2, "0").toUpperCase());
+    const rgb = [r, g, b].map((c) => Number(c).toString(16).padStart(2, "0")).join("");
+    const alpha = a === undefined || Number(a) >= 1 ? "" : Math.round(Number(a) * 255).toString(16).padStart(2, "0");
+    const hex = ("#" + alpha + rgb).toUpperCase();
     // A colour is emitted twice: as the Color a painting operation takes, and as
     // the SolidColorBrush a Background or BorderBrush property takes. Both are
     // derived from the one captured value so neither can drift from the other,

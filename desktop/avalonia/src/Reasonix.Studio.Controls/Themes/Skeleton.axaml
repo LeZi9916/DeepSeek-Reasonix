@@ -10,7 +10,6 @@
   -->
   <Styles.Resources>
     <ControlTheme x:Key="{x:Type ctl:StudioRail}" TargetType="ctl:StudioRail">
-      <Setter Property="Width" Value="{DynamicResource RailW}" />
       <Setter Property="Background" Value="{DynamicResource PageBrush}" />
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
       <Setter Property="FontSize" Value="14" />
@@ -69,14 +68,14 @@
     </ControlTheme>
 
     <ControlTheme x:Key="{x:Type ctl:StudioComposer}" TargetType="ctl:StudioComposer">
-      <Setter Property="Width" Value="{DynamicResource Column}" />
+      <Setter Property="MaxWidth" Value="{DynamicResource Column}" />
       <Setter Property="Height" Value="128" />
-      <Setter Property="Background" Value="{DynamicResource ComposeSurfaceBrush}" />
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="CornerRadius" Value="{DynamicResource RLg}" />
       <Setter Property="Template">
         <ControlTemplate>
-          <Border Background="{TemplateBinding Background}"
+          <Border Background="{TemplateBinding Background}" BoxShadow="{DynamicResource ComposerShadow}"
                   BorderBrush="{TemplateBinding BorderBrush}"
                   BorderThickness="{TemplateBinding BorderThickness}"
                   CornerRadius="{TemplateBinding CornerRadius}">

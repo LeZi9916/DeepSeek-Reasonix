@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Reasonix.Studio.Contracts.Events;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
@@ -28,6 +29,9 @@ public sealed partial class SessionPage : UserControl
     /// The column every row is drawn in.
     /// </summary>
     private readonly StackPanel _rows;
+
+    /// <summary>Open forms retain unsent selections across unrelated stream events.</summary>
+    private readonly Dictionary<string, QuestionForm> _forms = new(StringComparer.Ordinal);
 
     /// <summary>
     /// The scroll host, kept so a rebuild can restore where the reader was.
@@ -86,7 +90,16 @@ public sealed partial class SessionPage : UserControl
             Content = _rows,
         };
 
+        _scroll.ScrollChanged += (_, e) =>
+        {
+            var previousEnd = _scroll.ScrollBarMaximum.Y - e.ExtentDelta.Y + e.ViewportDelta.Y;
+            if (e.ExtentDelta.Y > 0 && _scroll.Offset.Y >= previousEnd - 2)
+            {
+                _scroll.ScrollToEnd();
+            }
+        };
         Content = _scroll;
+        ActualThemeVariantChanged += (_, _) => Rebuild(_state.Items);
     }
 
     /// <summary>
@@ -99,10 +112,25 @@ public sealed partial class SessionPage : UserControl
     /// </remarks>
     public event Action<ApprovalVerdict>? Answered;
 
+    /// <summary>Raised when the reader quotes a passage into the composer.</summary>
+    public event Action<string>? QuoteRequested;
+
     /// <summary>
     /// Gets the state the page is showing.
     /// </summary>
     public SessionState State => _state;
+
+    /// <summary>Gets or sets the acknowledgement path for a user's question answers.</summary>
+    public Func<string, IReadOnlyList<QuestionSelection>, Task<bool>>? SubmitAnswers
+    {
+        get; set;
+    }
+
+    /// <summary>Gets or sets the acknowledgement path for editing a timed question.</summary>
+    public Func<string, Task<bool>>? EngageQuestion
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Gets or sets the language the page's own labels are drawn in.
@@ -144,6 +172,19 @@ public sealed partial class SessionPage : UserControl
         get; set;
     }
 
+    /// <summary>Updates presentation preferences without replacing the session's state.</summary>
+    /// <param name="language">The window language.</param>
+    /// <param name="fold">Whether to group intermediate work.</param>
+    public void ApplyPreferences(InterfaceLanguage language, bool fold)
+    {
+        if (language != Language || fold != FoldsTurnWork)
+        {
+            Language = language;
+            FoldsTurnWork = fold;
+            Rebuild(_state.Items);
+        }
+    }
+
     /// <summary>
     /// Shows one state.
     /// </summary>
@@ -156,19 +197,13 @@ public sealed partial class SessionPage : UserControl
             throw new ArgumentNullException(nameof(state));
         }
 
-        // Only the transcript's composition forces a rebuild. Streaming text grows a
-        // row that already exists, and rebuilding for it would throw away the scroll
-        // position on every chunk.
-        var rebuilt = !ReferenceEquals(state.Items, _state.Items);
+        var previous = _state;
         _state = state;
-
-        if (rebuilt || _drawn.Count != state.Items.Count)
+        if (_rows.Children.Count == 0
+            || (!ReferenceEquals(previous.Items, state.Items) && !UpdateAnswers(previous.Items, state.Items)))
         {
             Rebuild(state.Items);
-            return;
         }
-
-        UpdateText(state.Items);
     }
 
     /// <summary>
@@ -176,7 +211,7 @@ public sealed partial class SessionPage : UserControl
     /// </summary>
     /// <param name="level">The level the kernel reported.</param>
     /// <returns>The brush for that level, or null to inherit the row's ink.</returns>
-    private static IBrush? NoticeInk(string level)
+    private IBrush? NoticeInk(string level)
     {
         return level switch
         {
@@ -191,10 +226,10 @@ public sealed partial class SessionPage : UserControl
     /// </summary>
     /// <param name="key">The token name, without its leading dashes.</param>
     /// <returns>The brush, or null when this theme has no such token.</returns>
-    private static IBrush? Brush(string key)
+    private IBrush? Brush(string key)
     {
         if (Application.Current is { } app
-            && app.TryGetResource(key, app.ActualThemeVariant, out var value)
+            && app.TryGetResource(key, ActualThemeVariant, out var value)
             && value is IBrush brush)
         {
             return brush;
@@ -243,33 +278,21 @@ public sealed partial class SessionPage : UserControl
         switch (item)
         {
             case UserItem user:
-                var own = new SelectableTextBlock
+                var bubble = new ContentControl
                 {
-                    Text = user.Text,
-                    FontSize = 13,
-                    TextWrapping = TextWrapping.Wrap,
-                };
-                AutomationProperties.SetAutomationId(own, "class:txt");
-                return new Border
-                {
-                    Background = Brush("RaisedBrush"),
-                    CornerRadius = new CornerRadius(10),
-                    Padding = new Thickness(12, 8, 12, 8),
+                    FontSize = 14,
+                    FontWeight = FontWeight.Medium,
+                    Background = Brush("OverlayBrush"),
+                    CornerRadius = new CornerRadius(15),
+                    Padding = new Thickness(14, 10),
                     HorizontalAlignment = HorizontalAlignment.Right,
-                    MaxWidth = 620,
-                    Child = own,
+                    Content = new SelectableTextBlock { Text = user.Text, LineHeight = 22.4, TextWrapping = TextWrapping.Wrap },
                 };
+                AutomationProperties.SetAutomationId(bubble, "class:txt");
+                return bubble;
 
             case SayItem say:
-                var answer = new SelectableTextBlock
-                {
-                    Text = say.Text,
-                    FontSize = 13,
-                    TextWrapping = TextWrapping.Wrap,
-                    Opacity = say.Done ? 1 : 0.9,
-                };
-                AutomationProperties.SetAutomationId(answer, "class:txt");
-                return answer;
+                return new AnswerCard(say, Language, text => QuoteRequested?.Invoke(text));
 
             case NoticeItem notice:
                 return new SelectableTextBlock
@@ -361,6 +384,22 @@ public sealed partial class SessionPage : UserControl
     /// <returns>The card's body: a heading, then each question it asks.</returns>
     private Control AskBody(AskItem item)
     {
+        if (item.Answered is null && SubmitAnswers is { } submit && EngageQuestion is { } engage
+            && item.Ask.Questions.All(q => q.Surface is null))
+        {
+            if (!_forms.TryGetValue(item.Ask.ID, out var form))
+            {
+                form = new QuestionForm(item.Ask, Language, engage, submit);
+                _forms[item.Ask.ID] = form;
+            }
+            else if (form.Parent is Border previous)
+            {
+                previous.Child = null;
+            }
+
+            return form;
+        }
+
         var body = new StackPanel { Spacing = 6 };
         body.Children.Add(new SelectableTextBlock
         {
@@ -400,6 +439,11 @@ public sealed partial class SessionPage : UserControl
                     TextWrapping = TextWrapping.Wrap,
                 });
             }
+        }
+
+        if (item.Answered is not null && !string.IsNullOrEmpty(item.Subject))
+        {
+            body.Children.Add(new SelectableTextBlock { Text = item.Subject, TextWrapping = TextWrapping.Wrap });
         }
 
         if (item.Answered is { Count: > 0 } answers)
@@ -545,19 +589,19 @@ public sealed partial class SessionPage : UserControl
         // and a second answer would name an approval the kernel no longer holds.
         if (item.Open)
         {
-            buttons.Children.Add(VerdictButton(item.Approval.ID, "允许", allow: true, session: false, persist: false));
-            buttons.Children.Add(VerdictButton(item.Approval.ID, "拒绝", allow: false, session: false, persist: false));
+            buttons.Children.Add(VerdictButton(item.Approval.ID, MessageCatalog.Get(MessageKey.Chat.AllowOnce, Language), allow: true, session: false, persist: false));
+            buttons.Children.Add(VerdictButton(item.Approval.ID, MessageCatalog.Get(MessageKey.Common.Refuse, Language), allow: false, session: false, persist: false));
 
             // The wider answers appear only where the kernel declared them, so the
             // card cannot offer a scope the call does not have.
             if (item.Approval.AllowsSession)
             {
-                buttons.Children.Add(VerdictButton(item.Approval.ID, "本会话都允许", allow: true, session: true, persist: false));
+                buttons.Children.Add(VerdictButton(item.Approval.ID, MessageCatalog.Get(MessageKey.Chat.AllowThisKindForThis, Language), allow: true, session: true, persist: false));
             }
 
             if (item.Approval.AllowsPersist)
             {
-                buttons.Children.Add(VerdictButton(item.Approval.ID, "以后都允许", allow: true, session: true, persist: true));
+                buttons.Children.Add(VerdictButton(item.Approval.ID, MessageCatalog.Get(MessageKey.Chat.AlwaysAllowThisKindStop, Language), allow: true, session: true, persist: true));
             }
         }
 
@@ -589,7 +633,14 @@ public sealed partial class SessionPage : UserControl
         {
             body.Children.Add(new SelectableTextBlock
             {
-                Text = item.Verdict == "allow" ? "已允许" : "已拒绝",
+                Text = item.Verdict switch
+                {
+                    "allow" or "allow_once" => MessageCatalog.Get(MessageKey.Chat.AllowedOnce, Language),
+                    "allow_session" or "recovery_continue_task" => MessageCatalog.Get(MessageKey.Chat.AllowedThisKindWillNot, Language),
+                    "allow_persistent" => MessageCatalog.Get(MessageKey.Chat.AllowedRecordedAsARule, Language),
+                    "deny" or "recovery_revise" => MessageCatalog.Get(MessageKey.Chat.Denied, Language),
+                    _ => item.Verdict,
+                },
                 FontSize = 12,
                 Opacity = 0.55,
             });
@@ -632,6 +683,15 @@ public sealed partial class SessionPage : UserControl
     /// <param name="items">The rows to draw.</param>
     private void Rebuild(IReadOnlyList<TranscriptItem> items)
     {
+        if (_forms.Count > 0)
+        {
+            var open = items.OfType<AskItem>().Where(ask => ask.Answered is null).Select(ask => ask.Ask.ID).ToHashSet();
+            foreach (var id in _forms.Keys.Where(id => !open.Contains(id)).ToArray())
+            {
+                _forms.Remove(id);
+            }
+        }
+
         var held = _scroll.Offset;
         _rows.Children.Clear();
         _drawn.Clear();
@@ -640,7 +700,7 @@ public sealed partial class SessionPage : UserControl
         {
             _rows.Children.Add(new TextBlock
             {
-                Text = "这个会话还没有内容。",
+                Text = MessageCatalog.Get(MessageKey.Composer.DescribeATaskQuestionOr, Language),
                 FontSize = 13,
                 Opacity = 0.55,
             });
@@ -653,17 +713,34 @@ public sealed partial class SessionPage : UserControl
     }
 
     /// <summary>
-    /// Extends the rows that are still being written.
+    /// Updates answer text without disturbing the selection or the surrounding cards.
     /// </summary>
-    /// <param name="items">The rows as they now stand.</param>
-    private void UpdateText(IReadOnlyList<TranscriptItem> items)
+    /// <param name="previous">The rows already mounted.</param>
+    /// <param name="next">The rows from the reducer.</param>
+    /// <returns>Whether the existing controls still represent every row.</returns>
+    private bool UpdateAnswers(IReadOnlyList<TranscriptItem> previous, IReadOnlyList<TranscriptItem> next)
     {
-        for (var i = 0; i < items.Count && i < _drawn.Count; i++)
+        if (previous.Count != next.Count || _drawn.Count != next.Count)
         {
-            if (items[i] is SayItem say && _drawn[i] is SelectableTextBlock text)
-            {
-                text.Text = say.Text;
-            }
+            return false;
         }
+
+        for (var i = 0; i < next.Count; i++)
+        {
+            if (ReferenceEquals(previous[i], next[i]))
+            {
+                continue;
+            }
+
+            if (previous[i] is not SayItem before || next[i] is not SayItem after || before.Id != after.Id
+                || _drawn[i] is not Border { Child: AnswerCard answer })
+            {
+                return false;
+            }
+
+            answer.Update(after, Language);
+        }
+
+        return true;
     }
 }
