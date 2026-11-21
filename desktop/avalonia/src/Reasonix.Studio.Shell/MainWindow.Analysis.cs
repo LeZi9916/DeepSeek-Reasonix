@@ -174,10 +174,11 @@ public sealed partial class MainWindow
         distribution.Children.Add(legend);
         body.Add(AnalysisCard(distribution, "class:run-budget", new Thickness(15, 12)));
 
-        var zoom = new Slider { Minimum = 1, Maximum = 8, Value = 1, Width = 130, TickFrequency = 1, IsSnapToTickEnabled = true };
+        var zoom = new Slider { Minimum = 1, Maximum = 16, Value = 1, Width = 130, TickFrequency = 1, IsSnapToTickEnabled = true };
         var scale = Detail("1×");
         var reset = new Button { Content = MessageCatalog.Get("panels.reset_zoom", Language), Height = 28, FontSize = 12 };
-        reset.Click += (_, _) => zoom.Value = 1;
+        AutomationProperties.SetAutomationId(zoom, "action:analysis.zoom");
+        AutomationProperties.SetAutomationId(reset, "action:analysis.reset-zoom");
         var controls = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
         controls.Children.Add(Detail(MessageCatalog.Get("panels.timeline_zoom", Language)));
         controls.Children.Add(zoom);
@@ -188,7 +189,13 @@ public sealed partial class MainWindow
         var track = new StackPanel { Spacing = 10 };
         var scroller = new ScrollViewer { Content = track, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
         var detail = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, IsVisible = false, FontFamily = FontFamily.Parse("monospace"), FontSize = 12 };
-        var signals = new WrapPanel();
+        var signals = new Workbench.SignalRail();
+        var points = new System.Collections.Generic.List<RunTimeline.Entry>();
+        reset.Click += (_, _) =>
+        {
+            zoom.Value = 1;
+            scroller.Offset = default;
+        };
         var rows = new StackPanel { Spacing = 4 };
         foreach (var entry in timeline.Rows)
         {
@@ -198,14 +205,10 @@ public sealed partial class MainWindow
             }
 
             var pick = new Button { Content = entry.Label, FontSize = 12, Margin = new Thickness(0, 0, 4, 2) };
-            pick.Click += (_, _) =>
-            {
-                detail.Text = string.Join(Environment.NewLine, entry.Frames.Select(frame => frame.ToJsonString(new JsonSerializerOptions { WriteIndented = true })));
-                detail.IsVisible = true;
-            };
+            pick.Click += (_, _) => Inspect(entry);
             if (entry.Duration is not > 0)
             {
-                signals.Children.Add(pick);
+                points.Add(entry);
                 continue;
             }
 
@@ -225,6 +228,7 @@ public sealed partial class MainWindow
             rows.Children.Add(row);
         }
 
+        signals.Open(points, timeline.Span, Inspect);
         var signalCard = new StackPanel { Spacing = 8 };
         signalCard.Children.Add(Detail(MessageCatalog.Get("panels.signal_rail", Language)));
         signalCard.Children.Add(signals);
@@ -241,6 +245,12 @@ public sealed partial class MainWindow
         };
         body.Add(scroller);
         body.Add(detail);
+
+        void Inspect(RunTimeline.Entry entry)
+        {
+            detail.Text = string.Join(Environment.NewLine, entry.Frames.Select(frame => frame.ToJsonString(new JsonSerializerOptions { WriteIndented = true })));
+            detail.IsVisible = true;
+        }
     }
 
     /// <summary>Builds a labelled metric from the trace.</summary>

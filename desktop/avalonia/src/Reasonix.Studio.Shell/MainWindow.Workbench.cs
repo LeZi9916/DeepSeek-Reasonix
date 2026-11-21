@@ -60,6 +60,8 @@ public sealed partial class MainWindow
         EndTerminal.Click += ConfirmTerminalClose;
         FilesTab.Content = MessageCatalog.Get(MessageKey.Common.Files, Language);
         ChangesTab.Content = MessageCatalog.Get(MessageKey.Common.Changes, Language);
+        TabViewport.ScrollChanged += (_, _) => UpdateTabOverflow();
+        TabViewport.SizeChanged += (_, _) => UpdateTabOverflow();
         FilesTab.Click += async (_, _) => await ListFilesAsync(_directory).ConfigureAwait(true);
         ChangesTab.Click += async (_, _) => await ListChangesAsync().ConfigureAwait(true);
         EditFile.Content = MessageCatalog.Get(MessageKey.Common.Edit, Language);
@@ -231,7 +233,7 @@ public sealed partial class MainWindow
                 if (ticket == _fileRead)
                 {
                     _openFile = null;
-                    ShowPreview(new SelectableTextBlock { FontFamily = FontFamily.Parse("monospace"), Text = (string?)diff["diff"], TextWrapping = TextWrapping.NoWrap });
+                    ShowDiff((string?)diff["diff"]);
                     WorkbenchTitle.Text = entry.Path;
                 }
 
@@ -389,6 +391,15 @@ public sealed partial class MainWindow
         }
     }
 
+    /// <summary>Draws a file or change-list diff through the same native component.</summary>
+    /// <param name="patch">Unified diff from the active workspace.</param>
+    private void ShowDiff(string? patch)
+    {
+        var preview = new Workbench.DiffPreview();
+        preview.Show(string.IsNullOrEmpty(patch) ? MessageCatalog.Get(MessageKey.Workbench.NoChanges, Language) : patch);
+        ShowPreview(preview);
+    }
+
     /// <summary>Marks the active presentation of the file in the toolbar.</summary>
     /// <param name="active">Selected mode.</param>
     private void SelectFileMode(Button active)
@@ -450,12 +461,7 @@ public sealed partial class MainWindow
                 return;
             }
 
-            var patch = (string?)diff["diff"];
-            ShowPreview(new SelectableTextBlock
-            {
-                FontFamily = FontFamily.Parse("monospace"),
-                Text = string.IsNullOrEmpty(patch) ? MessageCatalog.Get(MessageKey.Workbench.NoChanges, Language) : patch,
-            });
+            ShowDiff((string?)diff["diff"]);
             FileModes.IsVisible = true;
             PreviewFile.IsVisible = file.Kind is "markdown" or "html";
             SelectFileMode(DiffFile);
@@ -502,9 +508,15 @@ public sealed partial class MainWindow
     private void RebuildTabs()
     {
         FileTabs.Children.Clear();
+        Control? selected = null;
         foreach (var (key, buffer) in _fileBuffers.Where(pair => pair.Key.Root == _workspaceRoot))
         {
-            var group = new StackPanel { Orientation = Orientation.Horizontal };
+            var group = new StackPanel { Orientation = Orientation.Horizontal, Tag = key.Path };
+            if (ReferenceEquals(buffer, _openFile))
+            {
+                selected = group;
+            }
+
             var tab = new Button
             {
                 Content = Path.GetFileName(key.Path),
@@ -543,6 +555,45 @@ public sealed partial class MainWindow
             group.Children.Add(close);
             FileTabs.Children.Add(group);
         }
+
+        Avalonia.Threading.Dispatcher.UIThread.Post(
+            () =>
+            {
+                selected?.BringIntoView();
+                UpdateTabOverflow();
+            },
+            Avalonia.Threading.DispatcherPriority.Loaded);
+    }
+
+    /// <summary>Lists tabs clipped by the strip, using their measured positions and scroll offset.</summary>
+    private void UpdateTabOverflow()
+    {
+        var width = TabViewport.Viewport.Width;
+        var needsMenu = width > 0 && TabViewport.Extent.Width > width + (TabOverflow.IsVisible ? TabOverflow.Bounds.Width : 0) + 0.5;
+        TabOverflow.IsVisible = needsMenu;
+        if (!needsMenu || TabOverflow.Flyout is not MenuFlyout menu)
+        {
+            return;
+        }
+
+        var offset = TabViewport.Offset.X;
+        var clipped = FileTabs.Children.Where(c => c.Bounds.X < offset - 0.5 || c.Bounds.Right > offset + width + 0.5).Select(c => (string)c.Tag!).ToArray();
+        if (clipped.SequenceEqual(menu.Items.OfType<MenuItem>().Select(item => (string)item.Tag!)))
+        {
+            return;
+        }
+
+        menu.Items.Clear();
+        foreach (var path in clipped)
+        {
+            var item = new MenuItem { Header = Path.GetFileName(path), Tag = path };
+            ToolTip.SetTip(item, path);
+            item.Click += async (_, _) => await OpenEntryAsync(new FileEntry(path, false)).ConfigureAwait(true);
+            menu.Items.Add(item);
+        }
+
+        TabOverflow.Content = "+" + clipped.Length.ToString(System.Globalization.CultureInfo.CurrentCulture) + " ▾";
+        Avalonia.Automation.AutomationProperties.SetName(TabOverflow, string.Join(", ", clipped.Select(Path.GetFileName)));
     }
 
     /// <summary>Closes the chosen tab after any required save or explicit discard.</summary>

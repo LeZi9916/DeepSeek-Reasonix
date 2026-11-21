@@ -153,7 +153,7 @@ The React capture also exports `page-inputs.json`. The native tests replay those
 | Data and agent settings | Memory editing, historical restoration and version-aware preset creation, duplication and editing have ordinary-control interaction tests. Compare the remaining library import/export and memory suggestion flows. |
 | Appearance and extensions | Verify illustrated theme backgrounds and typography controls. Marketplace installation and updates now display and apply the kernel's reviewed plan. |
 | Connections and onboarding | Complete remote-machine management and the remaining protocol and project-selection steps. Exercise connection failure, retry and back navigation. |
-| Workbench and analysis | Compare file-tab overflow, diff presentation and signal grouping against measured runs. Keep browser acceptance on the manual system WebView path. |
+| Workbench and analysis | File-tab overflow, selectable unified diffs, grouped signal inspection and 1–16× zoom have interaction tests. Keep browser acceptance on the manual system WebView path. |
 | Platform interaction | Run the Windows and Linux CI jobs and inspect their screenshots. Verify keyboard focus, native menus, scrolling, motion and the system WebView on each desktop. |
 
 ## What the geometry baseline is
