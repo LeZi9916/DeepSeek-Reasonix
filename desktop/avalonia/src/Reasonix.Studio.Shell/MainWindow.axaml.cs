@@ -140,6 +140,7 @@ public sealed partial class MainWindow : Window
     /// </remarks>
     public void ShowState(SessionState state)
     {
+        UpdateMemorySuggestions(state.Running);
         Backdrop.SetBusy(state.Running);
         Conversation.Show(state);
         ShowComposerState(state);
@@ -251,6 +252,7 @@ public sealed partial class MainWindow : Window
             await LoadTreeAsync().ConfigureAwait(true);
 
             // The stream is awaited last and never returns: it is the window's life.
+            UpdateMemorySuggestions(_engine.State.Running);
             _ = LoadStartupPreferencesAsync();
             await _engine.StartAsync().ConfigureAwait(true);
         }

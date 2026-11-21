@@ -1403,5 +1403,11 @@
     "attic",
     "old-laptop"
   ],
-  "/agent-composition": null
+  "/agent-composition": null,
+  "/memory/proactive": {
+    "mode": "ask"
+  },
+  "/memory/suggestions": {
+    "suggestions": []
+  }
 }

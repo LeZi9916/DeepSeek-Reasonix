@@ -35,11 +35,43 @@ public sealed partial class MemoryWorkspace : SettingsFormView
     /// <param name="api">The active kernel.</param>
     /// <param name="language">The reader's language.</param>
     /// <param name="catalog">Initial memory snapshot.</param>
+    /// <param name="policy">The host's proactive policy, or null when unsupported.</param>
     /// <param name="describe">Localizes kernel failures.</param>
     /// <param name="token">Window lifetime.</param>
-    internal void Open(StudioPageClient api, InterfaceLanguage language, JsonObject catalog, Func<Exception, string> describe, CancellationToken token)
+    internal void Open(StudioPageClient api, InterfaceLanguage language, JsonObject catalog, string? policy, Func<Exception, string> describe, CancellationToken token)
     {
         Translate(language);
+        PolicyRow.IsVisible = policy is not null;
+        Policy.ItemsSource = new[] { new Option("off", Text("memory.proactive_off")), new Option("ask", Text("memory.proactive_ask")), new Option("auto", Text("memory.proactive_auto")) };
+        Select(Policy, policy ?? "off");
+        Policy.SelectionChanged += async (_, _) =>
+        {
+            if (!Policy.IsEnabled || Policy.SelectedItem is not Option option || option.Id == policy)
+            {
+                return;
+            }
+
+            Policy.IsEnabled = false;
+            try
+            {
+                await api.SetMemoryPolicyAsync(option.Id, token).ConfigureAwait(true);
+                policy = await api.MemoryPolicyAsync(token).ConfigureAwait(true);
+                PolicyRow.IsVisible = policy is not null;
+                Select(Policy, policy ?? "off");
+            }
+            catch (Exception error)
+            {
+                if (!token.IsCancellationRequested)
+                {
+                    Select(Policy, policy ?? "off");
+                    Error(describe(error));
+                }
+            }
+            finally
+            {
+                Policy.IsEnabled = true;
+            }
+        };
         var flags = new HashSet<string>(StringComparer.Ordinal);
         var selected = string.Empty;
         string? editing = null;

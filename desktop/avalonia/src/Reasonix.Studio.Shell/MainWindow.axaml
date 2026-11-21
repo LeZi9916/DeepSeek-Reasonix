@@ -148,6 +148,7 @@
                   <Button Name="DismissError" Grid.Column="1" Classes="icon">×</Button>
                 </Grid>
               </Border>
+              <StackPanel Name="MemorySuggestions" Spacing="5" IsVisible="False"/>
               <ScrollViewer Name="QueueScroll" IsVisible="False" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Name="QueueStrip" Spacing="4" />
               </ScrollViewer>

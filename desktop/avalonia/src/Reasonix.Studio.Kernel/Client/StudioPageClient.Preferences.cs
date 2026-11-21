@@ -93,6 +93,40 @@ public sealed partial class StudioPageClient
     /// <returns>The kernel acknowledgement.</returns>
     public Task ActivateThemeAsync(string id, CancellationToken token) => PostAsync("/themes", new JsonObject { ["id"] = id }, token);
 
+    /// <summary>Reads how proposed facts may be stored.</summary>
+    /// <param name="token">Cancels the read.</param>
+    /// <returns>The saved mode, or null for an older host.</returns>
+    public async Task<string?> MemoryPolicyAsync(CancellationToken token) => (string?)(await OptionalPreferenceAsync("/memory/proactive", token).ConfigureAwait(false))?["mode"];
+
+    /// <summary>Changes the machine's proactive memory policy.</summary>
+    /// <param name="mode">Off, ask or auto.</param>
+    /// <param name="token">Cancels the write.</param>
+    /// <returns>The acknowledgement.</returns>
+    public Task SetMemoryPolicyAsync(string mode, CancellationToken token) => PostAsync("/memory/proactive", new JsonObject { ["mode"] = mode }, token);
+
+    /// <summary>Reads the held proposals awaiting the user's decision.</summary>
+    /// <param name="token">Cancels the read.</param>
+    /// <returns>The held proposals.</returns>
+    public async Task<JsonArray> MemorySuggestionsAsync(CancellationToken token) =>
+        (await OptionalPreferenceAsync("/memory/suggestions", token).ConfigureAwait(false))?["suggestions"]?.AsArray() ?? [];
+
+    /// <summary>Accepts or dismisses a proposal on the runtime that owns it.</summary>
+    /// <param name="id">Proposal identity.</param>
+    /// <param name="accept">The user's decision.</param>
+    /// <param name="body">Edited body, or null to keep the proposal as written.</param>
+    /// <param name="token">Cancels the write.</param>
+    /// <returns>The acknowledgement.</returns>
+    public Task SettleMemoryAsync(string id, bool accept, string? body, CancellationToken token)
+    {
+        var payload = new JsonObject { ["id"] = id };
+        if (accept && body is not null)
+        {
+            payload["body"] = body;
+        }
+
+        return PostAsync(accept ? "/memory/suggestions/accept" : "/memory/suggestions/dismiss", payload, token);
+    }
+
     /// <summary>Reads this machine's memory entries and unreadable files.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The memory catalog.</returns>

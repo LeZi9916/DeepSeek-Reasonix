@@ -375,7 +375,7 @@ public sealed partial class MainWindow
                         var catalog = await api.MemoriesAsync(_closing.Token).ConfigureAwait(true);
                         var memories = new Settings.MemoryWorkspace { Tag = "data.memory" };
                         Card(column, "data.memory_and_usage").Children.Add(memories);
-                        memories.Open(api, Language, catalog, DescribeError, _closing.Token);
+                        memories.Open(api, Language, catalog, await api.MemoryPolicyAsync(_closing.Token).ConfigureAwait(true), DescribeError, _closing.Token);
                         if (TopLevel.GetTopLevel(memories) == this)
                         {
                             _unsavedSettings = () => memories.HasChanges;

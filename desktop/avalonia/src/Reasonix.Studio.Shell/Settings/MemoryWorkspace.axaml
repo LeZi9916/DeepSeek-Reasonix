@@ -3,6 +3,10 @@
   <StackPanel Spacing="8">
     <TextBlock Tag="data.memory" FontWeight="SemiBold" FontSize="{DynamicResource StudioType15}"/>
     <TextBlock Tag="settings.what_it_remembers" Foreground="{DynamicResource MutedBrush}"/>
+    <Grid Name="PolicyRow" ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,6">
+      <StackPanel Spacing="3"><TextBlock Tag="memory.proactive_title" FontWeight="Medium"/><TextBlock Tag="memory.proactive_hint" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/></StackPanel>
+      <ComboBox Name="Policy" Grid.Column="1" VerticalAlignment="Center" AutomationProperties.AutomationId="action:memory.proactive"/>
+    </Grid>
     <StackPanel Name="Warnings"/>
     <TextBlock Name="Failure" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}" IsVisible="False"/>
     <Button Name="Reload" Tag="common.reload" IsVisible="False"/>

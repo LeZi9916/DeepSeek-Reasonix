@@ -38,10 +38,22 @@ public sealed partial class NativeDomainTests
         var restores = 0;
         var confirmed = 0;
         var archived = 0;
+        var policyWrites = 0;
+        var chosenMode = "off";
         reads.Exchange = async request =>
         {
             switch (request.RequestUri!.AbsolutePath)
             {
+                case "/memory/proactive":
+                    if (request.Method == HttpMethod.Post)
+                    {
+                        var mode = JsonNode.Parse(await request.Content!.ReadAsStringAsync())!;
+                        chosenMode = (string)mode["mode"]!;
+                        policyWrites++;
+                        return new HttpResponseMessage(HttpStatusCode.NoContent);
+                    }
+
+                    return JsonReply(new JsonObject { ["mode"] = chosenMode });
                 case "/memory":
                     return JsonReply(catalog);
                 case "/memory/save":
@@ -83,6 +95,10 @@ public sealed partial class NativeDomainTests
                     return null;
             }
         };
+        var policy = ControlAt<ComboBox>(w, "action:memory.proactive");
+        policy.SelectedIndex = policy.SelectedIndex == 2 ? 0 : 2;
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(1, policyWrites);
         ControlAt<TextBox>(w, "action:memory.search").Text = name;
         Dispatcher.UIThread.RunJobs();
         ClickAt(w, "action:memory.edit");
@@ -115,6 +131,52 @@ public sealed partial class NativeDomainTests
         Assert.Equal(1, archived);
         Assert.DoesNotContain(w.GetVisualDescendants().OfType<Button>(), b => b.IsEffectivelyVisible && AutomationProperties.GetAutomationId(b) == "action:memory.open");
     });
+
+    /// <summary>Reviews a held suggestion locally before saving the edited body.</summary>
+    /// <returns>The native composer interaction.</returns>
+    [Fact]
+    public Task ComposerReviewsHeldMemory() => WithSettings(
+        "conversation",
+        (w, reads) =>
+        {
+            var accepts = 0;
+            var dismisses = 0;
+            var held = JsonNode.Parse("""{"suggestions":[{"id":"held","title":"A proposal","body":"original","scope":"project"},{"id":"other","body":"other"}]}""")!;
+            reads.Exchange = async req =>
+            {
+                if (req.RequestUri!.AbsolutePath == "/memory/suggestions")
+                {
+                    return JsonReply(held);
+                }
+
+                if (req.RequestUri.AbsolutePath == "/memory/suggestions/accept")
+                {
+                    var edit = JsonNode.Parse(await req.Content!.ReadAsStringAsync())!;
+                    Assert.Equal("held", (string?)edit["id"]);
+                    Assert.Equal("approved wording", (string?)edit["body"]);
+                    accepts++;
+                    return new HttpResponseMessage(HttpStatusCode.NoContent);
+                }
+
+                if (req.RequestUri.AbsolutePath == "/memory/suggestions/dismiss")
+                {
+                    dismisses++;
+                    return new HttpResponseMessage(HttpStatusCode.NoContent);
+                }
+
+                return null;
+            };
+            w.ShowState(new Reasonix.Studio.State.SessionState { Running = true });
+            w.ShowState(new Reasonix.Studio.State.SessionState());
+            Dispatcher.UIThread.RunJobs();
+            ClickAt(w, "action:memory.suggest-edit");
+            ControlAt<TextBox>(w, "action:memory.suggest-text").Text = "approved wording";
+            Assert.Equal(0, accepts);
+            ClickAt(w, "action:memory.suggest-save");
+            ClickAt(w, "action:memory.suggest-dismiss");
+            Assert.Equal(1, accepts);
+            Assert.Equal(1, dismisses);
+        });
 
     /// <summary>Runs a scenario on the UI thread through the main settings entry point.</summary>
     /// <param name="section">Baseline page name.</param>

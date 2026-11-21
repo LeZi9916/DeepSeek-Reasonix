@@ -1,0 +1,13 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.MemorySuggestionEntry">
+ <Border Padding="10,7" CornerRadius="8" Background="{DynamicResource RaisedBrush}" BorderBrush="{DynamicResource HairBrush}" BorderThickness="1">
+  <StackPanel Spacing="5">
+   <WrapPanel><TextBlock Tag="chat.suggest_lead" Foreground="{DynamicResource MutedBrush}" Margin="0,0,6,0"/><TextBlock Name="Title" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Name="Scope" Margin="8,0" Foreground="{DynamicResource FaintBrush}"/></WrapPanel>
+   <StackPanel Name="Editor" IsVisible="False" Spacing="4"><TextBox Name="Body" AcceptsReturn="True" TextWrapping="Wrap" AutomationProperties.AutomationId="action:memory.suggest-text"/>
+    <WrapPanel><Button Name="Save" Tag="chat.suggest_remember" AutomationProperties.AutomationId="action:memory.suggest-save"/><Button Name="Cancel" Tag="common.cancel" AutomationProperties.AutomationId="action:memory.suggest-cancel"/></WrapPanel>
+   </StackPanel>
+   <WrapPanel Name="Actions"><Button Name="Accept" Tag="chat.suggest_remember" AutomationProperties.AutomationId="action:memory.suggest-accept"/>
+    <Button Name="Edit" Tag="chat.suggest_edit" AutomationProperties.AutomationId="action:memory.suggest-edit"/><Button Name="Dismiss" Tag="chat.suggest_dismiss" AutomationProperties.AutomationId="action:memory.suggest-dismiss"/></WrapPanel>
+  </StackPanel>
+ </Border>
+</local:SettingsFormView>
