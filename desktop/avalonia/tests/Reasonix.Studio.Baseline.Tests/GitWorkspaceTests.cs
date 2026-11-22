@@ -56,6 +56,9 @@ public sealed class GitWorkspaceTests
             Assert.True(File.Exists(Path.Combine(isolated, "README.md")));
             var status = await engine.StatusAsync(token);
             Assert.Equal(isolated, status!.WorkspaceRoot);
+            await using var remounted = await initial.OpenProjectAsync(isolated, token);
+            var remountedStatus = await remounted.StatusAsync(token);
+            Assert.Equal(isolated, remountedStatus!.WorkspaceRoot);
         }
         finally
         {
