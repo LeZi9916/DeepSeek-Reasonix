@@ -35,6 +35,35 @@ public sealed class StudioPageClientTests
         Assert.Equal(409, refusal.Status);
     }
 
+    /// <summary>Worktree capability and source branches read from their canonical routes.</summary>
+    /// <returns>The inventory and branch list.</returns>
+    [Fact]
+    public async Task WorktreeSourcesCarryAvailabilityAndBranches()
+    {
+        using var handler = new Handler(request => Task.FromResult(request.RequestUri!.AbsolutePath switch
+        {
+            "/workspaces" => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"current":"/repo","canSwitch":true,"canIsolate":true,"isolated":false}""", Encoding.UTF8, "application/json"),
+            },
+            "/workspace/worktree-sources" => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"available":true,"sourceRoot":"/repo","sources":[{"ref":"refs/heads/topic","name":"topic","remote":false,"current":true}]}""", Encoding.UTF8, "application/json"),
+            },
+            _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+        }));
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("http://127.0.0.1:1234/") };
+        var pages = new StudioPageClient(http);
+        var inventory = await pages.WorkspaceInventoryAsync(default);
+        Assert.True(inventory.CanIsolate);
+        Assert.Equal("/repo", inventory.Current);
+        var sources = await pages.WorktreeSourcesAsync(default);
+        Assert.True(sources.Available);
+        var source = Assert.Single(sources.Sources);
+        Assert.Equal("refs/heads/topic", source.Ref);
+        Assert.True(source.Current);
+    }
+
     /// <summary>Isolation sends the chosen worktree source, ref and carried paths.</summary>
     /// <returns>The workspace switch request.</returns>
     [Fact]

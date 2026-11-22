@@ -9,6 +9,18 @@ namespace Reasonix.Studio.Kernel.Client;
 
 public sealed partial class StudioPageClient
 {
+    /// <summary>Reads the workspace inventory and isolation capability.</summary>
+    /// <param name="token">Cancels the read.</param>
+    /// <returns>The workspace inventory.</returns>
+    public Task<WorkspaceInventory> WorkspaceInventoryAsync(CancellationToken token) =>
+        ReadAsync<WorkspaceInventory>("/workspaces", token);
+
+    /// <summary>Reads branches that may seed a new worktree.</summary>
+    /// <param name="token">Cancels the read.</param>
+    /// <returns>The source branches.</returns>
+    public Task<WorktreeSources> WorktreeSourcesAsync(CancellationToken token) =>
+        ReadAsync<WorktreeSources>("/workspace/worktree-sources", token);
+
     /// <summary>Repoints the runtime at an isolated worktree of the current repository.</summary>
     /// <param name="sourceRoot">Current workspace serving as the worktree source.</param>
     /// <param name="reference">Branch ref to check out.</param>
