@@ -228,7 +228,7 @@ public sealed partial class MainWindow
         FileCanvas.RowDefinitions[0].Height = new GridLength(view.Classes.Contains("git-board") ? 0 : 40);
         FileMore.IsVisible = false;
         ShowPreview(view);
-        WorkbenchTitle.Text = title;
+        SetFileBarTitle(title, path: false);
         FileModes.IsVisible = false;
         SaveFile.IsVisible = false;
         RebuildTabs();

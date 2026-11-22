@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -152,9 +153,9 @@ public sealed partial class MainWindow
             }
         };
         WorkbenchView.Header = MessageCatalog.Get(MessageKey.Common.Workbench, Language);
-        SaveFile.Content = MessageCatalog.Get(MessageKey.Common.Save, Language);
+        SaveFileLabel.Text = MessageCatalog.Get(MessageKey.Common.Save, Language);
         Label(CloseWorkbench, MessageKey.Common.Close);
-        WorkbenchTitle.Text = MessageCatalog.Get(MessageKey.Common.Workbench, Language);
+        SetFileBarTitle(MessageCatalog.Get(MessageKey.Common.Workbench, Language), path: false);
         WorkbenchView.Click += async (_, _) => await OpenWorkbenchAsync().ConfigureAwait(true);
         CloseWorkbench.Click += (_, _) =>
         {
@@ -345,7 +346,7 @@ public sealed partial class MainWindow
                         SetReadOnlyBadge(null);
                         using var input = new MemoryStream(bytes);
                         ShowPreview(new Image { Source = new Bitmap(input), Stretch = Stretch.Uniform });
-                        WorkbenchTitle.Text = entry.Path;
+                        SetFileBarTitle(entry.Path, path: true);
                     }
 
                     return;
@@ -372,7 +373,7 @@ public sealed partial class MainWindow
             RebuildTabs();
             FileEditor.Text = buffer.Draft;
             FileEditor.IsReadOnly = buffer.Original.ReadOnly;
-            WorkbenchTitle.Text = entry.Path;
+            SetFileBarTitle(entry.Path, path: true);
             SaveFile.IsEnabled = buffer.CanSave;
             if (buffer.Kind == "markdown")
             {
@@ -424,7 +425,7 @@ public sealed partial class MainWindow
         RebuildTabs();
         if (html is null)
         {
-            WorkbenchTitle.Text = MessageCatalog.Get(MessageKey.Workbench.Browser, Language);
+            SetFileBarTitle(MessageCatalog.Get(MessageKey.Workbench.Browser, Language), path: false);
             PreviewFile.IsVisible = false;
             SaveFile.IsEnabled = false;
             Avalonia.Threading.Dispatcher.UIThread.Post(preview.FocusAddress, Avalonia.Threading.DispatcherPriority.Input);
@@ -448,7 +449,7 @@ public sealed partial class MainWindow
         WorkspaceBody.IsVisible = true;
         if (_openFile is { } file)
         {
-            WorkbenchTitle.Text = file.Original.Path;
+            SetFileBarTitle(file.Original.Path, path: true);
             PreviewFile.IsVisible = file.Kind is "markdown" or "html";
             PreviewFile.Content = MessageCatalog.Get(file.Kind == "markdown" ? MessageKey.Workbench.Read : MessageKey.Common.Preview, Language);
             SaveFile.IsEnabled = file.CanSave;
@@ -473,6 +474,39 @@ public sealed partial class MainWindow
             mode.Classes.Set("active", mode == active);
         }
     }
+
+    /// <summary>Draws a path as muted directories and a bold filename.</summary>
+    /// <param name="text">Path or plain title.</param>
+    /// <param name="path">Whether the text is a workspace-relative file path.</param>
+    private void SetFileBarTitle(string text, bool path)
+    {
+        WorkbenchTitle.Text = text;
+        WorkbenchTitle.IsVisible = !path;
+        Breadcrumb.IsVisible = path;
+        if (!path)
+        {
+            return;
+        }
+
+        Breadcrumb.Inlines?.Clear();
+        var parts = text.Split('/');
+        for (var i = 0; i < parts.Length; i++)
+        {
+            var final = i == parts.Length - 1;
+            Breadcrumb.Inlines?.Add(new Run
+            {
+                Text = final ? parts[i] : parts[i] + "/",
+                Foreground = ResourceBrush(final ? "TextBrush" : "MutedBrush"),
+                FontWeight = final ? FontWeight.SemiBold : FontWeight.Normal,
+            });
+        }
+    }
+
+    /// <summary>Reads a brush from the window's theme resources.</summary>
+    /// <param name="key">Resource key.</param>
+    /// <returns>The brush, or a muted fallback.</returns>
+    private IBrush ResourceBrush(string key) =>
+        this.TryFindResource(key, out var value) && value is IBrush brush ? brush : Brushes.Gray;
 
     /// <summary>Shows why a granted file cannot be saved.</summary>
     /// <param name="file">Current buffer, or null when no file is open.</param>
@@ -653,7 +687,7 @@ public sealed partial class MainWindow
     {
         ShowRefusal(error);
         ToolTip.SetTip(WorkbenchTitle, ErrorText.Text);
-        WorkbenchTitle.Text = ErrorText.Text;
+        SetFileBarTitle(ErrorText.Text ?? string.Empty, path: false);
     }
 
     /// <summary>A text buffer and the revision it was read against.</summary>

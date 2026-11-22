@@ -360,6 +360,7 @@
                 <Grid Name="FileCanvas" Grid.Column="1" RowDefinitions="40,*,Auto" Background="{DynamicResource RaisedBrush}" AutomationProperties.AutomationId="class:workbench-canvas">
                   <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6" UseLayoutRounding="False" AutomationProperties.AutomationId="class:workbench-filebar">
                     <TextBlock Name="WorkbenchTitle" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Name="Breadcrumb" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" TextTrimming="CharacterEllipsis" IsVisible="False"/>
                     <Button Name="EndTerminal" Grid.Column="1" IsVisible="False" />
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                       <Border Name="ReadOnlyBadge" Classes="readonly-badge" IsVisible="False">
@@ -371,7 +372,14 @@
                         <Button Name="DiffFile" Classes="file-mode" Content="Diff" />
                       </StackPanel>
                     </StackPanel>
-                    <Button Name="SaveFile" Classes="wb-command" AutomationProperties.AutomationId="action:workbench.save" Grid.Column="2" Width="75" Margin="0,0,0,1" Padding="8,0" IsEnabled="False" Height="32" />
+                    <Button Name="SaveFile" Classes="wb-command" AutomationProperties.AutomationId="action:workbench.save" Grid.Column="2" Width="75" Margin="0,0,0,1" Padding="8,0" IsEnabled="False" Height="32">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Viewbox Width="13" Height="13" VerticalAlignment="Center">
+                          <Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.check}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+                        </Viewbox>
+                        <TextBlock Name="SaveFileLabel" FontSize="{DynamicResource StudioType12}" VerticalAlignment="Center"/>
+                      </StackPanel>
+                    </Button>
                     <Button Name="FileMore" Grid.Column="3" Width="28" Height="28" Padding="0" Margin="0,0,8,1" Content="⋯" AutomationProperties.AutomationId="action:workbench.file-more"/>
                     <Border Grid.ColumnSpan="4" Height="1" VerticalAlignment="Bottom" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
                   </Grid>

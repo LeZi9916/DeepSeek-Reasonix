@@ -133,7 +133,7 @@ public sealed partial class MainWindow
         SettingsTitle.Text = MessageCatalog.Get(MessageKey.Common.Settings, Language);
         SettingsSearch.PlaceholderText = MessageCatalog.Get(MessageKey.Settings.SearchSettings, Language);
         WorkbenchView.Header = MessageCatalog.Get(MessageKey.Common.Workbench, Language);
-        SaveFile.Content = MessageCatalog.Get(MessageKey.Common.Save, Language);
+        SaveFileLabel.Text = MessageCatalog.Get(MessageKey.Common.Save, Language);
         Label(FindButton, MessageKey.Chat.Search);
         FindText.PlaceholderText = MessageCatalog.Get(MessageKey.Chat.Search, Language);
         ExplorerHeading.Text = MessageCatalog.Get(MessageKey.Workbench.Explorer, Language);

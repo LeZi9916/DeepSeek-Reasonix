@@ -98,7 +98,7 @@ public sealed partial class MainWindow
             {
                 ReleasePreview();
                 FileEditor.IsVisible = true;
-                WorkbenchTitle.Text = MessageCatalog.Get(MessageKey.Common.Workbench, Language);
+                SetFileBarTitle(MessageCatalog.Get(MessageKey.Common.Workbench, Language), path: false);
             }
         };
         menu.Items.Add(confirm);
@@ -139,7 +139,7 @@ public sealed partial class MainWindow
         TerminalSurface.IsVisible = true;
         _terminalId = id;
         EndTerminal.IsVisible = true;
-        WorkbenchTitle.Text = MessageCatalog.Get(MessageKey.Workbench.Terminal, Language);
+        SetFileBarTitle(MessageCatalog.Get(MessageKey.Workbench.Terminal, Language), path: false);
         terminal.Focus();
 
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(_closing.Token);
@@ -159,7 +159,7 @@ public sealed partial class MainWindow
                 }
                 else if (frame.Kind == "exit")
                 {
-                    WorkbenchTitle.Text += " · " + frame.Code;
+                    SetFileBarTitle(WorkbenchTitle.Text + " · " + frame.Code, path: false);
                     break;
                 }
             }

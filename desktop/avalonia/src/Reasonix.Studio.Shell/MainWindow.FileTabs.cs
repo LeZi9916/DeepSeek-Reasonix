@@ -200,7 +200,7 @@ public sealed partial class MainWindow
             ReleasePreview();
             FileEditor.IsVisible = true;
             PreviewFile.IsVisible = false;
-            WorkbenchTitle.Text = MessageCatalog.Get(MessageKey.Common.Workbench, Language);
+            SetFileBarTitle(MessageCatalog.Get(MessageKey.Common.Workbench, Language), path: false);
             WorkspaceFiles.SelectedItem = null;
         }
 
