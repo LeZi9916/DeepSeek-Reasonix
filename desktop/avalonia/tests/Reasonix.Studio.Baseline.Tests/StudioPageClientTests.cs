@@ -35,6 +35,31 @@ public sealed class StudioPageClientTests
         Assert.Equal(409, refusal.Status);
     }
 
+    /// <summary>Isolation sends the chosen worktree source, ref and carried paths.</summary>
+    /// <returns>The workspace switch request.</returns>
+    [Fact]
+    public async Task IsolateWorkspaceSendsTheWorktreeSelection()
+    {
+        using var handler = new Handler(async request =>
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal("/workspace", request.RequestUri!.AbsolutePath);
+            using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync());
+            Assert.True(body.RootElement.GetProperty("isolate").GetBoolean());
+            var worktree = body.RootElement.GetProperty("worktree");
+            Assert.Equal("refs/heads/topic", worktree.GetProperty("ref").GetString());
+            Assert.Equal("/repo", worktree.GetProperty("sourceRoot").GetString());
+            Assert.Equal("/repo/notes.md", worktree.GetProperty("attachments")[0].GetString());
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"workspaceRoot":"/worktrees/topic"}""", Encoding.UTF8, "application/json"),
+            };
+        });
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("http://127.0.0.1:1234/") };
+        var root = await new StudioPageClient(http).IsolateWorkspaceAsync("/repo", "refs/heads/topic", ["/repo/notes.md"], default);
+        Assert.Equal("/worktrees/topic", root);
+    }
+
     /// <summary>Long paste keeping sends text kind and reads the saved pointer.</summary>
     /// <returns>The saved pointer.</returns>
     [Fact]
