@@ -91,7 +91,7 @@ public sealed partial class MainWindow
     private void RestoreWorkbenchPresentation()
     {
         _browserPages.Clear();
-        _showHiddenFiles = false;
+        _showHiddenFiles = _workspacePreferences.ShowHiddenFiles;
         _fullWorkbench = false;
         if (_engine is not { } engine || !_workbenchStates.TryGetValue(engine, out var state) || state.Root != _workspaceRoot)
         {

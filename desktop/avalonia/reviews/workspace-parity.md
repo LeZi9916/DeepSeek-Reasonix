@@ -38,6 +38,8 @@ The reference is the checked-in `frontend-next` application, including its final
 | Granted-file read-only state | File bar badge | Names the reason beside the file bar and keeps save disabled | Granted-root read path and visible badge state |
 | File bar identity and save action | `Breadcrumb`, `SaveFile` | Muted directories with a bold filename, and the reference check-plus-Save affordance; both dark and light crops compared | `workbench.dark` / `workbench.light` render pairs |
 | Git inventory recovery | `GitRetry` | A failed repository read keeps its message and offers the same read again; success clears both | `WorkbenchGitInventoryFailureOffersRetry` |
+| Hidden-file preference | `HiddenFiles` | The explorer's hidden-file choice is device-local and survives the next launch | `HiddenFiles` preference round trip |
+| Launcher recents | `WorkbenchLauncher` | Recent rows keep the filename and add the dimmed directory, as the reference does | Workbench launcher capture |
 
 | Explorer search and sidebar shortcut | Native workbench controls | Clear-search restores the listing without changing the tree; sidebar Files opens the same retained workbench; reveal is hidden for remote workspaces | `WorkbenchClearSearchRestoresTheListing`, `SidebarFilesOpensTheWorkbench` |
 | Send/stop/steer/queue/withdraw/restore | Composer plus queue | Draft clears only after acceptance; refusal restores editable state; each runtime owns its queue | Composer/remote-draft/queue regression suites and real streaming case |

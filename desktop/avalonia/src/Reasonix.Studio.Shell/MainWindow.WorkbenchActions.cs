@@ -44,11 +44,23 @@ public sealed partial class MainWindow
             await OpenEntryAsync(new WorkspaceFileEntry(path, false)).ConfigureAwait(true);
         };
         Label(HiddenFiles, "workbench.show_hidden_files");
+        _showHiddenFiles = _workspacePreferences.ShowHiddenFiles;
+        HiddenFiles.Classes.Set("active", _showHiddenFiles);
+        HiddenSlash.IsVisible = !_showHiddenFiles;
         HiddenFiles.Click += async (_, _) =>
         {
             _showHiddenFiles = !_showHiddenFiles;
             HiddenFiles.Classes.Set("active", _showHiddenFiles);
             HiddenSlash.IsVisible = !_showHiddenFiles;
+            _workspacePreferences = _workspacePreferences with
+            {
+                ShowHiddenFiles = _showHiddenFiles,
+            };
+            if (_connectOnOpen)
+            {
+                _workspacePreferences.Save();
+            }
+
             await ListFilesAsync().ConfigureAwait(true);
         };
         Label(OpenWorkspaceEditor, "workbench.open_the_workspace_in_a");

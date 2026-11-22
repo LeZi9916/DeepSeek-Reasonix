@@ -32,6 +32,12 @@ internal sealed record WorkspacePreferences
         get; init;
     }
 
+    /// <summary>Gets or initializes a value indicating whether hidden files are listed.</summary>
+    public bool ShowHiddenFiles
+    {
+        get; init;
+    }
+
     /// <summary>Gets or initializes the three most recently selected canonical palette entries.</summary>
     public IReadOnlyList<string> PaletteRecent { get; init; } = Array.Empty<string>();
 

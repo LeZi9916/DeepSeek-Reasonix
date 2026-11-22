@@ -1,5 +1,6 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Collections.Generic;
@@ -49,7 +50,17 @@ public sealed partial class WorkbenchLauncher : UserControl
         Recent.Children.Clear();
         foreach (var path in recent)
         {
-            var item = new Button { Content = Path.GetFileName(path), Classes = { "launcher" }, MinHeight = 28, Height = 28, Padding = new Avalonia.Thickness(8, 2) };
+            var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+            content.Children.Add(new TextBlock { Text = Path.GetFileName(path) });
+            var directory = (Path.GetDirectoryName(path) ?? string.Empty).Replace('\\', '/');
+            if (directory.Length > 0)
+            {
+                var hint = new TextBlock { Text = directory + "/" };
+                hint.Classes.Add("launcher-dir");
+                content.Children.Add(hint);
+            }
+
+            var item = new Button { Content = content, Classes = { "launcher" }, MinHeight = 28, Height = 28, Padding = new Avalonia.Thickness(8, 2) };
             AutomationProperties.SetAutomationId(item, "action:workbench.launch-recent");
             ToolTip.SetTip(item, path);
             item.Click += (_, _) => FileRequested?.Invoke(path);
