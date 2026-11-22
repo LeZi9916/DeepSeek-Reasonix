@@ -36,6 +36,9 @@ public sealed partial class MainWindow
     /// <summary>Orders reads across directory, selection and workspace changes.</summary>
     private long _fileRead;
 
+    /// <summary>The read or save the in-canvas error can retry.</summary>
+    private Func<Task>? _workbenchRetry;
+
     /// <summary>Wires the native workspace explorer, editor and save command.</summary>
     private void InitializeWorkbench()
     {
@@ -175,6 +178,33 @@ public sealed partial class MainWindow
         };
         SaveFile.Click += OnSaveFile;
         FileEditor.ContextMenu = BuildFileEditorContextMenu();
+        FileErrorRetry.Content = MessageCatalog.Get("common.read_again", Language);
+        FileErrorClose.Content = MessageCatalog.Get(MessageKey.Workbench.CloseTab, Language);
+        FileErrorRetry.Click += async (_, _) =>
+        {
+            var retry = _workbenchRetry;
+            HideFileError();
+            if (retry is not null)
+            {
+                await retry().ConfigureAwait(true);
+            }
+        };
+        FileErrorClose.Click += (_, _) =>
+        {
+            HideFileError();
+            var pair = _fileBuffers.FirstOrDefault(entry => ReferenceEquals(entry.Value, _openFile));
+            if (pair.Value is { } file)
+            {
+                CloseFile(pair.Key, file);
+            }
+        };
+    }
+
+    /// <summary>Hides the in-canvas file error and forgets its retry.</summary>
+    private void HideFileError()
+    {
+        FileErrorPanel.IsVisible = false;
+        _workbenchRetry = null;
     }
 
     /// <summary>Builds the file editor's text actions, including quoting into the composer.</summary>
@@ -391,7 +421,7 @@ public sealed partial class MainWindow
         {
             if (ticket == _fileRead)
             {
-                ReportWorkbenchError(error);
+                ReportWorkbenchError(error, () => OpenEntryAsync(entry));
             }
         }
     }
@@ -521,6 +551,7 @@ public sealed partial class MainWindow
     /// <summary>Restores editing against the original file revision.</summary>
     private void ShowSource()
     {
+        HideFileError();
         WorkbenchStart.IsVisible = false;
         _fileRead++;
         HideBrowser();
@@ -583,7 +614,7 @@ public sealed partial class MainWindow
         {
             if (ticket == _fileRead)
             {
-                ReportWorkbenchError(error);
+                ReportWorkbenchError(error, ShowFileDiffAsync);
             }
         }
     }
@@ -606,6 +637,7 @@ public sealed partial class MainWindow
     /// <param name="view">Image, rendered text or diff.</param>
     private void ShowPreview(Control view)
     {
+        HideFileError();
         WorkbenchStart.IsVisible = false;
         ReleasePreview();
         FileEditor.IsVisible = false;
@@ -670,7 +702,7 @@ public sealed partial class MainWindow
         }
         catch (Exception error)
         {
-            ReportWorkbenchError(error);
+            ReportWorkbenchError(error, async () => await SaveBufferAsync(file).ConfigureAwait(true));
             return false;
         }
         finally
@@ -683,11 +715,13 @@ public sealed partial class MainWindow
 
     /// <summary>Keeps the editor intact when a read or save is refused.</summary>
     /// <param name="error">The host's refusal.</param>
-    private void ReportWorkbenchError(Exception error)
+    /// <param name="retry">The read or save that can be attempted again.</param>
+    private void ReportWorkbenchError(Exception error, Func<Task>? retry = null)
     {
-        ShowRefusal(error);
-        ToolTip.SetTip(WorkbenchTitle, ErrorText.Text);
-        SetFileBarTitle(ErrorText.Text ?? string.Empty, path: false);
+        _workbenchRetry = retry;
+        FileErrorText.Text = DescribeError(error);
+        FileErrorPanel.IsVisible = true;
+        FileErrorRetry.Focus();
     }
 
     /// <summary>A text buffer and the revision it was read against.</summary>

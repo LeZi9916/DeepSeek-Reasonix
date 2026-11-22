@@ -390,6 +390,15 @@
                            Background="Transparent" BorderThickness="0" Padding="10" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType13}" TextWrapping="NoWrap"
                            ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
                   <ScrollViewer Grid.Row="1" Name="RenderedFile" Padding="10" IsVisible="False"/>
+                  <Border Name="FileErrorPanel" Grid.Row="1" IsVisible="False" Background="{DynamicResource RaisedBrush}" Padding="24">
+                    <StackPanel MaxWidth="420" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
+                      <TextBlock Name="FileErrorText" TextWrapping="Wrap" TextAlignment="Center" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}"/>
+                      <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                        <Button Name="FileErrorRetry" Classes="wb-command" Height="30" Padding="12,0"/>
+                        <Button Name="FileErrorClose" Classes="wb-command" Height="30" Padding="12,0"/>
+                      </StackPanel>
+                    </StackPanel>
+                  </Border>
                   <ContentControl Grid.Row="1" Name="TerminalSurface" IsVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
                   <workbench:WorkbenchLauncher Name="WorkbenchStart" Grid.Row="1" IsVisible="False"/>
                   <Border Name="FileStatus" Grid.Row="2" IsVisible="False" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="10,4" Background="{DynamicResource RaisedBrush}">

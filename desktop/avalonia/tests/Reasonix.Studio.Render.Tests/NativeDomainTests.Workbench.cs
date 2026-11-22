@@ -1,6 +1,8 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -8,6 +10,7 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using FileEntry = Reasonix.Studio.Shell.Workbench.WorkspaceFileEntry;
 
 namespace Reasonix.Studio.Render.Tests;
 
@@ -69,6 +72,42 @@ public sealed partial class NativeDomainTests
             first.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
             Dispatcher.UIThread.RunJobs();
             Assert.Equal(first.Tag, w.FindControl<TextBlock>("WorkbenchTitle")!.Text);
+        });
+
+    /// <summary>A failed file read stays in the canvas and offers read again or close.</summary>
+    /// <returns>The recovery interaction.</returns>
+    [Fact]
+    public Task WorkbenchFileReadFailureOffersRecovery() => WithSettings(
+        "workbench",
+        (w, reads) =>
+        {
+            reads.Exchange = request => Task.FromResult<HttpResponseMessage?>(
+                request.RequestUri!.AbsolutePath == "/workspace/file"
+                    ? new HttpResponseMessage(HttpStatusCode.NotFound)
+                    : request.RequestUri.AbsolutePath == "/workspace/files" && request.RequestUri.Query.Contains("path=internal", StringComparison.Ordinal)
+                        ? JsonReply(new JsonObject { ["files"] = new JsonArray("internal/config.go"), ["directories"] = new JsonArray() })
+                        : null);
+            var listing = w.FindControl<ListBox>("WorkspaceFiles")!;
+            listing.GetVisualDescendants().OfType<Button>().First(button => AutomationProperties.GetName(button) == "internal")
+                .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Dispatcher.UIThread.RunJobs();
+            listing.SelectedItem = listing.Items.OfType<FileEntry>().First(item => item.Path == "internal/config.go");
+            Assert.True(SpinWait.SpinUntil(
+                () =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return w.FindControl<Border>("FileErrorPanel")!.IsVisible;
+                },
+                System.TimeSpan.FromSeconds(2)));
+            reads.Exchange = _ => Task.FromResult<HttpResponseMessage?>(null);
+            w.FindControl<Button>("FileErrorRetry")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.True(SpinWait.SpinUntil(
+                () =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return !w.FindControl<Border>("FileErrorPanel")!.IsVisible;
+                },
+                System.TimeSpan.FromSeconds(2)));
         });
 
     /// <summary>A failed Git inventory offers the same read again.</summary>

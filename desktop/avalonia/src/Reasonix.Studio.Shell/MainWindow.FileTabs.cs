@@ -194,6 +194,7 @@ public sealed partial class MainWindow
         {
             _fileRead++;
             _openFile = null;
+            HideFileError();
             FileEditor.Text = string.Empty;
             FileEditor.IsReadOnly = true;
             SaveFile.IsEnabled = false;
