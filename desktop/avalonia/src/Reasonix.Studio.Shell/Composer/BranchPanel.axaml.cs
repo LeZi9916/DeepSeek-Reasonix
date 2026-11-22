@@ -109,6 +109,10 @@ public sealed partial class BranchPanel : UserControl
         IsolatedMode.Content = MessageCatalog.Get("common.isolated_worktree", language);
         CurrentFolder.Classes.Set("active", !_isolated);
         IsolatedMode.Classes.Set("active", _isolated);
+        WorktreeBadge.IsVisible = false;
+        WorktreeBadge.Text = MessageCatalog.Get("common.isolated_worktree", language);
+        SourceLabel.IsVisible = false;
+        SourceLabel.Text = MessageCatalog.Get("common.source_branch", language);
         Draw();
     }
 
@@ -144,8 +148,12 @@ public sealed partial class BranchPanel : UserControl
         _isolated = isolated;
         CurrentFolder.Classes.Set("active", !isolated);
         IsolatedMode.Classes.Set("active", isolated);
+        WorktreeBadge.IsVisible = isolated;
+        WorktreeBadge.Text = MessageCatalog.Get("common.isolated_worktree", _language);
+        SourceLabel.IsVisible = isolated;
+        SourceLabel.Text = MessageCatalog.Get("common.source_branch", _language);
         _branches = isolated
-            ? _sources!.Sources.Select(source => new BranchChoice(source.Name, source.Current, string.Empty)).ToList()
+            ? _sources!.Sources.Select(source => new BranchChoice(source.Name, source.Current, string.Empty, source.Remote)).ToList()
             : _ordinary;
         Description.Text = MessageCatalog.Get(
             isolated ? "composer.create_an_isolated_worktree_when" : "session.work_directly_in_the_opened",
@@ -165,9 +173,34 @@ public sealed partial class BranchPanel : UserControl
             .Where(branch => query.Length == 0 || branch.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase))
             .OrderByDescending(branch => branch.Name == _current)
             .ToList();
-        foreach (var branch in shown)
+        if (_isolated)
         {
-            Rows.Children.Add(Row(branch));
+            foreach (var remote in new[] { false, true })
+            {
+                var group = shown.Where(branch => branch.Remote == remote).ToList();
+                if (group.Count == 0)
+                {
+                    continue;
+                }
+
+                var heading = new TextBlock
+                {
+                    Text = MessageCatalog.Get(remote ? "composer.remote_branches" : "composer.local_branches", _language),
+                };
+                heading.Classes.Add("branch-group");
+                Rows.Children.Add(heading);
+                foreach (var branch in group)
+                {
+                    Rows.Children.Add(Row(branch));
+                }
+            }
+        }
+        else
+        {
+            foreach (var branch in shown)
+            {
+                Rows.Children.Add(Row(branch));
+            }
         }
 
         if (shown.Count == 0)
@@ -207,9 +240,11 @@ public sealed partial class BranchPanel : UserControl
         grid.Children.Add(name);
         var state = branch.Worktree.Length > 0
             ? MessageCatalog.Get("composer.used_by_another_worktree", _language)
-            : branch.Name == _current
-                ? MessageCatalog.Get("common.now", _language)
-                : string.Empty;
+            : _isolated && branch.Current
+                ? MessageCatalog.Get("composer.source", _language)
+                : branch.Name == _current
+                    ? MessageCatalog.Get("common.now", _language)
+                    : string.Empty;
         if (state.Length > 0)
         {
             var label = new TextBlock { Text = state, VerticalAlignment = VerticalAlignment.Center };

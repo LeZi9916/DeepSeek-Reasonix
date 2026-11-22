@@ -179,7 +179,7 @@ public sealed partial class NativeDomainTests
         panel.IsolateRequested += reference => isolated = reference;
         panel.Show([new BranchChoice("main", true, string.Empty)], "main", "/repo", InterfaceLanguage.Zh, sources);
         Dispatcher.UIThread.RunJobs();
-        Assert.True(panel.FindControl<StackPanel>("WorktreeModes")!.IsVisible);
+        Assert.True(panel.FindControl<Border>("WorktreeModes")!.IsVisible);
         panel.FindControl<Button>("IsolatedMode")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Dispatcher.UIThread.RunJobs();
         var row = panel.FindControl<StackPanel>("Rows")!.Children.OfType<Button>().Single();

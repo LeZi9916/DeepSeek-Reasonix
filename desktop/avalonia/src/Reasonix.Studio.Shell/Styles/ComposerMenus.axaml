@@ -162,6 +162,15 @@
     <Setter Property="FontWeight" Value="Medium"/>
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
   </Style>
+  <Style Selector="TextBlock.palette-source-label">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.palette-identity-badge">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
   <Style Selector="TextBlock.palette-desc">
     <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
     <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
@@ -203,20 +212,27 @@
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     <Setter Property="CaretBrush" Value="{DynamicResource TextBrush}"/>
   </Style>
+  <Style Selector="Border.worktree-modes">
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="3"/>
+  </Style>
   <Style Selector="Button.worktree-mode">
-    <Setter Property="Height" Value="26"/>
+    <Setter Property="Height" Value="24"/>
     <Setter Property="Padding" Value="9,0"/>
     <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
-    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="CornerRadius" Value="6"/>
     <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
   </Style>
   <Style Selector="Button.worktree-mode:pointerover">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
   </Style>
   <Style Selector="Button.worktree-mode.active">
-    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
   </Style>
   <Style Selector="Button.branch-row">
@@ -237,10 +253,15 @@
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
   </Style>
   <Style Selector="Button.branch-row.current">
-    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="Background" Value="Transparent"/>
   </Style>
   <Style Selector="Button.branch-row:disabled">
     <Setter Property="Opacity" Value="0.5"/>
+  </Style>
+  <Style Selector="TextBlock.branch-group">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    <Setter Property="Margin" Value="10,8,0,3"/>
   </Style>
   <Style Selector="TextBlock.branch-name">
     <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>

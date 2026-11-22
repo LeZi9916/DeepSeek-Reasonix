@@ -8,17 +8,23 @@
       <Button Name="Close" Grid.Column="1" Classes="icon palette-close" Width="24" Height="24" Content="×"/>
     </Grid>
     <Border Grid.Row="1" Classes="palette-identity">
-      <Grid ColumnDefinitions="14,*" ColumnSpacing="8">
+      <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="8">
         <Path Width="14" Height="14" Data="{StaticResource Glyph.folder}" Stroke="{DynamicResource MutedBrush}"
               StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Stretch="Uniform" VerticalAlignment="Center"/>
         <TextBlock Name="WorkspaceName" Grid.Column="1" Classes="palette-identity-name" TextTrimming="CharacterEllipsis"/>
+        <TextBlock Name="WorktreeBadge" Grid.Column="2" Classes="palette-identity-badge" IsVisible="False"/>
       </Grid>
     </Border>
-    <StackPanel Name="WorktreeModes" Grid.Row="2" Margin="14,0,14,6" Orientation="Horizontal" Spacing="4" IsVisible="False">
-      <Button Name="CurrentFolder" Classes="worktree-mode"/>
-      <Button Name="IsolatedMode" Classes="worktree-mode"/>
+    <Border Name="WorktreeModes" Grid.Row="2" Margin="14,0,14,6" Classes="worktree-modes" IsVisible="False">
+      <StackPanel Orientation="Horizontal" Spacing="2">
+        <Button Name="CurrentFolder" Classes="worktree-mode"/>
+        <Button Name="IsolatedMode" Classes="worktree-mode"/>
+      </StackPanel>
+    </Border>
+    <StackPanel Grid.Row="3" Spacing="6">
+      <TextBlock Name="Description" Classes="palette-desc"/>
+      <TextBlock Name="SourceLabel" Classes="palette-source-label" IsVisible="False"/>
     </StackPanel>
-    <TextBlock Name="Description" Grid.Row="3" Classes="palette-desc"/>
     <Border Grid.Row="4" Classes="palette-search" Margin="14,0,14,6" Height="32">
       <Grid ColumnDefinitions="15,*" ColumnSpacing="6">
         <Path Width="15" Height="15" Data="{StaticResource Glyph.search}" Stroke="{DynamicResource FaintBrush}"
