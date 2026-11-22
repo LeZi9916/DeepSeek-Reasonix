@@ -3,12 +3,14 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Kernel.Client;
+using Reasonix.Studio.Shell;
 using Reasonix.Studio.Shell.Composer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +20,26 @@ namespace Reasonix.Studio.Render.Tests;
 
 public sealed partial class NativeDomainTests
 {
+    /// <summary>A provider chip choice is retained for the next launch.</summary>
+    /// <returns>The filter persistence.</returns>
+    [Fact]
+    public Task ModelPickerPersistsProviderFilter() => WithSettings(
+        "conversation",
+        (w, _) =>
+        {
+            w.FindControl<Button>("ModelButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.True(SpinWait.SpinUntil(
+                () => w.FindControl<ModelPicker>("ModelPicker")!.IsOpen,
+                TimeSpan.FromSeconds(2)));
+            var chips = w.FindControl<ModelPicker>("ModelPicker")!.FindControl<WrapPanel>("Chips")!;
+            var chip = chips.Children.OfType<Button>().First();
+            chip.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Dispatcher.UIThread.RunJobs();
+            var preferences = typeof(MainWindow).GetField("_workspacePreferences", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(w)!;
+            var filter = Assert.IsAssignableFrom<IReadOnlyList<string>>(preferences.GetType().GetProperty("ModelFilter")!.GetValue(preferences));
+            Assert.NotEmpty(filter);
+        });
+
     /// <summary>Provider health is read and shown when the installation enables it.</summary>
     /// <returns>The health interaction.</returns>
     [Fact]

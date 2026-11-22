@@ -41,6 +41,9 @@ internal sealed record WorkspacePreferences
     /// <summary>Gets or initializes the three most recently selected canonical palette entries.</summary>
     public IReadOnlyList<string> PaletteRecent { get; init; } = Array.Empty<string>();
 
+    /// <summary>Gets or initializes the provider chips chosen in the model picker.</summary>
+    public IReadOnlyList<string> ModelFilter { get; init; } = Array.Empty<string>();
+
     /// <summary>Reads optional local preferences without preventing a launch.</summary>
     /// <returns>The saved choices or defaults.</returns>
     internal static WorkspacePreferences Load()

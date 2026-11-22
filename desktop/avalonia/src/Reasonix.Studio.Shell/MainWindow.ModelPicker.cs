@@ -55,6 +55,7 @@ public sealed partial class MainWindow
         ModelPicker.ModelPicked += OnModelPicked;
         ModelPicker.EffortPicked += OnEffortPicked;
         ModelPicker.ModePicked += OnModePicked;
+        ModelPicker.FilterChanged += OnModelFilterChanged;
         ModelPicker.ManageRequested += OnManageModels;
         _ = RefreshModelCatalogAsync();
     }
@@ -86,7 +87,7 @@ public sealed partial class MainWindow
                 ShowComposeStatus(status);
             }
 
-            ModelPicker.Show(models, _composerStatus, Language, focusEffort, _providerHealth);
+            ModelPicker.Show(models, _composerStatus, Language, focusEffort, _providerHealth, _workspacePreferences.ModelFilter);
         }).ConfigureAwait(true);
     }
 
@@ -265,5 +266,19 @@ public sealed partial class MainWindow
         CloseComposeCards();
         OpenSettings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         await ShowSectionAsync("model").ConfigureAwait(true);
+    }
+
+    /// <summary>Remembers the provider chips chosen in the model picker.</summary>
+    /// <param name="filter">Chosen account keys.</param>
+    private void OnModelFilterChanged(IReadOnlyList<string> filter)
+    {
+        _workspacePreferences = _workspacePreferences with
+        {
+            ModelFilter = filter.ToArray(),
+        };
+        if (_connectOnOpen)
+        {
+            _workspacePreferences.Save();
+        }
     }
 }

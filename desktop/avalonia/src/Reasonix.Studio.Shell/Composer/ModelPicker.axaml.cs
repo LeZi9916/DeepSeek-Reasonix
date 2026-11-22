@@ -112,6 +112,9 @@ public sealed partial class ModelPicker : UserControl
     /// <summary>Raised when the reader toggled a model mode.</summary>
     public event Action<string>? ModePicked;
 
+    /// <summary>Raised when the reader narrowed the provider list.</summary>
+    public event Action<IReadOnlyList<string>>? FilterChanged;
+
     /// <summary>Raised when the reader asked for the model and connection settings.</summary>
     public event Action? ManageRequested;
 
@@ -140,8 +143,20 @@ public sealed partial class ModelPicker : UserControl
     /// <param name="language">Language for the panel's labels.</param>
     /// <param name="focusEffort">Whether the effort column should take focus first.</param>
     /// <param name="health">Provider health readings, when checks are enabled.</param>
-    public void Show(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language, bool focusEffort = false, IReadOnlyDictionary<string, ProviderHealth>? health = null)
+    /// <param name="filter">Provider chips saved on this device.</param>
+    public void Show(
+        IReadOnlyList<ModelChoice> models,
+        SessionStatus status,
+        InterfaceLanguage language,
+        bool focusEffort = false,
+        IReadOnlyDictionary<string, ProviderHealth>? health = null,
+        IReadOnlyList<string>? filter = null)
     {
+        if (_chosen.Count == 0 && filter is { Count: > 0 })
+        {
+            _chosen.UnionWith(filter);
+        }
+
         Bind(models, status, language, health);
         Open(focusEffort);
     }
@@ -256,6 +271,7 @@ public sealed partial class ModelPicker : UserControl
 
                 DrawChips();
                 DrawModels();
+                FilterChanged?.Invoke(_chosen.ToArray());
             };
             Chips.Children.Add(chip);
         }
@@ -269,6 +285,7 @@ public sealed partial class ModelPicker : UserControl
                 _chosen.Clear();
                 DrawChips();
                 DrawModels();
+                FilterChanged?.Invoke([]);
             };
             Chips.Children.Add(clear);
         }
