@@ -214,7 +214,7 @@ public sealed partial class MainWindow
     {
         var menu = new ContextMenu();
         var quote = new MenuItem { Header = MessageCatalog.Get("workbench.add_to_conversation", Language) };
-        quote.Click += (_, _) => InsertBlockQuote(FileEditor.SelectedText);
+        quote.Click += (_, _) => AddQuoteChip(FileEditor.SelectedText, _openFile?.Original.Path ?? string.Empty);
         var cut = new MenuItem
         {
             Header = MessageCatalog.Get("workbench.cut", Language),

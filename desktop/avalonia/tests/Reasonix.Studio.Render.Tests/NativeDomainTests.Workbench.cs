@@ -159,7 +159,10 @@ public sealed partial class NativeDomainTests
             Assert.True(quote.IsEnabled);
             quote.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
             Dispatcher.UIThread.RunJobs();
-            Assert.Contains("> first line", w.FindControl<TextBox>("Composer")!.Text);
+            Assert.True(w.FindControl<StackPanel>("AttachmentArea")!.IsVisible);
+            Assert.Contains(
+                "引用 README.md",
+                w.FindControl<WrapPanel>("AttachmentStrip")!.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text));
         });
 
     /// <summary>The explorer exposes its visible node count at the reference width.</summary>

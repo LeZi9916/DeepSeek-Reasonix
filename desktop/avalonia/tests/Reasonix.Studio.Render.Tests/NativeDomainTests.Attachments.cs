@@ -38,6 +38,23 @@ public sealed partial class NativeDomainTests
             Assert.False(area.IsVisible);
         });
 
+    /// <summary>A quote chip reaches the model as a reference block, not as typed text.</summary>
+    /// <returns>The submitted quote.</returns>
+    [Fact]
+    public Task QuoteChipTravelsInTheSubmitText() => WithSettings(
+        "conversation",
+        (w, _) =>
+        {
+            var add = typeof(MainWindow).GetMethod("AddQuoteChip", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            add.Invoke(w, ["selected words", "notes.md"]);
+            var compose = typeof(MainWindow).GetMethod("ComposeSubmitText", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            var submit = Assert.IsType<string>(compose.Invoke(w, ["ask"]));
+            Assert.Contains("[Quoting text selected in the workspace file notes.md.]", submit);
+            Assert.Contains("> selected words", submit);
+            Assert.EndsWith("ask", submit);
+            Assert.True(string.IsNullOrEmpty(w.FindControl<TextBox>("Composer")!.Text));
+        });
+
     /// <summary>A refused drop keeps its reason and a retry action.</summary>
     /// <returns>The failure chip.</returns>
     [Fact]

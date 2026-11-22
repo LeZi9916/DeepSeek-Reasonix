@@ -63,6 +63,24 @@ public sealed partial class MainWindow
         RebuildAttachments();
     }
 
+    /// <summary>Adds selected file text as a quote chip instead of inline Markdown.</summary>
+    /// <param name="text">Selected text.</param>
+    /// <param name="source">Workspace path the selection came from.</param>
+    private void AddQuoteChip(string text, string source)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+
+        var name = Path.GetFileName(source);
+        var label = name.Length == 0
+            ? MessageCatalog.Get("composer.quoting_a_reply", Language)
+            : MessageCatalog.Get("composer.quote_name", Language, ("name", name));
+        _attachments.Add(new AttachmentChip(string.Empty, label, source, false, QuoteBody: text, QuoteSource: source));
+        RebuildAttachments();
+    }
+
     /// <summary>Builds the reference chips above the prompt.</summary>
     private void RebuildAttachments()
     {
@@ -72,7 +90,7 @@ public sealed partial class MainWindow
             var chip = new Border { Classes = { "attachment-chip" } };
             ToolTip.SetTip(chip, attachment.SourcePath.Length > 0 ? attachment.SourcePath : attachment.Token);
             var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-            row.Children.Add(AttachmentGlyph(attachment.Image));
+            row.Children.Add(AttachmentGlyph(attachment.Image, attachment.QuoteBody.Length > 0));
             var name = new TextBlock { Text = attachment.Name, Classes = { "attachment-name" } };
             row.Children.Add(name);
             if (attachment.Error.Length > 0)
@@ -163,8 +181,24 @@ public sealed partial class MainWindow
     /// <returns>The submit text.</returns>
     private string ComposeSubmitText(string line)
     {
-        var tokens = string.Join(" ", _attachments.Where(chip => chip.Error.Length == 0 && chip.Token.Length > 0).Select(chip => chip.Token));
-        return tokens.Length == 0 ? line : tokens + "\n\n" + line;
+        var parts = _attachments
+            .Where(chip => chip.Error.Length == 0)
+            .Select(chip => chip.QuoteBody.Length > 0 ? QuoteBlock(chip) : chip.Token)
+            .Where(part => part.Length > 0)
+            .ToArray();
+        return parts.Length == 0 ? line : string.Join("\n\n", parts) + "\n\n" + line;
+    }
+
+    /// <summary>Builds the provider-visible quote block for a quote chip.</summary>
+    /// <param name="chip">The quote chip.</param>
+    /// <returns>The quoted block.</returns>
+    private string QuoteBlock(AttachmentChip chip)
+    {
+        var where = chip.QuoteSource.Replace('\\', '/');
+        var head = where.Length == 0
+            ? "[Quoting an earlier assistant reply in this conversation.]"
+            : $"[Quoting text selected in the workspace file {where}.]";
+        return string.Join("\n", new[] { head }.Concat(chip.QuoteBody.Split('\n').Select(line => "> " + line.TrimEnd('\r'))));
     }
 
     /// <summary>Drops attachments with the draft that owned them.</summary>
@@ -174,14 +208,20 @@ public sealed partial class MainWindow
         RebuildAttachments();
     }
 
-    /// <summary>Builds the small file or picture mark beside a chip name.</summary>
+    /// <summary>Builds the small file, picture or quote mark beside a chip name.</summary>
     /// <param name="picture">Whether the reference is a picture.</param>
+    /// <param name="quote">Whether the chip is a quote.</param>
     /// <returns>The mark.</returns>
-    private Control AttachmentGlyph(bool picture)
+    private Control AttachmentGlyph(bool picture, bool quote)
     {
         var path = new Avalonia.Controls.Shapes.Path
         {
-            Data = Geometry.Parse(picture ? "M4 5h16v14H4Z M8 15l3-3 2 2 3-3 4 4" : "M6 3h8l4 4v14H6Z M14 3v5h5"),
+            Data = Geometry.Parse(
+                quote
+                    ? "M7 7h4v4H7Z M13 7h4v4h-4Z M7 11c0 3 1 4 3 5 M13 11c0 3 1 4 3 5"
+                    : picture
+                        ? "M4 5h16v14H4Z M8 15l3-3 2 2 3-3 4 4"
+                        : "M6 3h8l4 4v14H6Z M14 3v5h5"),
             Stroke = Brushes.Gray,
             StrokeThickness = 1.5,
             StrokeLineCap = PenLineCap.Round,
@@ -202,5 +242,7 @@ public sealed partial class MainWindow
     /// <param name="SourcePath">The native path retry uses.</param>
     /// <param name="Image">Whether this reference is a picture.</param>
     /// <param name="Error">Why the drop was refused, empty for a ready chip.</param>
-    private sealed record AttachmentChip(string Token, string Name, string SourcePath, bool Image, string Error = "");
+    /// <param name="QuoteBody">Selected text for a quote chip, empty for an attachment.</param>
+    /// <param name="QuoteSource">File the quoted text came from.</param>
+    private sealed record AttachmentChip(string Token, string Name, string SourcePath, bool Image, string Error = "", string QuoteBody = "", string QuoteSource = "");
 }
