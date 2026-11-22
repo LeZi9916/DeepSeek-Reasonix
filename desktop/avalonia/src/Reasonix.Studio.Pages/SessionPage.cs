@@ -39,6 +39,9 @@ public sealed partial class SessionPage : UserControl
     /// </summary>
     private readonly ScrollViewer _scroll;
 
+    /// <summary>Hosts the optional preceding-history control outside the scrolling transcript.</summary>
+    private readonly ContentControl _historyHeader = new();
+
     /// <summary>
     /// The rows as they stand, in the order they were drawn, so a streamed chunk can
     /// extend the last one instead of rebuilding the list.
@@ -102,7 +105,8 @@ public sealed partial class SessionPage : UserControl
                 _scroll.ScrollToEnd();
             }
         };
-        Content = _scroll;
+        Grid.SetRow(_scroll, 1);
+        Content = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), Children = { _historyHeader, _scroll } };
         ActualThemeVariantChanged += (_, _) => Rebuild(_state.Items);
     }
 
@@ -123,6 +127,13 @@ public sealed partial class SessionPage : UserControl
     /// Gets the state the page is showing.
     /// </summary>
     public SessionState State => _state;
+
+    /// <summary>Gets or sets the history completeness and retry controls above the transcript.</summary>
+    public Control? TopContent
+    {
+        get => _historyHeader.Content as Control;
+        set => _historyHeader.Content = value;
+    }
 
     /// <summary>Gets or sets the acknowledgement path for a user's question answers.</summary>
     public Func<string, IReadOnlyList<QuestionSelection>, Task<bool>>? SubmitAnswers

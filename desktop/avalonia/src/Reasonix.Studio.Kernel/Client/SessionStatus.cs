@@ -12,6 +12,27 @@ namespace Reasonix.Studio.Kernel.Client;
 /// </remarks>
 public sealed record SessionStatus
 {
+    /// <summary>Gets the canonical request ledger for the current session run.</summary>
+    [JsonPropertyName("sessionUsage")]
+    public SessionUsage? SessionUsage
+    {
+        get; init;
+    }
+
+    /// <summary>Gets the current aggregate cost quote and its coverage.</summary>
+    [JsonPropertyName("sessionCostQuote")]
+    public Contracts.Wire.CostQuote? SessionCostQuote
+    {
+        get; init;
+    }
+
+    /// <summary>Gets the vendor's current billing window when applicable.</summary>
+    [JsonPropertyName("tariff")]
+    public ModelTariff? Tariff
+    {
+        get; init;
+    }
+
     /// <summary>Gets a value indicating whether the current task starts by planning.</summary>
     [JsonPropertyName("plan")]
     public bool Plan

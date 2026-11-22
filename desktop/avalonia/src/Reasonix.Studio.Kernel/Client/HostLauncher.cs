@@ -83,6 +83,8 @@ public static class HostLauncher
             throw new ArgumentNullException(nameof(binary));
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         var start = new ProcessStartInfo(binary)
         {
             RedirectStandardOutput = true,
@@ -109,6 +111,8 @@ public static class HostLauncher
             throw new InvalidOperationException($"the kernel at {binary} did not start");
         }
 
+        var diagnostics = new ProcessOutputPump(process.StandardError, retain: true);
+
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(HandshakeTimeout);
 
@@ -117,9 +121,15 @@ public static class HostLauncher
         {
             line = await process.StandardOutput.ReadLineAsync(timeout.Token).ConfigureAwait(false);
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException)
         {
+            diagnostics.Dispose();
             Kill(process);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+
             throw new TimeoutException(
                 string.Create(
                     CultureInfo.InvariantCulture,
@@ -131,6 +141,7 @@ public static class HostLauncher
             // Nothing on stdout means the process is gone or said nothing: either
             // way there is no origin to load and no credential to carry.
             var exitCode = process.HasExited ? process.ExitCode : (int?)null;
+            diagnostics.Dispose();
             Kill(process);
             throw new InvalidOperationException(
                 exitCode is null
@@ -140,11 +151,12 @@ public static class HostLauncher
 
         if (!LaunchHandshake.TryParse(line, out var handshake, out var refusal))
         {
+            diagnostics.Dispose();
             Kill(process);
             throw new InvalidOperationException(refusal);
         }
 
-        return new LaunchedKernel(process, handshake!);
+        return new LaunchedKernel(process, handshake!, [diagnostics, new ProcessOutputPump(process.StandardOutput, retain: false)]);
     }
 
     /// <summary>

@@ -24,6 +24,9 @@ public sealed class LaunchedKernel : IDisposable
     /// </summary>
     private readonly LaunchHandshake _handshake;
 
+    /// <summary>Drains redirected output for the entire owned process lifetime.</summary>
+    private readonly ProcessOutputPump[] _output;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="LaunchedKernel"/> class.
     /// </summary>
@@ -33,15 +36,27 @@ public sealed class LaunchedKernel : IDisposable
     /// Thrown when <paramref name="process"/> or <paramref name="handshake"/> is null.
     /// </exception>
     public LaunchedKernel(Process process, LaunchHandshake handshake)
+        : this(process, handshake, [])
+    {
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="LaunchedKernel"/> class with active output drains.</summary>
+    /// <param name="process">Owned child.</param><param name="handshake">Validated announcement.</param>
+    /// <param name="output">Already running pipe drains.</param>
+    internal LaunchedKernel(Process process, LaunchHandshake handshake, ProcessOutputPump[] output)
     {
         _process = process ?? throw new ArgumentNullException(nameof(process));
         _handshake = handshake ?? throw new ArgumentNullException(nameof(handshake));
+        _output = output;
     }
 
     /// <summary>
     /// Gets the origin and credential this launch is guarded by.
     /// </summary>
     public LaunchHandshake Handshake => _handshake;
+
+    /// <summary>Gets the last bounded host diagnostics without retaining its protocol stdout.</summary>
+    public string DiagnosticTail => _output.Length > 0 ? _output[0].Tail : string.Empty;
 
     /// <summary>
     /// Gets the origin the page is served from.
@@ -87,5 +102,9 @@ public sealed class LaunchedKernel : IDisposable
     public void Dispose()
     {
         HostLauncher.Kill(_process);
+        foreach (var output in _output)
+        {
+            output.Dispose();
+        }
     }
 }

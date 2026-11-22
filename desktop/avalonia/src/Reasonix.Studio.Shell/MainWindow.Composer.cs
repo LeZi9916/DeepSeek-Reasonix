@@ -69,6 +69,7 @@ public sealed partial class MainWindow
     internal void AdoptComposer(SessionStatus status)
     {
         BindWorkspace(status.WorkspaceRoot);
+        CaptureNavigation(status);
         _window = status.Window;
         SetModelLabel(status);
         if (!string.IsNullOrEmpty(status.WorkspaceRoot))

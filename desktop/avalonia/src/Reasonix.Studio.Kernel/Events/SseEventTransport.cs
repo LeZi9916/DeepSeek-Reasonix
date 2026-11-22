@@ -200,6 +200,8 @@ public sealed class SseEventTransport : IEventTransport
                     pending = pending is null ? chunk : pending + "\n" + chunk;
                 }
             }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken).ConfigureAwait(false);
         }
     }
 

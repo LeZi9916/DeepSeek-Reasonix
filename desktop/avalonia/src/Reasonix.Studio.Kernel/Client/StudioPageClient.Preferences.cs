@@ -173,6 +173,10 @@ public sealed partial class StudioPageClient
     /// <returns>The actual bound composition when supplied by the kernel.</returns>
     public Task<JsonObject?> CurrentCompositionAsync(CancellationToken token) => OptionalPreferenceAsync("/agent-composition", token);
 
+    /// <summary>Selects the explicit composition for an unused new-task runtime.</summary>
+    /// <param name="id">Canonical preset identity.</param><param name="token">Cancels selection.</param><returns>The acknowledgement.</returns>
+    public Task SelectCompositionAsync(string id, CancellationToken token) => PostAsync("/agent-composition", new JsonObject { ["id"] = id }, token);
+
     /// <summary>Reads the agent preset definitions available to this workspace.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The preset catalog.</returns>

@@ -22,7 +22,7 @@ internal sealed class ProjectRuntimeHandler : DelegatingHandler
     {
         var uri = request.RequestUri!;
         var segment = uri.Segments.Length > 1 ? uri.Segments[1].TrimEnd('/') : string.Empty;
-        if (segment is not ("tree" or "runtimes" or "remotes" or "studio" or "host" or "tray"))
+        if (segment is not ("tree" or "runtimes" or "rt" or "remotes" or "studio" or "host" or "tray"))
         {
             request.RequestUri = new Uri(uri.GetLeftPart(UriPartial.Authority) + _prefix + uri.PathAndQuery);
         }

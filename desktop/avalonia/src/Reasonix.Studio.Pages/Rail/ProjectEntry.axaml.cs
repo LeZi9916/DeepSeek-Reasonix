@@ -53,4 +53,22 @@ internal sealed partial class ProjectEntry : UserControl
         ToolTip.SetTip(Host, host?.Target);
         Fold.Click += (_, _) => toggle();
     }
+
+    /// <summary>Shares the same menu between the row and its visible action button.</summary>
+    /// <param name="menu">Canonical project operations.</param>
+    internal void SetMenu(MenuFlyout menu)
+    {
+        Fold.ContextFlyout = menu;
+        Menu.Flyout = menu;
+        Avalonia.Automation.AutomationProperties.SetName(Menu, Title.Text);
+    }
+
+    /// <summary>Opens a new canonical session from the project's hover action.</summary>
+    /// <param name="open">Canonical project navigation.</param><param name="enabled">Whether the project is available.</param><param name="language">Interface language.</param>
+    internal void SetNewAction(Action open, bool enabled, InterfaceLanguage language)
+    {
+        NewSession.IsEnabled = enabled;
+        AutomationProperties.SetName(NewSession, MessageCatalog.Get("common.start_a_new_session_in", language, ("name", Title.Text ?? string.Empty)));
+        NewSession.Click += (_, _) => open();
+    }
 }

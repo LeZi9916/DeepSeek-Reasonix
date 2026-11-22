@@ -37,6 +37,11 @@ public interface IKernelClient
     /// <returns>The messages in the order the session wrote them.</returns>
     Task<IReadOnlyList<HistoryMessage>> HistoryAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>Reads bounded history when supported by this connection.</summary>
+    /// <param name="cursor">Opaque host cursor.</param><param name="token">Cancels reading.</param>
+    /// <returns>The acknowledged window or null when unsupported.</returns>
+    Task<HistoryPage?> HistoryPageAsync(string? cursor = null, CancellationToken token = default) => Task.FromResult<HistoryPage?>(null);
+
     /// <summary>
     /// Starts a turn from one typed line.
     /// </summary>

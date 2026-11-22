@@ -81,23 +81,24 @@ public sealed partial class MainWindow
     /// <returns>The initial appearance and onboarding reads.</returns>
     private async Task LoadStartupPreferencesAsync()
     {
-        if (_engine is null)
+        var engine = _launchOwner ?? _engine;
+        if (engine is null)
         {
             return;
         }
 
         try
         {
-            var setup = await _engine.Pages.ProviderSetupAsync(_closing.Token).ConfigureAwait(true);
+            var setup = await engine.Pages.ProviderSetupAsync(_closing.Token).ConfigureAwait(true);
             if (setup is { Required: true } && !_closing.IsCancellationRequested)
             {
                 ShowSetup(setup);
             }
 
-            var look = await _engine.Pages.AppearanceAsync(_closing.Token).ConfigureAwait(true);
-            var fold = await _engine.Pages.FlagAsync(StudioSetting.FoldWork, _closing.Token).ConfigureAwait(true);
+            var look = await engine.Pages.AppearanceAsync(_closing.Token).ConfigureAwait(true);
+            var fold = await engine.Pages.FlagAsync(StudioSetting.FoldWork, _closing.Token).ConfigureAwait(true);
             ApplyAppearance(look, fold);
-            await LoadPaletteAsync(_engine.Pages).ConfigureAwait(true);
+            await LoadPaletteAsync(engine.Pages).ConfigureAwait(true);
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
         {
@@ -287,6 +288,7 @@ public sealed partial class MainWindow
 
                     break;
                 case "controls":
+                    SessionLimitControl(column);
                     var keys = Card(column, "settings.keyboard_shortcuts");
                     ShortcutChoice(keys);
                     ShortcutReference(keys);

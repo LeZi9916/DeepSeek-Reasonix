@@ -87,6 +87,9 @@ public sealed partial class SessionEngine : IAsyncDisposable
     /// <summary>Provides new authenticated connections for another runtime in this same launch.</summary>
     private readonly LaunchedKernel? _kernel;
 
+    /// <summary>Constructs a runtime over explicitly supplied authenticated transports.</summary>
+    private readonly Func<RuntimeDescriptor, SessionEngine>? _runtimeFactory;
+
     /// <summary>
     /// The tree's own stream, or null when the caller supplied the reads.
     /// </summary>
@@ -129,10 +132,11 @@ public sealed partial class SessionEngine : IAsyncDisposable
     /// </summary>
     /// <param name="client">Reads status and history, and submits lines.</param>
     /// <param name="transport">Carries the live stream and its replay.</param>
+    /// <param name="runtimeFactory">Constructs scoped engines for caller-owned transports.</param><param name="runtime">Optional validated runtime identity.</param>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="client"/> or <paramref name="transport"/> is null.
     /// </exception>
-    public SessionEngine(IKernelClient client, IEventTransport transport)
+    public SessionEngine(IKernelClient client, IEventTransport transport, Func<RuntimeDescriptor, SessionEngine>? runtimeFactory = null, RuntimeDescriptor? runtime = null)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
@@ -140,6 +144,8 @@ public sealed partial class SessionEngine : IAsyncDisposable
         _tree = null;
         _subscription = new EventSubscription(transport, Fold, ReportGap);
         _release = null;
+        _runtimeFactory = runtimeFactory;
+        Runtime = runtime;
     }
 
     /// <summary>Initializes a new instance of the <see cref="SessionEngine"/> class on a specific runtime.</summary>
@@ -199,6 +205,12 @@ public sealed partial class SessionEngine : IAsyncDisposable
     /// </remarks>
     public event Action<SessionState>? Changed;
 
+    /// <summary>Raised for accepted ordered frames, including their live or replay provenance.</summary>
+    public event Action<SessionEngine, WireFrame>? FrameReceived;
+
+    /// <summary>Raised when the host log cannot repair a missing event range.</summary>
+    public event Action<SessionEngine>? HistoryInvalidated;
+
     /// <summary>
     /// Raised when the kernel says its queue moved.
     /// </summary>
@@ -218,6 +230,18 @@ public sealed partial class SessionEngine : IAsyncDisposable
     /// listener re-reads it rather than patching what it had.
     /// </remarks>
     public event Action? TreeChanged;
+
+    /// <summary>Gets the hub identity when this engine addresses a named runtime.</summary>
+    public RuntimeDescriptor? Runtime
+    {
+        get; private set;
+    }
+
+    /// <summary>Gets a value indicating whether this connection can construct hub-scoped conversations.</summary>
+    public bool CanOpenProjects => _kernel is not null || _runtimeFactory is not null;
+
+    /// <summary>Gets live generation observations and host-recorded round measurements.</summary>
+    public GenerationTelemetry Generation { get; private set; } = new();
 
     /// <summary>
     /// Gets the authority of the kernel this conversation reads, or empty when
@@ -292,9 +316,8 @@ public sealed partial class SessionEngine : IAsyncDisposable
     /// <param name="preset">Device-selected composition for a new session.</param>
     public async Task<SessionEngine> OpenProjectAsync(string path, CancellationToken token, bool register = true, string? session = null, string? preset = null)
     {
-        var kernel = _kernel ?? throw new InvalidOperationException("This engine has no running workspace host.");
         var descriptor = await Pages.OpenProjectRuntimeAsync(path, register, session, preset, token).ConfigureAwait(false);
-        return EngineForRuntime(kernel, descriptor);
+        return CreateRuntime(descriptor);
     }
 
     /// <summary>Stops watching a replaced pane while its owning host remains available.</summary>
@@ -309,62 +332,6 @@ public sealed partial class SessionEngine : IAsyncDisposable
     public Task<SessionStatus?> StatusAsync(CancellationToken cancellationToken = default)
     {
         return _client.StatusAsync(cancellationToken);
-    }
-
-    /// <summary>
-    /// Reads the messages the session already holds, so a window opens on its
-    /// transcript rather than on an empty page.
-    /// </summary>
-    /// <param name="cancellationToken">Cancels the read.</param>
-    /// <returns>A task that completes once the history is folded.</returns>
-    /// <remarks>
-    /// A conversation with nothing in it still publishes. A listener told only
-    /// about non-empty histories cannot tell "this session is empty" from "the
-    /// read has not finished", and keeps drawing the rows of whatever it showed
-    /// before the switch.
-    /// </remarks>
-    public async Task LoadHistoryAsync(CancellationToken cancellationToken = default)
-    {
-        var messages = await _client.HistoryAsync(cancellationToken).ConfigureAwait(false);
-
-        var items = new List<TranscriptItem>(messages.Count);
-        foreach (var message in messages)
-        {
-            switch (message.Role)
-            {
-                case "user":
-                    items.Add(new UserItem
-                    {
-                        Id = HistoryId(message.MsgIndex),
-                        Text = message.Content,
-                        AuthoredTurn = message.MsgIndex,
-                        MsgIndex = message.MsgIndex,
-                        At = message.CreatedAt == 0 ? null : message.CreatedAt,
-                        Steer = message.Steer,
-                    });
-                    break;
-
-                case "assistant":
-                    items.Add(new SayItem
-                    {
-                        Id = HistoryId(message.MsgIndex),
-                        Text = message.Content,
-                        Reasoning = string.IsNullOrEmpty(message.Reasoning) ? null : message.Reasoning,
-                        Source = string.IsNullOrEmpty(message.ModelRef) ? null : message.ModelRef,
-                        Done = true,
-                    });
-                    break;
-            }
-        }
-
-        // A restored transcript owes no entrance: those facts are not arriving, they
-        // arrived. What the fold produces afterwards earns its own.
-        Publish(State with
-        {
-            Items = items,
-            EnteredThrough = items.Count,
-            Revision = State.Revision + 1,
-        });
     }
 
     /// <summary>
@@ -595,6 +562,7 @@ public sealed partial class SessionEngine : IAsyncDisposable
     public async Task ResumeAsync(string path, CancellationToken cancellationToken = default)
     {
         await _client.ResumeAsync(path, cancellationToken).ConfigureAwait(false);
+        Generation = new();
         Publish(new SessionState());
         await LoadHistoryAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -612,6 +580,7 @@ public sealed partial class SessionEngine : IAsyncDisposable
     public async Task NewSessionAsync(CancellationToken cancellationToken = default)
     {
         await _client.NewSessionAsync(cancellationToken).ConfigureAwait(false);
+        Generation = new();
         Publish(new SessionState());
         await LoadHistoryAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -716,6 +685,7 @@ public sealed partial class SessionEngine : IAsyncDisposable
         lock (_sync)
         {
             next = _reducer.Reduce(_state, frame);
+            Generation.Observe(frame);
             _state = next;
         }
 
@@ -723,6 +693,7 @@ public sealed partial class SessionEngine : IAsyncDisposable
 
         // The queue frame says only that the queue moved; whoever draws it asks
         // the kernel what it holds now.
+        FrameReceived?.Invoke(this, frame);
         if (frame.Kind == "inbox_changed")
         {
             QueueChanged?.Invoke();
@@ -739,6 +710,7 @@ public sealed partial class SessionEngine : IAsyncDisposable
     private void ReportGap()
     {
         Interlocked.Increment(ref _gaps);
+        HistoryInvalidated?.Invoke(this);
     }
 
     /// <summary>

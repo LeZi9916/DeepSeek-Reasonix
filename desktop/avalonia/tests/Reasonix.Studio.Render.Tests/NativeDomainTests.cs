@@ -433,6 +433,13 @@ public sealed partial class NativeDomainTests
                 return response;
             }
 
+            if (request.Method == HttpMethod.Post && (path == "/tree/sessions/viewed" || (path.StartsWith("/remotes/", StringComparison.Ordinal) && path.EndsWith("/sessions/viewed", StringComparison.Ordinal))))
+            {
+                var viewed = JsonNode.Parse(await request.Content!.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+                Assert.False(string.IsNullOrEmpty((string?)viewed?["path"]));
+                return new HttpResponseMessage(HttpStatusCode.NoContent);
+            }
+
             if (request.Method == HttpMethod.Post && path == "/themes")
             {
                 var choice = JsonNode.Parse(await request.Content!.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));

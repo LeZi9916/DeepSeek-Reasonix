@@ -180,75 +180,7 @@ public sealed partial class MainWindow
     /// <param name="remoteHost">Optional machine owning the project.</param>
     private async System.Threading.Tasks.Task ActivateProjectAsync(string path, bool register, string? session = null, Func<bool>? current = null, string? remoteHost = null)
     {
-        if (_engine is not { } previous)
-        {
-            return;
-        }
-
-        var next = remoteHost is null
-            ? await previous.OpenProjectAsync(path, _closing.Token, register, session, NewTaskPreset).ConfigureAwait(true)
-            : await previous.OpenRemoteProjectAsync(remoteHost, path, _closing.Token, session, NewTaskPreset).ConfigureAwait(true);
-        Kernel.Client.SessionStatus? status;
-        try
-        {
-            status = await next.StatusAsync(_closing.Token).ConfigureAwait(true) ?? throw new InvalidOperationException("Workspace runtime did not return its status.");
-            await next.LoadHistoryAsync(_closing.Token).ConfigureAwait(true);
-            _closing.Token.ThrowIfCancellationRequested();
-        }
-        catch
-        {
-            await next.DisposeAsync().ConfigureAwait(true);
-            throw;
-        }
-
-        if ((current is not null && !current()) || !ReferenceEquals(_engine, previous))
-        {
-            await next.DisposeAsync().ConfigureAwait(true);
-            return;
-        }
-
-        SaveDraft();
-        previous.Changed -= OnChanged;
-        previous.QueueChanged -= OnQueueChanged;
-        previous.TreeChanged -= OnTreeChanged;
-        _launchOwner ??= previous;
-        _engine = next;
-        _sidebarHost = remoteHost ?? string.Empty;
-        next.Changed += OnChanged;
-        next.QueueChanged += OnQueueChanged;
-        next.TreeChanged += OnTreeChanged;
-        AdoptComposer(status);
-        AdoptSessionPath(status.SessionPath);
-        CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? MessageCatalog.Get(MessageKey.Common.NewSession, Language) : status.Label;
-        ShowState(next.State);
-        ReturnToConversation();
-        _ = WatchAsync();
-        if (ReferenceEquals(previous, _launchOwner))
-        {
-            await previous.StopWatchingAsync().ConfigureAwait(true);
-        }
-        else
-        {
-            await previous.DisposeAsync().ConfigureAwait(true);
-        }
-
-        await LoadTreeAsync().ConfigureAwait(true);
-        await LoadQueueAsync().ConfigureAwait(true);
-
-        async System.Threading.Tasks.Task WatchAsync()
-        {
-            try
-            {
-                await next.StartAsync().ConfigureAwait(true);
-            }
-            catch (Exception error)
-            {
-                if (!_closing.IsCancellationRequested && ReferenceEquals(_engine, next))
-                {
-                    ShowRefusal(error);
-                }
-            }
-        }
+        await OpenTargetCoreAsync(new Pages.Rail.SessionOpenTarget(remoteHost ?? string.Empty, path, session ?? string.Empty), register, current).ConfigureAwait(true);
     }
 
     /// <summary>Enables only a fully specified connection or a discovered model.</summary>

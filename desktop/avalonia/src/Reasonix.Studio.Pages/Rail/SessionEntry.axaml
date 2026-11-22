@@ -2,6 +2,11 @@
              x:Class="Reasonix.Studio.Pages.Rail.SessionEntry" Classes="sidebar-session" Height="30" Margin="0,1,0,0">
   <UserControl.Styles>
     <Style Selector="Button.session-menu"><Setter Property="Opacity" Value="0"/></Style>
+    <Style Selector="Button.session-quick"><Setter Property="IsVisible" Value="False"/></Style>
+    <Style Selector="Grid.session-frame.quick:pointerover Button.session-quick, Grid.session-frame.quick:focus-within Button.session-quick"><Setter Property="IsVisible" Value="True"/></Style>
+    <Style Selector="Viewbox.session-pin"><Setter Property="IsVisible" Value="False"/></Style>
+    <Style Selector="Grid.session-frame.pinned Viewbox.session-pin"><Setter Property="IsVisible" Value="True"/></Style>
+    <Style Selector="Grid.session-frame.quick:pointerover Viewbox.session-pin, Grid.session-frame.quick:focus-within Viewbox.session-pin"><Setter Property="IsVisible" Value="False"/></Style>
     <Style Selector="Grid.session-frame:pointerover Button.session-menu, Grid.session-frame:focus-within Button.session-menu"><Setter Property="Opacity" Value="1"/></Style>
     <Style Selector="TextBlock.session-title"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
     <Style Selector="TextBlock.session-title.unread"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
@@ -10,21 +15,28 @@
     <Style Selector="TextBlock.session-title.current"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
     <Style Selector="Button.session-open.current"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
     <Style Selector="Grid.session-frame:pointerover Button.session-open, Grid.session-frame:focus-within Button.session-open"><Setter Property="Padding" Value="14,0,32,0"/></Style>
+    <Style Selector="Grid.session-frame.quick:pointerover Button.session-open, Grid.session-frame.quick:focus-within Button.session-open"><Setter Property="Padding" Value="14,0,80,0"/></Style>
+    <Style Selector="TextBox.session-rename"><Setter Property="Margin" Value="36,0,32,0"/></Style>
+    <Style Selector="Grid.session-frame.quick TextBox.session-rename"><Setter Property="Margin" Value="36,0,80,0"/></Style>
   </UserControl.Styles>
-  <Grid Classes="session-frame" ColumnDefinitions="*,24">
-    <Button Name="Open" Grid.ColumnSpan="2" Classes="rail-button session-open" Height="30" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" AutomationProperties.AutomationId="action:session.open">
-      <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="8">
+  <Grid Name="RowFrame" Classes="session-frame" ColumnDefinitions="*,Auto,24,Auto">
+    <Button Name="Open" Grid.ColumnSpan="4" Classes="rail-button session-open" Height="30" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" AutomationProperties.AutomationId="action:session.open">
+      <Grid ColumnDefinitions="14,*,Auto,Auto">
         <Grid Width="14" Height="14" VerticalAlignment="Center">
           <Ellipse Name="Unread" Width="7" Height="7" Fill="{DynamicResource TextBrush}" IsVisible="False"/>
-          <Viewbox Name="Pin" Width="11" Height="11" IsVisible="False"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M16 9V3 M8 3v6 M6 3h12 M8 9l-3 3v3h14v-3l-3-3 M12 15v7"/></Canvas></Viewbox>
           <Ellipse Name="Running" Width="7" Height="7" Fill="{DynamicResource NetBrush}" IsVisible="False"/>
+          <CheckBox Name="Selection" Width="14" Height="14" MinWidth="0" MinHeight="0" IsVisible="False" IsHitTestVisible="False" Focusable="False" AutomationProperties.AutomationId="action:session.selection"/>
         </Grid>
-        <TextBlock Name="Title" Grid.Column="1" Classes="session-title" FontSize="{DynamicResource StudioType13}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-        <TextBlock Name="Tail" Grid.Column="2" Classes="session-tail" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center"/>
+        <TextBlock Name="Title" Grid.Column="1" Margin="8,0,0,0" Classes="session-title" FontSize="{DynamicResource StudioType13}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+        <Viewbox Name="Pin" Grid.Column="2" Margin="8,0,0,0" Classes="session-pin" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M16 9V3 M8 3v6 M6 3h12 M8 9l-3 3v3h14v-3l-3-3 M12 15v7"/></Canvas></Viewbox>
+        <TextBlock Name="Tail" Grid.Column="3" Margin="8,0,0,0" Classes="session-tail" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center"/>
       </Grid>
     </Button>
-    <Button Name="Menu" Grid.Column="1" Classes="rail-button rail-icon session-menu" Width="24" Height="24" VerticalAlignment="Center" AutomationProperties.AutomationId="action:session.menu">
+    <Button Name="QuickPin" Grid.Column="1" Classes="rail-button rail-icon session-quick" Width="24" Height="24" VerticalAlignment="Center" AutomationProperties.AutomationId="action:session.pin"><Viewbox Width="13" Height="13"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M8 3h8v6l3 3v3H5v-3l3-3z M12 15v7"/></Canvas></Viewbox></Button>
+    <Button Name="Menu" Grid.Column="2" Classes="rail-button rail-icon session-menu" Width="24" Height="24" VerticalAlignment="Center" AutomationProperties.AutomationId="action:session.menu">
       <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M5 12h.01 M12 12h.01 M19 12h.01" StrokeThickness="3"/></Canvas></Viewbox>
     </Button>
+    <Button Name="QuickArchive" Grid.Column="3" Classes="rail-button rail-icon session-quick" Width="24" Height="24" VerticalAlignment="Center" AutomationProperties.AutomationId="action:session.archive"><Viewbox Width="13" Height="13"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M3 3h18v5H3z M5 8v13h14V8 M9 12h6"/></Canvas></Viewbox></Button>
+    <TextBox Name="Rename" Grid.ColumnSpan="4" Classes="session-rename" Height="26" MinHeight="0" Padding="3,0" FontSize="{DynamicResource StudioType13}" VerticalContentAlignment="Center" IsVisible="False" AutomationProperties.AutomationId="action:session.rename"/>
   </Grid>
 </UserControl>

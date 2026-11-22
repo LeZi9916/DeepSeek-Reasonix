@@ -7,6 +7,7 @@ using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell;
@@ -68,7 +69,7 @@ public sealed partial class MainWindow
         var ticket = ++_treeRead;
         try
         {
-            var query = new TreeWindow { Query = RailSearch.Text?.Trim() ?? string.Empty, HideLegacy = HideLegacySessions };
+            var query = Projects.WindowFor(RailSearch.Text?.Trim() ?? string.Empty, HideLegacySessions);
             var tree = await _engine.TreeAsync(query, _closing.Token).ConfigureAwait(true);
             if (ticket == _treeRead)
             {
@@ -117,131 +118,10 @@ public sealed partial class MainWindow
     /// Concurrent opens are ordered by a ticket, so a slow answer from a row the
     /// person abandoned cannot replace the one they chose.
     /// </remarks>
-    private async Task OpenSessionAsync(string path)
+    private Task OpenSessionAsync(string path)
     {
-        if (_engine is null || string.IsNullOrEmpty(path))
-        {
-            return;
-        }
-
-        // Already on screen: a second click is a focus, not a reload, and a
-        // reload would drop the reader's scroll position and any half-written line.
-        if (RailPresenter.Same(path, _sessionPath))
-        {
-            return;
-        }
-
-        // The same row asked for twice while the first answer is still out is one
-        // request; restarting it would abort work the kernel has already done.
-        if (_switch.Opening(path))
-        {
-            return;
-        }
-
-        var ticket = _switch.Begin(path);
-        try
-        {
-            if (_launchOwner is not null)
-            {
-                await ActivateProjectAsync(string.Empty, false, path, () => _switch.IsCurrent(ticket)).ConfigureAwait(true);
-                return;
-            }
-
-            await _engine.ResumeAsync(path, _closing.Token).ConfigureAwait(true);
-            if (!_switch.IsCurrent(ticket))
-            {
-                // A newer open superseded this one: its answer decides the screen.
-                return;
-            }
-
-            _sessionPath = path;
-
-            var status = await _engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-            if (status is not null)
-            {
-                CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? MessageCatalog.Get(MessageKey.Common.NewSession, Language) : status.Label;
-                ContextReadout.Text = Reasonix.Studio.Pages.Composer.ContextMeter.Readout(
-                    status.Used,
-                    status.Window,
-                    Language);
-                AdoptComposer(status);
-            }
-
-            Conversation.Show(_engine.State);
-            ShowComposerState(_engine.State);
-            await LoadTreeAsync().ConfigureAwait(true);
-            await RefreshQueueAsync().ConfigureAwait(true);
-        }
-        catch (OperationCanceledException)
-        {
-            // Closing is the outcome asked for.
-        }
-        catch (Exception error)
-        {
-            // A superseded open reports nothing: its refusal belongs to a row the
-            // person has already left.
-            if (!_switch.IsCurrent(ticket))
-            {
-                return;
-            }
-
-            // A history past the read limit cannot open whole. The newest part can
-            // be carried into a new transcript; the original file is never touched,
-            // so this is the reversible reading of that refusal.
-            if (error is IRefusal refusal && SessionBoundaries.Of(refusal) == SessionBoundary.TooLarge)
-            {
-                await ContinueFromTailAsync(path).ConfigureAwait(true);
-                return;
-            }
-
-            ShowRefusal(error);
-        }
-        finally
-        {
-            _switch.End(ticket);
-        }
-    }
-
-    /// <summary>
-    /// Carries the newest part of an oversized conversation into a new transcript
-    /// and opens that copy.
-    /// </summary>
-    /// <param name="path">The transcript whose history is past the read limit.</param>
-    /// <returns>A task that completes once the copy is open or the failure is shown.</returns>
-    /// <remarks>
-    /// The original stays exactly as it is: the copy is a new file, and the note
-    /// says how many messages stayed behind so the person can tell what they are
-    /// reading.
-    /// </remarks>
-    private async Task ContinueFromTailAsync(string path)
-    {
-        if (_engine is null)
-        {
-            return;
-        }
-
-        try
-        {
-            var tail = await _engine.TailAsync(path, _closing.Token).ConfigureAwait(true);
-            if (string.IsNullOrEmpty(tail.Path))
-            {
-                return;
-            }
-
-            await OpenSessionAsync(tail.Path).ConfigureAwait(true);
-            ShowNote(MessageCatalog.Get(
-                MessageKey.Session.SavedTheMostRecentPart,
-                Language,
-                ("n", Format.Count(tail.Dropped, Language))));
-        }
-        catch (OperationCanceledException)
-        {
-            // Closing is the outcome asked for.
-        }
-        catch (Exception error)
-        {
-            ShowRefusal(error);
-        }
+        var target = Projects.SearchEntries.FirstOrDefault(entry => entry.Target.SessionPath == path && entry.Target.Host.Length == 0).Target;
+        return OpenTargetAsync(target ?? new Pages.Rail.SessionOpenTarget(string.Empty, string.Empty, path));
     }
 
     /// <summary>
@@ -282,53 +162,7 @@ public sealed partial class MainWindow
     /// stale path here would make the new session look like the old one in the
     /// rail and in the title.
     /// </remarks>
-    private async Task StartNewSessionAsync()
-    {
-        if (_engine is null)
-        {
-            return;
-        }
-
-        var ticket = _switch.Begin(string.Empty);
-        try
-        {
-            if (NewTaskPreset is not null)
-            {
-                await ActivateProjectAsync(_workspaceRoot, false, null, () => _switch.IsCurrent(ticket)).ConfigureAwait(true);
-                return;
-            }
-
-            await _engine.NewSessionAsync(_closing.Token).ConfigureAwait(true);
-            if (!_switch.IsCurrent(ticket))
-            {
-                return;
-            }
-
-            _sessionPath = string.Empty;
-            CrumbTitle.Text = MessageCatalog.Get(MessageKey.Common.NewSession, Language);
-            ContextReadout.Text = "—";
-            Composer.Text = string.Empty;
-            Conversation.Show(_engine.State);
-            ShowComposerState(_engine.State);
-            await LoadTreeAsync().ConfigureAwait(true);
-            await RefreshQueueAsync().ConfigureAwait(true);
-        }
-        catch (OperationCanceledException)
-        {
-            // Closing is the outcome asked for.
-        }
-        catch (Exception error)
-        {
-            if (_switch.IsCurrent(ticket))
-            {
-                ShowRefusal(error);
-            }
-        }
-        finally
-        {
-            _switch.End(ticket);
-        }
-    }
+    private Task StartNewSessionAsync() => OpenTargetAsync(new Pages.Rail.SessionOpenTarget(_sidebarHost, _workspaceRoot, string.Empty));
 
     /// <summary>
     /// Pins or unpins one conversation and reads the tree back.

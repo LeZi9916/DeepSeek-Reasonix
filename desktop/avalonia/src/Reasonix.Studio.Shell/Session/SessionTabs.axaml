@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Shell.Session.SessionTabs">
+  <UserControl.Styles>
+    <Style Selector="Button.pane-tab"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Padding" Value="12,0"/><Setter Property="Height" Value="34"/><Setter Property="MinHeight" Value="0"/><Setter Property="CornerRadius" Value="0"/><Setter Property="FontSize" Value="12"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+    <Style Selector="Button.pane-tab.current"><Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+    <Style Selector="Button.pane-tab:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  </UserControl.Styles>
+  <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,0,1" Background="{DynamicResource PageBrush}" Height="35">
+    <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+      <StackPanel Name="Tabs" Orientation="Horizontal"/>
+    </ScrollViewer>
+  </Border>
+</UserControl>

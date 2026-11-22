@@ -25,11 +25,13 @@ Git counts refresh without opening the workbench; the changed-files pill opens i
 
 Prompt refinement offers an independent proposal with discard, retry, explicit adoption and keyboard shortcuts. Side questions use a separate read-only kernel stream, support closing and quoting, and never submit or clear the main draft. Shared scrolling bounds these surfaces in compact windows.
 
-Context and wallet readings come from the same captured HTTP responses as Electron, including wallet freshness and amount masking. Context opens its existing detail pane and cache opens an overview.
+Context and wallet readings come from the same captured HTTP responses as Electron, including wallet freshness and amount masking. Context and cache now open native floating cards.
 
-The detailed speed history, provider gallery and full worktree-configuration picker remain outstanding.
+The native speed history and detail cards are covered by the metric review. Provider configuration and worktree management remain in their existing settings pages.
 
-All 285 baseline tests and 135 render tests pass. The baseline geometry fixture now replays the same task, Git and telemetry responses as the screenshots. Eight newly mapped composer controls were removed from recorded missing debt; the debt budget was not widened.
+The integrated baseline suite passes 298 cases; the strict native suite passes 203 cases before the final sidebar and session-tab additions.
+
+The baseline geometry fixture now replays the same task, Git and telemetry responses as the screenshots. Eight newly mapped composer controls were removed from recorded missing debt; the debt budget was not widened.
 
 Element-level fixtures also compare the file-count texts, status readings, ring and model labels against Electron, including individual bounds, line height, weight, color and rasterized glyph rows in both palettes and viewports.
 
@@ -44,3 +46,14 @@ Render captures use Avalonia Headless with Skia on Windows. Live remote SSH auth
 Go formatting and vet pass. Go lint reports six existing findings; the changed-file debt gate reports the existing global CSS, essay, release-note and wire-parity totals.
 
 Builtin tests fail on the existing Git metadata denial attribution fixture. Boot tests fail and time out in WSL where the required shell sandbox is unavailable.
+
+
+Session navigation now uses complete host/root/path targets and retained runtime engines. Actual pointer release and Enter use the same coordinator. A tree update between press and release keeps the native clicked row until release.
+
+Initial and later opens use Hub descriptors, with eligible same-project reuse. Latest navigation wins; a repeated pending open waits for the same acknowledgment. A failed new history read keeps the previous runtime alive until the replacement has actually mounted.
+
+History pages restore tool calls and prepend without losing completed live output. The real Windows-host pagination case imports 421 records and reaches all 420 displayed message rows with two native Earlier clicks, without duplicate identities or draft loss.
+
+A separate delayed local provider verifies actual background generation through the Go HTTP/SSE path while two projects, visible bodies and independent drafts switch. It uses no paid provider or user credentials.
+
+See [the workspace ledger](../workspace-parity.md) for operation boundaries and [metric evidence](../metrics/verification.md) for hover, pricing, context and speed. The comparison images cover the integrated four-commit series.

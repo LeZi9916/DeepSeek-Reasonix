@@ -58,6 +58,16 @@ public sealed partial class ProjectRail : UserControl
     {
         InitializeComponent();
         _rows = Rows;
+        InitializeBatch();
+        InitializeGestures();
+        InitializePointerStability();
+        RetrySidebar.Click += async (_, _) =>
+        {
+            if (_retryWindow is not null)
+            {
+                await _retryWindow.Invoke().ConfigureAwait(true);
+            }
+        };
         FoldAll.Click += (_, _) =>
         {
             var keys = _tree.Select(w => w.Root).Concat(_remotes.SelectMany(h => h.Projects.Select(w => RemoteKey(h.Name, w.Root)))).ToArray();
@@ -77,12 +87,8 @@ public sealed partial class ProjectRail : UserControl
             Rebuild();
         };
         AddProject.Click += (_, _) => AddRequested?.Invoke();
-        RecentTab.Click += (_, _) => ShowRecent();
-        ProjectTab.Click += (_, _) =>
-        {
-            _scope = "all";
-            Rebuild();
-        };
+        RecentTab.Click += (_, _) => RecentRequested?.Invoke();
+        ProjectTab.Click += async (_, _) => await SelectScopeAsync("all").ConfigureAwait(true);
         RefreshLabels();
     }
 
@@ -93,6 +99,9 @@ public sealed partial class ProjectRail : UserControl
 
     /// <summary>Raised when the person asks to choose another project folder.</summary>
     public event Action? AddRequested;
+
+    /// <summary>Raised to read the canonical recent-session dialog.</summary>
+    public event Action? RecentRequested;
 
     /// <summary>
     /// Raised when the person pins or unpins a conversation.
@@ -126,23 +135,8 @@ public sealed partial class ProjectRail : UserControl
     {
         ProjectTab.Content = MessageCatalog.Get("common.project", Language);
         RecentTab.Content = MessageCatalog.Get("session.recent", Language);
-        RecentTitle.Text = MessageCatalog.Get("session.recent_sessions", Language);
         AutomationProperties.SetName(AddProject, MessageCatalog.Get("session.open_project", Language));
         ToolTip.SetTip(AddProject, MessageCatalog.Get("session.open_project", Language));
-        var menu = new MenuFlyout();
-        foreach (var (scope, key) in new[] { ("all", "common.all"), ("unread", "common.unread"), ("pinned", "session.pinned_2"), ("archived", "common.archived") })
-        {
-            var item = new MenuItem { Header = MessageCatalog.Get(key, Language) };
-            AutomationProperties.SetAutomationId(item, "action:session.scope." + scope);
-            item.Click += (_, _) =>
-            {
-                _scope = scope;
-                Rebuild();
-            };
-            menu.Items.Add(item);
-        }
-
-        Scope.Flyout = menu;
         Rebuild();
     }
 
@@ -163,10 +157,20 @@ public sealed partial class ProjectRail : UserControl
     /// </summary>
     private void Rebuild()
     {
+        if (DeferPointerRebuild())
+        {
+            return;
+        }
+
+        var editing = _rows.Children.OfType<SessionEntry>().FirstOrDefault(row => row.IsRenaming);
+        var editPath = editing?.SessionPath;
+        var editText = editing?.SuspendRename();
         _rows.Children.Clear();
+        _displayed.Clear();
+        UpdateScopeMenu();
 
         FoldAll.IsEnabled = _tree.Count > 0 || _remotes.Count > 0;
-        RecentTab.IsEnabled = _tree.Any(w => w.Sessions.Count > 0) || _remotes.Any(h => h.Projects.Any(w => w.Sessions.Count > 0));
+        RecentTab.IsEnabled = true;
         var allFolded = _tree.Select(w => w.Root).Concat(_remotes.SelectMany(h => h.Projects.Select(w => RemoteKey(h.Name, w.Root)))).All(_collapsed.Contains);
         FoldShape.Data = Geometry.Parse(allFolded ? "M15 3h6v6 M21 3l-7 7 M3 15v6h6 M3 21l7-7" : "m14 10 7-7 M20 10h-6V4 m-11 17 7-7 M4 14h6v6");
         AutomationProperties.SetName(FoldAll, MessageCatalog.Get(allFolded ? "session.expand_all_projects" : "session.collapse_all_projects", Language));
@@ -177,24 +181,27 @@ public sealed partial class ProjectRail : UserControl
                 "unread" => "common.unread",
                 "pinned" => "session.pinned_2",
                 "archived" => "common.archived",
+                "live" => "plan.step.now",
+                "waiting" => "chat.needs_you",
                 _ => "common.all",
             },
             Language);
         if (_tree.Count == 0 && _remotes.Count == 0)
         {
             _rows.Children.Add(EmptyState());
+            UpdateBatch();
             return;
         }
 
         foreach (var workspace in _tree)
         {
-            var sessions = RailPresenter.Sorted(workspace.Sessions).Where(MatchesScope).ToArray();
+            var sessions = RailPresenter.Sorted(workspace.Sessions).Where(session => InScope(string.Empty, session)).ToArray();
             if (_scope != "all" && sessions.Length == 0)
             {
                 continue;
             }
 
-            _rows.Children.Add(new ProjectEntry(workspace, _collapsed.Contains(workspace.Root), () =>
+            var project = new ProjectEntry(workspace, _collapsed.Contains(workspace.Root), () =>
             {
                 if (!_collapsed.Remove(workspace.Root))
                 {
@@ -202,60 +209,31 @@ public sealed partial class ProjectRail : UserControl
                 }
 
                 Rebuild();
-            }));
+            });
+            project.SetMenu(BuildProjectMenu(new SessionOpenTarget(string.Empty, workspace.Root, string.Empty)));
+            ConfigureProjectDrag(project, workspace);
+            project.SetNewAction(() => Navigate(new SessionOpenTarget(string.Empty, workspace.Root, string.Empty)), !workspace.Missing, Language);
+            _rows.Children.Add(project);
             if (_collapsed.Contains(workspace.Root))
             {
                 continue;
             }
 
-            var showAll = _expanded.Contains(workspace.Root) || sessions.Skip(5).Any(s => RailPresenter.Same(s.Path, _current));
-            var visible = showAll ? sessions.Length : 5;
-            foreach (var session in sessions.Take(visible))
+            var visible = PreviewRows(string.Empty, workspace.Root, sessions);
+            foreach (var session in visible)
             {
                 _rows.Children.Add(SessionRow(session));
+                AddKeptRows(workspace.Root, session);
             }
 
-            if (sessions.Length > visible)
-            {
-                var more = new Button
-                {
-                    Content = MessageCatalog.Get(MessageKey.Common.ShowMoreNLeft, Language, ("n", Format.Count(sessions.Length - visible, Language))),
-                    Classes = { "rail-button", "session-more" },
-                };
-                AutomationProperties.SetAutomationId(more, "action:session.more");
-                more.Click += (_, _) =>
-                {
-                    _expanded.Add(workspace.Root);
-                    Rebuild();
-                };
-                _rows.Children.Add(more);
-            }
+            AddWindowTail(string.Empty, workspace, sessions.Length, visible.Length);
         }
 
         RebuildRemotes();
-    }
-
-    /// <summary>Projects only facts explicitly carried by the canonical tree.</summary>
-    /// <param name="session">Session to project.</param>
-    /// <returns>Whether it belongs in the selected scope.</returns>
-    private bool MatchesScope(TreeSession session) => _scope switch
-    {
-        "unread" => session.Unread && !session.Archived,
-        "pinned" => session.Pinned && !session.Archived,
-        "live" => session.RuntimeId.Length > 0 && !session.Archived,
-        "archived" => session.Archived,
-        _ => !session.Archived,
-    };
-
-    /// <summary>Fills the recent-session flyout from the current canonical tree.</summary>
-    private void ShowRecent()
-    {
-        RecentRows.Children.Clear();
-        var local = _tree.SelectMany(w => w.Sessions.Select(s => (Host: string.Empty, Root: w.Root, Session: s)));
-        var remote = _remotes.SelectMany(h => h.Projects.SelectMany(w => w.Sessions.Select(s => (Host: h.Name, Root: w.Root, Session: s))));
-        foreach (var row in local.Concat(remote).Where(row => !row.Session.Archived).OrderByDescending(row => row.Session.LastActiveAt))
+        UpdateBatch();
+        if (editPath is not null && editText is not null)
         {
-            RecentRows.Children.Add(row.Host.Length == 0 ? SessionRow(row.Session) : RemoteSessionRow(row.Host, row.Root, row.Session));
+            _rows.Children.OfType<SessionEntry>().FirstOrDefault(row => row.SessionPath == editPath)?.RestoreRename(editText);
         }
     }
 
@@ -283,56 +261,26 @@ public sealed partial class ProjectRail : UserControl
     /// <summary>Builds the session's native row and its authoritative action menu.</summary>
     /// <param name="session">Canonical conversation.</param>
     /// <returns>The row.</returns>
-    private Control SessionRow(TreeSession session) => new SessionEntry(
+    private Control SessionRow(TreeSession session)
+    {
+        _displayed.Add(session);
+        var target = new SessionOpenTarget(string.Empty, session.WorkspaceRoot.Length > 0 ? session.WorkspaceRoot : _tree.FirstOrDefault(w => w.Sessions.Contains(session))?.Root ?? string.Empty, session.Path);
+        return new SessionEntry(
         session,
         _currentHost.Length == 0 && RailPresenter.Same(session.Path, _current),
-        SessionMenu(session),
+        BuildSessionMenu(target, session),
         () =>
         {
-            RecentTab.Flyout?.Hide();
-            Opened?.Invoke(session.Path);
+            if (_selection is null)
+            {
+                Navigate(target);
+            }
         },
         Language,
-        RunFor(string.Empty, session.Path));
-
-    /// <summary>
-    /// Builds the menu one conversation offers.
-    /// </summary>
-    /// <param name="session">The conversation.</param>
-    /// <returns>The menu, with only the actions that make sense for this row.</returns>
-    private MenuFlyout SessionMenu(TreeSession session)
-    {
-        var menu = new MenuFlyout();
-
-        var open = new MenuItem { Header = MessageCatalog.Get(MessageKey.Common.Open, Language) };
-        open.Click += (_, _) => Opened?.Invoke(session.Path);
-        menu.Items.Add(open);
-
-        var pin = new MenuItem
-        {
-            Header = MessageCatalog.Get(
-                session.Pinned ? MessageKey.Common.Unpin : MessageKey.Common.PinSession,
-                Language),
-        };
-        pin.Click += (_, _) => Pinned?.Invoke(session.Path, !session.Pinned);
-        menu.Items.Add(pin);
-
-        var archive = new MenuItem
-        {
-            Header = MessageCatalog.Get(
-                session.Archived ? MessageKey.Common.Unarchive : MessageKey.Common.ArchiveSession,
-                Language),
-        };
-        archive.Click += (_, _) => Archived?.Invoke(session.Path, !session.Archived);
-        menu.Items.Add(archive);
-
-        if (session.Unread)
-        {
-            var seen = new MenuItem { Header = MessageCatalog.Get(MessageKey.Common.MarkAsRead, Language) };
-            seen.Click += (_, _) => MarkedViewed?.Invoke(session.Path);
-            menu.Items.Add(seen);
-        }
-
-        return menu;
+        RunFor(string.Empty, session.Path),
+        QuickActions,
+        _selection?.Contains(session.Path),
+        () => ToggleSelected(session.Path),
+        title => RequestAction(new WorkspaceAction("session.rename", target, session, title)));
     }
 }

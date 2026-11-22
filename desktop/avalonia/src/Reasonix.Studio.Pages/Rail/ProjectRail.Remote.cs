@@ -12,7 +12,7 @@ namespace Reasonix.Studio.Pages.Rail;
 public sealed partial class ProjectRail
 {
     /// <summary>Reducer-owned turn states indexed by machine and transcript.</summary>
-    private readonly Dictionary<string, string> _runs = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RailActivity> _runs = new(StringComparer.Ordinal);
 
     /// <summary>Last acknowledged machine projections.</summary>
     private IReadOnlyList<RemoteRailHost> _remotes = Array.Empty<RemoteRailHost>();
@@ -32,6 +32,9 @@ public sealed partial class ProjectRail
     /// <summary>Raised to refresh the remote session book.</summary>
     public event Action? RemoteRefreshRequested;
 
+    /// <summary>Raised after a canonical transcript's reducer-owned activity changes.</summary>
+    public event Action? ActivityChanged;
+
     /// <summary>Shows the current remote address book and acknowledged trees.</summary>
     /// <param name="hosts">Visible machine projections.</param>
     /// <param name="query">The current search query.</param>
@@ -48,16 +51,27 @@ public sealed partial class ProjectRail
     /// <param name="host">The machine identity, empty for local.</param>
     /// <param name="path">The canonical transcript.</param>
     /// <param name="run">Running, halt, or empty for settled.</param>
-    public void ShowRun(string host, string path, string run)
+    /// <param name="live">Actual turn lifetime when known.</param>
+    public void ShowRun(string host, string path, string run, bool? live = null)
     {
-        if (path.Length == 0 || RunFor(host, path) == run)
+        var state = new RailActivity(run, live ?? (run == "running"));
+        if (path.Length == 0 || _runs.GetValueOrDefault(RemoteKey(host, path)) == state)
         {
             return;
         }
 
-        _runs[RemoteKey(host, path)] = run;
+        _runs[RemoteKey(host, path)] = state;
         Rebuild();
+        ActivityChanged?.Invoke();
     }
+
+    /// <summary>Reads the actual running or needs-attention state for a canonical transcript.</summary>
+    /// <param name="target">Machine and transcript identity.</param><returns>The known reducer state or empty.</returns>
+    public string RunState(SessionOpenTarget target) => RunFor(target.Host, target.SessionPath);
+
+    /// <summary>Reads the actual turn lifetime rather than inferring it from an open runtime.</summary>
+    /// <param name="target">Canonical machine and transcript.</param><returns>Whether a turn is live.</returns>
+    public bool IsLive(SessionOpenTarget target) => _runs.GetValueOrDefault(RemoteKey(target.Host, target.SessionPath))?.Live == true;
 
     /// <summary>Preserves both parts of a remote row identity.</summary>
     /// <param name="host">Machine name.</param><param name="path">Canonical path.</param>
@@ -67,7 +81,7 @@ public sealed partial class ProjectRail
     /// <summary>Reads the actual turn state, leaving an unknown pane idle.</summary>
     /// <param name="host">Machine name.</param><param name="path">Canonical path.</param>
     /// <returns>The known run state.</returns>
-    private string RunFor(string host, string path) => _runs.GetValueOrDefault(RemoteKey(host, path), string.Empty);
+    private string RunFor(string host, string path) => _runs.GetValueOrDefault(RemoteKey(host, path))?.Run ?? string.Empty;
 
     /// <summary>Projects remote rows through the shared pagination and fold state.</summary>
     private void RebuildRemotes()
@@ -78,7 +92,7 @@ public sealed partial class ProjectRail
             {
                 var hit = _remoteQuery.Length == 0 || host.Name.Contains(_remoteQuery, StringComparison.OrdinalIgnoreCase)
                     || host.Target.Contains(_remoteQuery, StringComparison.OrdinalIgnoreCase) || workspace.Name.Contains(_remoteQuery, StringComparison.OrdinalIgnoreCase);
-                var sessions = RailPresenter.Sorted(workspace.Sessions).Where(MatchesScope)
+                var sessions = RailPresenter.Sorted(workspace.Sessions).Where(session => InScope(host.Name, session))
                     .Where(s => hit || (s.Title.Length > 0 ? s.Title : s.Name).Contains(_remoteQuery, StringComparison.OrdinalIgnoreCase)).ToArray();
                 if ((sessions.Length == 0 && !hit) || (_scope != "all" && sessions.Length == 0))
                 {
@@ -101,41 +115,21 @@ public sealed partial class ProjectRail
                     },
                     host,
                     Language);
-                var menu = new MenuFlyout();
-                var start = new MenuItem { Header = MessageCatalog.Get("common.new_session", Language) };
-                start.Click += (_, _) => RemoteOpened?.Invoke(host.Name, workspace.Root, string.Empty);
-                var refresh = new MenuItem { Header = MessageCatalog.Get("common.reload", Language) };
-                refresh.Click += (_, _) => RemoteRefreshRequested?.Invoke();
-                menu.Items.Add(start);
-                menu.Items.Add(refresh);
-                project.ContextFlyout = menu;
+                project.SetMenu(BuildProjectMenu(new SessionOpenTarget(host.Name, workspace.Root, string.Empty)));
+                project.SetNewAction(() => Navigate(new SessionOpenTarget(host.Name, workspace.Root, string.Empty)), true, Language);
                 _rows.Children.Add(project);
                 if (folded && _remoteQuery.Length == 0)
                 {
                     continue;
                 }
 
-                var visible = _expanded.Contains(key) || _remoteQuery.Length > 0 ? sessions.Length : 5;
-                foreach (var session in sessions.Take(visible))
+                var visible = PreviewRows(host.Name, key, sessions);
+                foreach (var session in visible)
                 {
                     _rows.Children.Add(RemoteSessionRow(host.Name, workspace.Root, session));
                 }
 
-                if (sessions.Length > visible)
-                {
-                    var more = new Button
-                    {
-                        Content = MessageCatalog.Get(MessageKey.Common.ShowMoreNLeft, Language, ("n", Format.Count(sessions.Length - visible, Language))),
-                        Classes = { "rail-button", "session-more" },
-                    };
-                    AutomationProperties.SetAutomationId(more, "action:session.more");
-                    more.Click += (_, _) =>
-                    {
-                        _expanded.Add(key);
-                        Rebuild();
-                    };
-                    _rows.Children.Add(more);
-                }
+                AddWindowTail(host.Name, workspace, sessions.Length, visible.Length);
             }
         }
     }
@@ -146,28 +140,7 @@ public sealed partial class ProjectRail
     /// <returns>The native row.</returns>
     private Control RemoteSessionRow(string host, string root, TreeSession session)
     {
-        var menu = new MenuFlyout();
-        void Open() => RemoteOpened?.Invoke(host, session.WorkspaceRoot.Length > 0 ? session.WorkspaceRoot : root, session.Path);
-        var open = new MenuItem { Header = MessageCatalog.Get("common.open", Language) };
-        open.Click += (_, _) => Open();
-        menu.Items.Add(open);
-        foreach (var (action, key, value) in new[]
-        {
-            ("pin", session.Pinned ? "common.unpin" : "common.pin_session", !session.Pinned),
-            ("archive", session.Archived ? "common.unarchive" : "common.archive_session", !session.Archived),
-            ("viewed", "common.mark_as_read", true),
-        })
-        {
-            if (action == "viewed" && !session.Unread)
-            {
-                continue;
-            }
-
-            var item = new MenuItem { Header = MessageCatalog.Get(key, Language) };
-            item.Click += (_, _) => RemoteWritten?.Invoke(host, session.Path, action, value);
-            menu.Items.Add(item);
-        }
-
-        return new SessionEntry(session, _currentHost == host && RailPresenter.Same(session.Path, _current), menu, Open, Language, RunFor(host, session.Path));
+        var target = new SessionOpenTarget(host, session.WorkspaceRoot.Length > 0 ? session.WorkspaceRoot : root, session.Path);
+        return new SessionEntry(session, _currentHost == host && RailPresenter.Same(session.Path, _current), BuildSessionMenu(target, session), () => Navigate(target), Language, RunFor(host, session.Path), QuickActions);
     }
 }

@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Reasonix.Studio.Pages.Rail.ProjectRail"
              FontFamily="{DynamicResource WorkbenchUiFamily}" FontWeight="Medium" Foreground="{DynamicResource TextBrush}">
+  <UserControl.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceInclude Source="avares://Reasonix.Studio.Pages/Rail/WorkspaceMenu.axaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></UserControl.Resources>
   <UserControl.Styles>
     <Style Selector="Button.rail-button">
       <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
@@ -20,20 +21,14 @@
     <Style Selector="Button.rail-tab.selected"><Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
     <Style Selector="Button.rail-icon"><Setter Property="Width" Value="26"/><Setter Property="Height" Value="26"/><Setter Property="HorizontalContentAlignment" Value="Center"/></Style>
     <Style Selector="Button.session-more"><Setter Property="Height" Value="29"/><Setter Property="Margin" Value="3,2,9,5"/><Setter Property="Padding" Value="9,0"/><Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Left"/></Style>
+    <Style Selector="TextBlock.session-window-note"><Setter Property="Margin" Value="18,4"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Normal"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="TextWrapping" Value="Wrap"/></Style>
     <Style Selector="Path.rail-glyph"><Setter Property="Stroke" Value="{DynamicResource FaintBrush}"/><Setter Property="StrokeThickness" Value="1.8"/><Setter Property="StrokeLineCap" Value="Round"/><Setter Property="StrokeJoin" Value="Round"/></Style>
   </UserControl.Styles>
-  <Grid RowDefinitions="34,*">
+  <Grid RowDefinitions="34,Auto,Auto,*">
     <Border Margin="0,4,-1,0" Height="30" Padding="4,0,2,0" AutomationProperties.AutomationId="class:projects-header">
     <Grid Name="Toolbar" Height="28" VerticalAlignment="Center" ColumnDefinitions="Auto,Auto,*,28,54,28" ColumnSpacing="2">
       <Button Name="ProjectTab" Margin="2,0,0,0" Width="40" VerticalAlignment="Center" Classes="rail-button rail-tab selected" AutomationProperties.AutomationId="action:session.view"/>
-      <Button Name="RecentTab" Grid.Column="1" Width="40" VerticalAlignment="Center" Classes="rail-button rail-tab" AutomationProperties.AutomationId="action:session.recent">
-        <Button.Flyout><Flyout Placement="RightEdgeAlignedTop">
-          <StackPanel Width="320" MaxHeight="440" Spacing="8">
-            <TextBlock Name="RecentTitle" FontSize="{DynamicResource StudioType14}" FontWeight="SemiBold"/>
-            <ScrollViewer HorizontalScrollBarVisibility="Disabled"><StackPanel Name="RecentRows" Spacing="1"/></ScrollViewer>
-          </StackPanel>
-        </Flyout></Button.Flyout>
-      </Button>
+      <Button Name="RecentTab" Grid.Column="1" Width="40" VerticalAlignment="Center" Classes="rail-button rail-tab" AutomationProperties.AutomationId="action:session.recent"/>
       <Button Name="FoldAll" Grid.Column="3" Classes="rail-button rail-icon" Width="28" Height="28" FontSize="{DynamicResource StudioType13}" FontWeight="Normal" Foreground="{DynamicResource MutedBrush}" AutomationProperties.AutomationId="action:workspace.fold-all">
         <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Name="FoldShape" Classes="rail-glyph" Data="m14 10 7-7 M20 10h-6V4 m-11 17 7-7 M4 14h6v6"/></Canvas></Viewbox>
       </Button>
@@ -43,9 +38,18 @@
       <Button Name="AddProject" Grid.Column="5" Classes="rail-button rail-icon" Width="28" Height="28" FontSize="{DynamicResource StudioType13}" FontWeight="Normal" Foreground="{DynamicResource MutedBrush}" AutomationProperties.AutomationId="action:workspace.add">
         <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M5 12h14 M12 5v14"/></Canvas></Viewbox>
       </Button>
+      <Button Name="ClearScope" Grid.Column="4" Classes="rail-button rail-icon" Width="20" Height="20" HorizontalAlignment="Right" VerticalAlignment="Center" IsVisible="False" Content="×" AutomationProperties.AutomationId="action:session.filter-clear"/>
     </Grid>
     </Border>
-    <ScrollViewer Name="TreeScroll" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel Grid.Row="1" Spacing="4"><TextBlock Name="ReadFailure" Margin="12,6,12,0" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap" FontSize="12" IsVisible="False"/><Button Name="RetrySidebar" Margin="12,0,12,6" Classes="rail-button" HorizontalAlignment="Left" Padding="6,3" IsVisible="False" AutomationProperties.AutomationId="action:tree.retry"/></StackPanel>
+    <Border Name="BatchArea" Grid.Row="2" Margin="10,6,20,8" Padding="8" CornerRadius="7" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" IsVisible="False">
+      <StackPanel Spacing="6">
+        <Grid ColumnDefinitions="*,Auto"><TextBlock Name="BatchCount" FontSize="{DynamicResource StudioType11}" VerticalAlignment="Center"/><Button Name="BatchEnd" Grid.Column="1" Classes="rail-button" Padding="4" AutomationProperties.AutomationId="action:session.selection"/></Grid>
+        <WrapPanel><Button Name="BatchAll" Classes="rail-button" Padding="4" AutomationProperties.AutomationId="action:session.selection"/><Button Name="BatchArchive" Classes="rail-button" Padding="4" AutomationProperties.AutomationId="action:session.batch-archive"/><Button Name="BatchDelete" Classes="rail-button" Padding="4" AutomationProperties.AutomationId="action:session.batch-delete"/></WrapPanel>
+        <TextBlock Name="BatchNotice" FontSize="{DynamicResource StudioType11}" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" IsVisible="False"/>
+      </StackPanel>
+    </Border>
+    <ScrollViewer Name="TreeScroll" Grid.Row="3" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
       <StackPanel Name="Rows" Spacing="0" Margin="10,0,20,8"/>
     </ScrollViewer>
   </Grid>

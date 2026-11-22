@@ -8,12 +8,12 @@
       "height": 900,
       "scheme": "light",
       "referenceNodes": 482,
-      "observedNodes": 60,
+      "observedNodes": 65,
       "counts": {
         "box": 10,
         "style": 13,
-        "missing": 444,
-        "extra": 22,
+        "missing": 443,
+        "extra": 26,
         "token": 0
       },
       "expanded": "1440x900-light-expanded.png",
@@ -26,12 +26,12 @@
       "height": 900,
       "scheme": "dark",
       "referenceNodes": 482,
-      "observedNodes": 60,
+      "observedNodes": 65,
       "counts": {
         "box": 8,
         "style": 13,
-        "missing": 444,
-        "extra": 22,
+        "missing": 443,
+        "extra": 26,
         "token": 0
       },
       "expanded": "1440x900-dark-expanded.png",
@@ -44,11 +44,11 @@
       "height": 480,
       "scheme": "light",
       "referenceNodes": 486,
-      "observedNodes": 27,
+      "observedNodes": 28,
       "counts": {
         "box": 10,
         "style": 8,
-        "missing": 459,
+        "missing": 458,
         "extra": 0,
         "token": 0
       },
@@ -62,11 +62,11 @@
       "height": 480,
       "scheme": "dark",
       "referenceNodes": 486,
-      "observedNodes": 27,
+      "observedNodes": 28,
       "counts": {
         "box": 10,
         "style": 8,
-        "missing": 459,
+        "missing": 458,
         "extra": 0,
         "token": 0
       },

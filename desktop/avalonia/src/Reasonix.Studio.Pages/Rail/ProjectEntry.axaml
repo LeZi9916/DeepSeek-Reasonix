@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Reasonix.Studio.Pages.Rail.ProjectEntry" Margin="0,1,0,0">
+  <UserControl.Styles><Style Selector="StackPanel.project-actions"><Setter Property="Opacity" Value="0"/></Style><Style Selector="UserControl:pointerover StackPanel.project-actions, UserControl:focus-within StackPanel.project-actions"><Setter Property="Opacity" Value="1"/></Style><Style Selector="UserControl:pointerover Button#Fold, UserControl:focus-within Button#Fold"><Setter Property="Padding" Value="6,0,52,0"/></Style></UserControl.Styles>
   <Grid RowDefinitions="30,Auto">
   <Button Name="Fold" Classes="rail-button" AutomationProperties.AutomationId="action:workspace.fold"
           Height="30" Padding="6,0,4,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
@@ -11,9 +12,14 @@
       <TextBlock Grid.Column="4" Name="State" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource WarnInkBrush}" VerticalAlignment="Center"/>
     </Grid>
   </Button>
+    <StackPanel Classes="project-actions" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+      <Button Name="NewSession" Classes="rail-button rail-icon" Width="24" Height="24" AutomationProperties.AutomationId="action:session.new"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M12 4v16 M4 12h16"/></Canvas></Viewbox></Button>
+      <Button Name="Menu" Classes="rail-button rail-icon" Width="24" Height="24" AutomationProperties.AutomationId="action:workspace.menu"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M5 12h.01 M12 12h.01 M19 12h.01" StrokeThickness="3"/></Canvas></Viewbox></Button>
+    </StackPanel>
     <StackPanel Name="Connection" Grid.Row="1" Margin="48,0,2,4" Orientation="Horizontal" Spacing="5" IsVisible="False">
       <Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Name="ConnectionGlyph" Data="M20 7v5h-5 M20 12a8 8 0 1 0-2.5 6" Stroke="{DynamicResource WarnInkBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
       <TextBlock Name="Detail" Foreground="{DynamicResource WarnInkBrush}" FontSize="{DynamicResource StudioType11}" VerticalAlignment="Center"/>
     </StackPanel>
+    <Border Name="DropMarker" Height="2" Background="{DynamicResource NetBrush}" VerticalAlignment="Top" IsVisible="False" IsHitTestVisible="False"/>
   </Grid>
 </UserControl>

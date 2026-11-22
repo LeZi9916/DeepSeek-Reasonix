@@ -18,6 +18,12 @@ namespace Reasonix.Studio.Contracts.Events;
 /// </remarks>
 public readonly record struct WireFrame(long Seq, string Kind, JsonElement Payload)
 {
+    /// <summary>Gets or initializes a value indicating whether this frame came from the replay log.</summary>
+    public bool IsReplay
+    {
+        get; init;
+    }
+
     /// <summary>
     /// Gets a value indicating whether the frame occupies a position a client can
     /// resume from.

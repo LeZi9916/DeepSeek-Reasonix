@@ -6,6 +6,7 @@
         xmlns:settings="using:Reasonix.Studio.Shell.Settings"
         xmlns:rail="using:Reasonix.Studio.Pages.Rail"
         xmlns:workbench="using:Reasonix.Studio.Shell.Workbench"
+        xmlns:session="using:Reasonix.Studio.Shell.Session"
         x:Class="Reasonix.Studio.Shell.MainWindow"
         Title="Reasonix Studio" Width="1440" Height="900"
         MinWidth="760" MinHeight="480" Background="{DynamicResource SurfaceBrush}">
@@ -76,7 +77,7 @@
   <Grid>
   <Grid Name="LayoutRoot" ColumnDefinitions="264,*" Background="{DynamicResource PageBrush}">
     <appearance:ThemeBackdrop Name="Backdrop" Grid.ColumnSpan="2"/>
-    <Grid Name="MainArea" Grid.Column="1" RowDefinitions="48,*">
+    <Grid Name="MainArea" Grid.Column="1" RowDefinitions="48,Auto,*">
       <ctl:StudioChrome Name="TitleChrome">
         <Grid ColumnDefinitions="Auto,*,Auto">
           <Button Name="ExpandRail" Classes="icon" IsVisible="False" Margin="0,0,8,0"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.expand}"/></Canvas></Viewbox></Button>
@@ -124,10 +125,14 @@
           </Grid>
         </Grid>
       </ctl:StudioChrome>
-      <ctl:StudioPane Grid.Row="1">
+      <ProgressBar Name="NavigationProgress" Height="2" VerticalAlignment="Bottom" IsIndeterminate="True" IsVisible="False" IsHitTestVisible="False"/>
+      <session:SessionTabs Name="PaneTabs" Grid.Row="1" IsVisible="False"/>
+      <ctl:StudioPane Grid.Row="2">
         <Grid Name="PaneGrid" ColumnDefinitions="*,Auto,Auto" RowDefinitions="*,Auto">
           <Grid Name="ConversationArea" RowDefinitions="*,Auto" TextElement.FontFamily="{DynamicResource ConversationUiFamily}" TextElement.FontWeight="Medium" TextElement.Foreground="{DynamicResource TextBrush}">
-            <pages:SessionPage Name="Conversation" Grid.Row="0" HorizontalAlignment="Stretch" />
+            <pages:SessionPage Name="Conversation" Grid.Row="0" HorizontalAlignment="Stretch">
+              <pages:SessionPage.TopContent><Button Name="EarlierHistory" IsVisible="False" HorizontalAlignment="Center" Margin="8,4" MinHeight="24" FontSize="11" Background="Transparent" BorderThickness="0" AutomationProperties.AutomationId="action:history.more"/></pages:SessionPage.TopContent>
+            </pages:SessionPage>
           <ScrollViewer Name="AnalysisPanel" Grid.Row="0" MaxWidth="1080" Margin="0,0,10,0" AutomationProperties.AutomationId="class:run-analysis" IsVisible="False">
             <StackPanel Name="AnalysisContent" Margin="0,24,0,16" Spacing="16" HorizontalAlignment="Stretch" />
           </ScrollViewer>
@@ -547,6 +552,9 @@
     <Button Name="Maximise" Content="□" Classes="caption" />
     <Button Name="CloseCaption" Content="×" Classes="caption" />
   </StackPanel>
+  <Border Name="GlobalError" IsVisible="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16" MaxWidth="480" Padding="12" CornerRadius="8" Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource ErrInkBrush}" BorderThickness="1" AutomationProperties.LiveSetting="Assertive">
+    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12"><SelectableTextBlock Name="GlobalErrorText" TextWrapping="Wrap" Foreground="{DynamicResource ErrInkBrush}"/><Button Grid.Column="1" Classes="icon" Content="×" Click="OnDismissGlobalError"/></Grid>
+  </Border>
   </Grid>
   </LayoutTransformControl>
 </Window>

@@ -22,6 +22,12 @@ public sealed record RemoteRailHost
     /// <summary>Gets the link's diagnostic detail.</summary>
     public string Error { get; init; } = string.Empty;
 
+    /// <summary>Gets the address book's default connection root.</summary>
+    public string DefaultRoot { get; init; } = string.Empty;
+
+    /// <summary>Gets explicitly saved project roots eligible for removal from this list.</summary>
+    public IReadOnlyList<string> SavedRoots { get; init; } = Array.Empty<string>();
+
     /// <summary>Gets the projects supplied by the host or saved address book.</summary>
     public IReadOnlyList<TreeWorkspace> Projects { get; init; } = Array.Empty<TreeWorkspace>();
 }

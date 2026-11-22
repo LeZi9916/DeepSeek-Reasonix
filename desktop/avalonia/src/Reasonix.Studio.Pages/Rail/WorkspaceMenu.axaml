@@ -1,0 +1,15 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ControlTheme x:Key="WorkspaceMenuItemTheme" TargetType="MenuItem">
+    <Setter Property="FontFamily" Value="{DynamicResource WorkbenchUiFamily}"/><Setter Property="FontSize" Value="13"/><Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="MinHeight" Value="36"/><Setter Property="MinWidth" Value="250"/><Setter Property="Padding" Value="10,6"/><Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Template"><ControlTemplate><Border Name="Row" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}"><Grid ColumnDefinitions="16,*" ColumnSpacing="8"><ContentPresenter Content="{TemplateBinding Icon}" VerticalAlignment="Center"/><ContentPresenter Grid.Column="1" Content="{TemplateBinding Header}" VerticalAlignment="Center"/></Grid></Border></ControlTemplate></Setter>
+    <Style Selector="^:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    <Style Selector="^:selected"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.45"/></Style>
+  </ControlTheme>
+  <ControlTheme x:Key="WorkspaceMenuHeaderTheme" TargetType="MenuItem">
+    <Setter Property="FontFamily" Value="{DynamicResource WorkbenchUiFamily}"/>
+    <Setter Property="MinHeight" Value="54"/><Setter Property="MinWidth" Value="250"/><Setter Property="IsEnabled" Value="False"/>
+    <Setter Property="Template"><ControlTemplate><Border Padding="10,8"><ContentPresenter Content="{TemplateBinding Header}"/></Border></ControlTemplate></Setter>
+  </ControlTheme>
+</ResourceDictionary>

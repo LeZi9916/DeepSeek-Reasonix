@@ -24,10 +24,8 @@ namespace Reasonix.Studio.Shell;
 /// The top-level window Reasonix Studio opens on launch.
 /// </summary>
 /// <remarks>
-/// The window owns one conversation for its whole life: it starts the kernel when
-/// the window opens, folds what the kernel says into the page, and stops the kernel
-/// when it closes. A launch that cannot find or start a kernel still opens and says
-/// so in the transcript — a window that fails to appear explains nothing.
+/// The window owns its host and independently running conversation panes.
+/// A failed launch remains visible with its failure reason.
 /// </remarks>
 public sealed partial class MainWindow : Window
 {
@@ -79,16 +77,19 @@ public sealed partial class MainWindow : Window
 
     /// <summary>Initializes a new instance of the <see cref="MainWindow"/> class with an existing transport.</summary>
     /// <param name="connectOnOpen">Whether to launch the desktop host on opening.</param>
-    /// <param name="engine">Session already connected to a host, if any.</param>
-    /// <param name="language">Window language on first paint.</param>
+    /// <param name="engine">Session already connected to a host, if any.</param><param name="language">Window language on first paint.</param>
     /// <param name="systemAllowsMotion">Optional platform preference provider.</param>
-    internal MainWindow(bool connectOnOpen, SessionEngine? engine, InterfaceLanguage language, Func<CancellationToken, Task<bool>>? systemAllowsMotion = null)
+    /// <param name="drafts">Optional scoped draft persistence.</param>
+    internal MainWindow(bool connectOnOpen, SessionEngine? engine, InterfaceLanguage language, Func<CancellationToken, Task<bool>>? systemAllowsMotion = null, IDraftStorage? drafts = null)
     {
+        _drafts = drafts ?? (connectOnOpen ? Host.FileDrafts.Default() : new Host.MemoryDrafts());
         _systemAllowsMotion = systemAllowsMotion ?? SystemAllowsMotionAsync;
         InitializeComponent();
         _engine = engine;
 
         _connectOnOpen = connectOnOpen;
+        _workspacePreferences = connectOnOpen ? Host.WorkspacePreferences.Load() : new();
+        Projects.QuickActions = _workspacePreferences.SessionQuickActions;
 
         Conversation.Language = language;
         Projects.Language = Language;
@@ -96,6 +97,7 @@ public sealed partial class MainWindow : Window
         InitializeChrome();
         InitializeIntake();
         InitializePreferences();
+        InitializeNavigation();
         Conversation.SubmitAnswers = (id, answers) => TryAnswerAsync(() => _engine!.AnswerAsync(id, answers, _closing.Token));
         Conversation.EngageQuestion = id => TryAnswerAsync(() => _engine!.Pages.EngageAsync(id, _closing.Token));
         Label(DismissError, MessageKey.Common.Close);
@@ -215,22 +217,25 @@ public sealed partial class MainWindow : Window
         }
 
         _engine = launch.Engine;
+        var engine = _engine!;
+        _launchOwner ??= engine;
         _ = RefreshTrayAsync();
-        _engine!.Changed += OnChanged;
-        _engine.QueueChanged += OnQueueChanged;
-        _engine.TreeChanged += OnTreeChanged;
+        engine!.Changed += OnChanged;
+        engine.QueueChanged += OnQueueChanged;
+        engine.TreeChanged += OnTreeChanged;
 
         // A card whose middle the page let go of asks for the whole output
         // through this; the engine is what knows how to walk the kernel's pages.
-        Conversation.ReadFullOutput = callId => _engine.ReadFullOutputAsync(callId, _closing.Token);
+        Conversation.ReadFullOutput = callId => _engine!.ReadFullOutputAsync(callId, _closing.Token);
 
         try
         {
             // The status first, so the chrome names the session before any row
             // arrives; then the transcript the session already holds, so a resumed
             // window opens on its conversation rather than on an empty page.
-            var status = await _engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-            if (status is not null)
+            var historyRead = engine.LoadHistoryAsync(_closing.Token);
+            var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
+            if (status is not null && ReferenceEquals(_engine, engine))
             {
                 CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? MessageCatalog.Get(MessageKey.Common.NewSession, Language) : status.Label;
                 ContextReadout.Text = ContextMeter.Readout(status.Used, status.Window, Conversation.Language);
@@ -240,22 +245,35 @@ public sealed partial class MainWindow : Window
                 // usage against.
                 AdoptComposer(status);
                 AdoptSessionPath(status.SessionPath);
+                CaptureNavigation(status);
+                EnsurePaneWatching(_activePane!);
+                engine.RestoreRunning(status.Running, engine.Generation.Revision);
+                _ = engine.IdentifyRuntimeAsync(status, _closing.Token);
             }
 
-            await _engine.LoadHistoryAsync(_closing.Token).ConfigureAwait(true);
-            Conversation.Show(_engine.State);
-            ShowComposerState(_engine.State);
+            var treeRead = LoadTreeAsync();
+            var queueRead = LoadQueueAsync();
+            await historyRead.ConfigureAwait(true);
+            if (ReferenceEquals(_engine, engine))
+            {
+                Conversation.Show(engine.State);
+                ShowComposerState(engine.State);
+            }
 
             // A line another window already queued is on screen before anything
             // moves; the stream then says when to read it again. The tree is the
             // same kind of read: the column shows what the kernel holds now.
-            await LoadQueueAsync().ConfigureAwait(true);
-            await LoadTreeAsync().ConfigureAwait(true);
+            await Task.WhenAll(treeRead, queueRead).ConfigureAwait(true);
 
             // The stream is awaited last and never returns: it is the window's life.
-            UpdateMemorySuggestions(_engine.State.Running);
+            if (ReferenceEquals(_engine, engine))
+            {
+                UpdateMemorySuggestions(engine.State.Running);
+            }
+
             _ = LoadStartupPreferencesAsync();
-            await _engine.StartAsync().ConfigureAwait(true);
+            var watching = _navigation?.Panes.FirstOrDefault(pane => ReferenceEquals(pane.Engine, engine))?.Watching ?? engine.StartAsync();
+            await watching.ConfigureAwait(true);
         }
         catch (OperationCanceledException)
         {
@@ -263,7 +281,10 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception error)
         {
-            ShowRefusal(error);
+            if (ReferenceEquals(_engine, engine))
+            {
+                ShowRefusal(error);
+            }
         }
     }
 
@@ -285,10 +306,13 @@ public sealed partial class MainWindow : Window
             _engine.Changed -= OnChanged;
             _engine.QueueChanged -= OnQueueChanged;
             _engine.TreeChanged -= OnTreeChanged;
-            await _engine.DisposeAsync().ConfigureAwait(true);
-            if (_launchOwner is not null && !ReferenceEquals(_launchOwner, _engine))
+            if (_navigation is not null)
             {
-                await _launchOwner.DisposeAsync().ConfigureAwait(true);
+                await _navigation.DisposeAsync().ConfigureAwait(true);
+            }
+            else
+            {
+                await _engine.DisposeAsync().ConfigureAwait(true);
             }
 
             _engine = null;
@@ -312,6 +336,14 @@ public sealed partial class MainWindow : Window
     {
         Dispatcher.UIThread.Post(() =>
         {
+            var pane = _navigation?.Panes.FirstOrDefault(p => ReferenceEquals(p.Engine.State, state));
+            if (pane is not null)
+            {
+                var waiting = state.Items.Any(i => i is ApprovalItem { Open: true } or AskItem { Answered: null, Outcome: null });
+                Projects.ShowRun(pane.Host, pane.Status.SessionPath, waiting ? "halt" : state.Running ? "running" : string.Empty, state.Running);
+                DrawPaneTabs();
+            }
+
             if (ReferenceEquals(_engine?.State, state))
             {
                 ShowState(state);
@@ -515,7 +547,16 @@ public sealed partial class MainWindow : Window
     {
         ErrorBar.IsVisible = true;
         ErrorText.Text = DescribeError(error);
+        if (!ErrorBar.IsEffectivelyVisible)
+        {
+            GlobalErrorText.Text = ErrorText.Text;
+            GlobalError.IsVisible = true;
+        }
     }
+
+    /// <summary>Dismisses a refusal shown outside the active conversation surface.</summary>
+    /// <param name="sender">The close button.</param><param name="e">The click.</param>
+    private void OnDismissGlobalError(object? sender, RoutedEventArgs e) => GlobalError.IsVisible = false;
 
     /// <summary>Translates a host refusal for any window surface.</summary>
     /// <param name="error">The request failure.</param>

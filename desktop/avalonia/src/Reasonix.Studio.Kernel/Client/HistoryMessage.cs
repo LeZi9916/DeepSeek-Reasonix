@@ -7,6 +7,59 @@ namespace Reasonix.Studio.Kernel.Client;
 /// </summary>
 public sealed record HistoryMessage
 {
+    /// <summary>Gets dispatches made by this model message.</summary>
+    [JsonPropertyName("toolCalls")]
+    public HistoryToolCall[] ToolCalls { get; init; } = [];
+
+    /// <summary>Gets the call this result answers.</summary>
+    [JsonPropertyName("toolCallId")]
+    public string? ToolCallId
+    {
+        get; init;
+    }
+
+    /// <summary>Gets the result's canonical tool name.</summary>
+    [JsonPropertyName("toolName")]
+    public string? ToolName
+    {
+        get; init;
+    }
+
+    /// <summary>Gets a value indicating whether the host classified the result as failed.</summary>
+    [JsonPropertyName("toolFailed")]
+    public bool ToolFailed
+    {
+        get; init;
+    }
+
+    /// <summary>Gets the host's typed refusal cause.</summary>
+    [JsonPropertyName("toolRefusalCode")]
+    public string? ToolRefusalCode
+    {
+        get; init;
+    }
+
+    /// <summary>Gets a value indicating whether the result is a unified diff.</summary>
+    [JsonPropertyName("outputDiff")]
+    public bool OutputDiff
+    {
+        get; init;
+    }
+
+    /// <summary>Gets a value indicating whether the user-role line was authored by the host.</summary>
+    [JsonPropertyName("hostAuthored")]
+    public bool HostAuthored
+    {
+        get; init;
+    }
+
+    /// <summary>Gets the measured reasoning duration.</summary>
+    [JsonPropertyName("thoughtMs")]
+    public long? ThoughtMs
+    {
+        get; init;
+    }
+
     /// <summary>
     /// Gets who wrote the message: <c>user</c>, <c>assistant</c> or <c>tool</c>.
     /// </summary>

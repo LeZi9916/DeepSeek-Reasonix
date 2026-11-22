@@ -417,6 +417,12 @@ public sealed class LoopbackIntegrationTests
                     type = "application/json";
                     body = _status;
                 }
+                else if (path.StartsWith("/history/page", StringComparison.Ordinal))
+                {
+                    status = "404 Not Found";
+                    type = "application/json";
+                    body = "{\"code\":\"history.pagination_unsupported\",\"error\":\"unsupported capability\"}";
+                }
                 else if (path.StartsWith("/history", StringComparison.Ordinal))
                 {
                     status = "200 OK";

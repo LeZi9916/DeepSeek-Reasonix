@@ -346,7 +346,10 @@ public sealed class EventSubscription
                 Interlocked.Exchange(ref _seen, frame.Seq);
             }
 
-            _onFrame(frame);
+            _onFrame(frame with
+            {
+                IsReplay = true,
+            });
         }
 
         if (!result.Complete)
