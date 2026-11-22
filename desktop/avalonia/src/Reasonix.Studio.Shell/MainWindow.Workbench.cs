@@ -188,6 +188,11 @@ public sealed partial class MainWindow
         Grid.SetColumn(WorkbenchPanel, overlay ? 0 : 1);
         WorkbenchPanel.Width = overlay ? double.NaN : Math.Min(510, room - 246);
         ConversationArea.IsVisible = !(overlay && WorkbenchPanel.IsVisible);
+        var stacked = LayoutRoot.Bounds.Width <= 840;
+        var docked = WorkbenchPanel.IsVisible && !overlay;
+        ComposerArea.Margin = new Avalonia.Thickness(docked ? 39 : stacked ? 10 : 24, 0);
+        ConversationArea.Margin = new Avalonia.Thickness(0, 0, docked ? 2 : 0, 0);
+        Conversation.SetReadingInset(docked ? 45 : stacked ? 10 : 24);
     }
 
     /// <summary>Opens a listed workspace file or a diff, ignoring superseded reads.</summary>

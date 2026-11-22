@@ -117,6 +117,11 @@ public sealed partial class SessionPage
             if (row is SayItem or UserItem)
             {
                 Flush(work);
+                if (row is UserItem && _drawn.Count > 0)
+                {
+                    AddRaw(new Border { Height = 1, Background = Brush("BorderBrush"), Margin = new Thickness(0, 32, 0, 12) });
+                }
+
                 AddRow(RowOf(row));
                 continue;
             }
@@ -138,7 +143,17 @@ public sealed partial class SessionPage
             return;
         }
 
-        AddRaw(ActivityGroup(work));
+        var answer = (_drawn.LastOrDefault() as Border)?.Child as AnswerCard;
+        var group = ActivityGroup(work);
+        if (answer is not null)
+        {
+            answer.SetActivity(group);
+        }
+        else
+        {
+            AddRaw(group);
+        }
+
         work.Clear();
     }
 
@@ -228,28 +243,14 @@ public sealed partial class SessionPage
         };
     }
 
-    /// <summary>
-    /// Draws a stretch of work under one head that says what it came to.
-    /// </summary>
-    /// <param name="work">The rows the stretch holds.</param>
-    /// <returns>The group, open unless the reader closed it.</returns>
-    /// <remarks>
-    /// The head is drawn from <see cref="ActivityTally"/>, so the counts on
-    /// screen are the rows' own sum rather than a counter kept beside them.
-    ///
-    /// A group starts open. The reference frontend's default for this part is
-    /// "live" — open while the turn runs, closed once it settles — but the
-    /// geometry baseline was captured with the work showing, and a closed group
-    /// takes those rows out of the visual tree: the gate would then report the
-    /// capture's own rows as dropped. Opening is what keeps the two comparable;
-    /// the reader can still close it, and that choice is kept for the page.
-    /// </remarks>
+    /// <summary>Draws work under a disclosure that follows the call lifecycle.</summary>
+    /// <param name="work">The canonical rows in this activity.</param>
+    /// <returns>The mounted disclosure and its retained body.</returns>
     private Control ActivityGroup(IReadOnlyList<TranscriptItem> work)
     {
         var tally = ActivityTally.Of(work);
-        var open = _opened ?? true;
-
-        var body = new StackPanel { Spacing = 8 };
+        var open = _opened ?? !tally.Settled;
+        var body = new StackPanel { Name = "ActivityBody", Spacing = 2, IsVisible = open, Margin = new Thickness(17, 2, 0, 2) };
         foreach (var row in work)
         {
             var control = RowOf(row);
@@ -257,50 +258,7 @@ public sealed partial class SessionPage
             body.Children.Add(control);
         }
 
-        var head = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
-        };
-
-        var summary = new SelectableTextBlock
-        {
-            Text = HeadlineOf(tally),
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
-            Opacity = 0.65,
-            TextWrapping = TextWrapping.Wrap,
-        };
-        head.Children.Add(summary);
-
-        var toggle = new Button
-        {
-            Content = MessageCatalog.Get(open ? "common.collapse" : "common.expand", Language),
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
-            Padding = new Thickness(8, 2, 8, 2),
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            HorizontalAlignment = HorizontalAlignment.Right,
-        };
-        Grid.SetColumn(toggle, 2);
-        toggle.Click += (_, _) =>
-        {
-            _opened = !open;
-            Rebuild(_state.Items);
-        };
-        head.Children.Add(toggle);
-
-        var group = new StackPanel { Spacing = 6 };
-        group.Children.Add(head);
-        if (open)
-        {
-            group.Children.Add(body);
-        }
-
-        return new Border
-        {
-            Child = group,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            Margin = new Thickness(0, _drawn.Count == 0 ? 0 : 8, 0, 0),
-        };
+        return new ActivityDisclosure(body, HeadlineOf(tally), open, tally.Failed > 0 ? "ErrInkBrush" : tally.Running > 0 ? "NetBrush" : "OkBrush", value => _opened = value);
     }
 
     /// <summary>
@@ -313,7 +271,6 @@ public sealed partial class SessionPage
     {
         var parts = new List<string>
         {
-            MessageCatalog.Get("chat.activity", Language),
             MessageCatalog.Get("chat.count_actions", Language, ("count", Format.Count(tally.Calls, Language))),
         };
 

@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Pages.AnswerCard" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Reasonix.Studio.Pages/ConversationStyles.axaml"/>
+  </UserControl.Styles>
+  <StackPanel Margin="0,0,0,21">
+    <Grid Height="25" Margin="0,0,0,10" ColumnDefinitions="21,8,*">
+      <Border Width="21" Height="21" VerticalAlignment="Top" CornerRadius="7" Background="{DynamicResource AccentBrush}">
+        <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.agent}" Stroke="{DynamicResource AccentFgBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+      </Border>
+      <TextBlock Grid.Column="2" Text="reasonix" FontSize="{DynamicResource StudioType13}" FontWeight="Medium" LineHeight="18.2" VerticalAlignment="Center"/>
+    </Grid>
+    <Button Name="Thought" Classes="conversation-disclosure" HorizontalAlignment="Left">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Viewbox Width="10" Height="10"><Canvas Width="24" Height="24"><Path Name="ThoughtChevron" Data="M9 6 15 12 9 18" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        <TextBlock Name="ThoughtLabel" FontSize="{DynamicResource StudioType13}" LineHeight="18.2"/>
+      </StackPanel>
+    </Button>
+    <SelectableTextBlock Name="Reasoning" Margin="14,5,0,0" FontSize="{DynamicResource StudioType13}" LineHeight="21.84" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}" IsVisible="False"/>
+    <StackPanel Name="AnswerBlocks" AutomationProperties.AutomationId="class:txt">
+      <SelectableTextBlock Name="Answer" FontSize="{DynamicResource StudioReadingSize}" LineHeight="{DynamicResource StudioReadingHeight}" FontWeight="Medium" TextWrapping="Wrap"/>
+    </StackPanel>
+    <ContentControl Name="Activity" HorizontalContentAlignment="Stretch"/>
+    <StackPanel Orientation="Horizontal" Spacing="4" Margin="-6,4,0,0">
+      <Button Name="Copy" Classes="conversation-action">
+        <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Data="M10 8 H20 Q22 8 22 10 V20 Q22 22 20 22 H10 Q8 22 8 20 V10 Q8 8 10 8 M4 16 Q2 16 2 14 V4 Q2 2 4 2 H14 Q16 2 16 4" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+      </Button>
+      <Button Name="Cite" Classes="conversation-action">
+        <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Data="M3 3 H10 V11 Q10 20 3 21 V17 Q7 17 7 13 H3 Z M14 3 H21 V11 Q21 20 14 21 V17 Q18 17 18 13 H14 Z" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+      </Button>
+      <Button Name="More" Classes="conversation-action">
+        <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Data="M4 12 A1 1 0 1 0 6 12 A1 1 0 1 0 4 12 M11 12 A1 1 0 1 0 13 12 A1 1 0 1 0 11 12 M18 12 A1 1 0 1 0 20 12 A1 1 0 1 0 18 12" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8"/></Canvas></Viewbox>
+        <Button.Flyout><MenuFlyout><MenuItem Name="CopyMore"/><MenuItem Name="QuoteMore"/></MenuFlyout></Button.Flyout>
+      </Button>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

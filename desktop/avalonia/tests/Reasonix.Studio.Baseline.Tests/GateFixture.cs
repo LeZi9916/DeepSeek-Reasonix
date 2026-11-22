@@ -1,6 +1,9 @@
+using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Interactivity;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Reasonix.Studio.Baseline;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell;
@@ -50,6 +53,14 @@ internal static class GateFixture
                 window.ShowState(Reasonix.Studio.Testing.ReferenceConversation.Create());
                 Dispatcher.UIThread.RunJobs();
 
+                // The DOM capture measures descendants of closed details; expose native
+                // work bodies so the coverage audit still measures every recorded row.
+                foreach (var toggle in window.GetVisualDescendants().OfType<Button>().Where(button => button.Classes.Contains("activity-toggle")).ToArray())
+                {
+                    toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                }
+
+                Dispatcher.UIThread.RunJobs();
                 var found = new GeometryExporter(GeometryComparerOptions.Studio).Export(window);
                 window.Close();
                 return found;

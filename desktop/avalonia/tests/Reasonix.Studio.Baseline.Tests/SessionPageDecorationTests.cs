@@ -2,6 +2,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Wire;
 using Reasonix.Studio.Pages;
@@ -142,6 +143,8 @@ public sealed class SessionPageDecorationTests
                 var window = new Window { Width = 800, Height = 640, Content = page };
                 window.Show();
                 page.Show(state);
+
+                Dispatcher.UIThread.RunJobs();
 
                 var texts = page
                     .GetSelfAndVisualDescendants()

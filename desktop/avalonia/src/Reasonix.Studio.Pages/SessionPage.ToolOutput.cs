@@ -62,7 +62,7 @@ public sealed partial class SessionPage
     {
         if (tool.Hidden <= 0)
         {
-            return ToolName(tool);
+            return new ToolCallHeader(tool, Language);
         }
 
         var body = new StackPanel { Spacing = 4 };

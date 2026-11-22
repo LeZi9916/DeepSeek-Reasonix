@@ -12,6 +12,7 @@
   <Window.Styles>
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Settings.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Workbench.axaml" />
+    <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Conversation.axaml" />
     <Style Selector="Window.illustrated ctl|StudioPane"><Setter Property="Background" Value="Transparent"/></Style>
     <Style Selector="Window.illustrated ctl|StudioRail"><Setter Property="Background" Value="{DynamicResource ArtworkRailBrush}"/></Style>
     <Style Selector="Window.illustrated ctl|StudioChrome"><Setter Property="Background" Value="{DynamicResource ArtworkChromeBrush}"/></Style>
@@ -116,8 +117,8 @@
       </ctl:StudioChrome>
       <ctl:StudioPane Grid.Row="1">
         <Grid Name="PaneGrid" ColumnDefinitions="*,Auto,Auto" RowDefinitions="*,Auto">
-          <Grid Name="ConversationArea" RowDefinitions="*,Auto">
-            <pages:SessionPage Name="Conversation" Grid.Row="0" MaxWidth="{DynamicResource Column}" HorizontalAlignment="Stretch" />
+          <Grid Name="ConversationArea" RowDefinitions="*,Auto" TextElement.FontFamily="{DynamicResource ConversationUiFamily}" TextElement.FontWeight="Medium" TextElement.Foreground="{DynamicResource TextBrush}">
+            <pages:SessionPage Name="Conversation" Grid.Row="0" HorizontalAlignment="Stretch" />
           <ScrollViewer Name="AnalysisPanel" Grid.Row="0" MaxWidth="1080" Margin="0,0,10,0" AutomationProperties.AutomationId="class:run-analysis" IsVisible="False">
             <StackPanel Name="AnalysisContent" Margin="0,24,0,16" Spacing="16" HorizontalAlignment="Stretch" />
           </ScrollViewer>
@@ -154,23 +155,28 @@
               <ScrollViewer Name="QueueScroll" IsVisible="False" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Name="QueueStrip" Spacing="4" />
               </ScrollViewer>
-              <ctl:StudioComposer HorizontalAlignment="Stretch" Margin="0,0,0,35">
+              <Grid RowDefinitions="128,35">
+              <ctl:StudioComposer Name="ComposeSurface" Grid.RowSpan="2" HorizontalAlignment="Stretch" Margin="0,0,0,35">
                 <Grid RowDefinitions="30,52,46">
                   <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="16,0">
-                    <TextBlock Name="ComposerHint" FontSize="{DynamicResource StudioType11}" Opacity="0.55" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <Button Name="ContextToggle" Grid.Column="1" Padding="4,0" Background="Transparent" BorderThickness="0">
-                      <TextBlock Name="MeterText" FontSize="{DynamicResource StudioType11}" Opacity="0.65" Text="—" />
+                    <TextBlock Name="ComposerHint" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}" Opacity="0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <Button Name="ChangedFiles" Grid.Column="1" Classes="compose-changes" IsVisible="False" AutomationProperties.AutomationId="action:compose.changes">
+                      <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock Name="ChangedFilesLabel"/>
+                        <TextBlock Name="ChangedAdded" Foreground="{DynamicResource IoInBrush}"/>
+                        <TextBlock Name="ChangedRemoved" Foreground="{DynamicResource IoOutBrush}"/>
+                      </StackPanel>
                     </Button>
                   </Grid>
                   <TextBox Name="Composer" Grid.Row="1" AcceptsReturn="True" TextWrapping="Wrap"
                            Background="Transparent" BorderThickness="0" CornerRadius="0" Padding="0"
-                           FontSize="{DynamicResource StudioType14}" Foreground="{DynamicResource TextBrush}" VerticalContentAlignment="Top"
+                           FontSize="{DynamicResource StudioType14}" Foreground="{DynamicResource TextBrush}" PlaceholderForeground="{DynamicResource MutedBrush}" VerticalContentAlignment="Top"
                            Height="42" Margin="16,10,16,0" AutomationProperties.AutomationId="role:combobox" />
                   <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto">
                     <Button Name="Attach" Classes="icon" Margin="8,0" VerticalAlignment="Center"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.plus}"/></Canvas></Viewbox></Button>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4" VerticalAlignment="Center">
-                      <Button Name="ModelButton" Padding="8,3" MaxWidth="180" Background="Transparent" BorderThickness="0"/>
-                      <Button Name="EffortButton" Padding="4,3" Background="Transparent" BorderThickness="0" />
+                      <Button Name="ModelButton" Classes="compose-model" Padding="8,3" MaxWidth="180" Background="Transparent" BorderThickness="0" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+                      <Button Name="EffortButton" Classes="compose-model" Padding="4,3" Background="Transparent" BorderThickness="0" FontSize="{DynamicResource StudioType12}" FontWeight="Medium" Foreground="{DynamicResource MutedBrush}"/>
                     </StackPanel>
                     <Button Name="Stop" Grid.Column="2" Classes="icon" Width="32" Height="32"
                             VerticalAlignment="Top" Margin="0,6,4,0" CornerRadius="16"
@@ -179,15 +185,23 @@
                     </Button>
                     <Button Name="Send" Grid.Column="3" Width="32" Height="32" Margin="0,6,8,0"
                             VerticalAlignment="Top" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"
-                            Foreground="{DynamicResource FaintBrush}" Background="{DynamicResource OverlayBrush}"
+                            Classes="compose-send"
                             BorderThickness="0" CornerRadius="16" Padding="0"
                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                             AutomationProperties.AutomationId="action:session.send">
                       <PathIcon Width="18" Height="18" Data="M11,20 V7.83 L6.41,12.41 5,11 12,4 19,11 17.59,12.41 13,7.83 V20 Z" />
                     </Button>
                   </Grid>
+
                 </Grid>
               </ctl:StudioComposer>
+                  <Button Name="ContextToggle" Grid.Row="1" Classes="compose-context" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,0,0,0" Height="25">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                      <Viewbox Width="13" Height="13"><Canvas Width="24" Height="24"><Path Data="M12 3 A9 9 0 1 0 21 12 M12 3 V7 M17 4.5 L15 8" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox>
+                      <TextBlock Name="MeterText" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}" Text="—" VerticalAlignment="Center"/>
+                    </StackPanel>
+                  </Button>
+              </Grid>
             </StackPanel>
           </Grid>
           <Border Name="WorkbenchPanel" Grid.Column="1" Margin="0,8,8,8" AutomationProperties.AutomationId="class:workbench" IsVisible="False"

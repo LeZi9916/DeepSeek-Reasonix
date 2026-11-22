@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Pages.UserMessage" UseLayoutRounding="False">
+  <UserControl.Styles><StyleInclude Source="avares://Reasonix.Studio.Pages/ConversationStyles.axaml"/>
+    <Style Selector="UserControl:pointerover StackPanel.user-actions, UserControl:focus-within StackPanel.user-actions"><Setter Property="Opacity" Value="1"/></Style>
+  </UserControl.Styles>
+  <StackPanel Name="BubbleColumn" HorizontalAlignment="Right">
+    <Border Background="{DynamicResource OverlayBrush}" CornerRadius="15" Padding="14,10" AutomationProperties.AutomationId="class:txt">
+      <SelectableTextBlock Name="Message" FontSize="{DynamicResource StudioReadingSize}" FontWeight="Medium" LineHeight="{DynamicResource StudioUserHeight}" TextWrapping="Wrap"/>
+    </Border>
+    <StackPanel Classes="user-actions" Orientation="Horizontal" HorizontalAlignment="Right" Height="26" Margin="0,4,0,2" Opacity="0">
+      <Button Name="Copy" Classes="conversation-action">
+        <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Data="M10 8 H20 Q22 8 22 10 V20 Q22 22 20 22 H10 Q8 22 8 20 V10 Q8 8 10 8 M4 16 Q2 16 2 14 V4 Q2 2 4 2 H14 Q16 2 16 4" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+      </Button>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

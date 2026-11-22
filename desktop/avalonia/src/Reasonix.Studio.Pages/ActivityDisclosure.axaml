@@ -1,0 +1,14 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Pages.ActivityDisclosure" UseLayoutRounding="False">
+  <UserControl.Styles><StyleInclude Source="avares://Reasonix.Studio.Pages/ConversationStyles.axaml"/></UserControl.Styles>
+  <StackPanel Margin="0,6,0,0">
+    <Button Name="Toggle" Classes="conversation-disclosure activity-toggle" Height="28" HorizontalAlignment="Left">
+      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+        <Viewbox Width="12" Height="12" Margin="2,0,0,0"><Canvas Width="24" Height="24"><Path Name="Chevron" Data="M9 6 15 12 9 18" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        <Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Name="Status" Data="{StaticResource Glyph.check}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        <TextBlock Name="Summary" FontSize="{DynamicResource StudioType12}" LineHeight="18" Foreground="{DynamicResource FaintBrush}"/>
+      </StackPanel>
+    </Button>
+    <ContentControl Name="Body" HorizontalContentAlignment="Stretch"/>
+  </StackPanel>
+</UserControl>

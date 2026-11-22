@@ -190,6 +190,11 @@ public sealed partial class NativeDomainTests
                         GitScreenProofs(window, output, file);
                     }
 
+                    if (target == "conversation" && output is not null)
+                    {
+                        ConversationScreenProofs(window, output, file);
+                    }
+
                     if (target == "onboarding")
                     {
                         window.FindControl<Button>("BeginSetup")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

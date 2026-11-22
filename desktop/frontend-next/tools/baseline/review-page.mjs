@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const desktop = resolve(here, "../../..");
 const pageName = process.argv[2];
-const screens = { "settings-storage": ["settings:storage", ".memgrid"], workbench: ["workbench", ".workbench-history .gh-row"] };
+const screens = { "settings-storage": ["settings:storage", ".memgrid"], workbench: ["workbench", ".workbench-history .gh-row"], conversation: ["conversation", ".flow .call[data-k=say]"] };
 if (!Object.hasOwn(screens, pageName)) throw new Error("Choose a supported review page.");
 const [screen, proof] = screens[pageName];
 const root = join(desktop, "avalonia/bin/parity");
@@ -35,6 +35,19 @@ try {
         const record = { file, width, height, scheme, referenceNodes: report.nodes, observedNodes: report.observed, counts };
         results.push(record);
         await pair(stem, file);
+        if (pageName === "conversation") {
+          const thought = source.locator('.flow .think > summary').last();
+          const activity = source.locator('.flow .activity-group > summary').last();
+          await thought.evaluate(button => button.click());
+          await activity.evaluate(button => button.click());
+          record.expanded = file.replace(".png", "-expanded.png");
+          await pair(stem.replace("conversation", "conversation-expanded"), record.expanded);
+          await thought.evaluate(button => button.click());
+          await activity.evaluate(button => button.click());
+          await source.locator('.compose textarea').fill("对齐聊天区的字体、颜色与消息间距。");
+          record.draft = file.replace(".png", "-draft.png");
+          await pair(stem.replace("conversation", "conversation-draft"), record.draft);
+        }
         if (pageName === "workbench") {
           const local = /^class:workbench|^action:(?:workbench\.|commit\.|push\.|browser\.full)|^role:tablist/;
           record.workbenchBoxDifferences = report.findings.filter(f => f.Kind === "box" && local.test(f.Identity)).length;

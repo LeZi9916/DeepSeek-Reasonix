@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Pages.ToolCallHeader" UseLayoutRounding="False">
+  <UserControl.Styles><StyleInclude Source="avares://Reasonix.Studio.Pages/ConversationStyles.axaml"/></UserControl.Styles>
+  <StackPanel>
+    <Button Name="Toggle" Classes="conversation-disclosure" Height="28" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+      <Grid ColumnDefinitions="14,Auto,*,14,10" ColumnSpacing="9" Margin="10,0" VerticalAlignment="Center">
+        <Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.edit}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        <TextBlock Name="ToolName" Grid.Column="1" FontSize="{DynamicResource StudioType12}" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}"/>
+        <TextBlock Name="Argument" Grid.Column="2" FontSize="{DynamicResource StudioType11}" FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+        <Viewbox Grid.Column="3" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Name="Status" Data="{StaticResource Glyph.check}" Stroke="{DynamicResource OkBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        <Viewbox Grid.Column="4" Width="10" Height="10"><Canvas Width="24" Height="24"><Path Name="Chevron" Data="M9 6 15 12 9 18" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+      </Grid>
+    </Button>
+    <ScrollViewer Name="Output" IsVisible="False" MaxHeight="180" Margin="10,5,0,5" HorizontalScrollBarVisibility="Disabled">
+      <SelectableTextBlock Name="Result" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+    </ScrollViewer>
+  </StackPanel>
+</UserControl>

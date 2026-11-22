@@ -14,9 +14,11 @@
       <FontFamily x:Key="DataPathFamily">avares://Reasonix.Studio.Shell/Assets/DataFonts#Studio Code Text, monospace</FontFamily>
       <FontFamily x:Key="WorkbenchUiFamily">avares://Reasonix.Studio.Shell/Assets/WorkbenchFonts#Reasonix Workbench UI, Reasonix Workbench CJK</FontFamily>
       <FontFamily x:Key="WorkbenchMonoFamily">avares://Reasonix.Studio.Shell/Assets/WorkbenchFonts#Reasonix Workbench Mono, Reasonix Workbench CJK</FontFamily>
-      <FontFamily x:Key="StudioMonoFamily">monospace</FontFamily>
+      <FontFamily x:Key="ConversationUiFamily">avares://Reasonix.Studio.Shell/Assets/WorkbenchFonts#Reasonix Workbench UI, Reasonix Workbench CJK</FontFamily>
+      <FontFamily x:Key="StudioMonoFamily">avares://Reasonix.Studio.Shell/Assets/WorkbenchFonts#Reasonix Workbench Mono, Reasonix Workbench CJK</FontFamily>
+      <x:Double x:Key="StudioUserHeight">22.4</x:Double>
       <x:Double x:Key="StudioReadingSize">14</x:Double>
-      <x:Double x:Key="StudioReadingHeight">24</x:Double>
+      <x:Double x:Key="StudioReadingHeight">24.08</x:Double>
       <x:Double x:Key="StudioType8">8</x:Double>
       <x:Double x:Key="StudioType9">9</x:Double>
       <x:Double x:Key="StudioType10">10</x:Double>

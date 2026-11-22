@@ -77,11 +77,13 @@ public sealed partial class SessionPage : UserControl
     /// </summary>
     public SessionPage()
     {
+        UseLayoutRounding = false;
         _rows = new StackPanel
         {
             Orientation = Orientation.Vertical,
             Spacing = 0,
-            Margin = new Thickness(0),
+            Margin = new Thickness(24, 28, 24, 36),
+            [!MaxWidthProperty] = StudioTypography.Resource("Column"),
         };
 
         _scroll = new ScrollViewer
@@ -89,6 +91,7 @@ public sealed partial class SessionPage : UserControl
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Content = _rows,
+            Margin = new Thickness(0, 0, 6, 0),
         };
 
         _scroll.ScrollChanged += (_, e) =>
@@ -186,6 +189,10 @@ public sealed partial class SessionPage : UserControl
         }
     }
 
+    /// <summary>Sets the reading inset inside the full-width scroll viewport.</summary>
+    /// <param name="inset">Symmetric horizontal flow padding.</param>
+    public void SetReadingInset(double inset) => _rows.Margin = new Thickness(inset, 28, inset, 36);
+
     /// <summary>
     /// Shows one state.
     /// </summary>
@@ -262,7 +269,8 @@ public sealed partial class SessionPage : UserControl
         {
             Child = body,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            Margin = new Thickness(0, _drawn.Count == 0 ? 0 : 8, 0, 0),
+            Margin = item is SayItem ? new Thickness(-6, 0, 0, 0) : new Thickness(0, item is UserItem ? 8 : 0, 0, 0),
+            Padding = item is SayItem ? new Thickness(6, 0, 0, 0) : default,
         };
 
         AutomationProperties.SetAutomationId(row, "class:call");
@@ -279,18 +287,7 @@ public sealed partial class SessionPage : UserControl
         switch (item)
         {
             case UserItem user:
-                var bubble = new ContentControl
-                {
-                    [!TextBlock.FontSizeProperty] = StudioTypography.Resource("StudioReadingSize"),
-                    FontWeight = FontWeight.Medium,
-                    Background = Brush("OverlayBrush"),
-                    CornerRadius = new CornerRadius(15),
-                    Padding = new Thickness(14, 10),
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    Content = new SelectableTextBlock { Text = user.Text, LineHeight = 22.4, TextWrapping = TextWrapping.Wrap },
-                };
-                AutomationProperties.SetAutomationId(bubble, "class:txt");
-                return bubble;
+                return new UserMessage(user.Text, Language);
 
             case SayItem say:
                 return new AnswerCard(say, Language, text => QuoteRequested?.Invoke(text));

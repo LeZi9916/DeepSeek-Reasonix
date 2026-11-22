@@ -1,0 +1,74 @@
+{
+  "page": "conversation",
+  "toleranceDip": 0.5,
+  "results": [
+    {
+      "file": "1440x900-light.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "light",
+      "referenceNodes": 482,
+      "observedNodes": 52,
+      "counts": {
+        "box": 10,
+        "style": 14,
+        "missing": 452,
+        "extra": 22,
+        "token": 0
+      },
+      "expanded": "1440x900-light-expanded.png",
+      "draft": "1440x900-light-draft.png"
+    },
+    {
+      "file": "1440x900-dark.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "dark",
+      "referenceNodes": 482,
+      "observedNodes": 52,
+      "counts": {
+        "box": 10,
+        "style": 14,
+        "missing": 452,
+        "extra": 22,
+        "token": 0
+      },
+      "expanded": "1440x900-dark-expanded.png",
+      "draft": "1440x900-dark-draft.png"
+    },
+    {
+      "file": "760x480-light.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "light",
+      "referenceNodes": 486,
+      "observedNodes": 19,
+      "counts": {
+        "box": 10,
+        "style": 9,
+        "missing": 467,
+        "extra": 0,
+        "token": 0
+      },
+      "expanded": "760x480-light-expanded.png",
+      "draft": "760x480-light-draft.png"
+    },
+    {
+      "file": "760x480-dark.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "dark",
+      "referenceNodes": 486,
+      "observedNodes": 19,
+      "counts": {
+        "box": 10,
+        "style": 9,
+        "missing": 467,
+        "extra": 0,
+        "token": 0
+      },
+      "expanded": "760x480-dark-expanded.png",
+      "draft": "760x480-dark-draft.png"
+    }
+  ]
+}

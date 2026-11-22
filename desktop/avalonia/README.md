@@ -156,6 +156,10 @@ To regenerate a page review after running the native render tests, run `node too
 
 The [workbench review](reviews/workbench/report.json) distinguishes Git and workbench geometry from the conversation visible beside it. Each viewport includes the explorer, expanded changes and an unconfirmed commit proposal. Open the [page review gallery](reviews/index.html) to switch between them.
 
+The [conversation review](reviews/conversation/verification.md) adds twelve pairs for settled messages, reasoning/work expansion and a focused draft, in both themes and window sizes.
+
+The [sidebar review](reviews/sidebar/verification.md) covers the workspace rail separately. Both are available in the page review gallery.
+
 ### Parity checks and remaining verification
 
 | Area | Next implementation and acceptance check |

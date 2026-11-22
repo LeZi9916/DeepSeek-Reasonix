@@ -1,0 +1,31 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Style Selector="Button.conversation-action, Button.conversation-disclosure">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="7"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="FontWeight" Value="Normal"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Button.conversation-action"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="Width" Value="26"/><Setter Property="Height" Value="26"/></Style>
+  <Style Selector="Button.conversation-disclosure"><Setter Property="BorderThickness" Value="0"/></Style>
+  <Style Selector="Button.conversation-action:pointerover, Button.conversation-disclosure:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+  </Style>
+  <Style Selector="Button.conversation-action:pressed, Button.conversation-disclosure:pressed"><Setter Property="Background" Value="{DynamicResource BorderBrush}"/></Style>
+  <Style Selector="Button.conversation-action:disabled, Button.conversation-disclosure:disabled"><Setter Property="Opacity" Value="0.5"/></Style>
+</Styles>

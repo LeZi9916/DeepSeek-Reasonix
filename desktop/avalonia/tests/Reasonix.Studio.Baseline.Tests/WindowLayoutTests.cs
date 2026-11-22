@@ -33,6 +33,7 @@ public sealed class WindowLayoutTests
                 window.Show();
                 var first = new SayItem { Id = "answer", Text = "one" };
                 window.ShowState(new SessionState { Items = new[] { first } });
+                Dispatcher.UIThread.RunJobs();
                 var text = window.GetVisualDescendants().OfType<SelectableTextBlock>().Single(t => t.Text == "one");
                 window.ShowState(new SessionState { Items = new[] { first with { Text = "one two" } } });
                 Assert.Same(text, window.GetVisualDescendants().OfType<SelectableTextBlock>().Single(t => t.Text == "one two"));
@@ -56,6 +57,7 @@ public sealed class WindowLayoutTests
                 {
                     Items = new[] { new SayItem { Id = "a", Done = true, Text = "**strong** and [docs](https://example.org/guide)" } },
                 });
+                Dispatcher.UIThread.RunJobs();
                 var link = Assert.Single(window.GetVisualDescendants().OfType<HyperlinkButton>());
                 Assert.Equal("https://example.org/guide", link.NavigateUri!.AbsoluteUri);
                 var answer = window.GetVisualDescendants().OfType<SelectableTextBlock>().Single(t => t.Inlines?.OfType<Bold>().Any() == true);
@@ -121,6 +123,8 @@ public sealed class WindowLayoutTests
                 window.RequestedThemeVariant = ThemeVariant.Dark;
                 Dispatcher.UIThread.RunJobs();
 
+                window.FindControl<TextBox>("Composer")!.Text = "a draft";
+                Dispatcher.UIThread.RunJobs();
                 AvaloniaHeadlessPlatform.ForceRenderTimerTick(2);
                 foreach (var control in new Control[]
                 {

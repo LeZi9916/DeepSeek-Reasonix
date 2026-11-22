@@ -409,6 +409,7 @@ public sealed partial class MainWindow : Window
     /// <param name="e">The text change.</param>
     private void OnComposerTextChanged(object? sender, TextChangedEventArgs e)
     {
+        Send.IsEnabled = !string.IsNullOrWhiteSpace(Composer.Text);
         SaveDraft();
     }
 

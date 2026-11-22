@@ -94,8 +94,14 @@ public sealed partial class GitRepositoryView : SettingsFormView
     /// <summary>Gets repository-relative paths and statuses for the workspace file tree.</summary>
     internal System.Collections.Generic.IEnumerable<(string Path, string Status)> FileStatuses => _changes.Select(c => ((string)c["path"]!, (string?)c["status"] ?? "M"));
 
+    /// <summary>Gets the authoritative line totals for the composer summary.</summary>
+    internal (int Added, int Removed) LineChanges => (_changes.Sum(row => (int?)row["insertions"] ?? 0), _changes.Sum(row => (int?)row["deletions"] ?? 0));
+
     /// <summary>Gets the directory to use on all reads and writes from this section.</summary>
     internal string Directory => _repo;
+
+    /// <summary>Opens this repository's changes from the composer summary.</summary>
+    internal void OpenChanges() => Board.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
 
     /// <summary>Connects this new view instance to one repository.</summary>
     /// <param name="api">Runtime transport.</param>

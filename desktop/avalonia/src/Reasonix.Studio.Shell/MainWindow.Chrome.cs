@@ -221,9 +221,6 @@ public sealed partial class MainWindow
         ContextPanel.Width = stacked ? double.NaN : 316;
         ContextPanel.MaxHeight = stacked ? room.Height * 0.4 : double.PositiveInfinity;
         QueueScroll.MaxHeight = room.Height * 0.25;
-        var gutter = stacked ? 14 : 24;
-        ComposerArea.Margin = new Thickness(stacked ? 10 : gutter, 0);
-        Conversation.Margin = new Thickness(gutter, 0);
     }
 
     /// <summary>Handles the keyboard equivalent of resizing and toggling the divider.</summary>

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Wire;
 using Reasonix.Studio.Pages;
@@ -105,6 +106,9 @@ public sealed class SessionPageToolOutputTests
                 window.Show();
                 page.Show(new SessionState { Items = new TranscriptItem[] { row } });
 
+                Dispatcher.UIThread.RunJobs();
+                page.GetVisualDescendants().OfType<Button>().First(button => button.Classes.Contains("activity-toggle")).RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+                Dispatcher.UIThread.RunJobs();
                 var blocks = page.GetSelfAndVisualDescendants().OfType<TextBlock>().ToList();
                 var texts = blocks.Select(block => block.Text ?? string.Empty).ToList();
                 var visible = blocks.Where(block => block.IsVisible).Select(block => block.Text ?? string.Empty).ToList();

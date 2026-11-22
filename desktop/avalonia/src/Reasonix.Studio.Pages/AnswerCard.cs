@@ -14,7 +14,7 @@ using System.Text;
 namespace Reasonix.Studio.Pages;
 
 /// <summary>The assistant's identity, reasoning disclosure, selectable answer and message actions.</summary>
-internal sealed class AnswerCard : StackPanel
+internal sealed partial class AnswerCard : UserControl
 {
     /// <summary>Header for the collapsible reasoning stream.</summary>
     private readonly Button _thought;
@@ -40,31 +40,17 @@ internal sealed class AnswerCard : StackPanel
     /// <param name="quote">Adds the chosen passage to the draft.</param>
     internal AnswerCard(SayItem item, InterfaceLanguage language, Action<string> quote)
     {
-        var heading = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Height = 25 };
-        heading.Children.Add(new TextBlock { Text = "◉", [!TextBlock.FontSizeProperty] = StudioTypography.Size(16), VerticalAlignment = VerticalAlignment.Center });
-        heading.Children.Add(new TextBlock { Text = "reasonix", FontWeight = FontWeight.SemiBold, [!TextBlock.FontSizeProperty] = StudioTypography.Size(13), VerticalAlignment = VerticalAlignment.Center });
-        Children.Add(heading);
-        _thought = ActionButton("›", MessageCatalog.Get(MessageKey.Chat.Thinking, language));
-        _thought.Margin = new Thickness(0, 8, 0, 0);
-        Children.Add(_thought);
-        _reasoning = new SelectableTextBlock { IsVisible = false, TextWrapping = TextWrapping.Wrap, Opacity = 0.75 };
-        Children.Add(_reasoning);
+        Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
+        _thought = this.FindControl<Button>("Thought")!;
+        _reasoning = this.FindControl<SelectableTextBlock>("Reasoning")!;
+        _answer = this.FindControl<SelectableTextBlock>("Answer")!;
         _thought.Click += (_, _) =>
         {
             _openThought = !_reasoning.IsVisible;
-            _reasoning.IsVisible = _openThought.Value;
+            ShowReasoning(_openThought.Value);
         };
-        _answer = new SelectableTextBlock
-        {
-            [!TextBlock.FontSizeProperty] = StudioTypography.Resource("StudioReadingSize"),
-            FontWeight = FontWeight.Medium,
-            [!TextBlock.LineHeightProperty] = StudioTypography.Resource("StudioReadingHeight"),
-            TextWrapping = TextWrapping.Wrap,
-        };
-        AutomationProperties.SetAutomationId(_answer, "class:txt");
-        Children.Add(_answer);
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new Thickness(0, 8, 0, 0) };
-        var copy = ActionButton("⧉", MessageCatalog.Get(MessageKey.Common.Copy, language));
+        var copy = this.FindControl<Button>("Copy")!;
+        Label(copy, MessageCatalog.Get(MessageKey.Common.Copy, language));
         copy.Click += async (_, _) =>
         {
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
@@ -72,11 +58,16 @@ internal sealed class AnswerCard : StackPanel
                 await clipboard.SetTextAsync(_source).ConfigureAwait(true);
             }
         };
-        actions.Children.Add(copy);
-        var cite = ActionButton("❞", MessageCatalog.Get(MessageKey.Composer.SideQuoteLabel, language));
-        cite.Click += (_, _) => quote(string.IsNullOrEmpty(_answer.SelectedText) ? _source : _answer.SelectedText);
-        actions.Children.Add(cite);
-        Children.Add(actions);
+        var cite = this.FindControl<Button>("Cite")!;
+        Label(cite, MessageCatalog.Get(MessageKey.Composer.SideQuoteLabel, language));
+        cite.Click += (_, _) => quote(SelectedPassage());
+        Label(this.FindControl<Button>("More")!, MessageCatalog.Get(MessageKey.Common.More, language));
+        var copyMore = this.FindControl<MenuItem>("CopyMore")!;
+        copyMore.Header = MessageCatalog.Get(MessageKey.Common.Copy, language);
+        copyMore.Click += (_, _) => copy.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
+        var quoteMore = this.FindControl<MenuItem>("QuoteMore")!;
+        quoteMore.Header = MessageCatalog.Get(MessageKey.Composer.SideQuoteLabel, language);
+        quoteMore.Click += (_, _) => quote(SelectedPassage());
         Update(item, language);
     }
 
@@ -87,7 +78,7 @@ internal sealed class AnswerCard : StackPanel
         if (_reasoning.Text?.Contains(query, StringComparison.CurrentCultureIgnoreCase) == true)
         {
             _openThought = true;
-            _reasoning.IsVisible = true;
+            ShowReasoning(true);
         }
     }
 
@@ -105,7 +96,7 @@ internal sealed class AnswerCard : StackPanel
 
         var live = !item.Done && item.ThoughtMs is null && item.Cut is null;
         _thought.IsVisible = reasoning.Length > 0;
-        _reasoning.IsVisible = _thought.IsVisible && (_openThought ?? (live && item.Text.Length == 0));
+        ShowReasoning(_thought.IsVisible && (_openThought ?? (live && item.Text.Length == 0)));
         var chars = MessageCatalog.Get("chat.n_chars", language, ("n", Format.Count(_thoughtLength, language)));
         var secs = Format.Decimals((item.ThoughtMs ?? 0) / 1000d, 1, language);
         var label = item.Cut switch
@@ -116,34 +107,35 @@ internal sealed class AnswerCard : StackPanel
             _ when item.ThoughtMs > 0 => MessageCatalog.Get("chat.thought_chars_secs_s", language, ("chars", chars), ("secs", secs)),
             _ => MessageCatalog.Get("chat.thought_chars", language, ("chars", chars)),
         };
-        _thought.Content = label;
+        this.FindControl<TextBlock>("ThoughtLabel")!.Text = label;
         AutomationProperties.SetName(_thought, label);
         if (_source != item.Text)
         {
             _source = item.Text;
-            MarkdownAnswer.Show(_answer, item.Text);
+            ShowMarkdown(item.Text);
         }
 
         _answer.Opacity = item.Done ? 1 : 0.9;
     }
 
-    /// <summary>Creates a quiet action with a keyboard and screen reader label.</summary>
-    /// <param name="symbol">Visual mark.</param>
-    /// <param name="label">Accessible action.</param>
-    /// <returns>The button.</returns>
-    private static Button ActionButton(string symbol, string label)
+    /// <summary>Places the following work before the answer actions.</summary>
+    /// <param name="activity">The mounted work disclosure.</param>
+    internal void SetActivity(Control activity) => this.FindControl<ContentControl>("Activity")!.Content = activity;
+
+    /// <summary>Updates reasoning visibility and its disclosure mark together.</summary>
+    /// <param name="open">Whether the reasoning is expanded.</param>
+    private void ShowReasoning(bool open)
     {
-        var button = new Button
-        {
-            Content = symbol,
-            Padding = new Thickness(3, 0),
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
-            HorizontalAlignment = HorizontalAlignment.Left,
-        };
+        _reasoning.IsVisible = open;
+        this.FindControl<Avalonia.Controls.Shapes.Path>("ThoughtChevron")!.Data = Geometry.Parse(open ? "M6 9 12 15 18 9" : "M9 6 15 12 9 18");
+    }
+
+    /// <summary>Names an icon action for keyboard and screen reader use.</summary>
+    /// <param name="button">The action.</param>
+    /// <param name="label">Localized name.</param>
+    private void Label(Button button, string label)
+    {
         AutomationProperties.SetName(button, label);
         ToolTip.SetTip(button, label);
-        return button;
     }
 }

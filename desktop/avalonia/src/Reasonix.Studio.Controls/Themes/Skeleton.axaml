@@ -72,18 +72,16 @@
       <Setter Property="Height" Value="128" />
       <Setter Property="Background" Value="{DynamicResource RaisedBrush}" />
       <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
       <Setter Property="CornerRadius" Value="{DynamicResource RLg}" />
       <Setter Property="Template">
         <ControlTemplate>
-          <Border Background="{TemplateBinding Background}" BoxShadow="{DynamicResource ComposerShadow}"
-                  BorderBrush="{TemplateBinding BorderBrush}"
-                  BorderThickness="{TemplateBinding BorderThickness}"
-                  CornerRadius="{TemplateBinding CornerRadius}">
-            <!-- No padding here: the composer's own bands place the input box
-                 and the send button, and a margin on the presenter would push
-                 both inward by a second inset the baseline never had. -->
-            <ContentPresenter Content="{TemplateBinding Content}" />
-          </Border>
+          <Grid>
+            <Border Background="{TemplateBinding Background}" BoxShadow="0 1 2 0 #10000000, 0 10 30 -24 #52000000" CornerRadius="{TemplateBinding CornerRadius}">
+              <ContentPresenter Content="{TemplateBinding Content}" />
+            </Border>
+            <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="{TemplateBinding CornerRadius}" IsHitTestVisible="False"/>
+          </Grid>
         </ControlTemplate>
       </Setter>
     </ControlTheme>

@@ -32,6 +32,7 @@ public sealed partial class MainWindow
     /// <summary>Connects the workbench surface launcher and file menu.</summary>
     private void SetUpWorkspaceMenus()
     {
+        ChangedFiles.Click += (_, _) => GitRepositories.Children.OfType<GitRepositoryView>().FirstOrDefault(view => view.ChangeCount > 0)?.OpenChanges();
         Label(FullWorkbench, "workbench.expand_workbench");
         Label(NewSurface, "workbench.new_tab");
         Label(FileMore, "common.more");
@@ -267,6 +268,10 @@ public sealed partial class MainWindow
         var count = GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.ChangeCount);
         GitCountBadge.IsVisible = count > 0;
         TotalGitCount.Text = count.ToString(System.Globalization.CultureInfo.CurrentCulture);
+        ChangedFiles.IsVisible = count > 0;
+        ChangedFilesLabel.Text = MessageCatalog.Get("composer.n_files_changed", Language, ("n", TotalGitCount.Text));
+        ChangedAdded.Text = "+" + GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.LineChanges.Added).ToString(System.Globalization.CultureInfo.CurrentCulture);
+        ChangedRemoved.Text = "−" + GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.LineChanges.Removed).ToString(System.Globalization.CultureInfo.CurrentCulture);
     }
 
     /// <summary>Refreshes repository state when the agent finishes writing.</summary>

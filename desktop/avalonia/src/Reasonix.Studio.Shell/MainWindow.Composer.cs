@@ -123,6 +123,7 @@ public sealed partial class MainWindow
             Language);
         var runLabel = QueueDuringRun ? MessageKey.Composer.Queue : MessageKey.Common.Steer;
         Label(Send, running ? runLabel : MessageKey.Common.Send);
+        Send.IsEnabled = !string.IsNullOrWhiteSpace(Composer.Text);
         Stop.IsVisible = running;
         if (!running)
         {

@@ -336,6 +336,11 @@ public sealed class GeometryExporter
                 return AlignOf(control);
 
             case "backgroundColor":
+                if (control is Border { Background: ISolidColorBrush borderFill })
+                {
+                    return Rgba(borderFill.Color);
+                }
+
                 if (control is TemplatedControl filled && filled.Background is ISolidColorBrush back)
                 {
                     return Rgba(back.Color);
@@ -344,6 +349,11 @@ public sealed class GeometryExporter
                 return null;
 
             case "paddingTop":
+                if (control is Border borderTop)
+                {
+                    return Px(borderTop.Padding.Top);
+                }
+
                 if (control is TemplatedControl paddedTop)
                 {
                     return Px(paddedTop.Padding.Top);
@@ -352,6 +362,11 @@ public sealed class GeometryExporter
                 return null;
 
             case "paddingRight":
+                if (control is Border borderRight)
+                {
+                    return Px(borderRight.Padding.Right);
+                }
+
                 if (control is TemplatedControl paddedRight)
                 {
                     return Px(paddedRight.Padding.Right);
@@ -360,6 +375,11 @@ public sealed class GeometryExporter
                 return null;
 
             case "paddingBottom":
+                if (control is Border borderBottom)
+                {
+                    return Px(borderBottom.Padding.Bottom);
+                }
+
                 if (control is TemplatedControl paddedBottom)
                 {
                     return Px(paddedBottom.Padding.Bottom);
@@ -368,6 +388,11 @@ public sealed class GeometryExporter
                 return null;
 
             case "paddingLeft":
+                if (control is Border borderLeft)
+                {
+                    return Px(borderLeft.Padding.Left);
+                }
+
                 if (control is TemplatedControl paddedLeft)
                 {
                     return Px(paddedLeft.Padding.Left);
@@ -388,6 +413,11 @@ public sealed class GeometryExporter
                 return Px(control.Margin.Left);
 
             case "borderTopWidth":
+                if (control is Border border)
+                {
+                    return Px(border.BorderThickness.Top);
+                }
+
                 if (control is TemplatedControl bordered)
                 {
                     return Px(bordered.BorderThickness.Top);
@@ -396,6 +426,11 @@ public sealed class GeometryExporter
                 return null;
 
             case "borderTopLeftRadius":
+                if (control is Border roundBorder)
+                {
+                    return RadiusText(roundBorder.CornerRadius, control);
+                }
+
                 if (control is TemplatedControl rounded)
                 {
                     return RadiusText(rounded.CornerRadius, control);

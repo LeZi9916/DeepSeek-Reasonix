@@ -1,0 +1,20 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ctl="using:Reasonix.Studio.Controls">
+  <Style Selector="Button.compose-changes, Button.compose-context">
+    <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    <Setter Property="Padding" Value="6,0"/><Setter Property="BorderThickness" Value="0"/><Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Template"><ControlTemplate><Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/></Border></ControlTemplate></Setter>
+  </Style>
+  <Style Selector="Button.compose-changes">
+    <Setter Property="Height" Value="22"/><Setter Property="CornerRadius" Value="11"/>
+    <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+  </Style>
+  <Style Selector="Button.compose-changes:pointerover, Button.compose-context:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  <Style Selector="Button.compose-changes:pressed, Button.compose-context:pressed"><Setter Property="Background" Value="{DynamicResource BorderBrush}"/></Style>
+  <Style Selector="Button.compose-send"><Setter Property="Background" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentFgBrush}"/></Style>
+  <Style Selector="Button.compose-send:disabled"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
+  <Style Selector="Button.compose-send:disabled /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
+  <Style Selector="ctl|StudioComposer:focus-within"><Setter Property="BorderBrush" Value="{DynamicResource FaintBrush}"/></Style>
+  <Style Selector="ctl|StudioComposer:focus-within TextBlock#ComposerHint"><Setter Property="Opacity" Value="1"/></Style>
+  <Style Selector="TextBox#Composer /template/ Border#PART_BorderElement"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
+</Styles>
