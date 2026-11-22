@@ -34,6 +34,10 @@
     <Style Selector="Window.illustrated ctl|StudioChrome"><Setter Property="Background" Value="{DynamicResource ArtworkChromeBrush}"/></Style>
     <Style Selector="Window.illustrated ctl|StudioSidePanel"><Setter Property="Background" Value="{DynamicResource ArtworkSideBrush}"/></Style>
     <Style Selector="Window.illustrated ctl|StudioComposer"><Setter Property="Background" Value="{DynamicResource ArtworkComposeBrush}"/></Style>
+    <Style Selector="Border.readonly-badge">
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/><Setter Property="Padding" Value="6,2"/><Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
     <Style Selector="Button.file-mode">
       <Setter Property="Height" Value="26"/><Setter Property="Padding" Value="6,0"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
       <Setter Property="BorderThickness" Value="0"/><Setter Property="CornerRadius" Value="5"/>
@@ -357,10 +361,15 @@
                   <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6" UseLayoutRounding="False" AutomationProperties.AutomationId="class:workbench-filebar">
                     <TextBlock Name="WorkbenchTitle" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" TextTrimming="CharacterEllipsis" />
                     <Button Name="EndTerminal" Grid.Column="1" IsVisible="False" />
-                    <StackPanel Name="FileModes" Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" IsVisible="False">
-                      <Button Name="PreviewFile" Classes="file-mode" IsVisible="False" />
-                      <Button Name="EditFile" Classes="file-mode" />
-                      <Button Name="DiffFile" Classes="file-mode" Content="Diff" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <Border Name="ReadOnlyBadge" Classes="readonly-badge" IsVisible="False">
+                        <TextBlock Name="ReadOnlyBadgeText" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource MutedBrush}"/>
+                      </Border>
+                      <StackPanel Name="FileModes" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" IsVisible="False">
+                        <Button Name="PreviewFile" Classes="file-mode" IsVisible="False" />
+                        <Button Name="EditFile" Classes="file-mode" />
+                        <Button Name="DiffFile" Classes="file-mode" Content="Diff" />
+                      </StackPanel>
                     </StackPanel>
                     <Button Name="SaveFile" Classes="wb-command" AutomationProperties.AutomationId="action:workbench.save" Grid.Column="2" Width="75" Margin="0,0,0,1" Padding="8,0" IsEnabled="False" Height="32" />
                     <Button Name="FileMore" Grid.Column="3" Width="28" Height="28" Padding="0" Margin="0,0,8,1" Content="⋯" AutomationProperties.AutomationId="action:workbench.file-more"/>

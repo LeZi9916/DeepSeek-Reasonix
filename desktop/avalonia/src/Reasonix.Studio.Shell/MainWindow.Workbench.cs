@@ -197,6 +197,7 @@ public sealed partial class MainWindow
         _workspaceBufferScope = scope;
         ResetFileTree();
         _openFile = null;
+        SetReadOnlyBadge(null);
         RenderedFile.IsVisible = false;
         FileEditor.IsVisible = true;
         FileTabs.Children.Clear();
@@ -273,6 +274,7 @@ public sealed partial class MainWindow
                     if (ticket == _fileRead && bytes is not null)
                     {
                         _openFile = null;
+                        SetReadOnlyBadge(null);
                         using var input = new MemoryStream(bytes);
                         ShowPreview(new Image { Source = new Bitmap(input), Stretch = Stretch.Uniform });
                         WorkbenchTitle.Text = entry.Path;
@@ -292,6 +294,7 @@ public sealed partial class MainWindow
             }
 
             _openFile = buffer;
+            SetReadOnlyBadge(buffer);
             SelectWorkspaceFile(entry.Path);
             ReleasePreview();
             FileModes.IsVisible = true;
@@ -401,6 +404,16 @@ public sealed partial class MainWindow
         {
             mode.Classes.Set("active", mode == active);
         }
+    }
+
+    /// <summary>Shows why a granted file cannot be saved.</summary>
+    /// <param name="file">Current buffer, or null when no file is open.</param>
+    private void SetReadOnlyBadge(FileBuffer? file)
+    {
+        var readOnly = file?.Original.ReadOnly == true;
+        ReadOnlyBadge.IsVisible = readOnly;
+        ReadOnlyBadgeText.Text = readOnly ? MessageCatalog.Get("workbench.read_only_from_a_folder", Language) : string.Empty;
+        ToolTip.SetTip(ReadOnlyBadge, readOnly ? file?.Original.Root ?? string.Empty : string.Empty);
     }
 
     /// <summary>Restores editing against the original file revision.</summary>
