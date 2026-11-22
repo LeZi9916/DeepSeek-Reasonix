@@ -28,6 +28,7 @@
   -->
   <ItemGroup>
     <Compile Include="../Shared/ReferenceConversation.cs" Link="ReferenceConversation.cs" />
+    <None Include="../Reasonix.Studio.Render.Tests/page-inputs.json" Link="page-inputs.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\baseline\*.json" Link="baseline\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

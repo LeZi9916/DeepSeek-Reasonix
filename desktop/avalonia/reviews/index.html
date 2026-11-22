@@ -6,7 +6,7 @@
 :root{font:15px system-ui;color-scheme:light dark}body{margin:20px}header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}h1{font-size:20px;margin-right:auto}select{font:inherit;padding:4px}img{width:100%;height:auto;border:1px solid #8885}a{color:inherit}figure{margin:20px 0}figcaption{margin:8px 0}
 </style>
 <header><h1>Avalonia 与 Electron 页面对照</h1>
-<label>页面 <select id="scene"><option value="settings-storage">数据设置</option><option value="workbench">工作台</option><option value="conversation">聊天区</option><option value="expanded">聊天展开状态</option><option value="draft">聊天输入状态</option><option value="sidebar">工作区侧边栏</option><option value="sidebar-remote">侧边栏远程状态</option><option value="files">工作区文件树</option><option value="changes">Git 改动页</option><option value="commit">Git 提交审阅</option></select></label>
+<label>页面 <select id="scene"><option value="settings-storage">数据设置</option><option value="workbench">工作台</option><option value="conversation">聊天区</option><option value="expanded">聊天展开状态</option><option value="draft">聊天输入状态</option><option value="composer">输入区细节</option><option value="sidebar">工作区侧边栏</option><option value="sidebar-remote">侧边栏远程状态</option><option value="files">工作区文件树</option><option value="changes">Git 改动页</option><option value="commit">Git 提交审阅</option></select></label>
 <label>窗口 <select id="size"><option>1440x900</option><option>760x480</option></select></label>
 <label>主题 <select id="theme"><option value="light">浅色</option><option value="dark">深色</option></select></label></header>
 <figure><a id="full"><img id="picture" alt="左侧 Electron，右侧 Avalonia"></a><figcaption><a id="report">查看页面的几何、样式和映射统计</a></figcaption></figure>
@@ -14,7 +14,7 @@
 const scene=document.getElementById("scene"),size=document.getElementById("size"),theme=document.getElementById("theme");
 function show(){
  const direct=["settings-storage","workbench","conversation","sidebar"].includes(scene.value);
- const directory=scene.value==="sidebar-remote"?"sidebar":direct?scene.value:["expanded","draft"].includes(scene.value)?"conversation":"workbench";
+ const directory=scene.value==="sidebar-remote"?"sidebar":direct?scene.value:["expanded","draft","composer"].includes(scene.value)?"conversation":"workbench";
  const extra=scene.value==="sidebar-remote"?"-remote":direct?"":"-"+scene.value;
  const path=directory+"/"+size.value+"-"+theme.value+extra+".png";
  document.getElementById("picture").src=document.getElementById("full").href=path;

@@ -1,0 +1,974 @@
+[
+  {
+    "width": 1440,
+    "height": 900,
+    "theme": "light",
+    "elements": {
+      "ChangedFilesLabel": {
+        "box": [
+          617.015625,
+          12.5,
+          76.15625,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#292b29",
+        "inkRows": [
+          13,
+          22
+        ]
+      },
+      "ChangedAdded": {
+        "box": [
+          698.171875,
+          12.5,
+          21.40625,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#2b7a4b",
+        "inkRows": [
+          14,
+          21
+        ]
+      },
+      "ChangedRemoved": {
+        "box": [
+          724.578125,
+          12.5,
+          13.421875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#bc3d34",
+        "inkRows": [
+          14,
+          21
+        ]
+      },
+      "SpeedText": {
+        "box": [
+          8,
+          141,
+          36.28125,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#5e625c",
+        "inkRows": [
+          146,
+          146
+        ]
+      },
+      "SpeedUnit": {
+        "box": [
+          49.28125,
+          141,
+          26.421875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#666a63",
+        "inkRows": [
+          142,
+          150
+        ]
+      },
+      "CacheLabel": {
+        "box": [
+          114.703125,
+          141,
+          22,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#666a63",
+        "inkRows": [
+          141,
+          150
+        ]
+      },
+      "CacheText": {
+        "box": [
+          141.703125,
+          141,
+          9.953125,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#5e625c",
+        "inkRows": [
+          146,
+          146
+        ]
+      },
+      "ContextLabel": {
+        "box": [
+          179.65625,
+          141,
+          33,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#666a63",
+        "inkRows": [
+          141,
+          150
+        ]
+      },
+      "MeterText": {
+        "box": [
+          217.65625,
+          141,
+          25.296875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#5e625c",
+        "inkRows": [
+          142,
+          149
+        ]
+      },
+      "WalletText": {
+        "box": [
+          707.078125,
+          141,
+          44.921875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#5e625c",
+        "inkRows": [
+          142,
+          149
+        ]
+      },
+      "PlanModeLabel": {
+        "box": [
+          125,
+          98,
+          34.203125,
+          12
+        ],
+        "fontSize": 12,
+        "fontWeight": 500,
+        "lineHeight": 12,
+        "color": "#5e625c",
+        "inkRows": [
+          99,
+          110
+        ]
+      },
+      "ComposeBranchLabel": {
+        "box": [
+          212.203125,
+          98,
+          27.71875,
+          12
+        ],
+        "fontSize": 12,
+        "fontWeight": 500,
+        "lineHeight": 12,
+        "color": "#5e625c",
+        "inkRows": [
+          99,
+          107
+        ]
+      },
+      "ApprovalModeLabel": {
+        "box": [
+          292.921875,
+          98.5,
+          22,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#666a63",
+        "inkRows": [
+          99,
+          108
+        ]
+      },
+      "ModelLabel": {
+        "box": [
+          521.890625,
+          94,
+          110.109375,
+          19.5
+        ],
+        "fontSize": 13,
+        "fontWeight": 600,
+        "lineHeight": 19.5,
+        "color": "#292b29",
+        "inkRows": [
+          99,
+          110
+        ]
+      },
+      "ContextRing": {
+        "box": [
+          163.65625,
+          141,
+          11,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#666a63"
+      }
+    }
+  },
+  {
+    "width": 1440,
+    "height": 900,
+    "theme": "dark",
+    "elements": {
+      "ChangedFilesLabel": {
+        "box": [
+          617.015625,
+          12.5,
+          76.15625,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#e7e8e3",
+        "inkRows": [
+          13,
+          22
+        ]
+      },
+      "ChangedAdded": {
+        "box": [
+          698.171875,
+          12.5,
+          21.40625,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#5bb67f",
+        "inkRows": [
+          14,
+          21
+        ]
+      },
+      "ChangedRemoved": {
+        "box": [
+          724.578125,
+          12.5,
+          13.421875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#e16a60",
+        "inkRows": [
+          14,
+          21
+        ]
+      },
+      "SpeedText": {
+        "box": [
+          8,
+          141,
+          36.28125,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#b4b7b0",
+        "inkRows": [
+          146,
+          147
+        ]
+      },
+      "SpeedUnit": {
+        "box": [
+          49.28125,
+          141,
+          26.421875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#8e9289",
+        "inkRows": [
+          142,
+          150
+        ]
+      },
+      "CacheLabel": {
+        "box": [
+          114.703125,
+          141,
+          22,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#8e9289",
+        "inkRows": [
+          141,
+          150
+        ]
+      },
+      "CacheText": {
+        "box": [
+          141.703125,
+          141,
+          9.953125,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#b4b7b0",
+        "inkRows": [
+          146,
+          147
+        ]
+      },
+      "ContextLabel": {
+        "box": [
+          179.65625,
+          141,
+          33,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#8e9289",
+        "inkRows": [
+          141,
+          150
+        ]
+      },
+      "MeterText": {
+        "box": [
+          217.65625,
+          141,
+          25.296875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#b4b7b0",
+        "inkRows": [
+          142,
+          149
+        ]
+      },
+      "WalletText": {
+        "box": [
+          707.078125,
+          141,
+          44.921875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#b4b7b0",
+        "inkRows": [
+          142,
+          149
+        ]
+      },
+      "PlanModeLabel": {
+        "box": [
+          125,
+          98,
+          34.203125,
+          12
+        ],
+        "fontSize": 12,
+        "fontWeight": 500,
+        "lineHeight": 12,
+        "color": "#b4b7b0",
+        "inkRows": [
+          99,
+          110
+        ]
+      },
+      "ComposeBranchLabel": {
+        "box": [
+          212.203125,
+          98,
+          27.71875,
+          12
+        ],
+        "fontSize": 12,
+        "fontWeight": 500,
+        "lineHeight": 12,
+        "color": "#b4b7b0",
+        "inkRows": [
+          99,
+          107
+        ]
+      },
+      "ApprovalModeLabel": {
+        "box": [
+          292.921875,
+          98.5,
+          22,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#8e9289",
+        "inkRows": [
+          99,
+          108
+        ]
+      },
+      "ModelLabel": {
+        "box": [
+          521.890625,
+          94,
+          110.109375,
+          19.5
+        ],
+        "fontSize": 13,
+        "fontWeight": 600,
+        "lineHeight": 19.5,
+        "color": "#e7e8e3",
+        "inkRows": [
+          98,
+          110
+        ]
+      },
+      "ContextRing": {
+        "box": [
+          163.65625,
+          141,
+          11,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#b4b7b0"
+      }
+    }
+  },
+  {
+    "width": 760,
+    "height": 480,
+    "theme": "light",
+    "elements": {
+      "ChangedFilesLabel": {
+        "box": [
+          597.015625,
+          12.5,
+          76.15625,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#292b29",
+        "inkRows": [
+          13,
+          22
+        ]
+      },
+      "ChangedAdded": {
+        "box": [
+          678.171875,
+          12.5,
+          21.40625,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#2b7a4b",
+        "inkRows": [
+          14,
+          21
+        ]
+      },
+      "ChangedRemoved": {
+        "box": [
+          704.578125,
+          12.5,
+          13.421875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#bc3d34",
+        "inkRows": [
+          14,
+          21
+        ]
+      },
+      "SpeedText": {
+        "box": [
+          8,
+          141,
+          36.28125,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#5e625c",
+        "inkRows": [
+          146,
+          146
+        ]
+      },
+      "SpeedUnit": {
+        "box": [
+          49.28125,
+          141,
+          26.421875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#666a63",
+        "inkRows": [
+          142,
+          150
+        ]
+      },
+      "CacheLabel": {
+        "box": [
+          114.703125,
+          141,
+          22,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#666a63",
+        "inkRows": [
+          141,
+          150
+        ]
+      },
+      "CacheText": {
+        "box": [
+          141.703125,
+          141,
+          9.953125,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#5e625c",
+        "inkRows": [
+          146,
+          146
+        ]
+      },
+      "ContextLabel": {
+        "box": [
+          179.65625,
+          141,
+          33,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#666a63",
+        "inkRows": [
+          141,
+          150
+        ]
+      },
+      "MeterText": {
+        "box": [
+          217.65625,
+          141,
+          25.296875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#5e625c",
+        "inkRows": [
+          142,
+          149
+        ]
+      },
+      "WalletText": {
+        "box": [
+          687.078125,
+          141,
+          44.921875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#5e625c",
+        "inkRows": [
+          142,
+          149
+        ]
+      },
+      "PlanModeLabel": {
+        "box": [
+          125,
+          98,
+          34.203125,
+          12
+        ],
+        "fontSize": 12,
+        "fontWeight": 500,
+        "lineHeight": 12,
+        "color": "#5e625c",
+        "inkRows": [
+          99,
+          110
+        ]
+      },
+      "ComposeBranchLabel": {
+        "box": [
+          212.203125,
+          98,
+          27.71875,
+          12
+        ],
+        "fontSize": 12,
+        "fontWeight": 500,
+        "lineHeight": 12,
+        "color": "#5e625c",
+        "inkRows": [
+          99,
+          107
+        ]
+      },
+      "ApprovalModeLabel": {
+        "box": [
+          292.921875,
+          98.5,
+          22,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#666a63",
+        "inkRows": [
+          99,
+          108
+        ]
+      },
+      "ModelLabel": {
+        "box": [
+          501.890625,
+          94,
+          110.109375,
+          19.5
+        ],
+        "fontSize": 13,
+        "fontWeight": 600,
+        "lineHeight": 19.5,
+        "color": "#292b29",
+        "inkRows": [
+          99,
+          110
+        ]
+      },
+      "ContextRing": {
+        "box": [
+          163.65625,
+          141,
+          11,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#666a63"
+      }
+    }
+  },
+  {
+    "width": 760,
+    "height": 480,
+    "theme": "dark",
+    "elements": {
+      "ChangedFilesLabel": {
+        "box": [
+          597.015625,
+          12.5,
+          76.15625,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#e7e8e3",
+        "inkRows": [
+          13,
+          22
+        ]
+      },
+      "ChangedAdded": {
+        "box": [
+          678.171875,
+          12.5,
+          21.40625,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#5bb67f",
+        "inkRows": [
+          14,
+          21
+        ]
+      },
+      "ChangedRemoved": {
+        "box": [
+          704.578125,
+          12.5,
+          13.421875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#e16a60",
+        "inkRows": [
+          14,
+          21
+        ]
+      },
+      "SpeedText": {
+        "box": [
+          8,
+          141,
+          36.28125,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#b4b7b0",
+        "inkRows": [
+          146,
+          147
+        ]
+      },
+      "SpeedUnit": {
+        "box": [
+          49.28125,
+          141,
+          26.421875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#8e9289",
+        "inkRows": [
+          142,
+          150
+        ]
+      },
+      "CacheLabel": {
+        "box": [
+          114.703125,
+          141,
+          22,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#8e9289",
+        "inkRows": [
+          141,
+          150
+        ]
+      },
+      "CacheText": {
+        "box": [
+          141.703125,
+          141,
+          9.953125,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#b4b7b0",
+        "inkRows": [
+          146,
+          147
+        ]
+      },
+      "ContextLabel": {
+        "box": [
+          179.65625,
+          141,
+          33,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#8e9289",
+        "inkRows": [
+          141,
+          150
+        ]
+      },
+      "MeterText": {
+        "box": [
+          217.65625,
+          141,
+          25.296875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#b4b7b0",
+        "inkRows": [
+          142,
+          149
+        ]
+      },
+      "WalletText": {
+        "box": [
+          687.078125,
+          141,
+          44.921875,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 600,
+        "lineHeight": 11,
+        "color": "#b4b7b0",
+        "inkRows": [
+          142,
+          149
+        ]
+      },
+      "PlanModeLabel": {
+        "box": [
+          125,
+          98,
+          34.203125,
+          12
+        ],
+        "fontSize": 12,
+        "fontWeight": 500,
+        "lineHeight": 12,
+        "color": "#b4b7b0",
+        "inkRows": [
+          99,
+          110
+        ]
+      },
+      "ComposeBranchLabel": {
+        "box": [
+          212.203125,
+          98,
+          27.71875,
+          12
+        ],
+        "fontSize": 12,
+        "fontWeight": 500,
+        "lineHeight": 12,
+        "color": "#b4b7b0",
+        "inkRows": [
+          99,
+          107
+        ]
+      },
+      "ApprovalModeLabel": {
+        "box": [
+          292.921875,
+          98.5,
+          22,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#8e9289",
+        "inkRows": [
+          99,
+          108
+        ]
+      },
+      "ModelLabel": {
+        "box": [
+          501.890625,
+          94,
+          110.109375,
+          19.5
+        ],
+        "fontSize": 13,
+        "fontWeight": 600,
+        "lineHeight": 19.5,
+        "color": "#e7e8e3",
+        "inkRows": [
+          98,
+          110
+        ]
+      },
+      "ContextRing": {
+        "box": [
+          163.65625,
+          141,
+          11,
+          11
+        ],
+        "fontSize": 11,
+        "fontWeight": 500,
+        "lineHeight": 11,
+        "color": "#b4b7b0"
+      }
+    }
+  }
+]

@@ -29,12 +29,13 @@ public sealed partial class MainWindow
     {
         Label(Attach, MessageKey.Composer.AddAnAttachment);
         Label(ModelButton, MessageKey.Composer.ChooseModel);
-        ModelButton.Content = MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language);
+        ModelLabel.Text = MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language);
         Attach.Click += OnPickFiles;
         ModelButton.Click += OnModels;
         EffortButton.Click += OnEfforts;
-        EffortButton.Content = MessageCatalog.Get(MessageKey.Common.Auto, Language);
+        EffortLabel.Text = MessageCatalog.Get(MessageKey.Common.Auto, Language);
         Label(EffortButton, MessageKey.Composer.ReasoningEffort);
+        InitializeComposeTools();
         Composer.PropertyChanged += (_, e) =>
         {
             if (e.Property == TextBox.CaretIndexProperty || e.Property == TextBox.TextProperty)
@@ -350,7 +351,7 @@ public sealed partial class MainWindow
                 {
                     if (draft == _draftKey && await TryAnswerAsync(() => _engine.Pages.SetEffortAsync(level, _closing.Token)).ConfigureAwait(true) && draft == _draftKey)
                     {
-                        EffortButton.Content = level;
+                        EffortLabel.Text = level;
                     }
                 };
                 menu.Items.Add(item);
@@ -395,7 +396,13 @@ public sealed partial class MainWindow
                         await _engine.Pages.SetModelAsync(model.Ref, _closing.Token).ConfigureAwait(true);
                         if (draft == _draftKey)
                         {
-                            ModelButton.Content = model.ModelAlias ?? model.Model;
+                            ModelLabel.Text = model.ModelAlias ?? model.Model;
+                            if (await _engine.StatusAsync(_closing.Token).ConfigureAwait(true) is { } status && draft == _draftKey)
+                            {
+                                ShowComposeStatus(status);
+                                ModelLabel.Text = model.ModelAlias ?? model.Model;
+                                await LoadComposeTelemetryAsync().ConfigureAwait(true);
+                            }
                         }
                     }).ConfigureAwait(true);
                 };

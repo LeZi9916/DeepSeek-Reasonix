@@ -23,10 +23,14 @@ The native render suite exercises all four size/theme combinations, commit ackno
 
 A real Windows host exercises an isolated nested Git repository, including branch switching and restoration with a repository-local line-ending policy.
 
-The geometry gate checks the mapped workbench shell and Git action identities at a 0.5-DIP tolerance. Their box difference count is zero. The full-window report retains 10 desktop or 13 compact box differences in the adjacent conversation and chrome. Unmapped nodes and style differences are still outstanding.
+The geometry gate checks the mapped workbench shell and Git action identities at a 0.5-DIP tolerance. Their box difference count is zero. The full-window report retains differences in the adjacent conversation and chrome, listed in report.json.
+
+Unmapped nodes and style differences are still outstanding.
 
 Go vet passes. Go lint reports six existing findings outside this change. `make check` reports existing repository totals for CSS size, essays, release notes and wire parity.
 
-WSL boot tests cannot complete with the required shell sandbox unavailable; builtin tool tests pass.
+WSL boot tests cannot complete with the required shell sandbox unavailable; the builtin suite also fails on the existing Git metadata denial attribution fixture.
 
 The conversation beside Git now uses the native AXAML message surfaces described in [the conversation review](../conversation/verification.md). All sixteen pairs were regenerated after the conversation and sidebar changes.
+
+All sixteen pairs include the aligned composer controls and telemetry footer; its interaction validation is recorded in the conversation review.

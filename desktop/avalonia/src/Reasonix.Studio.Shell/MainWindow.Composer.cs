@@ -85,13 +85,17 @@ public sealed partial class MainWindow
         _draftKey = DraftStore.KeyFor(_engine.DraftHost, status.WorkspaceRoot, status.SessionPath);
         Composer.Text = DraftStore.Read(_drafts, _draftKey);
         Composer.CaretIndex = Composer.Text?.Length ?? 0;
+        DismissRefinement();
+        _ = CloseSideQuestionAsync();
+        _ = LoadComposeTelemetryAsync();
+        _ = LoadGitAsync();
     }
 
     /// <summary>Shows the model the kernel reported.</summary>
     /// <param name="status">The current session status.</param>
     private void SetModelLabel(SessionStatus status)
     {
-        ModelButton.Content = string.IsNullOrEmpty(status.ModelRef) ? MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language) : status.ModelRef[(status.ModelRef.IndexOf('/') + 1)..];
+        ShowComposeStatus(status);
         ToolTip.SetTip(ModelButton, string.IsNullOrEmpty(status.ModelRef) ? MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language) : status.ModelRef);
     }
 
@@ -116,14 +120,20 @@ public sealed partial class MainWindow
         // The preference is steer, which is the reading the reference frontend
         // starts from too.
         var intent = SendKey.IntentFor(running, QueueDuringRun ? SendKey.Intent.FollowUp : SendKey.Intent.Steer);
-        ComposerHint.Text = SendKey.Hint(_shortcut, running, Language, intent);
-        MeterText.Text = ContextMeter.Readout(state.ContextUsed, _window, Language);
-        ContextReadout.Text = MeterText.Text;
+        var shortcutHint = SendKey.Hint(_shortcut, running, Language, intent);
+        ComposerHint.Text = running ? MessageCatalog.Get(state.Doing, Language) : shortcutHint;
+        DrawComposeMeters(state);
+        ComposerHint.IsVisible = running;
         Composer.PlaceholderText = MessageCatalog.Get(
             running ? MessageKey.Composer.YouCanKeepTypingWhile : MessageKey.Composer.DescribeATaskQuestionOr,
             Language);
         var runLabel = QueueDuringRun ? MessageKey.Composer.Queue : MessageKey.Common.Steer;
         Label(Send, running ? runLabel : MessageKey.Common.Send);
+        SendIntent.Text = MessageCatalog.Get(runLabel, Language);
+        SendIntent.IsVisible = running;
+        Send.Width = running ? double.NaN : 32;
+        Send.Padding = running ? new Thickness(10, 0, 12, 0) : default;
+        ToolTip.SetTip(Send, shortcutHint);
         Send.IsEnabled = !string.IsNullOrWhiteSpace(Composer.Text);
         Stop.IsVisible = running;
         if (!running)

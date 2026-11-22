@@ -125,6 +125,7 @@ public sealed partial class MainWindow
         LabelChrome();
         Label(Attach, MessageKey.Composer.AddAnAttachment);
         Label(ModelButton, MessageKey.Composer.ChooseModel);
+        LabelComposeTools();
         OpenSettings.Content = MessageCatalog.Get(MessageKey.Common.Settings, Language);
         BackLabel.Text = MessageCatalog.Get(MessageKey.Settings.BackToWorkspace, Language);
         Avalonia.Automation.AutomationProperties.SetName(CloseSettings, BackLabel.Text);

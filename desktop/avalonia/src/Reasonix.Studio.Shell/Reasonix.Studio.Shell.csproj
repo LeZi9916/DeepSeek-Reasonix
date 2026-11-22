@@ -33,5 +33,6 @@
     <AvaloniaResource Include="Assets/DataFonts/*.ttf" />
     <AvaloniaResource Include="Assets/WorkbenchFonts/*.ttf" />
     <None Include="../../../frontend-next/public/fonts/NotoSansSC-OFL.txt;../../../frontend-next/public/fonts/IBMPlexMono-OFL.txt;../../../frontend-next/public/fonts/Inter-OFL.txt" Link="licenses/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../../frontend-next/src/assets/vendor-marks/LICENSE" Link="licenses/vendor-marks.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -22,6 +22,7 @@ public sealed partial class MainWindow
         Resources["StudioReadingSize"] = reading;
         Resources["StudioReadingHeight"] = reading * 1.72;
         Resources["StudioUserHeight"] = reading * 1.6;
+        Resources["ComposeModelLineHeight"] = 19.5 * scale;
         if ((string?)look["fontMono"] is { Length: > 0 } codeFamily)
         {
             Resources["StudioMonoFamily"] = FontFamily.Parse(codeFamily);

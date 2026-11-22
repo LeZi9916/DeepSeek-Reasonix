@@ -7,28 +7,40 @@ reviewed: 2026-11-22
 
 # Conversation review
 
-Electron is on the left and Avalonia on the right. Twelve pairs cover 1440 × 900 and 760 × 480 in both palettes, with settled messages, expanded reasoning and work, and a focused draft. The sixteen workbench pairs also include the updated conversation beside files and Git.
+Electron is on the left and Avalonia on the right. Sixteen pairs cover 1440 × 900 and 760 × 480 in both palettes, with settled messages, expanded reasoning and work, and a focused draft. Four closeups expose the composer at its original scale.
 
-`AnswerCard.axaml`, `UserMessage.axaml`, `ActivityDisclosure.axaml` and `ToolCallHeader.axaml` compose the native message surfaces.
+The sixteen workbench pairs include the updated composer beside files and Git.
 
-They use the reference Inter/Noto/IBM Plex faces and semantic brushes, a bounded reading column inside the full scroll viewport, selectable Markdown blocks, turn rules and vector actions. Streaming updates retain selectable blocks while their parsed shape stays stable.
+`AnswerCard.axaml`, `UserMessage.axaml`, `ActivityDisclosure.axaml` and `ToolCallHeader.axaml` compose the native message surfaces. They use the reference Inter/Noto/IBM Plex faces, semantic brushes, selectable Markdown and vector actions.
 
-Settled work starts folded; running work opens automatically until the reader makes a choice. Search reveals reasoning and work. Copy retains the original Markdown and quotation uses the selected passage.
+Streaming retains selectable blocks while their parsed shape stays stable.
 
-Tool disclosures expose canonical arguments, output and errors; capped output retains its existing paged read path.
+Settled work starts folded; running work opens automatically until the reader makes a choice. Search reveals reasoning and work. Copy retains original Markdown and quotation uses the selected passage. Tool disclosures preserve arguments, outputs, errors and capped-output paging.
 
-The composer uses an independent outline, the reference geometry, live Git counts and a changes-board launcher, a separate context footer and disabled empty-send state. Appearance preferences still override the reading and code fonts.
+The composer now uses the same reading face, 22.4-DIP text line, neutral focus outline, pill geometry, toolbar spacing, vendor mark and tabular status figures as Electron. An empty draft disables sending. Running turns expose stop and steer/queue labels.
 
-Secondary Electron composer launchers and its detailed telemetry rail remain outside this change; screenshots retain those visible gaps.
+Drafts remain scoped to the session and remote machine.
 
-The full solution builds with zero warnings and zero errors. All 280 baseline tests and 118 render tests pass.
+Git counts refresh without opening the workbench; the changed-files pill opens its actual changes board. Work strategy, execution permissions, branch, model and effort controls use kernel acknowledgements and readback. Mode refusals preserve the draft and previous reading.
 
-The suites exercise streaming, selection, quotation, Markdown links, work and reasoning folds, search, output caps, composer layout, typography preferences and adjacent Git/sidebar flows.
+Prompt refinement offers an independent proposal with discard, retry, explicit adoption and keyboard shortcuts. Side questions use a separate read-only kernel stream, support closing and quoting, and never submit or clear the main draft. Shared scrolling bounds these surfaces in compact windows.
 
-Render captures use Avalonia Headless with Skia on Windows; macOS/Linux screen-reader and platform interaction checks were not run locally.
+Context and wallet readings come from the same captured HTTP responses as Electron, including wallet freshness and amount masking. Context opens its existing detail pane and cache opens an overview.
 
-The geometry exporter now reads Border fill, padding and radius. The coverage fixture opens native work disclosures because the DOM collector also records descendants of closed details; the normal screenshot fixture preserves the settled collapsed state.
+The detailed speed history, provider gallery and full worktree-configuration picker remain outstanding.
 
-The debt gate reports zero new findings. Full-window screenshot reports still record ten box differences in the conversation views, with unmatched DOM identities and style differences listed separately. They are not a claim of complete frontend parity.
+All 285 baseline tests and 135 render tests pass. The baseline geometry fixture now replays the same task, Git and telemetry responses as the screenshots. Eight newly mapped composer controls were removed from recorded missing debt; the debt budget was not widened.
 
-Go formatting and vet pass. `make lint` reports six existing Go findings; `make check` reports the existing CSS, essay, release-note and wire-parity totals. Builtin tests pass. Boot tests fail and time out in WSL where the required shell sandbox is unavailable.
+Element-level fixtures also compare the file-count texts, status readings, ring and model labels against Electron, including individual bounds, line height, weight, color and rasterized glyph rows in both palettes and viewports.
+
+`StudioLineText` draws single-line labels around the primary font baseline with CSS half-leading. Pixel checks allow one row of rasterization difference, so matching an outer control cannot hide shifted glyphs.
+
+Status figures use the reference reading weight and a five-character speed slot. Short line boxes allow glyph overflow; the model name retains horizontal truncation. The context ring preserves its 11-pixel size, opacity and live warning colors.
+
+The mapped composer controls have no box differences in the desktop light/dark captures. Full-window reports still retain conversation/chrome geometry, style and unmatched DOM differences; this is not a claim of complete frontend parity.
+
+Render captures use Avalonia Headless with Skia on Windows. Live remote SSH authentication and macOS/Linux platform interaction were not exercised locally.
+
+Go formatting and vet pass. Go lint reports six existing findings; the changed-file debt gate reports the existing global CSS, essay, release-note and wire-parity totals.
+
+Builtin tests fail on the existing Git metadata denial attribution fixture. Boot tests fail and time out in WSL where the required shell sandbox is unavailable.

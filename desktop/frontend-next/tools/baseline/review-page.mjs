@@ -47,6 +47,11 @@ try {
           await source.locator('.compose textarea').fill("对齐聊天区的字体、颜色与消息间距。");
           record.draft = file.replace(".png", "-draft.png");
           await pair(stem.replace("conversation", "conversation-draft"), record.draft);
+          const composer = await source.locator(".compose").boundingBox();
+          const left = Math.max(0, Math.floor(composer.x) - 16), top = Math.max(0, Math.floor(composer.y) - 16);
+          const clip = { x: left, y: top, width: Math.min(width, Math.ceil(composer.x + composer.width) + 16) - left, height: height - top };
+          record.composer = file.replace(".png", "-composer.png");
+          await pair(stem.replace("conversation", "conversation-draft"), record.composer, clip);
         }
         if (pageName === "workbench") {
           const local = /^class:workbench|^action:(?:workbench\.|commit\.|push\.|browser\.full)|^role:tablist/;
@@ -67,7 +72,7 @@ try {
           await pair(stem.replace("workbench","workbench-commit"), record.commitReview);
         }
 
-        async function pair(scene, filename) {
+        async function pair(scene, filename, clip) {
           await source.evaluate(async () => { await document.fonts.ready; await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); });
           const reference = await source.screenshot({ path: join(root, "reference", scene+".png") });
           const native = await readFile(join(root,"native",scene+".png"));
@@ -76,10 +81,11 @@ try {
           }
           const compare = await context.newPage();
           try {
-            await compare.setViewportSize({width:width*2+12, height:height+36});
+            const crop = clip ?? { x: 0, y: 0, width, height };
+            await compare.setViewportSize({width:crop.width*2+12, height:crop.height+36});
             const labels=["Electron","Avalonia"];
-            const columns=[reference,native].map((image,i)=>`<figure><figcaption>${labels[i]} · ${width} × ${height} · ${scheme}</figcaption><img src="data:image/png;base64,${image.toString("base64")}"></figure>`).join("");
-            await compare.setContent(`<!doctype html><meta charset="utf-8"><style>:root{color-scheme:${scheme}}body{margin:0;display:flex;gap:12px;font:14px system-ui}figure{margin:0}figcaption{height:36px;box-sizing:border-box;padding:8px 12px}img{display:block}</style>${columns}`);
+            const columns=[reference,native].map((image,i)=>`<figure><figcaption>${labels[i]} · ${width} × ${height} · ${scheme}</figcaption><div class="crop"><img src="data:image/png;base64,${image.toString("base64")}"></div></figure>`).join("");
+            await compare.setContent(`<!doctype html><meta charset="utf-8"><style>:root{color-scheme:${scheme}}body{margin:0;display:flex;gap:12px;font:14px system-ui}figure{margin:0;width:${crop.width}px}figcaption{height:36px;box-sizing:border-box;padding:8px 12px}.crop{width:${crop.width}px;height:${crop.height}px;overflow:hidden}img{display:block;transform:translate(${-crop.x}px,${-crop.y}px)}</style>${columns}`);
             await compare.locator("img").evaluateAll(images=>Promise.all(images.map(i=>i.decode())));
             const temporary = join(out,filename+".tmp");
             try {

@@ -77,7 +77,7 @@
       <Setter Property="Template">
         <ControlTemplate>
           <Grid>
-            <Border Background="{TemplateBinding Background}" BoxShadow="0 1 2 0 #10000000, 0 10 30 -24 #52000000" CornerRadius="{TemplateBinding CornerRadius}">
+            <Border Background="{TemplateBinding Background}" BoxShadow="{DynamicResource ComposerShadow}" CornerRadius="{TemplateBinding CornerRadius}">
               <ContentPresenter Content="{TemplateBinding Content}" />
             </Border>
             <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="{TemplateBinding CornerRadius}" IsHitTestVisible="False"/>

@@ -12,6 +12,21 @@ namespace Reasonix.Studio.Kernel.Client;
 /// </remarks>
 public sealed record SessionStatus
 {
+    /// <summary>Gets a value indicating whether the current task starts by planning.</summary>
+    [JsonPropertyName("plan")]
+    public bool Plan
+    {
+        get; init;
+    }
+
+    /// <summary>Gets the current task's execution approval boundary.</summary>
+    [JsonPropertyName("toolApprovalMode")]
+    public string ToolApprovalMode { get; init; } = "ask";
+
+    /// <summary>Gets the current model's reasoning effort.</summary>
+    [JsonPropertyName("effort")]
+    public string Effort { get; init; } = "auto";
+
     /// <summary>
     /// Gets the conversation's label, which the rail and the title show.
     /// </summary>

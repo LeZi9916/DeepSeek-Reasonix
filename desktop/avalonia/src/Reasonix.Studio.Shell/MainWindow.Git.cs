@@ -32,7 +32,11 @@ public sealed partial class MainWindow
     /// <summary>Connects the workbench surface launcher and file menu.</summary>
     private void SetUpWorkspaceMenus()
     {
-        ChangedFiles.Click += (_, _) => GitRepositories.Children.OfType<GitRepositoryView>().FirstOrDefault(view => view.ChangeCount > 0)?.OpenChanges();
+        ChangedFiles.Click += async (_, _) =>
+        {
+            await OpenWorkbenchAsync().ConfigureAwait(true);
+            GitRepositories.Children.OfType<GitRepositoryView>().FirstOrDefault(view => view.ChangeCount > 0)?.OpenChanges();
+        };
         Label(FullWorkbench, "workbench.expand_workbench");
         Label(NewSurface, "workbench.new_tab");
         Label(FileMore, "common.more");
@@ -118,7 +122,7 @@ public sealed partial class MainWindow
     /// <returns>The visible sections' status and history reads.</returns>
     private async Task LoadGitAsync()
     {
-        if (_engine is not { } engine || !WorkbenchPanel.IsVisible)
+        if (_engine is not { } engine)
         {
             return;
         }
@@ -272,15 +276,19 @@ public sealed partial class MainWindow
         ChangedFilesLabel.Text = MessageCatalog.Get("composer.n_files_changed", Language, ("n", TotalGitCount.Text));
         ChangedAdded.Text = "+" + GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.LineChanges.Added).ToString(System.Globalization.CultureInfo.CurrentCulture);
         ChangedRemoved.Text = "−" + GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.LineChanges.Removed).ToString(System.Globalization.CultureInfo.CurrentCulture);
+        ComposeBranch.IsVisible = GitRepositories.Children.Count > 0;
+        ComposeBranchLabel.Text = GitRepositories.Children.OfType<GitRepositoryView>().FirstOrDefault()?.FindControl<Button>("Branch")?.Content?.ToString() ?? string.Empty;
+        LabelComposeLayout();
     }
 
     /// <summary>Refreshes repository state when the agent finishes writing.</summary>
     /// <param name="running">Whether the current turn is active.</param>
     private void RefreshGitAfterTurn(bool running)
     {
-        if (_gitWasRunning && !running && WorkbenchPanel.IsVisible)
+        if (_gitWasRunning && !running)
         {
             _ = LoadGitAsync();
+            _ = LoadComposeTelemetryAsync();
         }
 
         _gitWasRunning = running;

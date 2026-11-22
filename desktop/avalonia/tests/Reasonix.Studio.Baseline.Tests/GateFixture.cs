@@ -5,13 +5,20 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Baseline;
+using Reasonix.Studio.Kernel.Client;
+using Reasonix.Studio.Kernel.Events;
+using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Baseline.Tests;
@@ -45,11 +52,15 @@ internal static class GateFixture
         return await session.Dispatch(
             () =>
             {
-                var window = new MainWindow(false, null, InterfaceLanguage.Zh)
+                using var handler = new ComposerReads();
+                using var http = new HttpClient(handler) { BaseAddress = new Uri("http://127.0.0.1:4000") };
+                var engine = new SessionEngine(new KernelClient(http), new SseEventTransport(http.BaseAddress.ToString(), http));
+                var window = new MainWindow(false, engine, InterfaceLanguage.Zh)
                 {
                     RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light,
                 };
                 window.Show();
+                window.AdoptComposer(handler.Status);
                 window.ShowState(Reasonix.Studio.Testing.ReferenceConversation.Create());
                 Dispatcher.UIThread.RunJobs();
 
@@ -184,5 +195,26 @@ internal static class GateFixture
         var path = Path.Combine(AppContext.BaseDirectory, "baseline", "gate-covered.json");
         File.WriteAllText(path, json);
         return path;
+    }
+
+    /// <summary>Supplies the same captured task and repository reads as the screenshot fixture.</summary>
+    private sealed class ComposerReads : HttpMessageHandler
+    {
+        /// <summary>The reference renderer's endpoint answers.</summary>
+        private readonly JsonObject _reads = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "page-inputs.json")))!.AsObject();
+
+        /// <summary>Gets the captured task status.</summary>
+        public SessionStatus Status => _reads["/status"].Deserialize<SessionStatus>(JsonSerializerOptions.Web)!;
+
+        /// <inheritdoc/>
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri!.AbsolutePath;
+            var key = _reads.ContainsKey(request.RequestUri.PathAndQuery) ? request.RequestUri.PathAndQuery : path;
+            return Task.FromResult(new HttpResponseMessage(_reads.ContainsKey(key) ? HttpStatusCode.OK : HttpStatusCode.NotFound)
+            {
+                Content = new StringContent(_reads[key]?.ToJsonString() ?? "null", System.Text.Encoding.UTF8, "application/json"),
+            });
+        }
     }
 }

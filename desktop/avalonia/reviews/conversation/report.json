@@ -8,16 +8,17 @@
       "height": 900,
       "scheme": "light",
       "referenceNodes": 482,
-      "observedNodes": 52,
+      "observedNodes": 60,
       "counts": {
         "box": 10,
-        "style": 14,
-        "missing": 452,
+        "style": 13,
+        "missing": 444,
         "extra": 22,
         "token": 0
       },
       "expanded": "1440x900-light-expanded.png",
-      "draft": "1440x900-light-draft.png"
+      "draft": "1440x900-light-draft.png",
+      "composer": "1440x900-light-composer.png"
     },
     {
       "file": "1440x900-dark.png",
@@ -25,16 +26,17 @@
       "height": 900,
       "scheme": "dark",
       "referenceNodes": 482,
-      "observedNodes": 52,
+      "observedNodes": 60,
       "counts": {
-        "box": 10,
-        "style": 14,
-        "missing": 452,
+        "box": 8,
+        "style": 13,
+        "missing": 444,
         "extra": 22,
         "token": 0
       },
       "expanded": "1440x900-dark-expanded.png",
-      "draft": "1440x900-dark-draft.png"
+      "draft": "1440x900-dark-draft.png",
+      "composer": "1440x900-dark-composer.png"
     },
     {
       "file": "760x480-light.png",
@@ -42,16 +44,17 @@
       "height": 480,
       "scheme": "light",
       "referenceNodes": 486,
-      "observedNodes": 19,
+      "observedNodes": 27,
       "counts": {
         "box": 10,
-        "style": 9,
-        "missing": 467,
+        "style": 8,
+        "missing": 459,
         "extra": 0,
         "token": 0
       },
       "expanded": "760x480-light-expanded.png",
-      "draft": "760x480-light-draft.png"
+      "draft": "760x480-light-draft.png",
+      "composer": "760x480-light-composer.png"
     },
     {
       "file": "760x480-dark.png",
@@ -59,16 +62,17 @@
       "height": 480,
       "scheme": "dark",
       "referenceNodes": 486,
-      "observedNodes": 19,
+      "observedNodes": 27,
       "counts": {
         "box": 10,
-        "style": 9,
-        "missing": 467,
+        "style": 8,
+        "missing": 459,
         "extra": 0,
         "token": 0
       },
       "expanded": "760x480-dark-expanded.png",
-      "draft": "760x480-dark-draft.png"
+      "draft": "760x480-dark-draft.png",
+      "composer": "760x480-dark-composer.png"
     }
   ]
 }

@@ -645,6 +645,7 @@ window.__nativeReference = async () => {
   const port = hub.machinePort();
   const reads: Record<string, Promise<unknown>> = {
     "/tree": hub.tree(), "/status": port.status(), "/appearance": port.appearance(),
+    "/context": port.context(), "/balance": port.balance(),
     "/models": port.models("chat").then(models => ({ models })), "/provider-setup": port.providerSetup(),
     "/git/repos": port.gitRepos(), "/workspace/git": port.workspaceGit(), "/workspace/git/log": port.workspaceGitLog(100),
     "/workspace/branches": port.branches(),
