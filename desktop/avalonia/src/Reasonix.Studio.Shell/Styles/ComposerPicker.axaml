@@ -1,0 +1,280 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Style Selector="Border.model-picker">
+    <Setter Property="Background" Value="{DynamicResource FloatBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RMd}"/>
+    <Setter Property="Padding" Value="0"/>
+  </Style>
+  <Style Selector="TextBlock.model-picker-title">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.model-picker-subtitle">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+  </Style>
+  <Style Selector="Border.model-picker-search">
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="Padding" Value="7,0"/>
+    <Setter Property="MinHeight" Value="32"/>
+    <Setter Property="Margin" Value="8,4,8,6"/>
+  </Style>
+  <Style Selector="TextBox.model-picker-query">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="WatermarkForeground" Value="{DynamicResource FaintBrush}"/>
+    <Setter Property="CaretBrush" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="TextBox.model-picker-query /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style Selector="TextBlock.model-picker-count">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+  </Style>
+  <Style Selector="WrapPanel.model-picker-chips">
+    <Setter Property="Margin" Value="8,0,8,4"/>
+  </Style>
+  <Style Selector="Button.model-chip">
+    <Setter Property="Height" Value="24"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Margin" Value="0,0,6,6"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RPill}"/>
+    <Setter Property="Template">
+      <ControlTemplate><Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/></Border></ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Button.model-chip:pointerover">
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.model-chip.on">
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="Button.model-chip.clear">
+    <Setter Property="BorderBrush" Value="{DynamicResource FaintBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style Selector="StackPanel.model-picker-list">
+    <Setter Property="Margin" Value="8,0,8,4"/>
+  </Style>
+  <Style Selector="Border.model-group">
+    <Setter Property="Padding" Value="8,6,8,4"/>
+    <Setter Property="Margin" Value="0,2,0,1"/>
+  </Style>
+  <Style Selector="Border.model-group.divided">
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    <Setter Property="Margin" Value="0,6,0,1"/>
+  </Style>
+  <Style Selector="TextBlock.model-group-name">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+  </Style>
+  <Style Selector="TextBlock.model-group-host">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="FontFamily" Value="{DynamicResource StudioMonoFamily}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+  </Style>
+  <Style Selector="Border.model-mark">
+    <Setter Property="Width" Value="18"/>
+    <Setter Property="Height" Value="18"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RXs}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="TextBlock.model-mark-text">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="HorizontalAlignment" Value="Center"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Button.model-row">
+    <Setter Property="MinHeight" Value="38"/>
+    <Setter Property="Padding" Value="6,5"/>
+    <Setter Property="Margin" Value="0,1,0,0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="Template">
+      <ControlTemplate><Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/></Border></ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Button.model-row:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.model-row.current">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.model-row:disabled">
+    <Setter Property="Opacity" Value="0.45"/>
+  </Style>
+  <Style Selector="TextBlock.model-name">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+  </Style>
+  <Style Selector="TextBlock.model-kind">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+  </Style>
+  <Style Selector="Border.model-badge">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RXs}"/>
+    <Setter Property="Padding" Value="4,1"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="TextBlock.model-badge-text">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+  </Style>
+  <Style Selector="Button.model-manage">
+    <Setter Property="MinHeight" Value="38"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Margin" Value="0,4,0,0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="Template">
+      <ControlTemplate><Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/></Border></ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Button.model-manage:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Border.model-aside">
+    <Setter Property="Background" Value="{DynamicResource FloatBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="1,0,0,0"/>
+    <Setter Property="Padding" Value="8"/>
+  </Style>
+  <Style Selector="TextBlock.model-aside-title">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.model-aside-model">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="FontFamily" Value="{DynamicResource StudioMonoFamily}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    <Setter Property="MaxWidth" Value="160"/>
+  </Style>
+  <Style Selector="Button.effort-row">
+    <Setter Property="MinHeight" Value="52"/>
+    <Setter Property="Padding" Value="7,6"/>
+    <Setter Property="Margin" Value="0,1,0,0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="Template">
+      <ControlTemplate><Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/></Border></ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Button.effort-row:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.effort-row.current">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.effort-row.divided">
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    <Setter Property="Margin" Value="0,6,0,0"/>
+  </Style>
+  <Style Selector="TextBlock.effort-name">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.effort-api">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="FontFamily" Value="{DynamicResource StudioMonoFamily}"/>
+    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.effort-desc">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+    <Setter Property="Margin" Value="0,2,0,0"/>
+  </Style>
+  <Style Selector="Border.effort-bar">
+    <Setter Property="Width" Value="3"/>
+    <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="CornerRadius" Value="1,1,0,0"/>
+    <Setter Property="VerticalAlignment" Value="Bottom"/>
+    <Setter Property="Margin" Value="1,0,0,0"/>
+  </Style>
+  <Style Selector="Border.effort-bar.on">
+    <Setter Property="Background" Value="{DynamicResource MutedBrush}"/>
+  </Style>
+  <Style Selector="Border.mode-switch">
+    <Setter Property="Width" Value="32"/>
+    <Setter Property="Height" Value="18"/>
+    <Setter Property="CornerRadius" Value="9"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Border.mode-switch.on">
+    <Setter Property="Background" Value="{DynamicResource AccentWashBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+  </Style>
+  <Style Selector="Ellipse.mode-knob">
+    <Setter Property="Width" Value="12"/>
+    <Setter Property="Height" Value="12"/>
+    <Setter Property="Fill" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Margin" Value="2,0,0,0"/>
+  </Style>
+  <Style Selector="Border.mode-switch.on Ellipse.mode-knob">
+    <Setter Property="Fill" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="HorizontalAlignment" Value="Right"/>
+    <Setter Property="Margin" Value="0,0,2,0"/>
+  </Style>
+  <Style Selector="TextBlock.model-aside-note">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+    <Setter Property="Margin" Value="2,8,2,2"/>
+  </Style>
+  <Style Selector="TextBlock.model-empty">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="Margin" Value="10,12"/>
+  </Style>
+  <Style Selector="TextBlock.model-more">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    <Setter Property="Margin" Value="10,4,10,6"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+</Styles>

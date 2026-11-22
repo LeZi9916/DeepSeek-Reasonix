@@ -99,6 +99,7 @@ public sealed partial class MainWindow
                 }
             }
         };
+        SidebarFiles.Click += async (_, _) => await OpenWorkbenchAsync().ConfigureAwait(true);
         SidebarAccount.Click += (_, _) => ShowSidebarSection("account");
         SidebarModels.Click += (_, _) => ShowSidebarSection("model");
         SidebarTools.Click += (_, _) => ShowSidebarSection("ext");
@@ -108,6 +109,7 @@ public sealed partial class MainWindow
     /// <summary>Updates the anchored footer menu without replacing the controls.</summary>
     private void LabelSidebar()
     {
+        SidebarFiles.Header = MessageCatalog.Get("workbench.explorer", Language);
         SidebarAccount.Header = MessageCatalog.Get(MessageKey.Settings.Account, Language);
         SidebarModels.Header = MessageCatalog.Get(MessageKey.Common.Models, Language);
         SidebarTools.Header = MessageCatalog.Get("ext.extension", Language);

@@ -31,10 +31,11 @@ public sealed partial class MainWindow
         Label(ModelButton, MessageKey.Composer.ChooseModel);
         ModelLabel.Text = MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language);
         Attach.Click += OnPickFiles;
-        ModelButton.Click += OnModels;
-        EffortButton.Click += OnEfforts;
+        ModelButton.Click += async (_, _) => await OpenModelPickerAsync(focusEffort: false).ConfigureAwait(true);
+        EffortButton.Click += async (_, _) => await OpenModelPickerAsync(focusEffort: true).ConfigureAwait(true);
         EffortLabel.Text = MessageCatalog.Get(MessageKey.Common.Auto, Language);
         Label(EffortButton, MessageKey.Composer.ReasoningEffort);
+        InitializeModelPicker();
         InitializeComposeTools();
         Composer.PropertyChanged += (_, e) =>
         {
@@ -317,106 +318,12 @@ public sealed partial class MainWindow
     /// <param name="insert">The serialized reference text.</param>
     private void InsertReferences(string insert)
     {
+        var text = Composer.Text ?? string.Empty;
         var start = Math.Min(Composer.SelectionStart, Composer.SelectionEnd);
-        var prefix = start > 0 && !char.IsWhiteSpace(Composer.Text![start - 1]) ? " " : string.Empty;
+        var prefix = start > 0 && !char.IsWhiteSpace(text[start - 1]) ? " " : string.Empty;
+        Composer.SelectionStart = start;
+        Composer.SelectionEnd = start;
         Composer.SelectedText = prefix + insert + " ";
         Composer.Focus();
-    }
-
-    /// <summary>Offers the effort levels of the current model.</summary>
-    /// <param name="sender">The effort selector.</param>
-    /// <param name="e">The click.</param>
-    private async void OnEfforts(object? sender, RoutedEventArgs e)
-    {
-        if (_engine is null)
-        {
-            return;
-        }
-
-        var draft = _draftKey;
-        await TryAnswerAsync(async () =>
-        {
-            var catalog = await _engine.Pages.ModelsAsync(_closing.Token).ConfigureAwait(true);
-            var active = catalog.FirstOrDefault(model => model.Active);
-            if (draft != _draftKey || active?.Efforts is not { Length: > 0 } levels)
-            {
-                return;
-            }
-
-            var menu = new MenuFlyout();
-            foreach (var level in levels)
-            {
-                var item = new MenuItem { Header = level, IsEnabled = level != active.Effort };
-                item.Click += async (_, _) =>
-                {
-                    if (draft == _draftKey && await TryAnswerAsync(() => _engine.Pages.SetEffortAsync(level, _closing.Token)).ConfigureAwait(true) && draft == _draftKey)
-                    {
-                        EffortLabel.Text = level;
-                    }
-                };
-                menu.Items.Add(item);
-            }
-
-            menu.ShowAt(EffortButton);
-        }).ConfigureAwait(true);
-    }
-
-    /// <summary>Offers the chat models the active kernel actually supports.</summary>
-    /// <param name="sender">The model button.</param>
-    /// <param name="e">The click.</param>
-    private async void OnModels(object? sender, RoutedEventArgs e)
-    {
-        if (_engine is null)
-        {
-            return;
-        }
-
-        var draft = _draftKey;
-        try
-        {
-            var models = await _engine.Pages.ModelsAsync(_closing.Token).ConfigureAwait(true);
-            if (_closing.IsCancellationRequested || draft != _draftKey)
-            {
-                return;
-            }
-
-            var menu = new MenuFlyout();
-            foreach (var model in models)
-            {
-                var item = new MenuItem { Header = model.ModelAlias ?? model.Model, IsEnabled = !model.NotAdded && !model.Active };
-                item.Click += async (_, _) =>
-                {
-                    if (draft != _draftKey || _closing.IsCancellationRequested)
-                    {
-                        return;
-                    }
-
-                    await Ask(async () =>
-                    {
-                        await _engine.Pages.SetModelAsync(model.Ref, _closing.Token).ConfigureAwait(true);
-                        if (draft == _draftKey)
-                        {
-                            ModelLabel.Text = model.ModelAlias ?? model.Model;
-                            if (await _engine.StatusAsync(_closing.Token).ConfigureAwait(true) is { } status && draft == _draftKey)
-                            {
-                                ShowComposeStatus(status);
-                                ModelLabel.Text = model.ModelAlias ?? model.Model;
-                                await LoadComposeTelemetryAsync().ConfigureAwait(true);
-                            }
-                        }
-                    }).ConfigureAwait(true);
-                };
-                menu.Items.Add(item);
-            }
-
-            menu.ShowAt(ModelButton);
-        }
-        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
-        {
-        }
-        catch (Exception error)
-        {
-            ShowRefusal(error);
-        }
     }
 }

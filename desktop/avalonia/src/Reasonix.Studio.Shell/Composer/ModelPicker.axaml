@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              x:Class="Reasonix.Studio.Shell.Composer.ModelPicker"
+              x:Name="Root"
+              Focusable="False"
+              Width="0"
+              Height="0">
+  <Grid>
+    <Popup Name="Surface"
+           Placement="TopEdgeAlignedRight"
+           VerticalOffset="-9"
+           PlacementConstraintAdjustment="SlideX"
+           ShouldUseOverlayLayer="True"
+           IsLightDismissEnabled="True">
+      <Border Name="Frame" Classes="model-picker">
+        <Grid Name="Layout" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" ColumnDefinitions="*,0">
+          <Grid Name="PickHeader" Grid.Row="0" Margin="10,9,10,4" ColumnDefinitions="*,Auto">
+            <TextBlock Name="PickTitle" Classes="model-picker-title" VerticalAlignment="Center"/>
+            <TextBlock Name="PickSubtitle" Grid.Column="1" Classes="model-picker-subtitle" VerticalAlignment="Center"/>
+          </Grid>
+          <Border Name="SearchFrame" Grid.Row="1" Classes="model-picker-search">
+            <Grid ColumnDefinitions="15,*,Auto" ColumnSpacing="6">
+              <Viewbox Width="15" Height="15" VerticalAlignment="Center">
+                <Canvas Width="24" Height="24">
+                  <Path Data="{StaticResource Glyph.search}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/>
+                </Canvas>
+              </Viewbox>
+              <TextBox Name="Search" Grid.Column="1" Classes="model-picker-query"
+                       BorderThickness="0" Background="Transparent" MinHeight="0" Height="22" Padding="0"
+                       VerticalAlignment="Center" VerticalContentAlignment="Center"/>
+              <TextBlock Name="SearchCount" Grid.Column="2" Classes="model-picker-count" VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+          <WrapPanel Name="Chips" Grid.Row="2" Classes="model-picker-chips"/>
+          <ScrollViewer Name="ModelScroll" Grid.Row="3" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel Name="ModelList" Classes="model-picker-list"/>
+          </ScrollViewer>
+          <Button Name="Manage" Grid.Row="4" Classes="model-manage">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Name="ManageLabel" VerticalAlignment="Center"/>
+              <Path Grid.Column="1" Width="12" Height="12" Data="M9 6l6 6-6 6"
+                    Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"
+                    Stretch="Uniform" VerticalAlignment="Center"/>
+            </Grid>
+          </Button>
+          <Border Name="Aside" Grid.Row="0" Grid.RowSpan="5" Grid.Column="1" Classes="model-aside">
+            <Grid RowDefinitions="Auto,*,Auto">
+              <Grid Name="EffortHead" RowDefinitions="Auto" Margin="2,2,2,6" ColumnDefinitions="*,Auto">
+                <TextBlock Name="EffortTitle" Classes="model-aside-title" VerticalAlignment="Center"/>
+                <TextBlock Name="EffortModel" Grid.Column="1" Classes="model-aside-model" VerticalAlignment="Center"/>
+              </Grid>
+              <ScrollViewer Name="EffortScroll" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Name="EffortList"/>
+              </ScrollViewer>
+              <TextBlock Name="EffortNote" Grid.Row="2" Classes="model-aside-note"/>
+            </Grid>
+          </Border>
+        </Grid>
+      </Border>
+    </Popup>
+  </Grid>
+</UserControl>

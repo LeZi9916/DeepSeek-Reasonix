@@ -138,6 +138,16 @@ public sealed partial class StudioPageClient
         return PostAsync("/effort", request, token);
     }
 
+    /// <summary>Turns a mode the active model declares on, or off with an empty value.</summary>
+    /// <param name="mode">Kernel mode identity.</param>
+    /// <param name="token">Cancels the write.</param>
+    /// <returns>The kernel acknowledgement.</returns>
+    public Task SetModelModeAsync(string mode, CancellationToken token)
+    {
+        var request = new JsonObject { ["mode"] = mode };
+        return PostAsync("/model-mode", request, token);
+    }
+
     /// <summary>Reads the available chat models.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The catalog in host order.</returns>

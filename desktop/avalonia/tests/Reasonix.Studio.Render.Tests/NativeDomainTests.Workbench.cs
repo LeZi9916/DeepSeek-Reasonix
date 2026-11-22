@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -66,6 +67,44 @@ public sealed partial class NativeDomainTests
             first.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
             Dispatcher.UIThread.RunJobs();
             Assert.Equal(first.Tag, w.FindControl<TextBlock>("WorkbenchTitle")!.Text);
+        });
+
+    /// <summary>The explorer's clear control empties the query and restores the listing.</summary>
+    /// <returns>The search interaction.</returns>
+    [Fact]
+    public Task WorkbenchClearSearchRestoresTheListing() => WithSettings(
+        "workbench",
+        (w, _) =>
+        {
+            var search = w.FindControl<TextBox>("WorkbenchSearch")!;
+            var clear = w.FindControl<Button>("ClearWorkbenchSearch")!;
+            Assert.False(clear.IsVisible);
+            search.Text = "README";
+            Dispatcher.UIThread.RunJobs();
+            Assert.True(clear.IsVisible);
+            clear.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(string.Empty, search.Text);
+            Assert.False(clear.IsVisible);
+            Assert.NotEmpty(w.FindControl<ListBox>("WorkspaceFiles")!.Items);
+        });
+
+    /// <summary>The sidebar's Files shortcut opens the same workbench as the view menu.</summary>
+    /// <returns>The navigation interaction.</returns>
+    [Fact]
+    public Task SidebarFilesOpensTheWorkbench() => WithSettings(
+        "conversation",
+        (w, _) =>
+        {
+            w.FindControl<MenuItem>("SidebarFiles")!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            var opened = SpinWait.SpinUntil(
+                () =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return w.FindControl<Border>("WorkbenchPanel")!.IsVisible;
+                },
+                System.TimeSpan.FromSeconds(2));
+            Assert.True(opened);
         });
 
     /// <summary>Opens a real file's Diff view and checks classified, selectable content.</summary>

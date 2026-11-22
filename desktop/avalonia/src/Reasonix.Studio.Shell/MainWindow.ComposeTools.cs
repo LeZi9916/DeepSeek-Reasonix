@@ -2,9 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
+using Reasonix.Studio.Shell.Composer;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -165,10 +167,19 @@ public sealed partial class MainWindow
         _composerStatus = status;
         PlanModeLabel.Text = status.Plan ? "Plan" : "Agent";
         ApprovalModeLabel.Text = MessageCatalog.Get(ApprovalKey(status.ToolApprovalMode), Language);
-        EffortLabel.Text = status.Effort == "auto" ? MessageCatalog.Get("common.auto", Language) : status.Effort;
-        ModelLabel.Text = string.IsNullOrEmpty(status.ModelRef) ? MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language) : status.ModelRef[(status.ModelRef.IndexOf('/') + 1)..];
-        ModelMark.IsVisible = status.ModelRef.StartsWith("deepseek/", StringComparison.OrdinalIgnoreCase);
-        ToolTip.SetTip(ModelButton, status.ModelRef);
+        if (string.IsNullOrEmpty(status.ModelRef))
+        {
+            ModelLabel.Text = MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language);
+            ModelMark.IsVisible = false;
+            ModelInitial.IsVisible = false;
+            EffortLabel.Text = ModelPicker.EffortText(status.Effort);
+            ToolTip.SetTip(ModelButton, MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language));
+        }
+        else
+        {
+            BindModelTrigger(status);
+        }
+
         LabelComposeLayout();
     }
 
@@ -178,12 +189,32 @@ public sealed partial class MainWindow
     {
         var button = approval ? ApprovalMode : PlanMode;
         var menu = new MenuFlyout();
+        menu.Items.Add(MenuHead(
+            MessageCatalog.Get(approval ? "safety.execution_permissions" : "composer.work_mode", Language),
+            MessageCatalog.Get("common.current_task", Language)));
         var choices = approval ? new[] { "dontAsk", "ask", "auto", "yolo" } : new[] { "agent", "plan" };
+        var engine = _engine;
+        var draft = _draftKey;
         foreach (var value in choices)
         {
-            var item = new MenuItem { Tag = value, Header = approval ? MessageCatalog.Get(ApprovalKey(value), Language) : value == "plan" ? "Plan" : "Agent" };
-            var engine = _engine;
-            var draft = _draftKey;
+            if (approval && value == "yolo")
+            {
+                menu.Items.Add(new MenuItem
+                {
+                    Header = new TextBlock { Text = MessageCatalog.Get("common.high_risk", Language), Foreground = ThemeBrush("WarnInkBrush"), FontSize = 11 },
+                    IsEnabled = false,
+                });
+            }
+
+            var current = approval ? _composerStatus.ToolApprovalMode == value : _composerStatus.Plan == (value == "plan");
+            var item = new MenuItem
+            {
+                Tag = value,
+                Header = MenuChoice(
+                    approval ? MessageCatalog.Get(ApprovalKey(value), Language) : value == "plan" ? "Plan" : "Agent",
+                    MessageCatalog.Get(approval ? ApprovalNote(value) : value == "plan" ? "composer.plan_steps_before_changing_files" : "composer.run_tasks_with_enabled_tools", Language)),
+                IsChecked = current,
+            };
             item.Click += async (_, _) =>
             {
                 if (engine is null || engine != _engine || draft != _draftKey)
@@ -214,9 +245,104 @@ public sealed partial class MainWindow
             menu.Items.Add(item);
         }
 
+        if (approval)
+        {
+            menu.Items.Add(new Separator());
+            menu.Items.Add(new MenuItem
+            {
+                Header = MenuChoice(string.Empty, MessageCatalog.Get("safety.approvals_decide_when_to_ask", Language)),
+                IsEnabled = false,
+            });
+            var boundary = new MenuItem
+            {
+                Tag = "__boundary",
+                Header = MenuChoice(
+                    MessageCatalog.Get("safety.sandbox_and_runtime_boundary", Language),
+                    MessageCatalog.Get("safety.view_current_isolation_and_network", Language)),
+            };
+            boundary.Click += async (_, _) =>
+            {
+                OpenSettings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await ShowSectionAsync("tools").ConfigureAwait(true);
+            };
+            menu.Items.Add(boundary);
+        }
+
         button.Flyout = menu;
         menu.ShowAt(button);
     }
+
+    /// <summary>Maps an approval mode to the note under its label.</summary>
+    /// <param name="mode">Kernel approval mode.</param>
+    /// <returns>Message key naming what the mode does.</returns>
+    private string ApprovalNote(string mode) => mode switch
+    {
+        "dontAsk" => "safety.no_approval_prompts_anything_needing",
+        "auto" => "safety.low_risk_steps_proceed_writes",
+        "yolo" => "safety.stops_asking_only_for_a",
+        _ => "safety.asks_before_every_action",
+    };
+
+    /// <summary>Builds the muted caption above a picker's choices.</summary>
+    /// <param name="title">Caption on the left.</param>
+    /// <param name="right">Context on the right.</param>
+    /// <returns>The menu header.</returns>
+    private Control MenuHead(string title, string right)
+    {
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), MinWidth = 240 };
+        grid.Children.Add(new TextBlock
+        {
+            Text = title,
+            FontSize = 11,
+            FontWeight = FontWeight.SemiBold,
+            Foreground = ThemeBrush("MutedBrush"),
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+        var context = new TextBlock
+        {
+            Text = right,
+            FontSize = 10,
+            Foreground = ThemeBrush("FaintBrush"),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        Grid.SetColumn(context, 1);
+        grid.Children.Add(context);
+        return grid;
+    }
+
+    /// <summary>Builds one option's label and explanatory note.</summary>
+    /// <param name="title">Human label, or empty for a note row.</param>
+    /// <param name="note">Explanation under the label.</param>
+    /// <returns>The menu item content.</returns>
+    private Control MenuChoice(string title, string note)
+    {
+        var panel = new StackPanel { Spacing = 2, MaxWidth = 300 };
+        if (title.Length > 0)
+        {
+            panel.Children.Add(new TextBlock
+            {
+                Text = title,
+                FontSize = 12,
+                FontWeight = FontWeight.Medium,
+                Foreground = ThemeBrush("TextBrush"),
+            });
+        }
+
+        panel.Children.Add(new TextBlock
+        {
+            Text = note,
+            FontSize = 10,
+            Foreground = ThemeBrush("MutedBrush"),
+            TextWrapping = TextWrapping.Wrap,
+        });
+        return panel;
+    }
+
+    /// <summary>Reads a brush from the window's theme resources.</summary>
+    /// <param name="key">Resource key.</param>
+    /// <returns>The brush, or a muted fallback.</returns>
+    private IBrush ThemeBrush(string key) =>
+        this.TryFindResource(key, out var value) && value is IBrush brush ? brush : Brushes.Gray;
 
     /// <summary>Refreshes the branch catalog when the chooser opens.</summary>
     /// <returns>The chooser read.</returns>

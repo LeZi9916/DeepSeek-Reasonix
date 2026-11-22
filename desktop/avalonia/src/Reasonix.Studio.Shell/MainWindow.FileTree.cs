@@ -95,7 +95,6 @@ public sealed partial class MainWindow
                 }
             }
 
-            ParentFolder.IsEnabled = false;
             DrawFileTree();
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)

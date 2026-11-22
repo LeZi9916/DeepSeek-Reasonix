@@ -90,6 +90,7 @@ public sealed partial class MainWindow
         DismissRefinement();
         _ = CloseSideQuestionAsync();
         _ = LoadComposeTelemetryAsync();
+        _ = RefreshModelCatalogAsync();
         _ = LoadGitAsync();
     }
 
@@ -98,7 +99,6 @@ public sealed partial class MainWindow
     private void SetModelLabel(SessionStatus status)
     {
         ShowComposeStatus(status);
-        ToolTip.SetTip(ModelButton, string.IsNullOrEmpty(status.ModelRef) ? MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language) : status.ModelRef);
     }
 
     /// <summary>

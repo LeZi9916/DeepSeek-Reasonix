@@ -70,22 +70,32 @@ public sealed partial class MainWindow
         Label(FilesTab, MessageKey.Workbench.Explorer);
         FileListHeading.Text = MessageCatalog.Get(MessageKey.Common.Files, Language);
         Label(ToggleFileList, MessageKey.Common.Files);
-        ToggleFileList.Click += (_, _) =>
+        void ToggleFileListVisibility()
         {
             WorkspaceFiles.IsVisible = !WorkspaceFiles.IsVisible;
             NoWorkspaceFiles.IsVisible = WorkspaceFiles.IsVisible && WorkspaceFiles.ItemCount == 0;
             FileListChevron.RenderTransform = new RotateTransform(WorkspaceFiles.IsVisible ? 0 : -90);
-        };
+        }
+
+        ToggleFileList.Click += (_, _) => ToggleFileListVisibility();
+        FilesTab.Click += async (_, _) => await ListFilesAsync().ConfigureAwait(true);
         WorkspaceFiles.AddHandler(Button.ClickEvent, OnWorkspaceFileClick);
         WorkspaceFiles.AddHandler(Avalonia.Input.InputElement.KeyDownEvent, OnFileTreeKeyDown, RoutingStrategies.Tunnel);
         NoWorkspaceFiles.Text = MessageCatalog.Get("workbench.no_matching_files", Language);
         WorkbenchSearch.PlaceholderText = MessageCatalog.Get("workbench.search_files", Language);
         WorkbenchSearch.TextChanged += async (_, _) =>
         {
+            ClearWorkbenchSearch.IsVisible = !string.IsNullOrEmpty(WorkbenchSearch.Text);
             if (WorkbenchPanel.IsVisible)
             {
                 await ListFilesAsync().ConfigureAwait(true);
             }
+        };
+        ClearWorkbenchSearch.Click += async (_, _) =>
+        {
+            WorkbenchSearch.Text = string.Empty;
+            await ListFilesAsync().ConfigureAwait(true);
+            WorkbenchSearch.Focus();
         };
         WorkspaceBody.SizeChanged += (_, e) =>
         {
@@ -97,7 +107,6 @@ public sealed partial class MainWindow
         };
         TabViewport.ScrollChanged += (_, _) => UpdateTabOverflow();
         TabViewport.SizeChanged += (_, _) => UpdateTabOverflow();
-        FilesTab.Click += async (_, _) => await ListFilesAsync().ConfigureAwait(true);
         EditFile.Content = MessageCatalog.Get(MessageKey.Common.Edit, Language);
         EditFile.Click += (_, _) => ShowSource();
         DiffFile.Click += async (_, _) => await ShowFileDiffAsync().ConfigureAwait(true);
@@ -115,7 +124,6 @@ public sealed partial class MainWindow
         WorkbenchView.Header = MessageCatalog.Get(MessageKey.Common.Workbench, Language);
         SaveFile.Content = MessageCatalog.Get(MessageKey.Common.Save, Language);
         Label(CloseWorkbench, MessageKey.Common.Close);
-        Label(ParentFolder, MessageKey.Common.Back);
         WorkbenchTitle.Text = MessageCatalog.Get(MessageKey.Common.Workbench, Language);
         WorkbenchView.Click += async (_, _) => await OpenWorkbenchAsync().ConfigureAwait(true);
         CloseWorkbench.Click += (_, _) =>
@@ -125,7 +133,6 @@ public sealed partial class MainWindow
             LayoutWorkbench();
             Composer.Focus();
         };
-        ParentFolder.Click += async (_, _) => await ListFilesAsync().ConfigureAwait(true);
         FileEditor.TextChanged += (_, _) =>
         {
             if (_openFile is { } file)
@@ -180,6 +187,7 @@ public sealed partial class MainWindow
         HideBrowser();
         ShowAnalysis(false);
         WorkbenchPanel.IsVisible = true;
+        RevealWorkspace.IsVisible = _engine?.IsRemote != true;
         LayoutWorkbench();
         EnterView(WorkbenchPanel);
         await Task.WhenAll(ListFilesAsync(), LoadGitAsync()).ConfigureAwait(true);
@@ -311,7 +319,6 @@ public sealed partial class MainWindow
 
         BackToEditor.IsVisible = html is not null;
         WorkspaceBody.IsVisible = false;
-        ParentFolder.IsVisible = false;
         SaveFile.IsVisible = html is not null;
         ManualBrowserHost.IsVisible = true;
         RebuildTabs();
@@ -337,7 +344,6 @@ public sealed partial class MainWindow
         FileMore.IsVisible = _openFile is not null;
         BackToEditor.IsVisible = false;
         ManualBrowserHost.IsVisible = false;
-        ParentFolder.IsVisible = true;
         SaveFile.IsVisible = true;
         WorkspaceBody.IsVisible = true;
         if (_openFile is { } file)

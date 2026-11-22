@@ -96,6 +96,27 @@ public sealed record SessionStatus
     [JsonPropertyName("modelRef")]
     public string ModelRef { get; init; } = string.Empty;
 
+    /// <summary>Gets the provider's display name for the active model.</summary>
+    [JsonPropertyName("providerDisplayName")]
+    public string ProviderDisplayName
+    {
+        get; init;
+    } = string.Empty;
+
+    /// <summary>Gets a value indicating whether the active model reads images.</summary>
+    [JsonPropertyName("vision")]
+    public bool Vision
+    {
+        get; init;
+    }
+
+    /// <summary>Gets the optional modes the active model declares.</summary>
+    [JsonPropertyName("modes")]
+    public ModelModeChoice[] Modes
+    {
+        get; init;
+    } = Array.Empty<ModelModeChoice>();
+
     /// <summary>
     /// Gets how many context tokens the last request used.
     /// </summary>
