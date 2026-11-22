@@ -33,8 +33,14 @@ public sealed partial class MainWindow
             AutomationProperties.SetAutomationId(tab, "action:workbench.browser-tab");
             tab.Click += (_, _) => target.Open();
             var menu = new MenuFlyout();
+            menu.Items.Add(new MenuItem
+            {
+                Header = MessageCatalog.Get("workbench.browser_tab_named", Language, ("name", title)),
+                IsEnabled = false,
+            });
             Add("workbench.close_tab", "workbench.close-browser", () => CloseBrowsers([page]));
             Add("workbench.close_other_browser_tabs", "workbench.close-other-browsers", () => CloseBrowsers(_browserPages.Where(other => !ReferenceEquals(other, page)).ToArray()));
+            Add("workbench.close_browser_tabs_to_the", "workbench.close-right-browsers", () => CloseBrowsers(_browserPages.SkipWhile(other => !ReferenceEquals(other, page)).Skip(1).ToArray()));
             Add("workbench.close_all_browser_tabs", "workbench.close-all-browsers", () => CloseBrowsers(_browserPages.ToArray()));
             tab.ContextFlyout = menu;
             var close = new Button { Content = "×", Width = 22, Padding = default, Classes = { "wb-tab-close" } };
