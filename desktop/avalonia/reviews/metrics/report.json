@@ -1,0 +1,698 @@
+{
+  "toleranceDip": 0.5,
+  "textRasterTolerancePixels": 1,
+  "results": [
+    {
+      "file": "speed-1440x900-light.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "light",
+      "surface": "speed",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 268,
+        "height": 207
+      },
+      "native": {
+        "width": 268,
+        "height": 207
+      },
+      "referenceBox": {
+        "x": 474,
+        "y": 655.21875,
+        "width": 268,
+        "height": 206.78125
+      },
+      "nativeBox": {
+        "x": 474,
+        "y": 655.2,
+        "width": 268,
+        "height": 206.8
+      },
+      "geometryDelta": {
+        "x": 0,
+        "y": -0.018749999999954525,
+        "width": 0,
+        "height": 0.01875000000001137
+      }
+    },
+    {
+      "file": "cache-1440x900-light.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "light",
+      "surface": "cache",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 71
+      },
+      "native": {
+        "width": 360,
+        "height": 71
+      },
+      "referenceBox": {
+        "x": 563.703125,
+        "y": 792.8125,
+        "width": 360,
+        "height": 70.1875
+      },
+      "nativeBox": {
+        "x": 563.7021484375,
+        "y": 792.8,
+        "width": 360,
+        "height": 70.2
+      },
+      "geometryDelta": {
+        "x": -0.0009765625,
+        "y": -0.012500000000045475,
+        "width": 0,
+        "height": 0.012500000000002842
+      }
+    },
+    {
+      "file": "context-1440x900-light.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "light",
+      "surface": "context",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 318
+      },
+      "native": {
+        "width": 360,
+        "height": 318
+      },
+      "referenceBox": {
+        "x": 629.65625,
+        "y": 545.921875,
+        "width": 360,
+        "height": 317.078125
+      },
+      "nativeBox": {
+        "x": 629.6461484375,
+        "y": 545.972,
+        "width": 360,
+        "height": 317.028
+      },
+      "geometryDelta": {
+        "x": -0.010101562500040018,
+        "y": 0.05012499999997999,
+        "width": 0,
+        "height": -0.05012499999997999
+      }
+    },
+    {
+      "file": "cache-full-1440x900-light.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "light",
+      "surface": "cache-full",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 435
+      },
+      "native": {
+        "width": 360,
+        "height": 435
+      },
+      "referenceBox": {
+        "x": 563.703125,
+        "y": 428.921875,
+        "width": 360,
+        "height": 434.078125
+      },
+      "nativeBox": {
+        "x": 563.7021484375,
+        "y": 428.648,
+        "width": 360,
+        "height": 434.352
+      },
+      "geometryDelta": {
+        "x": -0.0009765625,
+        "y": -0.27387499999997544,
+        "width": 0,
+        "height": 0.27387499999997544
+      }
+    },
+    {
+      "file": "spark-1440x900-light.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "light",
+      "surface": "spark",
+      "scope": "reference component fixture",
+      "reference": {
+        "width": 44,
+        "height": 13
+      },
+      "native": {
+        "width": 44,
+        "height": 13
+      },
+      "referenceBox": {
+        "x": 0,
+        "y": 0,
+        "width": 44,
+        "height": 13
+      },
+      "nativeBox": {
+        "x": 480,
+        "y": 877,
+        "width": 44,
+        "height": 13
+      },
+      "geometryDelta": {
+        "width": 0,
+        "height": 0
+      },
+      "raster": {
+        "tolerancePixels": 1,
+        "unmatchedReferencePixels": 0,
+        "unmatchedNativePixels": 0
+      }
+    },
+    {
+      "file": "speed-1440x900-dark.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "dark",
+      "surface": "speed",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 268,
+        "height": 207
+      },
+      "native": {
+        "width": 268,
+        "height": 207
+      },
+      "referenceBox": {
+        "x": 474,
+        "y": 655.21875,
+        "width": 268,
+        "height": 206.78125
+      },
+      "nativeBox": {
+        "x": 474,
+        "y": 655.2,
+        "width": 268,
+        "height": 206.8
+      },
+      "geometryDelta": {
+        "x": 0,
+        "y": -0.018749999999954525,
+        "width": 0,
+        "height": 0.01875000000001137
+      }
+    },
+    {
+      "file": "cache-1440x900-dark.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "dark",
+      "surface": "cache",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 71
+      },
+      "native": {
+        "width": 360,
+        "height": 71
+      },
+      "referenceBox": {
+        "x": 563.703125,
+        "y": 792.8125,
+        "width": 360,
+        "height": 70.1875
+      },
+      "nativeBox": {
+        "x": 563.7021484375,
+        "y": 792.8,
+        "width": 360,
+        "height": 70.2
+      },
+      "geometryDelta": {
+        "x": -0.0009765625,
+        "y": -0.012500000000045475,
+        "width": 0,
+        "height": 0.012500000000002842
+      }
+    },
+    {
+      "file": "context-1440x900-dark.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "dark",
+      "surface": "context",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 318
+      },
+      "native": {
+        "width": 360,
+        "height": 318
+      },
+      "referenceBox": {
+        "x": 629.65625,
+        "y": 545.921875,
+        "width": 360,
+        "height": 317.078125
+      },
+      "nativeBox": {
+        "x": 629.6461484375,
+        "y": 545.972,
+        "width": 360,
+        "height": 317.028
+      },
+      "geometryDelta": {
+        "x": -0.010101562500040018,
+        "y": 0.05012499999997999,
+        "width": 0,
+        "height": -0.05012499999997999
+      }
+    },
+    {
+      "file": "cache-full-1440x900-dark.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "dark",
+      "surface": "cache-full",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 435
+      },
+      "native": {
+        "width": 360,
+        "height": 435
+      },
+      "referenceBox": {
+        "x": 563.703125,
+        "y": 428.921875,
+        "width": 360,
+        "height": 434.078125
+      },
+      "nativeBox": {
+        "x": 563.7021484375,
+        "y": 428.648,
+        "width": 360,
+        "height": 434.352
+      },
+      "geometryDelta": {
+        "x": -0.0009765625,
+        "y": -0.27387499999997544,
+        "width": 0,
+        "height": 0.27387499999997544
+      }
+    },
+    {
+      "file": "spark-1440x900-dark.png",
+      "width": 1440,
+      "height": 900,
+      "scheme": "dark",
+      "surface": "spark",
+      "scope": "reference component fixture",
+      "reference": {
+        "width": 44,
+        "height": 13
+      },
+      "native": {
+        "width": 44,
+        "height": 13
+      },
+      "referenceBox": {
+        "x": 0,
+        "y": 0,
+        "width": 44,
+        "height": 13
+      },
+      "nativeBox": {
+        "x": 480,
+        "y": 877,
+        "width": 44,
+        "height": 13
+      },
+      "geometryDelta": {
+        "width": 0,
+        "height": 0
+      },
+      "raster": {
+        "tolerancePixels": 1,
+        "unmatchedReferencePixels": 0,
+        "unmatchedNativePixels": 0
+      }
+    },
+    {
+      "file": "speed-760x480-light.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "light",
+      "surface": "speed",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 268,
+        "height": 207
+      },
+      "native": {
+        "width": 268,
+        "height": 207
+      },
+      "referenceBox": {
+        "x": 12,
+        "y": 235.21875,
+        "width": 268,
+        "height": 206.78125
+      },
+      "nativeBox": {
+        "x": 12,
+        "y": 235.2,
+        "width": 268,
+        "height": 206.8
+      },
+      "geometryDelta": {
+        "x": 0,
+        "y": -0.01875000000001137,
+        "width": 0,
+        "height": 0.01875000000001137
+      }
+    },
+    {
+      "file": "cache-760x480-light.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "light",
+      "surface": "cache",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 71
+      },
+      "native": {
+        "width": 360,
+        "height": 71
+      },
+      "referenceBox": {
+        "x": 101.703125,
+        "y": 372.8125,
+        "width": 360,
+        "height": 70.1875
+      },
+      "nativeBox": {
+        "x": 101.7021484375,
+        "y": 372.8,
+        "width": 360,
+        "height": 70.2
+      },
+      "geometryDelta": {
+        "x": -0.0009765625,
+        "y": -0.012499999999988631,
+        "width": 0,
+        "height": 0.012500000000002842
+      }
+    },
+    {
+      "file": "context-760x480-light.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "light",
+      "surface": "context",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 318
+      },
+      "native": {
+        "width": 360,
+        "height": 318
+      },
+      "referenceBox": {
+        "x": 167.65625,
+        "y": 125.921875,
+        "width": 360,
+        "height": 317.078125
+      },
+      "nativeBox": {
+        "x": 167.64614843750002,
+        "y": 125.97199999999998,
+        "width": 360,
+        "height": 317.028
+      },
+      "geometryDelta": {
+        "x": -0.010101562499983174,
+        "y": 0.05012499999997999,
+        "width": 0,
+        "height": -0.05012499999997999
+      }
+    },
+    {
+      "file": "cache-full-760x480-light.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "light",
+      "surface": "cache-full",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 435
+      },
+      "native": {
+        "width": 360,
+        "height": 435
+      },
+      "referenceBox": {
+        "x": 101.703125,
+        "y": 8.921875,
+        "width": 360,
+        "height": 434.078125
+      },
+      "nativeBox": {
+        "x": 101.7021484375,
+        "y": 8.648000000000025,
+        "width": 360,
+        "height": 434.352
+      },
+      "geometryDelta": {
+        "x": -0.0009765625,
+        "y": -0.27387499999997544,
+        "width": 0,
+        "height": 0.27387499999997544
+      }
+    },
+    {
+      "file": "spark-760x480-light.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "light",
+      "surface": "spark",
+      "scope": "reference component fixture",
+      "reference": {
+        "width": 44,
+        "height": 13
+      },
+      "native": {
+        "width": 44,
+        "height": 13
+      },
+      "referenceBox": {
+        "x": 0,
+        "y": 0,
+        "width": 44,
+        "height": 13
+      },
+      "nativeBox": {
+        "x": 18,
+        "y": 457,
+        "width": 44,
+        "height": 13
+      },
+      "geometryDelta": {
+        "width": 0,
+        "height": 0
+      },
+      "raster": {
+        "tolerancePixels": 1,
+        "unmatchedReferencePixels": 0,
+        "unmatchedNativePixels": 0
+      }
+    },
+    {
+      "file": "speed-760x480-dark.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "dark",
+      "surface": "speed",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 268,
+        "height": 207
+      },
+      "native": {
+        "width": 268,
+        "height": 207
+      },
+      "referenceBox": {
+        "x": 12,
+        "y": 235.21875,
+        "width": 268,
+        "height": 206.78125
+      },
+      "nativeBox": {
+        "x": 12,
+        "y": 235.2,
+        "width": 268,
+        "height": 206.8
+      },
+      "geometryDelta": {
+        "x": 0,
+        "y": -0.01875000000001137,
+        "width": 0,
+        "height": 0.01875000000001137
+      }
+    },
+    {
+      "file": "cache-760x480-dark.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "dark",
+      "surface": "cache",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 71
+      },
+      "native": {
+        "width": 360,
+        "height": 71
+      },
+      "referenceBox": {
+        "x": 101.703125,
+        "y": 372.8125,
+        "width": 360,
+        "height": 70.1875
+      },
+      "nativeBox": {
+        "x": 101.7021484375,
+        "y": 372.8,
+        "width": 360,
+        "height": 70.2
+      },
+      "geometryDelta": {
+        "x": -0.0009765625,
+        "y": -0.012499999999988631,
+        "width": 0,
+        "height": 0.012500000000002842
+      }
+    },
+    {
+      "file": "context-760x480-dark.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "dark",
+      "surface": "context",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 318
+      },
+      "native": {
+        "width": 360,
+        "height": 318
+      },
+      "referenceBox": {
+        "x": 167.65625,
+        "y": 125.921875,
+        "width": 360,
+        "height": 317.078125
+      },
+      "nativeBox": {
+        "x": 167.64614843750002,
+        "y": 125.97199999999998,
+        "width": 360,
+        "height": 317.028
+      },
+      "geometryDelta": {
+        "x": -0.010101562499983174,
+        "y": 0.05012499999997999,
+        "width": 0,
+        "height": -0.05012499999997999
+      }
+    },
+    {
+      "file": "cache-full-760x480-dark.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "dark",
+      "surface": "cache-full",
+      "scope": "workspace floating frame",
+      "reference": {
+        "width": 361,
+        "height": 435
+      },
+      "native": {
+        "width": 360,
+        "height": 435
+      },
+      "referenceBox": {
+        "x": 101.703125,
+        "y": 8.921875,
+        "width": 360,
+        "height": 434.078125
+      },
+      "nativeBox": {
+        "x": 101.7021484375,
+        "y": 8.648000000000025,
+        "width": 360,
+        "height": 434.352
+      },
+      "geometryDelta": {
+        "x": -0.0009765625,
+        "y": -0.27387499999997544,
+        "width": 0,
+        "height": 0.27387499999997544
+      }
+    },
+    {
+      "file": "spark-760x480-dark.png",
+      "width": 760,
+      "height": 480,
+      "scheme": "dark",
+      "surface": "spark",
+      "scope": "reference component fixture",
+      "reference": {
+        "width": 44,
+        "height": 13
+      },
+      "native": {
+        "width": 44,
+        "height": 13
+      },
+      "referenceBox": {
+        "x": 0,
+        "y": 0,
+        "width": 44,
+        "height": 13
+      },
+      "nativeBox": {
+        "x": 18,
+        "y": 457,
+        "width": 44,
+        "height": 13
+      },
+      "geometryDelta": {
+        "width": 0,
+        "height": 0
+      },
+      "raster": {
+        "tolerancePixels": 1,
+        "unmatchedReferencePixels": 0,
+        "unmatchedNativePixels": 0
+      }
+    }
+  ]
+}

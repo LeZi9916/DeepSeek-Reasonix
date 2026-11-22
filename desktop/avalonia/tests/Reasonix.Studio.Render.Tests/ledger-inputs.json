@@ -1,0 +1,14 @@
+{
+  "sessionUsage": {
+    "requests": 12, "promptTokens": 120000, "completionTokens": 8000,
+    "cacheHit": 100000, "cacheMiss": 20000, "cacheUnknown": 4000, "workMs": 360000,
+    "coldStart": { "promptTokens": 10000, "cacheHit": 0, "cacheMiss": 10000, "cacheUnknown": 0 },
+    "sources": [
+      { "source": "executor", "requests": 9, "promptTokens": 90000, "completionTokens": 6000, "cacheHit": 80000, "cacheMiss": 10000, "cacheUnknown": 0,
+        "cost": { "coverage": "complete", "original": { "currency": "USD", "amount": "0.10" }, "selected": { "currency": "CNY", "amount": "0.72" } } },
+      { "source": "subagent", "requests": 3, "promptTokens": 30000, "completionTokens": 2000, "cacheHit": 20000, "cacheMiss": 10000, "cacheUnknown": 4000,
+        "cost": { "coverage": "partial", "original": { "currency": "USD", "amount": "0.025" }, "selected": { "currency": "CNY", "amount": "0.18" } } }
+    ]
+  },
+  "sessionCostQuote": { "coverage": "partial", "original": { "currency": "USD", "amount": "0.125" }, "selected": { "currency": "CNY", "amount": "0.90" } }
+}

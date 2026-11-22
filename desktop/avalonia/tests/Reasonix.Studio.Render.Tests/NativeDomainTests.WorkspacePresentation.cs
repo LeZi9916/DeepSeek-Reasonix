@@ -54,7 +54,7 @@ public sealed partial class NativeDomainTests
         Dispatcher.UIThread.RunJobs();
         export = menu.Items.OfType<MenuItem>().Single(item => item.Header is Grid grid && grid.Children.OfType<Button>().Count() == 2);
         var json = Assert.IsType<Grid>(export.Header).Children.OfType<Button>().Last();
-        Assert.True(json.Focus());
+        PumpNavigation(() => TopLevel.GetTopLevel(json)?.IsVisible == true && json.Focus());
         Assert.True(json.IsKeyboardFocusWithin);
         var currentPopup = Assert.IsAssignableFrom<TopLevel>(TopLevel.GetTopLevel(json));
         currentPopup.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, "\r");

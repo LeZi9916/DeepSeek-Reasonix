@@ -113,11 +113,6 @@ public sealed partial class MainWindow
             RequestedThemeVariant = ActualThemeVariant == ThemeVariant.Dark ? ThemeVariant.Light : ThemeVariant.Dark;
         };
         ActualThemeVariantChanged += (_, _) => LabelTheme();
-        ContextToggle.Click += (_, _) =>
-        {
-            ContextPanel.IsVisible = !ContextPanel.IsVisible;
-            LayoutPanels();
-        };
         ConversationView.Click += (_, _) => ShowAnalysis(false);
         AnalysisView.Click += (_, _) => ShowAnalysis(true);
         KeyDown += OnWindowKey;

@@ -7,6 +7,7 @@ import { pushToast } from "../src/state/toasts";
 import { apply as applyPack } from "../src/ui/theme";
 import { mount as mountEditor } from "./syntax-mount";
 import { App } from "../src/ui/App";
+import { Spark } from "../src/ui/Spark";
 import { parseScreen, type Screen } from "../src/ui/screen";
 import { MockHub } from "../src/port/mock_hub";
 import { MockPort } from "../src/port/mock";
@@ -638,10 +639,32 @@ declare global {
     __nativeReference: () => Promise<Record<string, unknown>>;
     __nativeTrajectory: () => ReturnType<AgentPort["trajectory"]>;
     __nativeStatus: (patch: Partial<Awaited<ReturnType<AgentPort["status"]>>>) => void;
+    __nativeSpark: (points: number[]) => Promise<string>;
     __syntax: { apply: typeof applyPack; mount: typeof mountEditor };
   }
 }
 window.__nativeTrajectory = () => hub.machinePort().trajectory();
+window.__nativeSpark = async (points) => {
+  const host = document.createElement("div");
+  host.className = "studio-meter-speed";
+  host.style.cssText = "position:fixed;left:-9999px;width:44px;height:13px";
+  document.body.append(host);
+  const root = createRoot(host);
+  try {
+    root.render(<><Spark points={points} w={44} h={13} /><i data-live="" /></>);
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const original = host.querySelector("svg")!;
+    const clone = original.cloneNode(true) as SVGElement;
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    clone.setAttribute("width", "44"); clone.setAttribute("height", "13");
+    const parts = [...original.querySelectorAll<SVGElement>("*")];
+    [...clone.querySelectorAll<SVGElement>("*")].forEach((part, index) => {
+      const style = getComputedStyle(parts[index]);
+      for (const key of ["fill", "stroke", "stroke-width", "stroke-linejoin", "opacity"]) part.style.setProperty(key, style.getPropertyValue(key));
+    });
+    return new XMLSerializer().serializeToString(clone);
+  } finally { root.unmount(); host.remove(); }
+};
 window.__nativeStatus = (patch) => hub.feeds.forEach((port) => {
   const status = port.status.bind(port);
   port.status = async () => ({ ...await status(), ...patch });

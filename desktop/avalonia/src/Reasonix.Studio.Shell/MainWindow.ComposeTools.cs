@@ -30,6 +30,8 @@ public sealed partial class MainWindow
     /// <summary>Wires the composer's task controls and responsive layout.</summary>
     private void InitializeComposeTools()
     {
+        _hideAmounts = _workspacePreferences.HideAmounts;
+        InitializeComposeMetrics();
         PlanMode.Click += (_, _) => ShowComposeModes(false);
         ApprovalMode.Click += (_, _) => ShowComposeModes(true);
         ComposeBranch.Click += async (_, _) => await ShowComposeBranchesAsync().ConfigureAwait(true);
@@ -58,13 +60,23 @@ public sealed partial class MainWindow
         HideAmounts.Click += (_, _) =>
         {
             _hideAmounts = !_hideAmounts;
+            _workspacePreferences = _workspacePreferences with
+            {
+                HideAmounts = _hideAmounts,
+            };
+            if (_connectOnOpen)
+            {
+                _workspacePreferences.Save();
+            }
+
             DrawComposeWallet();
+            DrawComposeCards(Conversation.State);
         };
         Composer.AddHandler(KeyDownEvent, OnComposeReviewKey, RoutingStrategies.Tunnel);
         WalletButton.Click += async (_, _) =>
         {
             OpenSettings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            await ShowSectionAsync("storage").ConfigureAwait(true);
+            await ShowSectionAsync("usage").ConfigureAwait(true);
         };
         ComposerArea.SizeChanged += (_, _) => LayoutComposeTools();
         SpeedText.PropertyChanged += (_, e) =>
@@ -136,7 +148,6 @@ public sealed partial class MainWindow
         SideTitle.Text = MessageCatalog.Get("composer.side_question", Language);
         SideNote.Text = string.Join(" · ", new[] { "composer.side_badge_read_only", "composer.side_badge_not_main", "composer.side_badge_gone" }.Select(key => MessageCatalog.Get(key, Language)));
         CacheLabel.Text = MessageCatalog.Get("composer.cache", Language);
-        CacheOverviewTitle.Text = MessageCatalog.Get("composer.open_the_session_overview", Language);
         ContextLabel.Text = MessageCatalog.Get("common.context", Language);
         DiscardRefine.Content = MessageCatalog.Get("composer.discard", Language);
         RetryRefine.Content = MessageCatalog.Get("common.retry", Language);

@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Shell.Metrics.SpeedDetailCard" FontFamily="{DynamicResource ConversationUiFamily}" FontSize="11" FontWeight="Medium">
+  <UserControl.Styles>
+    <Style Selector="TextBlock"><Setter Property="LineHeight" Value="14.3"/></Style>
+    <Style Selector="TextBlock.label"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+    <Style Selector="TextBlock.value"><Setter Property="FontFamily" Value="{DynamicResource WorkbenchMonoFamily}"/><Setter Property="HorizontalAlignment" Value="Right"/></Style>
+  </UserControl.Styles>
+  <StackPanel Margin="12" Spacing="9">
+    <Grid ColumnDefinitions="*,Auto"><TextBlock Name="Title" FontWeight="SemiBold"/><TextBlock Name="Scope" Grid.Column="1" Foreground="{DynamicResource GhostBrush}"/></Grid>
+    <Border Height="1" Background="{DynamicResource HairBrush}"/>
+    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,6,Auto,6,Auto,6,Auto,6,Auto">
+      <TextBlock Name="CurrentLabel" Classes="label"/><TextBlock Name="Current" Grid.Column="1" Classes="value"/>
+      <TextBlock Name="AverageLabel" Grid.Row="2" Classes="label"/><TextBlock Name="Average" Grid.Row="2" Grid.Column="1" Classes="value"/>
+      <TextBlock Name="FirstLabel" Grid.Row="4" Classes="label"/><TextBlock Name="First" Grid.Row="4" Grid.Column="1" Classes="value"/>
+      <TextBlock Name="OutputLabel" Grid.Row="6" Classes="label"/><TextBlock Name="Output" Grid.Row="6" Grid.Column="1" Classes="value"/>
+      <TextBlock Name="TimeLabel" Grid.Row="8" Classes="label"/><TextBlock Name="Time" Grid.Row="8" Grid.Column="1" Classes="value"/>
+    </Grid>
+    <Border Height="1" Background="{DynamicResource HairBrush}"/>
+    <TextBlock Name="Explanation" TextWrapping="Wrap" Foreground="{DynamicResource GhostBrush}" LineHeight="16.5"/>
+  </StackPanel>
+</UserControl>

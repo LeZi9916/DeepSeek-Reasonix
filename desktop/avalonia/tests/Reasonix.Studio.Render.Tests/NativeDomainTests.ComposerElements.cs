@@ -153,7 +153,8 @@ public sealed partial class NativeDomainTests
         Assert.Equal(Color.Parse(dark ? "#B4B7B0" : "#5E625C"), Assert.IsAssignableFrom<ISolidColorBrush>(percent.Foreground).Color);
         context.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Dispatcher.UIThread.RunJobs();
-        Assert.True(w.FindControl<Control>("ContextPanel")!.IsEffectivelyVisible);
+        Assert.True(w.FindControl<Reasonix.Studio.Controls.StudioHoverCard>("ContextHover")!.IsOpen);
+        Assert.False(w.FindControl<Control>("ContextPanel")!.IsVisible);
         w.FindControl<Button>("HideAmounts")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Assert.Equal("•••", w.FindControl<TextBlock>("WalletText")!.Text);
         w.FindControl<Button>("HideAmounts")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

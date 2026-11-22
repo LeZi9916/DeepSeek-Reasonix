@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Controls.StudioHoverCard" x:Name="Root" Focusable="False">
+  <Grid>
+    <ContentPresenter Name="AnchorPresenter" Content="{Binding Anchor, ElementName=Root}" HorizontalContentAlignment="Stretch"/>
+    <Popup Name="Surface" Placement="TopEdgeAlignedLeft" VerticalOffset="-8" PlacementTarget="{Binding #AnchorPresenter}" IsLightDismissEnabled="False" ShouldUseOverlayLayer="True">
+      <Border Name="Frame" Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RMd}">
+        <ScrollViewer Name="CardScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <ContentPresenter Name="CardPresenter" Content="{Binding Card, ElementName=Root}" TextElement.Foreground="{DynamicResource TextBrush}"/>
+        </ScrollViewer>
+      </Border>
+    </Popup>
+  </Grid>
+</UserControl>

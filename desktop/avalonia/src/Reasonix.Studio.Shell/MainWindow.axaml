@@ -8,6 +8,7 @@
         xmlns:workbench="using:Reasonix.Studio.Shell.Workbench"
         xmlns:session="using:Reasonix.Studio.Shell.Session"
         xmlns:workspace="using:Reasonix.Studio.Shell.Workspace"
+        xmlns:metrics="using:Reasonix.Studio.Shell.Metrics"
         x:Class="Reasonix.Studio.Shell.MainWindow"
         Title="Reasonix Studio" Width="1440" Height="900"
         MinWidth="760" MinHeight="480" Background="{DynamicResource SurfaceBrush}">
@@ -200,7 +201,7 @@
               </Border>
                 </StackPanel>
               </ScrollViewer>
-              <Grid>
+  <Grid>
                 <ctl:StudioComposer Name="ComposeSurface" Margin="0,0,0,35" HorizontalAlignment="Stretch" Height="NaN" MinHeight="98">
                   <Grid Name="ComposeRows" RowDefinitions="30,Auto,46">
                     <Grid Name="ComposeRunState" Grid.Row="0" ColumnDefinitions="*,Auto" Margin="12,6,12,0" Height="24">
@@ -239,9 +240,19 @@
                 </ctl:StudioComposer>
                 <Border Height="27" VerticalAlignment="Bottom" RenderTransform="translate(0px,-3px)" Padding="2,0" TextElement.FontSize="{DynamicResource StudioType11}" TextElement.Foreground="{DynamicResource GhostBrush}" AutomationProperties.AutomationId="class:studio-meterrail">
                   <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto">
-                  <Button Name="SpeedToggle" Classes="compose-context"><StackPanel Orientation="Horizontal" Spacing="5"><ctl:StudioLineText Name="SpeedText" Classes="compose-reading" TextAlignment="Right" Text="—"/><ctl:StudioLineText Name="SpeedUnit" Text="tok/s"/><Border Width="4" Height="4" Margin="1,0,0,0" CornerRadius="2" Background="{DynamicResource GhostBrush}" VerticalAlignment="Center"/></StackPanel></Button>
-                  <Button Name="CacheToggle" Grid.Column="1" Classes="compose-context" AutomationProperties.AutomationId="action:metrics.details"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.bolt}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="CacheLabel"/><ctl:StudioLineText Name="CacheText" Classes="compose-reading" Text="—"/></StackPanel><Button.Flyout><Flyout Placement="TopEdgeAlignedLeft"><StackPanel Spacing="8" MinWidth="220"><ctl:StudioLineText Name="CacheOverviewTitle" FontWeight="SemiBold"/><SelectableTextBlock Name="CacheOverviewText" TextWrapping="Wrap"/></StackPanel></Flyout></Button.Flyout></Button>
-                  <Button Name="ContextToggle" Grid.Column="2" Classes="compose-context"><StackPanel Orientation="Horizontal" Spacing="5"><Grid Name="ContextRing" Width="11" Height="11" Opacity="0.75" VerticalAlignment="Center"><Ellipse Fill="{DynamicResource ComposeContextHoleBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="2"/><Path Name="ContextArc" Classes="context-arc" StrokeThickness="2"/></Grid><ctl:StudioLineText Name="ContextLabel"/><ctl:StudioLineText Name="MeterText" Classes="compose-reading" Text="0%"/></StackPanel></Button>
+                  <ctl:StudioHoverCard Name="SpeedHover" CardWidth="268" OpenOnFocus="True">
+                    <ctl:StudioHoverCard.Anchor><Button Name="SpeedToggle" Classes="compose-context"><StackPanel Orientation="Horizontal" Spacing="5"><ctl:StudioSparkline Name="SpeedSpark" Width="44" Height="13" IsVisible="False" Stroke="{DynamicResource FaintBrush}"/><ctl:StudioLineText Name="SpeedText" Classes="compose-reading" TextAlignment="Right" Text="—"/><ctl:StudioLineText Name="SpeedUnit" Text="tok/s"/><Border Name="SpeedLive" Width="4" Height="4" Margin="1,0,0,0" CornerRadius="2" Background="{DynamicResource GhostBrush}" VerticalAlignment="Center"/></StackPanel></Button></ctl:StudioHoverCard.Anchor>
+                    <ctl:StudioHoverCard.Card><metrics:SpeedDetailCard Name="SpeedDetails"/></ctl:StudioHoverCard.Card>
+                  </ctl:StudioHoverCard>
+                  <ctl:StudioHoverCard Name="CacheHover" Grid.Column="1" Gap="7" CardWidth="360" PinOnClick="True">
+                    <ctl:StudioHoverCard.Anchor><Button Name="CacheToggle" Classes="compose-context" AutomationProperties.AutomationId="action:metrics.details"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.bolt}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="CacheLabel"/><ctl:StudioLineText Name="CacheText" Classes="compose-reading" Text="—"/></StackPanel></Button></ctl:StudioHoverCard.Anchor>
+                    <ctl:StudioHoverCard.Card><metrics:SessionOverviewCard Name="CacheDetails"/></ctl:StudioHoverCard.Card>
+                  </ctl:StudioHoverCard>
+                  <ctl:StudioHoverCard Name="ContextHover" Grid.Column="2" Gap="7" CardWidth="360" PinOnClick="True">
+                    <ctl:StudioHoverCard.Anchor><Button Name="ContextToggle" Classes="compose-context"><StackPanel Orientation="Horizontal" Spacing="5"><Grid Name="ContextRing" Width="11" Height="11" Opacity="0.75" VerticalAlignment="Center"><Ellipse Fill="{DynamicResource ComposeContextHoleBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="2"/><Path Name="ContextArc" Classes="context-arc" StrokeThickness="2"/></Grid><ctl:StudioLineText Name="ContextLabel"/><ctl:StudioLineText Name="MeterText" Classes="compose-reading" Text="0%"/></StackPanel></Button></ctl:StudioHoverCard.Anchor>
+                    <ctl:StudioHoverCard.Card><metrics:ContextSummaryCard Name="ContextDetails"/></ctl:StudioHoverCard.Card>
+                  </ctl:StudioHoverCard>
+                  <StackPanel Name="ExtraMeters" Grid.Column="3" Orientation="Horizontal" Spacing="10" Margin="6,0" VerticalAlignment="Center"><StackPanel Name="TariffMeter" Orientation="Horizontal" Spacing="4" IsVisible="False"><ctl:StudioLineText Name="TariffText"/><ctl:StudioLineText Name="TariffRemainingText" Foreground="{DynamicResource MutedBrush}"/></StackPanel><ctl:StudioLineText Name="SessionCostText" IsVisible="False"/><ctl:StudioLineText Name="TurnCostText" IsVisible="False"/></StackPanel>
                   <Button Name="HideAmounts" Foreground="{DynamicResource ComposeMaskBrush}" Grid.Column="4" Classes="compose-context compose-mask" Width="22" Padding="5,0" AutomationProperties.AutomationId="action:metrics.hide-amounts"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.eye}" Stroke="{DynamicResource ComposeMaskBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/><Path Name="AmountMaskSlash" IsVisible="False" Data="M3 3 21 21" Stroke="{DynamicResource ComposeMaskBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox></Button>
                   <Button Name="WalletButton" Grid.Column="5" Classes="compose-context" IsVisible="False"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.wallet}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="WalletText" Classes="compose-reading"/></StackPanel></Button>
                   </Grid>

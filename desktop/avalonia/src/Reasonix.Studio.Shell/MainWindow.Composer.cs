@@ -68,9 +68,10 @@ public sealed partial class MainWindow
     /// <param name="status">What the kernel said about the open session.</param>
     internal void AdoptComposer(SessionStatus status)
     {
+        CloseComposeCards();
         BindWorkspace(status.WorkspaceRoot);
-        CaptureNavigation(status);
         _window = status.Window;
+        CaptureNavigation(status);
         SetModelLabel(status);
         if (!string.IsNullOrEmpty(status.WorkspaceRoot))
         {

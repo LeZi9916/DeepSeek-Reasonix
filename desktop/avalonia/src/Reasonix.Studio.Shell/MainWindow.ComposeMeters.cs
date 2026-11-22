@@ -24,6 +24,9 @@ public sealed partial class MainWindow
     /// <summary>Rejects superseded context and wallet reads.</summary>
     private long _composeMeterRead;
 
+    /// <summary>The runtime owning the retained readings.</summary>
+    private Kernel.Session.SessionEngine? _composeMeterOwner;
+
     /// <summary>Reads the selected runtime's context and provider wallet.</summary>
     /// <returns>The independent meter reads.</returns>
     private async Task LoadComposeTelemetryAsync()
@@ -31,15 +34,70 @@ public sealed partial class MainWindow
         var engine = _engine;
         var draft = _draftKey;
         var ticket = ++_composeMeterRead;
-        _composeWallet = null;
-        _composeContext = null;
+        if (!ReferenceEquals(_composeMeterOwner, engine))
+        {
+            _composeMeterOwner = engine;
+            _composeWallet = null;
+            _composeContext = null;
+            _composeServers = null;
+            _composeIsolated = false;
+        }
+
         DrawComposeWallet();
         if (engine is null)
         {
             return;
         }
 
-        await Task.WhenAll(ReadContext(), ReadWallet()).ConfigureAwait(true);
+        await Task.WhenAll(ReadContext(), ReadWallet(), ReadExtras()).ConfigureAwait(true);
+        async Task ReadExtras()
+        {
+            await Task.WhenAll(ReadTrace(), ReadMcp(), ReadWorkspace()).ConfigureAwait(true);
+        }
+
+        async Task ReadTrace()
+        {
+            var revision = engine.Generation.Revision;
+            try
+            {
+                var trace = await engine.Pages.TrajectoryAsync(_closing.Token).ConfigureAwait(true);
+                engine.Generation.Restore(trace, revision);
+                if (ticket == _composeMeterRead && engine == _engine)
+                {
+                    DrawComposeCards(Conversation.State);
+                }
+            }
+            catch (Exception error) when (error is not OutOfMemoryException) { }
+        }
+
+        async Task ReadMcp()
+        {
+            try
+            {
+                var servers = await engine.Pages.McpInventoryAsync(_closing.Token).ConfigureAwait(true);
+                if (ticket == _composeMeterRead && engine == _engine)
+                {
+                    _composeServers = servers?["servers"] as System.Text.Json.Nodes.JsonArray;
+                    DrawComposeCards(Conversation.State);
+                }
+            }
+            catch (Exception error) when (error is not OutOfMemoryException) { }
+        }
+
+        async Task ReadWorkspace()
+        {
+            try
+            {
+                var workspace = await engine.Pages.WorkspaceInfoAsync(_closing.Token).ConfigureAwait(true);
+                if (ticket == _composeMeterRead && engine == _engine)
+                {
+                    _composeIsolated = (bool?)workspace?["isolated"] == true && (string?)workspace?["current"] == _workspaceRoot;
+                    DrawComposeCards(Conversation.State);
+                }
+            }
+            catch (Exception error) when (error is not OutOfMemoryException) { }
+        }
+
         async Task ReadContext()
         {
             try
@@ -87,8 +145,12 @@ public sealed partial class MainWindow
     {
         var total = state.Metrics.Hit + state.Metrics.Miss;
         CacheText.Text = total > 0 ? Math.Floor(100d * state.Metrics.Hit / total).ToString(CultureInfo.CurrentCulture) + "%" : "—";
-        CacheOverviewText.Text = MessageCatalog.Get("composer.hit_hit_miss_miss", Language, ("hit", state.Metrics.Hit.ToString(CultureInfo.CurrentCulture)), ("miss", state.Metrics.Miss.ToString(CultureInfo.CurrentCulture)))
-            + Environment.NewLine + MessageCatalog.Get("composer.run_output", Language) + ": " + state.Metrics.Out.ToString(CultureInfo.CurrentCulture);
+        var ledger = _composerStatus.SessionUsage;
+        if (ledger is { Requests: > 0 })
+        {
+            CacheText.Text = Metrics.MetricReadouts.Percent(Metrics.MetricReadouts.CacheRate(ledger.CacheHit, ledger.CacheMiss, ledger.CacheUnknown));
+        }
+
         var used = state.ContextUsed > 0 ? state.ContextUsed : (long?)_composeContext?["used"] ?? _composerStatus.Used;
         var window = (long?)_composeContext?["window"] ?? _window;
         MeterText.Text = window > 0 ? Math.Min(100, Math.Round(100d * used / window, MidpointRounding.AwayFromZero)).ToString(CultureInfo.CurrentCulture) + "%" : "—";
@@ -112,6 +174,7 @@ public sealed partial class MainWindow
         }
 
         LabelComposeLayout();
+        DrawComposeCards(state);
     }
 
     /// <summary>Shows the provider's formatted amount and keeps freshness available.</summary>

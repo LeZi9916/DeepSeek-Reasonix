@@ -6,7 +6,7 @@
 :root{font:15px system-ui;color-scheme:light dark}body{margin:20px}header{display:flex;align-items:center;gap:16px;flex-wrap:wrap}h1{font-size:20px;margin-right:auto}select{font:inherit;padding:4px}img{width:100%;height:auto;border:1px solid #8885}a{color:inherit}figure{margin:20px 0}figcaption{margin:8px 0}
 </style>
 <header><h1>Avalonia 与 Electron 页面对照</h1>
-<label>页面 <select id="scene"><option value="settings-storage">数据设置</option><option value="workbench">工作台</option><option value="conversation">聊天区</option><option value="expanded">聊天展开状态</option><option value="draft">聊天输入状态</option><option value="composer">输入区细节</option><option value="palette">全局搜索</option><option value="session-menu">会话菜单</option><option value="device-access">设备访问</option><option value="recent">最近会话</option><option value="community">社区与贡献者</option><option value="sidebar">工作区侧边栏</option><option value="sidebar-remote">侧边栏远程状态</option><option value="files">工作区文件树</option><option value="changes">Git 改动页</option><option value="commit">Git 提交审阅</option></select></label>
+<label>页面 <select id="scene"><option value="settings-storage">数据设置</option><option value="workbench">工作台</option><option value="conversation">聊天区</option><option value="expanded">聊天展开状态</option><option value="draft">聊天输入状态</option><option value="composer">输入区细节</option><option value="palette">全局搜索</option><option value="session-menu">会话菜单</option><option value="device-access">设备访问</option><option value="recent">最近会话</option><option value="community">社区与贡献者</option><option value="sidebar">工作区侧边栏</option><option value="sidebar-remote">侧边栏远程状态</option><option value="speed">TPS 浮层</option><option value="cache">缓存浮层</option><option value="context">上下文浮层</option><option value="cache-full">完整账本</option><option value="spark">曲线组件对照</option><option value="running-curve">运行中曲线窗口</option><option value="files">工作区文件树</option><option value="changes">Git 改动页</option><option value="commit">Git 提交审阅</option></select></label>
 <label>窗口 <select id="size"><option>1440x900</option><option>760x480</option></select></label>
 <label>主题 <select id="theme"><option value="light">浅色</option><option value="dark">深色</option></select></label></header>
 <figure><a id="full"><img id="picture" alt="左侧 Electron，右侧 Avalonia"></a><figcaption><a id="report">查看页面的几何、样式和映射统计</a></figcaption></figure>
@@ -16,8 +16,9 @@ function show(){
  const direct=["settings-storage","workbench","conversation","sidebar"].includes(scene.value);
 const directory=["palette","session-menu","device-access","recent","community"].includes(scene.value)?"workspace":scene.value==="sidebar-remote"?"sidebar":direct?scene.value:["expanded","draft","composer"].includes(scene.value)?"conversation":"workbench";
  const extra=scene.value==="sidebar-remote"?"-remote":direct?"":"-"+scene.value;
- const metric=["speed","cache","context","cache-full"].includes(scene.value);
+ const metric=["speed","cache","context","cache-full","spark","running-curve"].includes(scene.value);
  const path=metric?"metrics/"+scene.value+"-"+size.value+"-"+theme.value+".png":directory+"/"+size.value+"-"+theme.value+extra+".png";
+ document.getElementById("picture").alt=scene.value==="running-curve"?"Avalonia 运行窗口：声明式曲线样本":"左侧 Electron，右侧 Avalonia";
  document.getElementById("picture").src=document.getElementById("full").href=path;
  document.getElementById("report").href=(metric?"metrics":directory)+"/report.json";
  location.hash=[scene.value,size.value,theme.value].join("/");

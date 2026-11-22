@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Shell.Metrics.SessionOverviewCard" FontFamily="{DynamicResource ConversationUiFamily}" FontSize="12" FontWeight="Medium" Foreground="{DynamicResource MutedBrush}">
+  <UserControl.Styles>
+    <Style Selector="Border.cell"><Setter Property="Padding" Value="10,8"/><Setter Property="CornerRadius" Value="6"/><Setter Property="Background" Value="{DynamicResource PageBrush}"/></Style>
+    <Style Selector="StackPanel.cell"><Setter Property="Spacing" Value="2"/></Style>
+    <Style Selector="TextBlock.caption"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="FontSize" Value="12"/><Setter Property="LineHeight" Value="15.6"/></Style>
+    <Style Selector="TextBlock.reading"><Setter Property="FontSize" Value="17"/><Setter Property="FontWeight" Value="Bold"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="LineHeight" Value="20.4"/></Style>
+    <Style Selector="TextBlock.note"><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="FontSize" Value="11"/><Setter Property="LineHeight" Value="15.4"/><Setter Property="TextWrapping" Value="Wrap"/></Style>
+  </UserControl.Styles>
+  <StackPanel Spacing="0">
+    <Grid ColumnDefinitions="*,Auto" Margin="14,12,14,8"><TextBlock Name="Title" FontSize="14" LineHeight="18.2" FontWeight="Bold"/><TextBlock Name="Since" Grid.Column="1" FontSize="12" LineHeight="15.6" Foreground="{DynamicResource FaintBrush}"/></Grid>
+    <TextBlock Name="Empty" Margin="14,0,14,12" FontSize="12" LineHeight="18" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+    <Grid Name="Values" Margin="14,0" ColumnDefinitions="*,6,*" RowDefinitions="Auto,6,Auto,6,Auto">
+      <Border Classes="cell"><StackPanel Classes="cell"><TextBlock Name="RequestsLabel" Classes="caption"/><TextBlock Name="Requests" Classes="reading"/><TextBlock Name="RequestsNote" Classes="note"/></StackPanel></Border>
+      <Border Grid.Column="2" Classes="cell"><StackPanel Classes="cell"><TextBlock Name="CostLabel" Classes="caption"/><TextBlock Name="Cost" Classes="reading"/><TextBlock Name="CostNote" Classes="note"/></StackPanel></Border>
+      <Border Grid.Row="2" Classes="cell"><StackPanel Classes="cell"><TextBlock Name="TokensLabel" Classes="caption"/><TextBlock Name="Tokens" Classes="reading"/><TextBlock Name="TokensNote" Classes="note"/></StackPanel></Border>
+      <Border Grid.Row="2" Grid.Column="2" Classes="cell"><StackPanel Classes="cell"><TextBlock Name="CacheLabel" Classes="caption"/><TextBlock Name="Cache" Classes="reading"/><TextBlock Name="CacheNote" Classes="note"/></StackPanel></Border>
+      <Border Grid.Row="4" Classes="cell"><StackPanel Classes="cell"><TextBlock Name="WarmLabel" Classes="caption"/><TextBlock Name="Warm" Classes="reading"/><TextBlock Name="WarmNote" Classes="note"/></StackPanel></Border>
+      <Border Grid.Row="4" Grid.Column="2" Classes="cell"><StackPanel Classes="cell"><TextBlock Name="RatioLabel" Classes="caption"/><TextBlock Name="Ratio" Classes="reading"/><TextBlock Name="RatioNote" Classes="note"/></StackPanel></Border>
+    </Grid>
+    <StackPanel Name="Sources" Spacing="0" Margin="14,8,14,0"/>
+    <Border Name="Divider" Height="1" Margin="0,6,0,0" Background="{DynamicResource HairBrush}"/>
+    <Grid Name="Footer" Margin="14,10" ColumnDefinitions="*,Auto"><TextBlock Name="WorkTime" LineHeight="15.6" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/><Button Name="Context" Grid.Column="1" MinHeight="0" Padding="0" FontSize="12" Foreground="{DynamicResource AccentInkBrush}" Background="Transparent" BorderThickness="0" AutomationProperties.AutomationId="action:metrics.details"/></Grid>
+  </StackPanel>
+</UserControl>

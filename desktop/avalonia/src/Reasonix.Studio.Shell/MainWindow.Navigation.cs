@@ -345,6 +345,11 @@ public sealed partial class MainWindow
             _ = MarkPaneViewedAsync(pane);
         }
 
+        if (frame.Kind == "notice" && frame.Payload.TryGetProperty("code", out var code) && code.GetString() is "compacted" or "compact_declined" or "compact_failed")
+        {
+            _compactOperations.Remove(engine);
+        }
+
         if (frame.Kind is "usage" or "turn_started" or "turn_done" or "approval_request" or "ask_request")
         {
             _ = ReadPaneStatusAsync(pane);
@@ -366,6 +371,7 @@ public sealed partial class MainWindow
             return;
         }
 
+        _compactOperations.Remove(engine);
         await Task.WhenAll(ReadPaneHistoryAsync(pane, true), ReadPaneStatusAsync(pane)).ConfigureAwait(true);
     });
 

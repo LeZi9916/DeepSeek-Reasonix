@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Shell.Metrics.ContextSummaryCard" FontFamily="{DynamicResource ConversationUiFamily}" FontSize="11" FontWeight="Medium">
+  <UserControl.Styles>
+    <Style Selector="Button.context-disclose"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Padding" Value="0"/><Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="Template"><ControlTemplate><Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" VerticalContentAlignment="Center"/></Border></ControlTemplate></Setter></Style>
+    <Style Selector="Button.context-disclose:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+  </UserControl.Styles>
+  <StackPanel Spacing="0">
+    <Grid ColumnDefinitions="*,Auto" Margin="14,10,14,6"><StackPanel><TextBlock Name="Title" FontSize="14" LineHeight="18.2" FontWeight="SemiBold"/><TextBlock Name="Subtitle" IsVisible="False"/></StackPanel><TextBlock Name="Percent" Grid.Column="1" FontSize="17" LineHeight="17" FontWeight="SemiBold" VerticalAlignment="Center"/></Grid>
+    <Border Height="8" Margin="14,0" CornerRadius="3" ClipToBounds="True" Background="{DynamicResource OverlayBrush}"><Canvas Name="Segments"/></Border>
+    <Grid ColumnDefinitions="Auto,*" Margin="14,4,14,0"><TextBlock Name="Used" LineHeight="15.4" Foreground="{DynamicResource FaintBrush}"/><StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Right"><TextBlock Name="Capacity" LineHeight="15.4" Foreground="{DynamicResource FaintBrush}"/><TextBlock Name="CompactThreshold" LineHeight="15.4" Foreground="{DynamicResource FaintBrush}"/></StackPanel></Grid>
+    <StackPanel Name="Parts" Margin="14,6,14,0" Spacing="0"/>
+    <TextBlock Name="Hint" Margin="14,6,14,8" TextWrapping="Wrap" Foreground="{DynamicResource GhostBrush}" FontSize="11"/>
+    <StackPanel Name="Details" Margin="14,0,14,8" Spacing="6"/>
+    <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="14,8,14,8.5">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+        <TextBlock Name="Mcp" FontSize="12" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+        <Button Name="Compact" Grid.Column="1" Classes="context-disclose" MinHeight="24" Padding="4,2" FontSize="12" AutomationProperties.AutomationId="action:compaction.confirm"/>
+        <Button Name="Manage" Grid.Column="2" Classes="context-disclose" MinHeight="24" Padding="0,2" FontSize="12" Foreground="{DynamicResource AccentInkBrush}" AutomationProperties.AutomationId="action:settings.section"/>
+      </Grid>
+    </Border>
+  </StackPanel>
+</UserControl>
