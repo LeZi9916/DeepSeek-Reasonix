@@ -40,6 +40,20 @@ public sealed partial class NativeDomainTests
             Assert.NotEmpty(filter);
         });
 
+    /// <summary>Model settings exposes an up/down control for every provider row.</summary>
+    /// <returns>The provider order controls.</returns>
+    [Fact]
+    public Task ModelSettingsShowsProviderOrderControls() => WithSettings(
+        "settings-model",
+        (w, _) =>
+        {
+            var buttons = w.GetVisualDescendants().OfType<Button>().ToArray();
+            var ups = buttons.Where(button => Equals(button.Content, "↑")).ToArray();
+            var downs = buttons.Where(button => Equals(button.Content, "↓")).ToArray();
+            Assert.NotEmpty(ups);
+            Assert.NotEmpty(downs);
+        });
+
     /// <summary>Provider health is read and shown when the installation enables it.</summary>
     /// <returns>The health interaction.</returns>
     [Fact]
