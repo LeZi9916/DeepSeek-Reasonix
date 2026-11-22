@@ -91,6 +91,7 @@ public sealed partial class MainWindow
         WorkbenchSearch.TextChanged += async (_, _) =>
         {
             ClearWorkbenchSearch.IsVisible = !string.IsNullOrEmpty(WorkbenchSearch.Text);
+            WorkbenchSearch.Padding = ClearWorkbenchSearch.IsVisible ? new Avalonia.Thickness(2, 0, 20, 0) : new Avalonia.Thickness(2, 0);
             if (WorkbenchPanel.IsVisible)
             {
                 await ListFilesAsync().ConfigureAwait(true);

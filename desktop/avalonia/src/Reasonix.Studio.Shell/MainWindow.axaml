@@ -331,15 +331,15 @@
                   <Border Grid.Row="1" Margin="8,7,9,7" Height="34" BorderThickness="1" CornerRadius="6" Padding="8,0" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}" AutomationProperties.AutomationId="class:workbench-search">
                     <Grid ColumnDefinitions="15,*" ColumnSpacing="6">
                       <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" Data="{StaticResource Glyph.search}"/></Canvas></Viewbox>
-                      <TextBox Name="WorkbenchSearch" Grid.Column="1" Height="17" MinHeight="0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" Padding="2,0,20,0" BorderThickness="0" Background="Transparent" AutomationProperties.AutomationId="action:workbench.search"/>
+                      <TextBox Name="WorkbenchSearch" Grid.Column="1" Height="17" MinHeight="0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" Padding="2,0" BorderThickness="0" Background="Transparent" AutomationProperties.AutomationId="action:workbench.search"/>
                       <Button Name="ClearWorkbenchSearch" Grid.Column="1" Classes="icon" Width="20" Height="20" Padding="0" HorizontalAlignment="Right" IsVisible="False" Content="×" AutomationProperties.AutomationId="action:workbench.clear-search"/>
                     </Grid>
                   </Border>
                   <ScrollViewer Name="ExplorerScroller" Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,0,1,0">
-                      <Grid Margin="6,3" ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                        <TextBlock Name="GitError" IsVisible="False" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}"/>
-                        <Button Name="GitRetry" Grid.Column="1" Classes="git-flat" IsVisible="False" FontSize="{DynamicResource StudioType10}" VerticalAlignment="Top"/>
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                        <TextBlock Name="GitError" IsVisible="False" TextWrapping="Wrap" Margin="6,3" Foreground="{DynamicResource ErrBrush}"/>
+                        <Button Name="GitRetry" Grid.Column="1" Classes="git-flat" IsVisible="False" Margin="0,3" FontSize="{DynamicResource StudioType10}" VerticalAlignment="Top"/>
                       </Grid>
                       <StackPanel Name="GitRepositories"/>
                       <Border Height="34" Padding="6,0,10,0" AutomationProperties.AutomationId="class:workbench-explorer-head">
