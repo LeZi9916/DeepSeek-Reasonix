@@ -37,6 +37,7 @@ The reference is the checked-in `frontend-next` application, including its final
 | File editor text actions | `FileEditor` context menu | Quote selection into the composer, cut/copy/paste/select-all/undo/redo with selection and editability state | `WorkbenchSelectionQuotesIntoTheComposer` |
 | Granted-file read-only state | File bar badge | Names the reason beside the file bar and keeps save disabled | Granted-root read path and visible badge state |
 | File bar identity and save action | `Breadcrumb`, `SaveFile` | Muted directories with a bold filename, and the reference check-plus-Save affordance; both dark and light crops compared | `workbench.dark` / `workbench.light` render pairs |
+| Git inventory recovery | `GitRetry` | A failed repository read keeps its message and offers the same read again; success clears both | `WorkbenchGitInventoryFailureOffersRetry` |
 
 | Explorer search and sidebar shortcut | Native workbench controls | Clear-search restores the listing without changing the tree; sidebar Files opens the same retained workbench; reveal is hidden for remote workspaces | `WorkbenchClearSearchRestoresTheListing`, `SidebarFilesOpensTheWorkbench` |
 | Send/stop/steer/queue/withdraw/restore | Composer plus queue | Draft clears only after acceptance; refusal restores editable state; each runtime owns its queue | Composer/remote-draft/queue regression suites and real streaming case |

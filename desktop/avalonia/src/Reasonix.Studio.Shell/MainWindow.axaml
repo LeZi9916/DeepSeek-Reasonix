@@ -337,7 +337,10 @@
                   </Border>
                   <ScrollViewer Name="ExplorerScroller" Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="0,0,1,0">
-                      <TextBlock Name="GitError" IsVisible="False" TextWrapping="Wrap" Margin="6,3" Foreground="{DynamicResource ErrBrush}"/>
+                      <Grid Margin="6,3" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                        <TextBlock Name="GitError" IsVisible="False" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}"/>
+                        <Button Name="GitRetry" Grid.Column="1" Classes="git-flat" IsVisible="False" FontSize="{DynamicResource StudioType10}" VerticalAlignment="Top"/>
+                      </Grid>
                       <StackPanel Name="GitRepositories"/>
                       <Border Height="34" Padding="6,0,10,0" AutomationProperties.AutomationId="class:workbench-explorer-head">
                       <Grid ColumnDefinitions="18,*" ColumnSpacing="6">

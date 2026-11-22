@@ -2,6 +2,8 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,6 +69,37 @@ public sealed partial class NativeDomainTests
             first.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
             Dispatcher.UIThread.RunJobs();
             Assert.Equal(first.Tag, w.FindControl<TextBlock>("WorkbenchTitle")!.Text);
+        });
+
+    /// <summary>A failed Git inventory offers the same read again.</summary>
+    /// <returns>The retry interaction.</returns>
+    [Fact]
+    public Task WorkbenchGitInventoryFailureOffersRetry() => WithSettings(
+        "workbench",
+        (w, reads) =>
+        {
+            reads.Exchange = request => Task.FromResult<HttpResponseMessage?>(
+                request.RequestUri!.AbsolutePath == "/git/repos"
+                    ? new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+                    : null);
+            var retry = w.FindControl<Button>("GitRetry")!;
+            retry.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.True(SpinWait.SpinUntil(
+                () =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return retry.IsVisible;
+                },
+                System.TimeSpan.FromSeconds(2)));
+            reads.Exchange = _ => Task.FromResult<HttpResponseMessage?>(null);
+            retry.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.True(SpinWait.SpinUntil(
+                () =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return !retry.IsVisible;
+                },
+                System.TimeSpan.FromSeconds(2)));
         });
 
     /// <summary>The file editor quotes a selection into the composer instead of replacing it.</summary>

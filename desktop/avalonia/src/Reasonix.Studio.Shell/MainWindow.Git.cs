@@ -40,6 +40,8 @@ public sealed partial class MainWindow
         Label(FullWorkbench, "workbench.expand_workbench");
         Label(NewSurface, "workbench.new_tab");
         Label(FileMore, "common.more");
+        GitRetry.Content = MessageCatalog.Get("common.read_again", Language);
+        GitRetry.Click += async (_, _) => await LoadGitAsync().ConfigureAwait(true);
         FileMore.Click += (_, _) =>
         {
             if (_openFile is not { } file)
@@ -76,6 +78,7 @@ public sealed partial class MainWindow
         GitRepositories.Children.Clear();
         UpdateGitBadge();
         GitError.IsVisible = false;
+        GitRetry.IsVisible = false;
     }
 
     /// <summary>Reads the local repository inventory, with a retry and workspace fallback on discovery failure.</summary>
@@ -98,6 +101,7 @@ public sealed partial class MainWindow
         var token = _gitLifetime!.Token;
         var ticket = ++_gitDiscovery;
         GitError.IsVisible = false;
+        GitRetry.IsVisible = false;
         JsonObject[] repos;
         try
         {
@@ -123,6 +127,7 @@ public sealed partial class MainWindow
 
             GitError.Text = DescribeError(error);
             GitError.IsVisible = true;
+            GitRetry.IsVisible = true;
             repos = [new JsonObject { ["dir"] = string.Empty }];
         }
 
