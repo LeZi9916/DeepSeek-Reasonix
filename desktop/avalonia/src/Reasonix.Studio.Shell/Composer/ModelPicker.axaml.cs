@@ -94,6 +94,7 @@ public sealed partial class ModelPicker : UserControl
         };
         Surface.Opened += (_, _) => Dispatcher.UIThread.Post(() =>
         {
+            Surface.VerticalOffset = -13;
             Search.Focus();
             Search.SelectAll();
         });
@@ -162,6 +163,7 @@ public sealed partial class ModelPicker : UserControl
         }
 
         Surface.PlacementTarget = Anchor;
+        Surface.VerticalOffset = -13;
         var top = TopLevel.GetTopLevel(this);
         var viewport = top?.ClientSize ?? new Size(900, 700);
         var available = Math.Max(320, viewport.Width - 24);

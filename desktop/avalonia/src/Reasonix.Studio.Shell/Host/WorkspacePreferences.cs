@@ -26,6 +26,12 @@ internal sealed record WorkspacePreferences
         get; init;
     }
 
+    /// <summary>Gets or initializes the explorer width, with zero using the reference width.</summary>
+    public double ExplorerWidth
+    {
+        get; init;
+    }
+
     /// <summary>Gets or initializes the three most recently selected canonical palette entries.</summary>
     public IReadOnlyList<string> PaletteRecent { get; init; } = Array.Empty<string>();
 

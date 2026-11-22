@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Composer.ComposerPopup"
+             x:Name="Root"
+             Focusable="False"
+             Width="0"
+             Height="0">
+  <Grid>
+    <Popup Name="Surface"
+           Placement="TopEdgeAlignedLeft"
+           VerticalOffset="-9"
+           PlacementConstraintAdjustment="SlideX"
+           ShouldUseOverlayLayer="True"
+           IsLightDismissEnabled="True">
+      <Border Name="Frame" Classes="composer-menu">
+        <ScrollViewer Name="Scroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch">
+          <ContentPresenter Name="PanelPresenter" Content="{Binding Panel, ElementName=Root}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
+        </ScrollViewer>
+      </Border>
+    </Popup>
+  </Grid>
+</UserControl>

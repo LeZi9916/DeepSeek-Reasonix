@@ -6,6 +6,8 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Kernel.Client;
+using Reasonix.Studio.Shell.Composer;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -97,19 +99,66 @@ public sealed partial class NativeDomainTests
         var input = w.FindControl<TextBox>("Composer")!;
         input.Text = "keep this draft";
         Click("PlanMode");
-        var menu = Assert.IsType<MenuFlyout>(w.FindControl<Button>("PlanMode")!.Flyout);
-        menu.Items.OfType<MenuItem>().Single(item => (string?)item.Tag == "plan").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        var modePopup = w.FindControl<ComposerPopup>("ModePopup")!;
+        Assert.True(modePopup.IsOpen);
+        var modePanel = w.FindControl<ModePanel>("ModePanel")!;
+        modePanel.FindControl<Button>("PlanOption")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Dispatcher.UIThread.RunJobs();
         Assert.Equal("Plan", w.FindControl<TextBlock>("PlanModeLabel")!.Text);
         Assert.Equal("keep this draft", input.Text);
+        Assert.False(modePopup.IsOpen);
         refuse = true;
         Click("ApprovalMode");
-        menu = Assert.IsType<MenuFlyout>(w.FindControl<Button>("ApprovalMode")!.Flyout);
-        menu.Items.OfType<MenuItem>().Single(item => (string?)item.Tag == "auto").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        var policyPopup = w.FindControl<ComposerPopup>("PolicyPopup")!;
+        Assert.True(policyPopup.IsOpen);
+        var policyPanel = w.FindControl<PolicyPanel>("PolicyPanel")!;
+        policyPanel.FindControl<Button>("AutoOption")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Dispatcher.UIThread.RunJobs();
         Assert.Equal("询问", w.FindControl<TextBlock>("ApprovalModeLabel")!.Text);
         Assert.Equal("keep this draft", input.Text);
-        Assert.True(w.FindControl<Border>("ErrorBar")!.IsVisible);
+        Assert.True(policyPopup.IsOpen);
+        Assert.True(policyPanel.FindControl<TextBlock>("ErrorText")!.IsVisible);
+        void Click(string name) => w.FindControl<Button>(name)!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    });
+
+    /// <summary>The branch palette searches local branches and applies a switch.</summary>
+    /// <returns>The branch interaction.</returns>
+    [Fact]
+    public Task ComposerBranchPaletteSearchesAndSwitches() => WithSettings("conversation", (w, reads) =>
+    {
+        var calls = new List<string>();
+        reads.Exchange = async request =>
+        {
+            calls.Add(request.RequestUri!.AbsolutePath);
+            if (request.RequestUri.AbsolutePath != "/workspace/branch/switch")
+            {
+                return null;
+            }
+
+            var body = JsonNode.Parse(await request.Content!.ReadAsStringAsync())!;
+            Assert.Equal("studio", (string?)body["name"]);
+            return JsonReply(new JsonObject { ["branch"] = "studio" });
+        };
+        w.AdoptComposer(reads.Read<SessionStatus>("/status"));
+        Click("ComposeBranch");
+        Dispatcher.UIThread.RunJobs();
+        var popup = w.FindControl<ComposerPopup>("BranchPopup")!;
+        var panel = w.FindControl<BranchPanel>("BranchPanel")!;
+        Assert.True(popup.IsOpen);
+        panel.FindControl<TextBox>("Search")!.Text = "stu";
+        Dispatcher.UIThread.RunJobs();
+        var row = panel.FindControl<StackPanel>("Rows")!.Children.OfType<Button>().Single();
+        Assert.Equal("studio", (string?)row.Tag);
+        row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var switched = SpinWait.SpinUntil(
+            () =>
+            {
+                Dispatcher.UIThread.RunJobs();
+                return w.FindControl<TextBlock>("ComposeBranchLabel")!.Text == "studio";
+            },
+            System.TimeSpan.FromSeconds(2));
+        Assert.True(switched, string.Join(",", calls) + " / " + panel.FindControl<TextBlock>("ErrorText")?.Text);
+        Assert.False(popup.IsOpen);
         void Click(string name) => w.FindControl<Button>(name)!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
     });
 

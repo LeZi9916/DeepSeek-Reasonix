@@ -97,6 +97,35 @@ public sealed partial class MainWindow
             await ListFilesAsync().ConfigureAwait(true);
             WorkbenchSearch.Focus();
         };
+        var savedExplorerWidth = _workspacePreferences.ExplorerWidth;
+        ExplorerPane.Width = savedExplorerWidth is >= 190 and <= 260 ? savedExplorerWidth : 190;
+        ExplorerGrip.DragDelta += (_, e) =>
+        {
+            ExplorerPane.Width = Math.Clamp(ExplorerPane.Width + e.Vector.X, 190, 260);
+        };
+        ExplorerGrip.DragCompleted += (_, _) =>
+        {
+            _workspacePreferences = _workspacePreferences with
+            {
+                ExplorerWidth = ExplorerPane.Width,
+            };
+            if (_connectOnOpen)
+            {
+                _workspacePreferences.Save();
+            }
+        };
+        ExplorerGrip.DoubleTapped += (_, _) =>
+        {
+            ExplorerPane.Width = 190;
+            _workspacePreferences = _workspacePreferences with
+            {
+                ExplorerWidth = 190,
+            };
+            if (_connectOnOpen)
+            {
+                _workspacePreferences.Save();
+            }
+        };
         WorkspaceBody.SizeChanged += (_, e) =>
         {
             WorkspaceFiles.Margin = new Avalonia.Thickness(0, 0, ClientSize.Width > 900 ? 10 : 0, 0);

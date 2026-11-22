@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Composer.PolicyPanel"
+             HorizontalAlignment="Stretch">
+  <StackPanel Spacing="0">
+    <Border Classes="composer-menu-head">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Name="PolicyTitle" Classes="composer-menu-title" VerticalAlignment="Center"/>
+        <TextBlock Name="PolicyContext" Grid.Column="1" Classes="composer-menu-context" VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
+    <Button Name="DontAskOption" Classes="choice-row">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="2">
+          <TextBlock Name="DontAskTitle" Classes="choice-title"/>
+          <TextBlock Name="DontAskNote" Classes="choice-note"/>
+        </StackPanel>
+        <Path Name="DontAskCheck" Grid.Column="1" Classes="choice-check" Data="{StaticResource Glyph.check}" IsVisible="False"/>
+      </Grid>
+    </Button>
+    <Button Name="AskOption" Classes="choice-row">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="2">
+          <TextBlock Name="AskTitle" Classes="choice-title"/>
+          <TextBlock Name="AskNote" Classes="choice-note"/>
+        </StackPanel>
+        <Path Name="AskCheck" Grid.Column="1" Classes="choice-check" Data="{StaticResource Glyph.check}" IsVisible="False"/>
+      </Grid>
+    </Button>
+    <Button Name="AutoOption" Classes="choice-row">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="2">
+          <TextBlock Name="AutoTitle" Classes="choice-title"/>
+          <TextBlock Name="AutoNote" Classes="choice-note"/>
+        </StackPanel>
+        <Path Name="AutoCheck" Grid.Column="1" Classes="choice-check" Data="{StaticResource Glyph.check}" IsVisible="False"/>
+      </Grid>
+    </Button>
+    <TextBlock Name="RiskNote" Classes="risk-note"/>
+    <Button Name="YoloOption" Classes="choice-row">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="2">
+          <TextBlock Name="YoloTitle" Classes="choice-title danger"/>
+          <TextBlock Name="YoloNote" Classes="choice-note"/>
+        </StackPanel>
+        <Path Name="YoloCheck" Grid.Column="1" Classes="choice-check" Data="{StaticResource Glyph.check}" IsVisible="False"/>
+      </Grid>
+    </Button>
+    <TextBlock Name="ErrorText" Classes="menu-error" IsVisible="False"/>
+    <Border Classes="composer-menu-note">
+      <TextBlock Name="PolicyNote" Classes="composer-menu-note-text"/>
+    </Border>
+    <Button Name="BoundaryOption" Classes="menu-boundary">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="2">
+          <TextBlock Name="BoundaryTitle" Classes="menu-boundary-title"/>
+          <TextBlock Name="BoundaryNote" Classes="menu-boundary-note"/>
+        </StackPanel>
+        <Path Grid.Column="1" Width="12" Height="12" Data="M9 6l6 6-6 6" Stroke="{DynamicResource MutedBrush}"
+              StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Stretch="Uniform" VerticalAlignment="Center"/>
+      </Grid>
+    </Button>
+  </StackPanel>
+</UserControl>

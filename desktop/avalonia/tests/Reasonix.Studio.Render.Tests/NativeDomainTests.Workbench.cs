@@ -69,6 +69,19 @@ public sealed partial class NativeDomainTests
             Assert.Equal(first.Tag, w.FindControl<TextBlock>("WorkbenchTitle")!.Text);
         });
 
+    /// <summary>The explorer exposes its visible node count at the reference width.</summary>
+    /// <returns>The explorer chrome.</returns>
+    [Fact]
+    public Task WorkbenchExplorerShowsCountAndDefaultWidth() => WithSettings(
+        "workbench",
+        (w, _) =>
+        {
+            var pane = w.FindControl<Grid>("ExplorerPane")!;
+            Assert.Equal(190, pane.Bounds.Width);
+            Assert.False(string.IsNullOrWhiteSpace(w.FindControl<TextBlock>("ExplorerCount")!.Text));
+            Assert.NotNull(w.FindControl<Avalonia.Controls.Primitives.Thumb>("ExplorerGrip"));
+        });
+
     /// <summary>The explorer's clear control empties the query and restores the listing.</summary>
     /// <returns>The search interaction.</returns>
     [Fact]

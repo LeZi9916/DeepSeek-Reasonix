@@ -1,0 +1,271 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Style Selector="Border.composer-menu">
+    <Setter Property="Background" Value="{DynamicResource FloatBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RMd}"/>
+    <Setter Property="Padding" Value="8"/>
+  </Style>
+  <Style Selector="Border.composer-menu-head">
+    <Setter Property="Margin" Value="0,0,0,4"/>
+    <Setter Property="Padding" Value="8,2,8,8"/>
+    <Setter Property="MinHeight" Value="30"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+  </Style>
+  <Style Selector="TextBlock.composer-menu-title">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="LineHeight" Value="15.6"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.composer-menu-context">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+  </Style>
+  <Style Selector="Button.choice-row">
+    <Setter Property="MinHeight" Value="36"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="Padding" Value="10,8"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="FocusAdorner">
+      <Template>
+        <Border Margin="-2" BorderBrush="{DynamicResource FocusBrush}" BorderThickness="2" CornerRadius="7" IsHitTestVisible="False"/>
+      </Template>
+    </Setter>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Button.choice-row:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.choice-row.current">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.choice-row:disabled">
+    <Setter Property="Opacity" Value="0.55"/>
+  </Style>
+  <Style Selector="TextBlock.choice-title">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    <Setter Property="LineHeight" Value="18.2"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.choice-title.danger">
+    <Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.choice-note">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="LineHeight" Value="15.95"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <Style Selector="Path.choice-check">
+    <Setter Property="Width" Value="13"/>
+    <Setter Property="Height" Value="13"/>
+    <Setter Property="Stroke" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="StrokeThickness" Value="1.8"/>
+    <Setter Property="StrokeLineCap" Value="Round"/>
+    <Setter Property="StrokeJoin" Value="Round"/>
+    <Setter Property="Stretch" Value="Uniform"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Margin" Value="8,0,0,0"/>
+  </Style>
+  <Style Selector="TextBlock.risk-note">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/>
+    <Setter Property="Margin" Value="8,8,8,2"/>
+  </Style>
+  <Style Selector="TextBlock.menu-error">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+    <Setter Property="Margin" Value="8,6,8,0"/>
+  </Style>
+  <Style Selector="Border.composer-menu-note">
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    <Setter Property="Margin" Value="0,4,0,0"/>
+    <Setter Property="Padding" Value="8,8,8,4"/>
+  </Style>
+  <Style Selector="TextBlock.composer-menu-note-text">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <Style Selector="Button.menu-boundary">
+    <Setter Property="MinHeight" Value="40"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="Padding" Value="10,8"/>
+    <Setter Property="Margin" Value="0,4,0,0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    <Setter Property="CornerRadius" Value="0,0,7,7"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Button.menu-boundary:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.menu-boundary-title">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.menu-boundary-note">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <Style Selector="TextBlock.palette-title">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="Button.palette-close">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType14}"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Button.palette-close:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="Border.palette-identity">
+    <Setter Property="Padding" Value="14,0,14,10"/>
+  </Style>
+  <Style Selector="TextBlock.palette-identity-name">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.palette-desc">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+    <Setter Property="Margin" Value="14,0,14,10"/>
+  </Style>
+  <Style Selector="Border.palette-footer">
+    <Setter Property="Padding" Value="10,8"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+  </Style>
+  <Style Selector="TextBlock.palette-path">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="FontFamily" Value="{DynamicResource StudioMonoFamily}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Button.palette-copy">
+    <Setter Property="Height" Value="24"/>
+    <Setter Property="Padding" Value="7,0"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+  </Style>
+  <Style Selector="Button.palette-copy:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="Border.palette-search">
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="Padding" Value="10,0"/>
+  </Style>
+  <Style Selector="Border.palette-search TextBox">
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="CaretBrush" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="Button.branch-row">
+    <Setter Property="Height" Value="32"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Margin" Value="4,1,4,0"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="Template">
+      <ControlTemplate><Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/></Border></ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Button.branch-row:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.branch-row.current">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.branch-row:disabled">
+    <Setter Property="Opacity" Value="0.5"/>
+  </Style>
+  <Style Selector="TextBlock.branch-name">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="FontFamily" Value="{DynamicResource StudioMonoFamily}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+  </Style>
+  <Style Selector="Border.branch-badge">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RPill}"/>
+    <Setter Property="Padding" Value="7,0"/>
+    <Setter Property="Height" Value="20"/>
+  </Style>
+  <Style Selector="TextBlock.branch-badge-text">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="TextBlock.palette-empty">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="TextAlignment" Value="Center"/>
+    <Setter Property="Margin" Value="14,18"/>
+  </Style>
+  <Style Selector="Button.palette-retry">
+    <Setter Property="Height" Value="28"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+  </Style>
+  <Style Selector="Border.palette-note">
+    <Setter Property="Padding" Value="14,8"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+  </Style>
+  <Style Selector="TextBlock.palette-note-text">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+</Styles>

@@ -27,6 +27,7 @@
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Workbench.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Conversation.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerPicker.axaml" />
+    <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerMenus.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Sidebar.axaml" />
     <Style Selector="Window.illustrated ctl|StudioPane"><Setter Property="Background" Value="Transparent"/></Style>
     <Style Selector="Window.illustrated ctl|StudioRail"><Setter Property="Background" Value="{DynamicResource ArtworkRailBrush}"/></Style>
@@ -239,6 +240,21 @@
                       <Button Name="Send" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Grid.Column="3" Classes="compose-tool compose-send" Width="32" Height="32" Margin="4,0,0,0" CornerRadius="16" Padding="0" AutomationProperties.AutomationId="action:session.send"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="18" Height="18"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.arrow}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="SendIntent" IsVisible="False" VerticalAlignment="Center"/></StackPanel></Button>
                     </Grid>
                     <composer:ModelPicker Name="ModelPicker" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                    <composer:ComposerPopup Name="ModePopup" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="300" MenuPadding="0,0,0,6">
+                      <composer:ComposerPopup.Panel>
+                        <composer:ModePanel Name="ModePanel"/>
+                      </composer:ComposerPopup.Panel>
+                    </composer:ComposerPopup>
+                    <composer:ComposerPopup Name="PolicyPopup" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="8">
+                      <composer:ComposerPopup.Panel>
+                        <composer:PolicyPanel Name="PolicyPanel"/>
+                      </composer:ComposerPopup.Panel>
+                    </composer:ComposerPopup>
+                    <composer:ComposerPopup Name="BranchPopup" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="0">
+                      <composer:ComposerPopup.Panel>
+                        <composer:BranchPanel Name="BranchPanel"/>
+                      </composer:ComposerPopup.Panel>
+                    </composer:ComposerPopup>
                   </Grid>
                 </ctl:StudioComposer>
                 <Border Height="27" VerticalAlignment="Bottom" RenderTransform="translate(0px,-3px)" Padding="2,0" TextElement.FontSize="{DynamicResource StudioType11}" TextElement.Foreground="{DynamicResource GhostBrush}" AutomationProperties.AutomationId="class:studio-meterrail">
@@ -300,7 +316,10 @@
                 <Grid Name="ExplorerPane" UseLayoutRounding="False" Width="190" RowDefinitions="34,48,*" Background="{DynamicResource PageBrush}" AutomationProperties.AutomationId="class:workbench-explorer">
                   <Border Padding="6,0,10,0" Margin="0,0,1,0" AutomationProperties.AutomationId="class:workbench-explorer-head"><Grid ColumnDefinitions="18,*,28,28,28" ColumnSpacing="8">
                     <Button Name="FilesTab" Classes="icon" Width="18" Height="22" Content="⌄"/>
-                    <TextBlock Name="ExplorerHeading" Grid.Column="1" Margin="4,0" FontSize="{DynamicResource StudioType13}" FontWeight="Bold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    <StackPanel Grid.Column="1" Margin="4,0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                      <TextBlock Name="ExplorerHeading" FontSize="{DynamicResource StudioType13}" FontWeight="Bold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Name="ExplorerCount" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
                     <Button Name="HiddenFiles" Grid.Column="2" Classes="icon wb-open-editor" Width="28" AutomationProperties.AutomationId="action:workbench.hidden"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.eye}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8"/><Path Name="HiddenSlash" Data="M3 3l18 18" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8"/></Canvas></Viewbox></Button>
                     <Button Name="OpenWorkspaceEditor" Grid.Column="3" Classes="icon wb-open-editor" Width="28" AutomationProperties.AutomationId="action:workspace.editor"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="m8 6-6 6 6 6 M16 6l6 6-6 6 M14 3l-4 18" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
                     <Button Name="RevealWorkspace" Grid.Column="4" Classes="icon wb-open-editor" Width="28" AutomationProperties.AutomationId="action:workbench.reveal"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="M4 10V4h6 M14 4h6v6 M20 14v6h-6 M10 20H4v-6" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox></Button>
@@ -331,6 +350,8 @@
                     </StackPanel>
                   </ScrollViewer>
                   <Border Grid.RowSpan="3" Width="1" HorizontalAlignment="Right" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
+                  <Thumb Name="ExplorerGrip" Grid.RowSpan="3" Width="5" HorizontalAlignment="Right" Background="Transparent"
+                         Cursor="SizeWestEast" ZIndex="2"/>
                 </Grid>
                 <Grid Name="FileCanvas" Grid.Column="1" RowDefinitions="40,*,Auto" Background="{DynamicResource RaisedBrush}" AutomationProperties.AutomationId="class:workbench-canvas">
                   <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6" UseLayoutRounding="False" AutomationProperties.AutomationId="class:workbench-filebar">

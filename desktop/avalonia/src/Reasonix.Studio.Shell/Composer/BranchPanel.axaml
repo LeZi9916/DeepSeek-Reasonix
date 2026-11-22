@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Composer.BranchPanel"
+             HorizontalAlignment="Stretch">
+  <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto">
+    <Grid Grid.Row="0" Margin="14,12,10,8" ColumnDefinitions="*,Auto">
+      <TextBlock Name="Title" Classes="palette-title" VerticalAlignment="Center"/>
+      <Button Name="Close" Grid.Column="1" Classes="icon palette-close" Width="24" Height="24" Content="×"/>
+    </Grid>
+    <Border Grid.Row="1" Classes="palette-identity">
+      <Grid ColumnDefinitions="14,*" ColumnSpacing="8">
+        <Path Width="14" Height="14" Data="{StaticResource Glyph.folder}" Stroke="{DynamicResource MutedBrush}"
+              StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Stretch="Uniform" VerticalAlignment="Center"/>
+        <TextBlock Name="WorkspaceName" Grid.Column="1" Classes="palette-identity-name" TextTrimming="CharacterEllipsis"/>
+      </Grid>
+    </Border>
+    <TextBlock Name="Description" Grid.Row="2" Classes="palette-desc"/>
+    <Border Grid.Row="3" Classes="palette-search" Margin="14,0,14,6" Height="32">
+      <Grid ColumnDefinitions="15,*" ColumnSpacing="6">
+        <Path Width="15" Height="15" Data="{StaticResource Glyph.search}" Stroke="{DynamicResource FaintBrush}"
+              StrokeThickness="1.8" StrokeLineCap="Round" Stretch="Uniform" VerticalAlignment="Center"/>
+        <TextBox Name="Search" Grid.Column="1" Height="20" MinHeight="0" Padding="0" BorderThickness="0"
+                 Background="Transparent" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}"/>
+      </Grid>
+    </Border>
+    <Grid Grid.Row="4">
+      <ScrollViewer Name="RowsScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Name="Rows" Margin="0,0,0,4"/>
+      </ScrollViewer>
+      <StackPanel Name="ErrorBox" IsVisible="False" Margin="14,12" Spacing="10">
+        <TextBlock Name="ErrorText" Classes="palette-empty" TextWrapping="Wrap"/>
+        <Button Name="Retry" Classes="palette-retry" HorizontalAlignment="Left"/>
+      </StackPanel>
+    </Grid>
+    <Border Grid.Row="5" Classes="palette-note">
+      <TextBlock Name="Note" Classes="palette-note-text"/>
+    </Border>
+    <Border Grid.Row="6" Classes="palette-footer">
+      <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="8">
+        <Path Width="14" Height="14" Data="{StaticResource Glyph.folder}" Stroke="{DynamicResource MutedBrush}"
+              StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Stretch="Uniform" VerticalAlignment="Center"/>
+        <TextBlock Name="WorkspacePath" Grid.Column="1" Classes="palette-path" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+        <Button Name="CopyPath" Grid.Column="2" Classes="palette-copy"/>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

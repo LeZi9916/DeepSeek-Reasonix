@@ -117,6 +117,11 @@ public sealed partial class MainWindow
     {
         ShowSidebarState(state);
         var running = state.Running;
+        ComposeBranch.IsEnabled = !running;
+        if (running)
+        {
+            BranchPopup.Close();
+        }
 
         // While a turn runs, a line is guidance unless the person chose to queue.
         // The preference is steer, which is the reading the reference frontend

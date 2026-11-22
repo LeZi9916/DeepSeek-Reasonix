@@ -36,6 +36,12 @@ public sealed partial class MainWindow
         InitializeComposeMetrics();
         PlanMode.Click += (_, _) => ShowComposeModes(false);
         ApprovalMode.Click += (_, _) => ShowComposeModes(true);
+        ModePanel.Picked += OnPlanPicked;
+        PolicyPanel.Picked += OnApprovalPicked;
+        PolicyPanel.BoundaryRequested += OnPolicyBoundary;
+        BranchPanel.Picked += OnBranchPicked;
+        BranchPanel.RetryRequested += OnBranchRetry;
+        BranchPanel.CloseRequested += BranchPopup.Close;
         ComposeBranch.Click += async (_, _) => await ShowComposeBranchesAsync().ConfigureAwait(true);
         SideQuestion.Click += async (_, _) => await ToggleSideAsync().ConfigureAwait(true);
         CloseSide.Click += async (_, _) => await CloseSideQuestionAsync().ConfigureAwait(true);
@@ -183,166 +189,108 @@ public sealed partial class MainWindow
         LabelComposeLayout();
     }
 
-    /// <summary>Offers task modes and keeps a refusal from changing the displayed mode.</summary>
+    /// <summary>Opens the self-drawn work-mode or permission panel.</summary>
     /// <param name="approval">Whether this is the approval chooser.</param>
     private void ShowComposeModes(bool approval)
     {
-        var button = approval ? ApprovalMode : PlanMode;
-        var menu = new MenuFlyout();
-        menu.Items.Add(MenuHead(
-            MessageCatalog.Get(approval ? "safety.execution_permissions" : "composer.work_mode", Language),
-            MessageCatalog.Get("common.current_task", Language)));
-        var choices = approval ? new[] { "dontAsk", "ask", "auto", "yolo" } : new[] { "agent", "plan" };
-        var engine = _engine;
-        var draft = _draftKey;
-        foreach (var value in choices)
+        var popup = approval ? PolicyPopup : ModePopup;
+        if (popup.IsOpen)
         {
-            if (approval && value == "yolo")
-            {
-                menu.Items.Add(new MenuItem
-                {
-                    Header = new TextBlock { Text = MessageCatalog.Get("common.high_risk", Language), Foreground = ThemeBrush("WarnInkBrush"), FontSize = 11 },
-                    IsEnabled = false,
-                });
-            }
-
-            var current = approval ? _composerStatus.ToolApprovalMode == value : _composerStatus.Plan == (value == "plan");
-            var item = new MenuItem
-            {
-                Tag = value,
-                Header = MenuChoice(
-                    approval ? MessageCatalog.Get(ApprovalKey(value), Language) : value == "plan" ? "Plan" : "Agent",
-                    MessageCatalog.Get(approval ? ApprovalNote(value) : value == "plan" ? "composer.plan_steps_before_changing_files" : "composer.run_tasks_with_enabled_tools", Language)),
-                IsChecked = current,
-            };
-            item.Click += async (_, _) =>
-            {
-                if (engine is null || engine != _engine || draft != _draftKey)
-                {
-                    return;
-                }
-
-                button.IsEnabled = false;
-                await TryAnswerAsync(async () =>
-                {
-                    if (approval)
-                    {
-                        await engine.Pages.SetApprovalModeAsync(value, _closing.Token).ConfigureAwait(true);
-                    }
-                    else
-                    {
-                        await engine.Pages.SetPlanAsync(value == "plan", _closing.Token).ConfigureAwait(true);
-                    }
-
-                    var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-                    if (status is not null && engine == _engine && draft == _draftKey)
-                    {
-                        ShowComposeStatus(status);
-                    }
-                }).ConfigureAwait(true);
-                button.IsEnabled = true;
-            };
-            menu.Items.Add(item);
+            popup.Close();
+            return;
         }
 
         if (approval)
         {
-            menu.Items.Add(new Separator());
-            menu.Items.Add(new MenuItem
-            {
-                Header = MenuChoice(string.Empty, MessageCatalog.Get("safety.approvals_decide_when_to_ask", Language)),
-                IsEnabled = false,
-            });
-            var boundary = new MenuItem
-            {
-                Tag = "__boundary",
-                Header = MenuChoice(
-                    MessageCatalog.Get("safety.sandbox_and_runtime_boundary", Language),
-                    MessageCatalog.Get("safety.view_current_isolation_and_network", Language)),
-            };
-            boundary.Click += async (_, _) =>
-            {
-                OpenSettings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                await ShowSectionAsync("tools").ConfigureAwait(true);
-            };
-            menu.Items.Add(boundary);
+            PolicyPanel.Show(_composerStatus.ToolApprovalMode, Language);
+            popup.Anchor = ApprovalMode;
+        }
+        else
+        {
+            ModePanel.Show(_composerStatus.Plan, Language);
+            popup.Anchor = PlanMode;
         }
 
-        button.Flyout = menu;
-        menu.ShowAt(button);
+        popup.Show();
     }
 
-    /// <summary>Maps an approval mode to the note under its label.</summary>
-    /// <param name="mode">Kernel approval mode.</param>
-    /// <returns>Message key naming what the mode does.</returns>
-    private string ApprovalNote(string mode) => mode switch
+    /// <summary>Applies a work mode and keeps a refusal inside the open panel.</summary>
+    /// <param name="mode">Chosen mode identity.</param>
+    private async void OnPlanPicked(string mode)
     {
-        "dontAsk" => "safety.no_approval_prompts_anything_needing",
-        "auto" => "safety.low_risk_steps_proceed_writes",
-        "yolo" => "safety.stops_asking_only_for_a",
-        _ => "safety.asks_before_every_action",
-    };
-
-    /// <summary>Builds the muted caption above a picker's choices.</summary>
-    /// <param name="title">Caption on the left.</param>
-    /// <param name="right">Context on the right.</param>
-    /// <returns>The menu header.</returns>
-    private Control MenuHead(string title, string right)
-    {
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), MinWidth = 240 };
-        grid.Children.Add(new TextBlock
+        if (_engine is not { } engine)
         {
-            Text = title,
-            FontSize = 11,
-            FontWeight = FontWeight.SemiBold,
-            Foreground = ThemeBrush("MutedBrush"),
-            VerticalAlignment = VerticalAlignment.Center,
-        });
-        var context = new TextBlock
-        {
-            Text = right,
-            FontSize = 10,
-            Foreground = ThemeBrush("FaintBrush"),
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        Grid.SetColumn(context, 1);
-        grid.Children.Add(context);
-        return grid;
-    }
-
-    /// <summary>Builds one option's label and explanatory note.</summary>
-    /// <param name="title">Human label, or empty for a note row.</param>
-    /// <param name="note">Explanation under the label.</param>
-    /// <returns>The menu item content.</returns>
-    private Control MenuChoice(string title, string note)
-    {
-        var panel = new StackPanel { Spacing = 2, MaxWidth = 300 };
-        if (title.Length > 0)
-        {
-            panel.Children.Add(new TextBlock
-            {
-                Text = title,
-                FontSize = 12,
-                FontWeight = FontWeight.Medium,
-                Foreground = ThemeBrush("TextBrush"),
-            });
+            return;
         }
 
-        panel.Children.Add(new TextBlock
+        var draft = _draftKey;
+        ModePanel.SetPending(true);
+        try
         {
-            Text = note,
-            FontSize = 10,
-            Foreground = ThemeBrush("MutedBrush"),
-            TextWrapping = TextWrapping.Wrap,
-        });
-        return panel;
+            await engine.Pages.SetPlanAsync(mode == "plan", _closing.Token).ConfigureAwait(true);
+            var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
+            if (status is not null && engine == _engine && draft == _draftKey)
+            {
+                ShowComposeStatus(status);
+                ModePanel.Show(status.Plan, Language);
+                ModePopup.Close();
+            }
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            ModePanel.ShowError(DescribeError(error));
+        }
+        finally
+        {
+            ModePanel.SetPending(false);
+        }
     }
 
-    /// <summary>Reads a brush from the window's theme resources.</summary>
-    /// <param name="key">Resource key.</param>
-    /// <returns>The brush, or a muted fallback.</returns>
-    private IBrush ThemeBrush(string key) =>
-        this.TryFindResource(key, out var value) && value is IBrush brush ? brush : Brushes.Gray;
+    /// <summary>Applies an approval mode and keeps a refusal inside the open panel.</summary>
+    /// <param name="mode">Chosen kernel approval mode.</param>
+    private async void OnApprovalPicked(string mode)
+    {
+        if (_engine is not { } engine)
+        {
+            return;
+        }
+
+        var draft = _draftKey;
+        PolicyPanel.SetPending(true);
+        try
+        {
+            await engine.Pages.SetApprovalModeAsync(mode, _closing.Token).ConfigureAwait(true);
+            var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
+            if (status is not null && engine == _engine && draft == _draftKey)
+            {
+                ShowComposeStatus(status);
+                PolicyPanel.Show(status.ToolApprovalMode, Language);
+                PolicyPopup.Close();
+            }
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            PolicyPanel.ShowError(DescribeError(error));
+        }
+        finally
+        {
+            PolicyPanel.SetPending(false);
+        }
+    }
+
+    /// <summary>Opens the sandbox settings destination from the permission panel.</summary>
+    private async void OnPolicyBoundary()
+    {
+        PolicyPopup.Close();
+        OpenSettings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await ShowSectionAsync("tools").ConfigureAwait(true);
+    }
 
     /// <summary>Refreshes the branch catalog when the chooser opens.</summary>
     /// <returns>The chooser read.</returns>
@@ -353,8 +301,15 @@ public sealed partial class MainWindow
             return;
         }
 
+        if (BranchPopup.IsOpen)
+        {
+            BranchPopup.Close();
+            return;
+        }
+
         var draft = _draftKey;
-        await TryAnswerAsync(async () =>
+        BranchPopup.Anchor = ComposeBranch;
+        try
         {
             var branches = await engine.Pages.GitBranchesAsync(_closing.Token).ConfigureAwait(true);
             if (engine != _engine || draft != _draftKey)
@@ -362,33 +317,73 @@ public sealed partial class MainWindow
                 return;
             }
 
-            var menu = new MenuFlyout();
-            foreach (var branch in branches["branches"]?.AsArray().OfType<System.Text.Json.Nodes.JsonObject>() ?? [])
+            if ((bool?)branches["repo"] == false)
             {
-                var name = (string)branch["name"]!;
-                var item = new MenuItem { Header = name, IsEnabled = (bool?)branch["current"] != true && string.IsNullOrEmpty((string?)branch["worktree"]) };
-                item.Click += async (_, _) =>
-                {
-                    if (engine == _engine && draft == _draftKey)
-                    {
-                        await TryAnswerAsync(async () =>
-                        {
-                            var state = await engine.Pages.GitSwitchBranchAsync(name, _closing.Token).ConfigureAwait(true);
-                            if (engine == _engine && draft == _draftKey)
-                            {
-                                ComposeBranchLabel.Text = (string?)state["branch"];
-                                await LoadGitAsync().ConfigureAwait(true);
-                                await ListFilesAsync().ConfigureAwait(true);
-                            }
-                        }).ConfigureAwait(true);
-                    }
-                };
-                menu.Items.Add(item);
+                BranchPanel.Show([], ComposeBranchLabel.Text ?? string.Empty, _composerStatus.WorkspaceRoot, Language);
+                BranchPanel.ShowError(MessageCatalog.Get("composer.there_is_no_git_repository", Language));
+                BranchPopup.Show();
+                return;
             }
 
-            ComposeBranch.Flyout = menu;
-            menu.ShowAt(ComposeBranch);
-        }).ConfigureAwait(true);
+            var choices = (branches["branches"]?.AsArray().OfType<System.Text.Json.Nodes.JsonObject>() ?? [])
+                .Select(branch => new BranchChoice(
+                    (string?)branch["name"] ?? string.Empty,
+                    (bool?)branch["current"] == true,
+                    (string?)branch["worktree"] ?? string.Empty))
+                .Where(branch => branch.Name.Length > 0)
+                .ToList();
+            BranchPanel.Show(choices, ComposeBranchLabel.Text ?? string.Empty, _composerStatus.WorkspaceRoot, Language);
+            BranchPopup.Show();
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            BranchPanel.Show([], ComposeBranchLabel.Text ?? string.Empty, _composerStatus.WorkspaceRoot, Language);
+            BranchPanel.ShowError(DescribeError(error));
+            BranchPopup.Show();
+        }
+    }
+
+    /// <summary>Switches to a branch and keeps a refusal inside the palette.</summary>
+    /// <param name="name">Branch to switch to.</param>
+    private async void OnBranchPicked(string name)
+    {
+        if (_engine is not { } engine)
+        {
+            return;
+        }
+
+        BranchPanel.SetPending(name);
+        try
+        {
+            var state = await engine.Pages.GitSwitchBranchAsync(name, _closing.Token).ConfigureAwait(true);
+            if (engine != _engine)
+            {
+                return;
+            }
+
+            await LoadGitAsync().ConfigureAwait(true);
+            await ListFilesAsync().ConfigureAwait(true);
+            ComposeBranchLabel.Text = (string?)state["branch"] ?? name;
+            BranchPopup.Close();
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            BranchPanel.SetPending(null);
+            BranchPanel.ShowError(DescribeError(error));
+        }
+    }
+
+    /// <summary>Reads the branches again after a failed palette read.</summary>
+    private async void OnBranchRetry()
+    {
+        BranchPopup.Close();
+        await ShowComposeBranchesAsync().ConfigureAwait(true);
     }
 
     /// <summary>Fits the toolbar to the conversation pane rather than the window width.</summary>
