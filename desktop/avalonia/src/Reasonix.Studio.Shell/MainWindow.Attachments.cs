@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell;
 
@@ -22,8 +23,16 @@ public sealed partial class MainWindow
     {
         foreach (var reference in references)
         {
+            var path = reference.Path ?? string.Empty;
+            var name = Path.GetFileName(path);
             if (string.IsNullOrWhiteSpace(reference.Ref))
             {
+                if (string.IsNullOrEmpty(reference.Error) || path.Length == 0 || _attachments.Any(chip => chip.SourcePath == path && chip.Error.Length > 0))
+                {
+                    continue;
+                }
+
+                _attachments.Add(new AttachmentChip(string.Empty, name.Length == 0 ? MessageCatalog.Get("common.files", Language) : name, path, IsPicture(path), reference.Error));
                 continue;
             }
 
@@ -33,9 +42,8 @@ public sealed partial class MainWindow
                 continue;
             }
 
-            var path = reference.Path ?? token;
-            var name = Path.GetFileName(path);
-            _attachments.Add(new AttachmentChip(token, name.Length == 0 ? token : name, IsPicture(path)));
+            _attachments.RemoveAll(chip => chip.SourcePath == path && chip.Error.Length > 0);
+            _attachments.Add(new AttachmentChip(token, name.Length == 0 ? token : name, path, IsPicture(path)));
         }
 
         RebuildAttachments();
@@ -51,7 +59,7 @@ public sealed partial class MainWindow
         }
 
         var name = Path.GetFileName(reference);
-        _attachments.Add(new AttachmentChip(reference, name.Length == 0 ? reference : name, true));
+        _attachments.Add(new AttachmentChip(reference, name.Length == 0 ? reference : name, reference, true));
         RebuildAttachments();
     }
 
@@ -62,11 +70,20 @@ public sealed partial class MainWindow
         foreach (var attachment in _attachments.ToArray())
         {
             var chip = new Border { Classes = { "attachment-chip" } };
-            ToolTip.SetTip(chip, attachment.Token);
+            ToolTip.SetTip(chip, attachment.SourcePath.Length > 0 ? attachment.SourcePath : attachment.Token);
             var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
             row.Children.Add(AttachmentGlyph(attachment.Image));
             var name = new TextBlock { Text = attachment.Name, Classes = { "attachment-name" } };
             row.Children.Add(name);
+            if (attachment.Error.Length > 0)
+            {
+                var reason = new TextBlock { Text = attachment.Error, Classes = { "attachment-error" } };
+                row.Children.Add(reason);
+                var retry = new Button { Content = MessageCatalog.Get("composer.could_not_add_retry", Language), Classes = { "attachment-retry" } };
+                retry.Click += async (_, _) => await RetryAttachmentAsync(attachment).ConfigureAwait(true);
+                row.Children.Add(retry);
+            }
+
             var remove = new Button { Content = "×", Classes = { "attachment-remove" } };
             ToolTip.SetTip(remove, MessageCatalog.Get("common.remove", Language));
             remove.Click += (_, _) =>
@@ -79,16 +96,76 @@ public sealed partial class MainWindow
             AttachmentStrip.Children.Add(chip);
         }
 
-        AttachmentStrip.IsVisible = _attachments.Count > 0;
+        AttachmentArea.IsVisible = _attachments.Count > 0;
+        UpdateAttachmentWarning();
+    }
+
+    /// <summary>Retries one refused drop without disturbing the others.</summary>
+    /// <param name="attachment">The failed chip.</param>
+    /// <returns>The retry.</returns>
+    private async Task RetryAttachmentAsync(AttachmentChip attachment)
+    {
+        if (_engine is null || attachment.SourcePath.Length == 0 || _closing.IsCancellationRequested)
+        {
+            return;
+        }
+
+        try
+        {
+            var refs = await _engine.Pages.DropAsync([attachment.SourcePath], _closing.Token).ConfigureAwait(true);
+            if (refs.Any(reference => !string.IsNullOrWhiteSpace(reference.Ref)))
+            {
+                _attachments.Remove(attachment);
+                AddAttachments(refs);
+                return;
+            }
+
+            var error = refs.Select(reference => reference.Error).FirstOrDefault(value => !string.IsNullOrEmpty(value)) ?? MessageCatalog.Get("composer.could_not_add_retry", Language);
+            var at = _attachments.IndexOf(attachment);
+            if (at >= 0)
+            {
+                _attachments[at] = attachment with
+                {
+                    Error = error,
+                };
+            }
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            var at = _attachments.IndexOf(attachment);
+            if (at >= 0)
+            {
+                _attachments[at] = attachment with
+                {
+                    Error = DescribeError(error),
+                };
+            }
+        }
+
+        RebuildAttachments();
+    }
+
+    /// <summary>Warns when a picture rides with a model that does not read images.</summary>
+    private void UpdateAttachmentWarning()
+    {
+        var pictures = _attachments.Any(chip => chip.Image && chip.Error.Length == 0);
+        AttachmentWarning.IsVisible = pictures && !_composerStatus.Vision;
+        AttachmentWarning.Text = AttachmentWarning.IsVisible
+            ? MessageCatalog.Get("composer.this_model_does_not_read", Language)
+            : string.Empty;
     }
 
     /// <summary>Serializes attachments ahead of the typed line for the model.</summary>
     /// <param name="line">The visible prompt.</param>
     /// <returns>The submit text.</returns>
-    private string ComposeSubmitText(string line) =>
-        _attachments.Count == 0
-            ? line
-            : string.Join(" ", _attachments.Select(chip => chip.Token)) + "\n\n" + line;
+    private string ComposeSubmitText(string line)
+    {
+        var tokens = string.Join(" ", _attachments.Where(chip => chip.Error.Length == 0 && chip.Token.Length > 0).Select(chip => chip.Token));
+        return tokens.Length == 0 ? line : tokens + "\n\n" + line;
+    }
 
     /// <summary>Drops attachments with the draft that owned them.</summary>
     private void ClearAttachments()
@@ -120,8 +197,10 @@ public sealed partial class MainWindow
         Path.GetExtension(path).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".bmp";
 
     /// <summary>One reference held above the prompt.</summary>
-    /// <param name="Token">The host-issued token.</param>
+    /// <param name="Token">The host-issued token, empty for a failed drop.</param>
     /// <param name="Name">The visible basename.</param>
+    /// <param name="SourcePath">The native path retry uses.</param>
     /// <param name="Image">Whether this reference is a picture.</param>
-    private sealed record AttachmentChip(string Token, string Name, bool Image);
+    /// <param name="Error">Why the drop was refused, empty for a ready chip.</param>
+    private sealed record AttachmentChip(string Token, string Name, string SourcePath, bool Image, string Error = "");
 }

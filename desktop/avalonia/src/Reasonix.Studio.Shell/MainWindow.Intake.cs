@@ -293,12 +293,6 @@ public sealed partial class MainWindow
             }
 
             AddAttachments(refs);
-            var refused = string.Join(Environment.NewLine, refs.Select(r => r.Error).Where(r => !string.IsNullOrEmpty(r)));
-            if (refused.Length > 0)
-            {
-                ErrorBar.IsVisible = true;
-                ErrorText.Text = refused;
-            }
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
         {

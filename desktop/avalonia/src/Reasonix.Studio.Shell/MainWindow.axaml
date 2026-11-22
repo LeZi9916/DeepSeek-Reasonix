@@ -218,7 +218,10 @@
                         <StackPanel Orientation="Horizontal" Spacing="5"><ctl:StudioLineText Name="ChangedFilesLabel"/><ctl:StudioLineText Name="ChangedAdded" Foreground="{DynamicResource AddBrush}"/><ctl:StudioLineText Name="ChangedRemoved" Foreground="{DynamicResource DelBrush}"/></StackPanel>
                       </Button>
                     </Grid>
-                    <WrapPanel Name="AttachmentStrip" Grid.Row="1" Margin="16,6,16,0" IsVisible="False"/>
+                    <StackPanel Name="AttachmentArea" Grid.Row="1" Margin="16,6,16,0" Spacing="4" IsVisible="False">
+                      <WrapPanel Name="AttachmentStrip"/>
+                      <TextBlock Name="AttachmentWarning" IsVisible="False" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource WarnInkBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
                     <TextBox Name="Composer" Classes="compose-input" Grid.Row="2" AcceptsReturn="True" TextWrapping="Wrap"
                              Background="Transparent" BorderThickness="0" CornerRadius="0" Padding="0" MinHeight="42" MaxHeight="168"
                              FontFamily="{DynamicResource ConversationUiFamily}" FontWeight="Medium" FontSize="{DynamicResource StudioType14}" LineHeight="{DynamicResource StudioUserHeight}"
