@@ -87,7 +87,14 @@ public sealed partial class MainWindow
                 ShowComposeStatus(status);
             }
 
-            ModelPicker.Show(models, _composerStatus, Language, focusEffort, _providerHealth, _workspacePreferences.ModelFilter);
+            ModelPicker.Show(
+                models,
+                _composerStatus,
+                Language,
+                focusEffort,
+                _providerHealth,
+                _workspacePreferences.ModelFilter,
+                _workspacePreferences.ProviderOrder);
         }).ConfigureAwait(true);
     }
 

@@ -144,20 +144,22 @@ public sealed partial class ModelPicker : UserControl
     /// <param name="focusEffort">Whether the effort column should take focus first.</param>
     /// <param name="health">Provider health readings, when checks are enabled.</param>
     /// <param name="filter">Provider chips saved on this device.</param>
+    /// <param name="providerOrder">Provider ordering saved on this device.</param>
     public void Show(
         IReadOnlyList<ModelChoice> models,
         SessionStatus status,
         InterfaceLanguage language,
         bool focusEffort = false,
         IReadOnlyDictionary<string, ProviderHealth>? health = null,
-        IReadOnlyList<string>? filter = null)
+        IReadOnlyList<string>? filter = null,
+        IReadOnlyList<string>? providerOrder = null)
     {
         if (_chosen.Count == 0 && filter is { Count: > 0 })
         {
             _chosen.UnionWith(filter);
         }
 
-        Bind(models, status, language, health);
+        Bind(models, status, language, health, providerOrder);
         Open(focusEffort);
     }
 
@@ -184,13 +186,19 @@ public sealed partial class ModelPicker : UserControl
     /// <param name="status">The session status.</param>
     /// <param name="language">Language for the labels.</param>
     /// <param name="health">Provider health readings, when checks are enabled.</param>
-    private void Bind(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language, IReadOnlyDictionary<string, ProviderHealth>? health)
+    /// <param name="providerOrder">Provider ordering saved on this device.</param>
+    private void Bind(
+        IReadOnlyList<ModelChoice> models,
+        SessionStatus status,
+        InterfaceLanguage language,
+        IReadOnlyDictionary<string, ProviderHealth>? health,
+        IReadOnlyList<string>? providerOrder = null)
     {
         _models = models;
         _status = status;
         _language = language;
         _health = health ?? new Dictionary<string, ProviderHealth>();
-        _accounts = Group(models, status.ModelRef);
+        _accounts = Group(models, status.ModelRef, providerOrder);
         _chosen.IntersectWith(_accounts.Select(account => account.Key));
         BuildChrome();
         DrawChips();
@@ -448,8 +456,9 @@ public sealed partial class ModelPicker : UserControl
     /// <summary>Groups the catalog by endpoint and credential slot.</summary>
     /// <param name="models">Kernel catalog.</param>
     /// <param name="current">The session's model reference.</param>
-    /// <returns>Accounts in listing order.</returns>
-    private IReadOnlyList<Account> Group(IReadOnlyList<ModelChoice> models, string current)
+    /// <param name="providerOrder">Provider ordering saved on this device.</param>
+    /// <returns>Accounts in the saved order, then listing order.</returns>
+    private IReadOnlyList<Account> Group(IReadOnlyList<ModelChoice> models, string current, IReadOnlyList<string>? providerOrder)
     {
         var order = new List<string>();
         var byKey = new Dictionary<string, List<ModelChoice>>(StringComparer.Ordinal);
@@ -466,12 +475,19 @@ public sealed partial class ModelPicker : UserControl
             list.Add(model);
         }
 
-        return order.Select(key =>
-        {
-            var list = byKey[key];
-            var host = HostOf(list[0]);
-            return new Account(key, AccountLabel(list, host), host, MarkOf(list[0]), list);
-        }).ToList();
+        var rank = (providerOrder ?? []).Select((provider, index) => (Provider: provider, Index: index))
+            .GroupBy(item => item.Provider, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First().Index, StringComparer.Ordinal);
+        return order
+            .Select((key, index) => (Key: key, Index: index, Provider: byKey[key][0].Provider))
+            .OrderBy(item => rank.TryGetValue(item.Provider, out var at) ? at : int.MaxValue)
+            .ThenBy(item => item.Index)
+            .Select(item =>
+            {
+                var list = byKey[item.Key];
+                var host = HostOf(list[0]);
+                return new Account(item.Key, AccountLabel(list, host), host, MarkOf(list[0]), list);
+            }).ToList();
     }
 
     /// <summary>Names the account a model route belongs to.</summary>

@@ -309,11 +309,45 @@ public sealed partial class MainWindow
                     var services = Card(column, "models.services");
                     var models = await api.ModelsAsync(_closing.Token).ConfigureAwait(true);
                     var providers = await api.ProvidersAsync(_closing.Token).ConfigureAwait(true);
-                    foreach (var service in providers.OfType<JsonObject>())
+                    var providerList = providers.OfType<JsonObject>().ToArray();
+                    var providerOrder = _workspacePreferences.ProviderOrder;
+                    var providerRank = providerOrder.Select((name, index) => (Name: name, Index: index))
+                        .GroupBy(item => item.Name, StringComparer.Ordinal)
+                        .ToDictionary(group => group.Key, group => group.First().Index, StringComparer.Ordinal);
+                    var sortedProviders = providerList
+                        .Select((service, index) => (Service: service, Index: index, Name: ProviderName(service)))
+                        .OrderBy(item => providerRank.TryGetValue(item.Name, out var at) ? at : int.MaxValue)
+                        .ThenBy(item => item.Index)
+                        .Select(item => item.Service)
+                        .ToArray();
+                    for (var providerIndex = 0; providerIndex < sortedProviders.Length; providerIndex++)
                     {
+                        var service = sortedProviders[providerIndex];
+                        var name = ProviderName(service);
+                        var display = (string?)service["displayName"] ?? name;
+                        var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+                        head.Children.Add(new TextBlock { Text = display, VerticalAlignment = VerticalAlignment.Center });
+                        foreach (var (glyph, direction) in new[] { ("↑", -1), ("↓", 1) })
+                        {
+                            var move = new Button
+                            {
+                                Content = glyph,
+                                Width = 24,
+                                Height = 24,
+                                MinWidth = 0,
+                                MinHeight = 0,
+                                Padding = default,
+                                FontSize = 11,
+                                IsEnabled = providerIndex + direction >= 0 && providerIndex + direction < sortedProviders.Length,
+                            };
+                            move.Classes.Add("icon");
+                            move.Click += async (_, _) => await MoveProviderAsync(name, direction).ConfigureAwait(true);
+                            head.Children.Add(move);
+                        }
+
                         var info = new Expander
                         {
-                            Header = (string?)service["displayName"] ?? (string?)service["name"],
+                            Header = head,
                             HorizontalAlignment = HorizontalAlignment.Stretch,
                         };
                         var list = service["models"] is JsonArray names ? string.Join(" · ", names.Select(n => n?.ToString())) : string.Empty;
@@ -326,6 +360,45 @@ public sealed partial class MainWindow
                         ShowSetup(new ProviderSetup(true, true));
                         return Task.CompletedTask;
                     });
+
+                    async Task MoveProviderAsync(string name, int direction)
+                    {
+                        var visible = sortedProviders.Select(ProviderName).Where(value => value.Length > 0).ToArray();
+                        var shown = visible.OrderBy(value => providerRank.TryGetValue(value, out var at) ? at : int.MaxValue).ToArray();
+                        var at = Array.IndexOf(shown, name);
+                        var neighbor = at < 0 ? null : shown.ElementAtOrDefault(at + direction);
+                        if (neighbor is null || at < 0)
+                        {
+                            return;
+                        }
+
+                        var next = providerOrder.ToList();
+                        foreach (var value in shown.Where(value => !next.Contains(value, StringComparer.Ordinal)))
+                        {
+                            next.Add(value);
+                        }
+
+                        var from = next.IndexOf(name);
+                        var to = next.IndexOf(neighbor);
+                        if (from < 0 || to < 0)
+                        {
+                            return;
+                        }
+
+                        (next[from], next[to]) = (next[to], next[from]);
+                        _workspacePreferences = _workspacePreferences with
+                        {
+                            ProviderOrder = next.ToArray(),
+                        };
+                        if (_connectOnOpen)
+                        {
+                            _workspacePreferences.Save();
+                        }
+
+                        await ShowSectionAsync("model").ConfigureAwait(true);
+                    }
+
+                    static string ProviderName(JsonObject service) => (string?)service["name"] ?? string.Empty;
                     await FlagControlAsync(services, StudioSetting.ProviderHealth, "models.automatically_check_connections_and_balances").ConfigureAwait(true);
                     var choices = models.Where(m => !m.NotAdded).Select(m => new SectionEntry(m.Ref, m.ModelAlias ?? m.Model)).ToArray();
                     var selected = models.FirstOrDefault(m => m.Default)?.Ref ?? string.Empty;
