@@ -68,7 +68,6 @@ public sealed partial class MainWindow
         EndTerminal.Content = MessageCatalog.Get(MessageKey.Workbench.CloseTab, Language);
         EndTerminal.Click += ConfirmTerminalClose;
         Label(FilesTab, MessageKey.Workbench.Explorer);
-        Label(GitRefresh, "common.read_again");
         FileListHeading.Text = MessageCatalog.Get(MessageKey.Common.Files, Language);
         Label(ToggleFileList, MessageKey.Common.Files);
         ToggleFileList.Click += (_, _) =>
@@ -88,7 +87,6 @@ public sealed partial class MainWindow
                 await ListFilesAsync().ConfigureAwait(true);
             }
         };
-        GitRefresh.Click += async (_, _) => await LoadGitAsync().ConfigureAwait(true);
         WorkspaceBody.SizeChanged += (_, e) =>
         {
             WorkspaceFiles.Margin = new Avalonia.Thickness(0, 0, ClientSize.Width > 900 ? 10 : 0, 0);
@@ -134,20 +132,24 @@ public sealed partial class MainWindow
             {
                 file.Draft = FileEditor.Text ?? string.Empty;
                 SaveFile.IsEnabled = file.CanSave;
+                DrawFileStatus();
             }
         };
         SaveFile.Click += OnSaveFile;
     }
 
-    /// <summary>Invalidates pending reads when the session changes workspace.</summary>
+    /// <summary>Mounts the workbench retained by this runtime and canonical project.</summary>
     /// <param name="root">Workspace root from session status.</param>
     private void BindWorkspace(string root)
     {
-        if (_workspaceRoot == root)
+        var scope = BufferScopeFor(root);
+        if (_workspaceRoot == root && ReferenceEquals(_boundWorkspaceEngine, _engine))
         {
+            _workspaceBufferScope = scope;
             return;
         }
 
+        CaptureWorkbenchPresentation();
         DetachTerminal();
         ReleasePreview();
         _fileRead++;
@@ -155,6 +157,8 @@ public sealed partial class MainWindow
         HideBrowser();
         ResetGit();
         _workspaceRoot = root;
+        _boundWorkspaceEngine = _engine;
+        _workspaceBufferScope = scope;
         ResetFileTree();
         _openFile = null;
         RenderedFile.IsVisible = false;
@@ -166,6 +170,7 @@ public sealed partial class MainWindow
         SaveFile.IsEnabled = false;
         WorkspaceFiles.ItemsSource = null;
         WorkbenchPanel.IsVisible = false;
+        RestoreWorkbenchPresentation();
     }
 
     /// <summary>Opens the file explorer next to the active conversation.</summary>
@@ -178,6 +183,10 @@ public sealed partial class MainWindow
         LayoutWorkbench();
         EnterView(WorkbenchPanel);
         await Task.WhenAll(ListFilesAsync(), LoadGitAsync()).ConfigureAwait(true);
+        if (_openFile is null && _gitSurface is null && !TerminalSurface.IsVisible)
+        {
+            ShowWorkbenchLauncher();
+        }
     }
 
     /// <summary>Gives a narrow workbench the pane; wide windows retain the conversation beside it.</summary>
@@ -200,6 +209,7 @@ public sealed partial class MainWindow
     /// <returns>The opened entry.</returns>
     private async Task OpenEntryAsync(FileEntry entry)
     {
+        WorkbenchStart.IsVisible = false;
         if (_engine is null)
         {
             return;
@@ -209,7 +219,7 @@ public sealed partial class MainWindow
         var ticket = ++_fileRead;
         FileCanvas.RowDefinitions[0].Height = new GridLength(40);
         FileMore.IsVisible = true;
-        var key = (_workspaceRoot, entry.Path);
+        var key = (WorkspaceBufferScope, entry.Path);
         try
         {
             if (!_fileBuffers.TryGetValue(key, out var buffer) || !buffer.Dirty)
@@ -279,17 +289,24 @@ public sealed partial class MainWindow
 
     /// <summary>Opens an isolated, user-operated system browser in the workbench.</summary>
     /// <param name="html">Optional workspace HTML already read under the file grant.</param>
-    private void OpenManualBrowser(string? html = null)
+    /// <param name="newPage">Whether an explicit launcher action creates another browser tab.</param>
+    private void OpenManualBrowser(string? html = null, bool newPage = false)
     {
+        WorkbenchStart.IsVisible = false;
         DetachTerminal();
         ShowAnalysis(false);
         WorkbenchPanel.IsVisible = true;
         LayoutWorkbench();
-        if (ManualBrowserHost.Content is not ManualWebPreview preview)
+        if (ManualBrowserHost.Content is not ManualWebPreview preview || newPage)
         {
             Uri.TryCreate(_engine?.Host, UriKind.Absolute, out var kernel);
             preview = new ManualWebPreview(kernel, Language);
             ManualBrowserHost.Content = preview;
+        }
+
+        if (html is null && !_browserPages.Contains(preview))
+        {
+            _browserPages.Add(preview);
         }
 
         BackToEditor.IsVisible = html is not null;
@@ -297,6 +314,7 @@ public sealed partial class MainWindow
         ParentFolder.IsVisible = false;
         SaveFile.IsVisible = html is not null;
         ManualBrowserHost.IsVisible = true;
+        RebuildTabs();
         if (html is null)
         {
             WorkbenchTitle.Text = MessageCatalog.Get(MessageKey.Workbench.Browser, Language);
@@ -353,6 +371,7 @@ public sealed partial class MainWindow
     /// <summary>Restores editing against the original file revision.</summary>
     private void ShowSource()
     {
+        WorkbenchStart.IsVisible = false;
         _fileRead++;
         HideBrowser();
         ReleasePreview();
@@ -437,6 +456,7 @@ public sealed partial class MainWindow
     /// <param name="view">Image, rendered text or diff.</param>
     private void ShowPreview(Control view)
     {
+        WorkbenchStart.IsVisible = false;
         ReleasePreview();
         FileEditor.IsVisible = false;
         RenderedFile.Padding = view.Classes.Contains("git-board") ? default : new Avalonia.Thickness(10);
@@ -445,194 +465,6 @@ public sealed partial class MainWindow
         RenderedFile.IsVisible = true;
         SaveFile.IsEnabled = false;
         PreviewFile.IsVisible = false;
-    }
-
-    /// <summary>Builds tabs for files opened in this workspace.</summary>
-    private void RebuildTabs()
-    {
-        FileTabs.Children.Clear();
-        Control? selected = null;
-        foreach (var (key, buffer) in _fileBuffers.Where(pair => pair.Key.Root == _workspaceRoot))
-        {
-            var group = new StackPanel { Orientation = Orientation.Horizontal, Tag = key.Path };
-            group.Classes.Add("wb-tab-frame");
-            group.Classes.Set("active", ReferenceEquals(buffer, _openFile));
-            if (ReferenceEquals(buffer, _openFile))
-            {
-                selected = group;
-            }
-
-            var tab = new Button
-            {
-                Content = Path.GetFileName(key.Path),
-                IsEnabled = true,
-                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
-            };
-            tab.Classes.Add("wb-tab");
-            tab.Classes.Set("active", ReferenceEquals(buffer, _openFile));
-            ToolTip.SetTip(tab, key.Path);
-            tab.Click += async (_, _) => await OpenEntryAsync(new FileEntry(key.Path, false)).ConfigureAwait(true);
-            var close = new Button { Content = "×", Padding = new Avalonia.Thickness(4, 0), [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };
-            close.Classes.Add("wb-tab-close");
-            Label(close, MessageKey.Workbench.CloseTab);
-            close.Click += (_, _) =>
-            {
-                if (!buffer.Dirty && !buffer.Saving)
-                {
-                    CloseFile(key, buffer);
-                    return;
-                }
-
-                var prompt = new MenuFlyout();
-                var save = new MenuItem { Header = MessageCatalog.Get(MessageKey.Common.Save, Language), IsEnabled = buffer.CanSave };
-                save.Click += async (_, _) =>
-                {
-                    if (await SaveBufferAsync(buffer).ConfigureAwait(true) && !buffer.Dirty)
-                    {
-                        CloseFile(key, buffer);
-                    }
-                };
-                var discard = new MenuItem { Header = MessageCatalog.Get(MessageKey.Workbench.Discard, Language), IsEnabled = !buffer.Saving };
-                discard.Click += (_, _) => CloseFile(key, buffer);
-                prompt.Items.Add(save);
-                prompt.Items.Add(discard);
-                prompt.Items.Add(new MenuItem { Header = MessageCatalog.Get(MessageKey.Common.Cancel, Language) });
-                prompt.ShowAt(close);
-            };
-            group.Children.Add(tab);
-            group.Children.Add(close);
-            FileTabs.Children.Add(group);
-        }
-
-        if (_gitSurface is { } git)
-        {
-            var group = new StackPanel { Orientation = Orientation.Horizontal, Tag = git };
-            group.Classes.Add("wb-tab-frame");
-            group.Classes.Set("active", ReferenceEquals(git.View, RenderedFile.Content));
-            var tab = new Button { Content = git.Title };
-            tab.Classes.Add("wb-tab");
-            tab.Classes.Set("active", ReferenceEquals(git.View, RenderedFile.Content));
-            tab.Click += (_, _) => ShowGitCanvas(git.Title, git.View);
-            var close = new Button { Content = "×" };
-            close.Classes.Add("wb-tab-close");
-            Label(close, MessageKey.Workbench.CloseTab);
-            Avalonia.Automation.AutomationProperties.SetAutomationId(close, "action:workbench.close-git");
-            close.Click += async (_, _) =>
-            {
-                var visible = ReferenceEquals(git.View, RenderedFile.Content);
-                _gitSurface = null;
-                if (visible)
-                {
-                    ReleasePreview();
-                    FileCanvas.RowDefinitions[0].Height = new GridLength(40);
-                    if (_fileBuffers.LastOrDefault(pair => pair.Key.Root == _workspaceRoot) is { Value: not null } last)
-                    {
-                        await OpenEntryAsync(new FileEntry(last.Key.Path, false)).ConfigureAwait(true);
-                        if (last.Value.Dirty)
-                        {
-                            ShowSource();
-                        }
-                    }
-                    else
-                    {
-                        FileEditor.IsVisible = true;
-                        FileEditor.IsReadOnly = true;
-                        FileEditor.Text = string.Empty;
-                    }
-                }
-
-                RebuildTabs();
-            };
-            group.Children.Add(tab);
-            group.Children.Add(close);
-            FileTabs.Children.Insert(0, group);
-            if (ReferenceEquals(git.View, RenderedFile.Content))
-            {
-                selected = group;
-            }
-        }
-
-        Avalonia.Threading.Dispatcher.UIThread.Post(
-            () =>
-            {
-                selected?.BringIntoView();
-                UpdateTabOverflow();
-            },
-            Avalonia.Threading.DispatcherPriority.Loaded);
-    }
-
-    /// <summary>Lists tabs clipped by the strip, using their measured positions and scroll offset.</summary>
-    private void UpdateTabOverflow()
-    {
-        var width = TabViewport.Viewport.Width;
-        var needsMenu = width > 0 && TabViewport.Extent.Width > width + (TabOverflow.IsVisible ? TabOverflow.Bounds.Width : 0) + 0.5;
-        TabOverflow.IsVisible = needsMenu;
-        if (!needsMenu || TabOverflow.Flyout is not MenuFlyout menu)
-        {
-            return;
-        }
-
-        var offset = TabViewport.Offset.X;
-        var clipped = FileTabs.Children.Where(c => c.Bounds.X < offset - 0.5 || c.Bounds.Right > offset + width + 0.5).Select(c => c.Tag).ToArray();
-        if (clipped.SequenceEqual(menu.Items.OfType<MenuItem>().Select(item => item.Tag)))
-        {
-            return;
-        }
-
-        menu.Items.Clear();
-        foreach (var target in clipped)
-        {
-            var item = new MenuItem { Tag = target };
-            if (target is string path)
-            {
-                item.Header = Path.GetFileName(path);
-                ToolTip.SetTip(item, path);
-                item.Click += async (_, _) => await OpenEntryAsync(new FileEntry(path, false)).ConfigureAwait(true);
-            }
-            else if (target is ValueTuple<string, Control> surface)
-            {
-                item.Header = surface.Item1;
-                item.Click += (_, _) =>
-                {
-                    if (_gitSurface == surface)
-                    {
-                        ShowGitCanvas(surface.Item1, surface.Item2);
-                    }
-                };
-            }
-
-            menu.Items.Add(item);
-        }
-
-        TabOverflow.Content = "+" + clipped.Length.ToString(System.Globalization.CultureInfo.CurrentCulture) + " ▾";
-        Avalonia.Automation.AutomationProperties.SetName(TabOverflow, string.Join(", ", menu.Items.OfType<MenuItem>().Select(i => i.Header)));
-    }
-
-    /// <summary>Closes the chosen tab after any required save or explicit discard.</summary>
-    /// <param name="key">Workspace and path.</param>
-    /// <param name="file">The buffer confirmed by the reader.</param>
-    private void CloseFile((string Root, string Path) key, FileBuffer file)
-    {
-        if (file.Saving || !_fileBuffers.Remove(key))
-        {
-            return;
-        }
-
-        if (ReferenceEquals(_openFile, file))
-        {
-            _fileRead++;
-            _openFile = null;
-            FileEditor.Text = string.Empty;
-            FileEditor.IsReadOnly = true;
-            SaveFile.IsEnabled = false;
-            ReleasePreview();
-            FileEditor.IsVisible = true;
-            PreviewFile.IsVisible = false;
-            WorkbenchTitle.Text = MessageCatalog.Get(MessageKey.Common.Workbench, Language);
-            WorkspaceFiles.SelectedItem = null;
-        }
-
-        RebuildTabs();
     }
 
     /// <summary>Saves the selected revision while preserving edits made during the write.</summary>
@@ -657,6 +489,7 @@ public sealed partial class MainWindow
         }
 
         file.Saving = true;
+        var engine = _engine;
         SaveFile.IsEnabled = false;
         try
         {
@@ -664,7 +497,7 @@ public sealed partial class MainWindow
             {
                 Content = file.Draft,
             };
-            file.Original = await _engine.Pages.SaveFileAsync(submitted, _closing.Token).ConfigureAwait(true);
+            file.Original = await engine.Pages.SaveFileAsync(submitted, _closing.Token).ConfigureAwait(true);
             if (file.Draft == submitted.Content)
             {
                 file.Draft = file.Original.Content;
@@ -674,7 +507,7 @@ public sealed partial class MainWindow
                 }
             }
 
-            if (WorkbenchPanel.IsVisible)
+            if (ReferenceEquals(engine, _engine) && WorkbenchPanel.IsVisible)
             {
                 await LoadGitAsync().ConfigureAwait(true);
             }
@@ -694,6 +527,7 @@ public sealed partial class MainWindow
         {
             file.Saving = false;
             SaveFile.IsEnabled = _openFile?.CanSave == true;
+            DrawFileStatus();
         }
     }
 

@@ -53,7 +53,7 @@ public sealed partial class MainWindow
         var open = _fileDirectories.Keys.Where(p => p.Length > 0 && !_fileCollapsed.Contains(p)).OrderBy(p => p.Count(c => c == '/')).ToArray();
         try
         {
-            var root = await engine.Pages.FilesAsync(string.Empty, query, _closing.Token).ConfigureAwait(true);
+            var root = await engine.Pages.FilesAsync(string.Empty, query, _showHiddenFiles, _closing.Token).ConfigureAwait(true);
             var snapshots = new Dictionary<string, WorkspaceListing>(StringComparer.Ordinal) { [string.Empty] = root };
             if (query.Length == 0)
             {
@@ -66,7 +66,7 @@ public sealed partial class MainWindow
 
                     try
                     {
-                        snapshots[path] = await engine.Pages.FilesAsync(path, string.Empty, _closing.Token).ConfigureAwait(true);
+                        snapshots[path] = await engine.Pages.FilesAsync(path, string.Empty, _showHiddenFiles, _closing.Token).ConfigureAwait(true);
                     }
                     catch (Exception error) when (error is not OperationCanceledException)
                     {

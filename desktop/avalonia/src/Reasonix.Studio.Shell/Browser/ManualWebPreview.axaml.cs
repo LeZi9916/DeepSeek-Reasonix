@@ -5,6 +5,7 @@ using Avalonia.Platform;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Net;
+using System.Text;
 
 namespace Reasonix.Studio.Shell.Browser;
 
@@ -20,8 +21,8 @@ public sealed partial class ManualWebPreview : UserControl
     /// <summary>Native adapter created only when the reader actually asks for a page.</summary>
     private NativeWebView? _guest;
 
-    /// <summary>Whether this view is showing an explicitly opened workspace HTML snapshot.</summary>
-    private bool _localDocument;
+    /// <summary>The exact generated source authorized for the explicit workspace preview.</summary>
+    private Uri? _documentAddress;
 
     /// <summary>Initializes a new instance of the <see cref="ManualWebPreview"/> class.</summary>
     public ManualWebPreview()
@@ -64,17 +65,24 @@ public sealed partial class ManualWebPreview : UserControl
         Address.SelectAll();
     }
 
+    /// <summary>Releases the native guest when its browser tab is explicitly closed.</summary>
+    internal void ClosePage()
+    {
+        GuestHost.Child = null;
+        _guest = null;
+    }
+
     /// <summary>Previews local HTML inside a script-free sandbox with no host file URL.</summary>
     /// <param name="html">Contents of the already-granted workspace file.</param>
     internal void ShowDocument(string html)
     {
-        _localDocument = true;
         Notice.IsVisible = false;
         try
         {
             var sandbox = "<!doctype html><meta charset=utf-8><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; frame-src 'self' about:; img-src data:; style-src 'unsafe-inline'\"><style>body{margin:0}iframe{width:100vw;height:100vh;border:none}</style><iframe sandbox srcdoc=\""
                 + WebUtility.HtmlEncode(html) + "\"></iframe>";
-            Guest().NavigateToString(sandbox);
+            _documentAddress = new Uri("data:text/html;charset=utf-8;base64," + Convert.ToBase64String(Encoding.UTF8.GetBytes(sandbox)));
+            Guest().Source = _documentAddress;
         }
         catch (Exception error)
         {
@@ -91,7 +99,7 @@ public sealed partial class ManualWebPreview : UserControl
             return;
         }
 
-        _localDocument = false;
+        _documentAddress = null;
         Notice.IsVisible = false;
         try
         {
@@ -138,7 +146,7 @@ public sealed partial class ManualWebPreview : UserControl
         view.NavigationStarted += (sender, e) =>
         {
             var destination = e.Request?.AbsoluteUri;
-            if (_localDocument && destination is null or "about:blank")
+            if (_documentAddress is not null && (destination is null or "about:blank" || e.Request == _documentAddress))
             {
                 return;
             }

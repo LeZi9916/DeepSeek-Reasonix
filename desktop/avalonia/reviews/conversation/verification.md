@@ -29,7 +29,7 @@ Context and wallet readings come from the same captured HTTP responses as Electr
 
 The native speed history and detail cards are covered by the metric review. Provider configuration and worktree management remain in their existing settings pages.
 
-The integrated baseline suite passes 298 cases; the strict native suite passes 203 cases before the final sidebar and session-tab additions.
+Integrated validation passes 299 baseline cases and 213 native cases. Runtime scenarios require the Windows host executable.
 
 The baseline geometry fixture now replays the same task, Git and telemetry responses as the screenshots. Eight newly mapped composer controls were removed from recorded missing debt; the debt budget was not widened.
 

@@ -28,6 +28,9 @@ internal sealed class WindowSessionCoordinator(SessionEngine owner) : IAsyncDisp
     /// <summary>Raised when an explicit tab limit folds a settled pane.</summary>
     internal event Action<string>? Folded;
 
+    /// <summary>Raised after the owning runtime acknowledges an explicit or idle close.</summary>
+    internal event Action<SessionPaneState>? Closed;
+
     /// <summary>Gets or sets the pane protected from automatic idle folding.</summary>
     internal SessionPaneState? Focused
     {
@@ -219,5 +222,7 @@ internal sealed class WindowSessionCoordinator(SessionEngine owner) : IAsyncDisp
         {
             await pane.Engine.DisposeAsync().ConfigureAwait(true);
         }
+
+        Closed?.Invoke(pane);
     }
 }

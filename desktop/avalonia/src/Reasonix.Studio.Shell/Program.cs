@@ -21,6 +21,7 @@ public static class Program
     /// </summary>
     /// <param name="args">Command-line arguments passed to the shell.</param>
     /// <returns>The process's exit code.</returns>
+    [STAThread]
     public static int Main(string[] args)
     {
         var identity = InstanceActivation.Identity();

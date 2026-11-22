@@ -29,12 +29,12 @@ public sealed partial class MainWindow
             return;
         }
 
-        var root = _workspaceRoot;
-        var api = _engine.Pages;
+        var engine = _engine;
+        var api = engine.Pages;
         await TryAnswerAsync(async () =>
         {
             var terminals = await api.TerminalsAsync(_closing.Token).ConfigureAwait(true);
-            if (root != _workspaceRoot || _closing.IsCancellationRequested)
+            if (!ReferenceEquals(engine, _engine) || _closing.IsCancellationRequested)
             {
                 return;
             }
@@ -43,12 +43,12 @@ public sealed partial class MainWindow
             var start = new MenuItem { Header = MessageCatalog.Get(MessageKey.Common.Open, Language) + " · " + MessageCatalog.Get(MessageKey.Workbench.Terminal, Language) };
             start.Click += async (_, _) =>
             {
-                if (root == _workspaceRoot)
+                if (ReferenceEquals(engine, _engine))
                 {
                     await TryAnswerAsync(async () =>
                     {
                         var id = await api.OpenTerminalAsync(_closing.Token).ConfigureAwait(true);
-                        if (root == _workspaceRoot)
+                        if (ReferenceEquals(engine, _engine))
                         {
                             AttachTerminal(id, api);
                         }
@@ -66,7 +66,7 @@ public sealed partial class MainWindow
                 var item = new MenuItem { Header = (string?)entry?["name"] ?? id };
                 item.Click += (_, _) =>
                 {
-                    if (_workspaceRoot == root)
+                    if (ReferenceEquals(_engine, engine))
                     {
                         AttachTerminal(id, api);
                     }
@@ -88,11 +88,13 @@ public sealed partial class MainWindow
             return;
         }
 
+        var engine = _engine;
+
         var menu = new MenuFlyout();
         var confirm = new MenuItem { Header = MessageCatalog.Get(MessageKey.Terminal.CloseAndEnd, Language) };
         confirm.Click += async (_, _) =>
         {
-            if (_terminalId == id && await TryAnswerAsync(() => _engine.Pages.CloseTerminalAsync(id, _closing.Token)).ConfigureAwait(true) && _terminalId == id)
+            if (ReferenceEquals(_engine, engine) && _terminalId == id && await TryAnswerAsync(() => engine.Pages.CloseTerminalAsync(id, _closing.Token)).ConfigureAwait(true) && ReferenceEquals(_engine, engine) && _terminalId == id)
             {
                 ReleasePreview();
                 FileEditor.IsVisible = true;
@@ -119,6 +121,7 @@ public sealed partial class MainWindow
     /// <param name="api">The owning session.</param>
     private async void AttachTerminal(string id, StudioPageClient api)
     {
+        WorkbenchStart.IsVisible = false;
         DetachTerminal();
         HideBrowser();
         _fileRead++;

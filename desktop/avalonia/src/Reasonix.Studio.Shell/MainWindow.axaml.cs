@@ -302,6 +302,7 @@ public sealed partial class MainWindow : Window
         SaveDraft();
 
         ResetGit();
+        ReleaseWorkbenchPresentations();
         await _closing.CancelAsync().ConfigureAwait(true);
         if (_engine is not null)
         {

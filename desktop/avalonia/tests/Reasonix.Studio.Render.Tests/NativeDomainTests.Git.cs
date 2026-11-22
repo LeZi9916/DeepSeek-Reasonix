@@ -166,7 +166,7 @@ public sealed partial class NativeDomainTests
 
                 return new HttpResponseMessage(HttpStatusCode.NoContent);
             };
-            ClickAt(w, "action:workbench.repos-reload");
+            Navigate(w, "workbench");
             ClickAt(w, "action:workbench.stage");
             ClickAt(w, "action:workbench.stage");
             ClickAt(w, "action:workbench.discard");

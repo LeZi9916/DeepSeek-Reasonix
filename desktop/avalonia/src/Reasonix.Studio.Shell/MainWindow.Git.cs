@@ -40,14 +40,6 @@ public sealed partial class MainWindow
         Label(FullWorkbench, "workbench.expand_workbench");
         Label(NewSurface, "workbench.new_tab");
         Label(FileMore, "common.more");
-        var create = new MenuFlyout();
-        var browse = new MenuItem { Header = MessageCatalog.Get(MessageKey.Workbench.Browser, Language) };
-        browse.Click += (_, _) => OpenManualBrowser();
-        var terminal = new MenuItem { Header = MessageCatalog.Get(MessageKey.Workbench.Terminal, Language) };
-        terminal.Click += OnTerminals;
-        create.Items.Add(browse);
-        create.Items.Add(terminal);
-        NewSurface.Flyout = create;
         FileMore.Click += (_, _) =>
         {
             if (_openFile is not { } file)
@@ -55,40 +47,8 @@ public sealed partial class MainWindow
                 return;
             }
 
-            var path = file.Original.Path;
-            var root = file.Original.Root ?? _workspaceRoot;
-            var menu = new MenuFlyout();
-            var copy = new MenuItem { Header = MessageCatalog.Get("common.copy_path", Language) };
-            copy.Click += async (_, _) =>
-            {
-                try
-                {
-                    if (Clipboard is not null)
-                    {
-                        await Clipboard.SetTextAsync(path).ConfigureAwait(true);
-                    }
-                }
-                catch (Exception error)
-                {
-                    ReportWorkbenchError(error);
-                }
-            };
-            menu.Items.Add(copy);
-            if (_engine?.IsRemote != true)
-            {
-                var host = new Host.AvaloniaHost(this);
-                var show = new MenuItem { Header = MessageCatalog.Get(OperatingSystem.IsMacOS() ? "workbench.reveal_in_finder" : OperatingSystem.IsWindows() ? "workbench.reveal_in_file_explorer" : "workbench.show_in_file_manager", Language) };
-                show.Click += async (_, _) =>
-                {
-                    if (await host.RevealPathAsync(root, path).ConfigureAwait(true) is { } refusal)
-                    {
-                        GitError.Text = refusal.Error;
-                        GitError.IsVisible = true;
-                    }
-                };
-                menu.Items.Add(show);
-            }
-
+            var menu = BuildWorkspaceFileMenu(new FileEntry(file.Original.Path, false));
+            FileMore.Flyout = menu;
             menu.ShowAt(FileMore);
         };
     }
@@ -197,21 +157,38 @@ public sealed partial class MainWindow
             };
             GitRepositories.Children.Add(view);
             view.Fit(WorkspaceBody.Bounds.Height);
-            await view.OpenAsync(api, repo, several, engine.IsRemote, Language, ShowGitCanvas, path => OpenEntryAsync(new FileEntry(name.Length == 0 ? path : name + "/" + path, false)), ClaimGitCanvas, AfterGitWrite, DescribeError, token).ConfigureAwait(true);
+            await view.OpenAsync(
+                api,
+                repo,
+                several,
+                engine.IsRemote,
+                Language,
+                (title, surface) =>
+                {
+                    if (ReferenceEquals(_engine, engine))
+                    {
+                        ShowGitCanvas(title, surface);
+                    }
+                },
+                path => ReferenceEquals(_engine, engine) ? OpenEntryAsync(new FileEntry(name.Length == 0 ? path : name + "/" + path, false)) : Task.CompletedTask,
+                () => ReferenceEquals(_engine, engine) ? ClaimGitCanvas() : () => false,
+                AfterGitWrite,
+                DescribeError,
+                token).ConfigureAwait(true);
         }
 
         UpdateGitBadge();
 
         async Task AfterGitWrite(string? restored)
         {
-            if (token.IsCancellationRequested)
+            if (token.IsCancellationRequested || !ReferenceEquals(_engine, engine))
             {
                 return;
             }
 
-            if (restored is not null && _fileBuffers.TryGetValue((_workspaceRoot, restored), out var buffer) && !buffer.Dirty && !buffer.Saving)
+            if (restored is not null && _fileBuffers.TryGetValue((WorkspaceBufferScope, restored), out var buffer) && !buffer.Dirty && !buffer.Saving)
             {
-                _fileBuffers.Remove((_workspaceRoot, restored));
+                _fileBuffers.Remove((WorkspaceBufferScope, restored));
                 if (ReferenceEquals(buffer, _openFile))
                 {
                     await OpenEntryAsync(new FileEntry(restored, false)).ConfigureAwait(true);
@@ -237,6 +214,7 @@ public sealed partial class MainWindow
     /// <param name="view">Git patch or changes board.</param>
     private void ShowGitCanvas(string title, Control view)
     {
+        WorkbenchStart.IsVisible = false;
         _fileRead++;
         HideBrowser();
         _openFile = null;

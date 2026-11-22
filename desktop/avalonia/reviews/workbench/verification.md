@@ -34,3 +34,20 @@ WSL boot tests cannot complete with the required shell sandbox unavailable; the 
 The conversation beside Git now uses the native AXAML message surfaces described in [the conversation review](../conversation/verification.md). All sixteen pairs were regenerated after the conversation and sidebar changes.
 
 All sixteen pairs include the aligned composer controls and telemetry footer; its interaction validation is recorded in the conversation review.
+
+
+The plus button and empty workbench now expose files, browser, terminal and recent paths through a native launcher. Explorer actions open the configured editor, select the workspace in its file manager and request hidden listings from the kernel.
+
+File menus restore canonical references, copied paths and platform actions. Reveal and Open use distinct native verbs and await the operating system acknowledgment. Refused or missing paths remain visible failures.
+
+Browser tabs retain independent guests and close without losing file drafts. Workbench presentation is owned per runtime; same-runtime conversation rebinding preserves the project editor buffer, folds and tabs. Late terminal responses are checked against the owning engine.
+
+Actual Windows WebView2 testing exposed a missing supported-OS manifest and a rejected generated HTML address. The shared manifest now declares Windows and per-monitor DPI support; only the exact explicit generated document bypasses ordinary address validation.
+
+The desktop smoke now passes address navigation, Back, Forward, Reload, rejected file URLs and the sandboxed workspace iframe at the machine’s 150% scaling. Scaled headless checks cover the metric geometry at 125%, 150% and 200%.
+
+The Git interaction regression reopens the actual workbench to refresh canonical repository state. It then checks stage/unstage, discard cancellation/confirmation, reviewed commit fingerprints and secret acknowledgment, push preview/cancel/confirm and disabled zero-ahead state.
+
+The production entry now declares STA. A separate native experiment with identical pages failed before loading on MTA and passed on STA; the production entry attribute is covered by a regression test.
+
+Native two-tab testing also reproduced discarded browser history after switching tabs. StudioSurfaceHost now keeps inactive guests attached and hidden; explicit tab or runtime closure releases them. The same native test now retains Back/Forward history across tab changes.

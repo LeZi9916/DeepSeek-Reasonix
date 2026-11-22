@@ -111,6 +111,28 @@ public sealed partial class NativeDomainTests
                     Assert.Equal("draft in first project", draft.Text);
                     Assert.Contains(window.FindControl<SessionPage>("Conversation")!.State.Items.OfType<SayItem>(), item => item.Text == "first real answer");
                     Assert.True(File.Exists(occupiedPath));
+                    window.FindControl<MenuItem>("BrowserAction")!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                    var browsers = window.FindControl<Reasonix.Studio.Controls.StudioSurfaceHost>("ManualBrowserHost")!;
+                    var firstBrowser = browsers.Content!;
+                    rail.Show(tree, firstPath);
+                    Dispatcher.UIThread.RunJobs();
+                    Click("Second fixture");
+                    await Wait(() => draft.Text == "draft in second project").ConfigureAwait(true);
+                    window.FindControl<MenuItem>("BrowserAction")!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                    var secondBrowser = browsers.Content!;
+                    Assert.Equal(2, browsers.Children.Count);
+                    Assert.True(firstBrowser.IsAttachedToVisualTree());
+                    var firstTab = window.FindControl<Control>("PaneTabs")!.GetVisualDescendants().OfType<Button>().Single(button => AutomationProperties.GetAutomationId(button) == "action:pane.activate" && AutomationProperties.GetName(button) == "First fixture");
+                    var close = Assert.IsType<StackPanel>(firstTab.Parent).Children.OfType<Button>().Single(button => AutomationProperties.GetAutomationId(button) == "action:pane.close");
+                    var closePoint = close.TranslatePoint(new Point(10, 10), window)!.Value;
+                    window.MouseMove(closePoint);
+                    window.MouseDown(closePoint, MouseButton.Left);
+                    window.MouseUp(closePoint, MouseButton.Left);
+                    await Wait(() => browsers.Children.Count == 1).ConfigureAwait(true);
+                    Assert.Same(secondBrowser, browsers.Content);
+                    Assert.False(firstBrowser.IsAttachedToVisualTree());
+                    Assert.Equal("draft in second project", draft.Text);
+                    Assert.DoesNotContain(await owner.Pages.RuntimesAsync(token).ConfigureAwait(true), runtime => runtime.SessionPath == firstPath);
                 }
                 finally
                 {

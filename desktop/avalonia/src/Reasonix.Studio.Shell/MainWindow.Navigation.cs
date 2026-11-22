@@ -76,6 +76,7 @@ public sealed partial class MainWindow
         }
 
         _navigation = new WindowSessionCoordinator(owner) { Limit = _workspacePreferences.OpenSessionLimit };
+        _navigation.Closed += pane => ReleaseWorkbenchFor(pane.Engine);
         _navigation.Folded += title => ShowNote(MessageCatalog.Get("session.the_open_session_limit_n", Language, ("n", _navigation.Limit.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title)));
     }
 
@@ -211,14 +212,7 @@ public sealed partial class MainWindow
                 scroll.Offset = new Vector(0, pane.ScrollOffset);
             }
 
-            if (pane.WorkbenchOpen)
-            {
-                await OpenWorkbenchAsync().ConfigureAwait(true);
-                if (pane.FilePath is { Length: > 0 } file)
-                {
-                    await OpenEntryAsync(new Workbench.WorkspaceFileEntry(file, false)).ConfigureAwait(true);
-                }
-            }
+            await RestoreWorkbenchFocusAsync(pane).ConfigureAwait(true);
         }
     }
 

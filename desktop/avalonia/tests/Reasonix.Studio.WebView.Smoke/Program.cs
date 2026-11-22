@@ -1,13 +1,16 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Reasonix.Studio.Shell;
 using Reasonix.Studio.Shell.Browser;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -63,11 +66,14 @@ internal static class Program
     private static async Task CheckAsync(MainWindow window, string baseUrl)
     {
         window.FindControl<MenuItem>("BrowserAction")!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-        var pane = (ManualWebPreview)window.FindControl<ContentControl>("ManualBrowserHost")!.Content!;
+        var pane = (ManualWebPreview)window.FindControl<Reasonix.Studio.Controls.StudioSurfaceHost>("ManualBrowserHost")!.Content!;
         var address = pane.FindControl<TextBox>("Address")!;
         address.Text = baseUrl + "/one";
         Click("Go");
         var guest = (NativeWebView)pane.FindControl<Border>("GuestHost")!.Child!;
+        var documentReady = false;
+        guest.NavigationStarted += (_, _) => documentReady = false;
+        guest.NavigationCompleted += (_, e) => documentReady = e.IsSuccess;
         await UntilAsync("document.title", "one").ConfigureAwait(true);
         if (guest.AdapterInfo?.Type is not (WebViewAdapterType.WkWebView or WebViewAdapterType.WebView2 or WebViewAdapterType.WebKitGtk or WebViewAdapterType.WpeWebKit))
         {
@@ -91,6 +97,39 @@ internal static class Program
         };
         Click("Reload");
         await reloaded.Task.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(true);
+        window.FindControl<Button>("NewSurface")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        window.FindControl<Reasonix.Studio.Shell.Workbench.WorkbenchLauncher>("WorkbenchStart")!.FindControl<Button>("Browser")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var second = (ManualWebPreview)window.FindControl<Reasonix.Studio.Controls.StudioSurfaceHost>("ManualBrowserHost")!.Content!;
+        second.FindControl<TextBox>("Address")!.Text = baseUrl + "/one";
+        second.FindControl<Button>("Go")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var otherGuest = (NativeWebView)second.FindControl<Border>("GuestHost")!.Child!;
+        var otherLoaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        otherGuest.NavigationCompleted += (_, e) =>
+        {
+            if (e.IsSuccess)
+            {
+                otherLoaded.TrySetResult();
+            }
+        };
+        await otherLoaded.Task.WaitAsync(TimeSpan.FromSeconds(15)).ConfigureAwait(true);
+        var tabs = window.FindControl<StackPanel>("FileTabs")!;
+        tabs.GetVisualDescendants().OfType<Button>().First(button => AutomationProperties.GetAutomationId(button) == "action:workbench.browser-tab").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await UntilAsync("document.title", "two").ConfigureAwait(true);
+        if (!guest.CanGoBack)
+        {
+            throw new InvalidOperationException("Switching browser tabs discarded native navigation history.");
+        }
+
+        tabs.GetVisualDescendants().OfType<Button>().Last(button => AutomationProperties.GetAutomationId(button) == "action:workbench.close-browser").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if (tabs.GetVisualDescendants().OfType<Button>().Count(button => AutomationProperties.GetAutomationId(button) == "action:workbench.browser-tab") != 1)
+        {
+            throw new InvalidOperationException("Closing a background browser tab changed the surviving tab.");
+        }
+
+        Click("Back");
+        await UntilAsync("document.title", "one").ConfigureAwait(true);
+        Click("Forward");
+        await UntilAsync("document.title", "two").ConfigureAwait(true);
         address.Text = "file:///manual-preview-smoke";
         Click("Go");
         if (!pane.FindControl<SelectableTextBlock>("Notice")!.IsVisible)
@@ -101,7 +140,7 @@ internal static class Program
         await UntilAsync("document.title", "two").ConfigureAwait(true);
         pane.ShowDocument("<h1>Workspace preview</h1>");
         await UntilAsync("document.querySelector('iframe')?.getAttribute('srcdoc')?.includes('Workspace preview') && document.querySelector('iframe')?.getAttribute('sandbox') === ''", "true").ConfigureAwait(true);
-        Console.WriteLine($"{guest.AdapterInfo.Type}: address, back, forward, reload and workspace HTML passed.");
+        Console.WriteLine($"{guest.AdapterInfo.Type}: address, tabs, retained history, close, reload and workspace HTML passed; Windows render scaling {window.RenderScaling}.");
 
         void Click(string name) => pane.FindControl<Button>(name)!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
@@ -110,16 +149,17 @@ internal static class Program
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             while (!timeout.IsCancellationRequested)
             {
-                try
+                if (documentReady)
                 {
-                    var result = await guest.InvokeScript(expression).WaitAsync(timeout.Token).ConfigureAwait(true);
-                    if (result?.Trim('"') == expected)
+                    try
                     {
-                        return;
+                        var result = await guest.InvokeScript(expression).WaitAsync(timeout.Token).ConfigureAwait(true);
+                        if (result?.Trim('"') == expected)
+                        {
+                            return;
+                        }
                     }
-                }
-                catch (InvalidOperationException) when (guest.AdapterInfo is null)
-                {
+                    catch (InvalidOperationException) { }
                 }
 
                 await Task.Delay(50, timeout.Token).ConfigureAwait(true);

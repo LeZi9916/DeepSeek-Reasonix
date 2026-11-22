@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-22",
+  "baseline": {
+    "passed": 299,
+    "failed": 0,
+    "skipped": 0
+  },
+  "native": {
+    "passed": 213,
+    "failed": 0,
+    "skipped": 0,
+    "requiredHost": true
+  },
+  "strictBuild": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "nativeBrowser": {
+    "checks": [
+      "address",
+      "back",
+      "forward",
+      "reload",
+      "tabs",
+      "retained history",
+      "close",
+      "sandboxed HTML"
+    ],
+    "adapter": "WebView2",
+    "windowsScale": 1.5
+  },
+  "metrics": {
+    "nativeRunningWindows": 4,
+    "floatingPairs": 16,
+    "scales": [
+      1.25,
+      1.5,
+      2.0
+    ],
+    "maximumFrameDeltaDip": 0.274,
+    "unsupportedCurvePixels": 0,
+    "geometryToleranceDip": 0.5,
+    "curvePairs": 4,
+    "curveRasterTolerancePixels": 1
+  },
+  "repository": {
+    "format": "pass",
+    "vet": "pass",
+    "debt": "existing global css-size, essay, release-note and wire-parity totals",
+    "budgetWidened": false,
+    "boot": "missing WSL sandbox and timeout",
+    "lint": "6 existing findings",
+    "builtin": "existing Git metadata attribution failure"
+  },
+  "externalNotExercised": [
+    "live SSH authentication",
+    "internet account pairing",
+    "non-Windows native adapters"
+  ]
+}

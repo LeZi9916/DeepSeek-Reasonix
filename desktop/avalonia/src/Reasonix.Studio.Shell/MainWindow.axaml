@@ -292,15 +292,17 @@
                 <Button Name="CloseWorkbench" AutomationProperties.AutomationId="action:workbench.dismiss" Grid.Column="4" Classes="icon" Margin="0,0,6,0">×</Button>
                 <Border Grid.ColumnSpan="5" VerticalAlignment="Bottom" Height="1" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
               </Grid>
-              <ContentControl Name="ManualBrowserHost" Grid.Row="1" IsVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+              <ctl:StudioSurfaceHost Name="ManualBrowserHost" Grid.Row="1" IsVisible="False"/>
               <Grid Name="WorkspaceBody" Grid.Row="1" ColumnDefinitions="Auto,*" AutomationProperties.AutomationId="class:workbench-body">
                 <Grid Name="ExplorerPane" UseLayoutRounding="False" Width="190" RowDefinitions="34,48,*" Background="{DynamicResource PageBrush}" AutomationProperties.AutomationId="class:workbench-explorer">
-                  <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,1,0" AutomationProperties.AutomationId="class:workbench-explorer-head">
+                  <Border Padding="6,0,10,0" Margin="0,0,1,0" AutomationProperties.AutomationId="class:workbench-explorer-head"><Grid ColumnDefinitions="18,*,28,28,28" ColumnSpacing="8">
                     <Button Name="FilesTab" Classes="icon" Width="18" Height="22" Content="⌄"/>
-                    <TextBlock Name="ExplorerHeading" Grid.Column="1" Margin="4,0" FontSize="{DynamicResource StudioType13}" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Button Name="ParentFolder" Grid.Column="2" Classes="icon" Width="20" Content="↑"/>
-                    <Button Name="GitRefresh" Grid.Column="3" Classes="icon" Width="20" Content="↻" AutomationProperties.AutomationId="action:workbench.repos-reload"/>
-                  </Grid>
+                    <TextBlock Name="ExplorerHeading" Grid.Column="1" Margin="4,0" FontSize="{DynamicResource StudioType13}" FontWeight="Bold" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    <Button Name="HiddenFiles" Grid.Column="2" Classes="icon wb-open-editor" Width="28" AutomationProperties.AutomationId="action:workbench.hidden"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.eye}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8"/><Path Name="HiddenSlash" Data="M3 3l18 18" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8"/></Canvas></Viewbox></Button>
+                    <Button Name="OpenWorkspaceEditor" Grid.Column="3" Classes="icon wb-open-editor" Width="28" AutomationProperties.AutomationId="action:workspace.editor"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="m8 6-6 6 6 6 M16 6l6 6-6 6 M14 3l-4 18" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
+                    <Button Name="RevealWorkspace" Grid.Column="4" Classes="icon wb-open-editor" Width="28" AutomationProperties.AutomationId="action:workbench.reveal"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="M4 10V4h6 M14 4h6v6 M20 14v6h-6 M10 20H4v-6" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox></Button>
+                    <Button Name="ParentFolder" Grid.Column="5" IsVisible="False" Classes="icon" Width="0" Content="↑"/>
+                  </Grid></Border>
                   <Border Grid.Row="1" Margin="8,7,9,7" Height="34" BorderThickness="1" CornerRadius="6" Padding="8,0" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}" AutomationProperties.AutomationId="class:workbench-search">
                     <Grid ColumnDefinitions="15,*" ColumnSpacing="6">
                       <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" Data="{StaticResource Glyph.search}"/></Canvas></Viewbox>
@@ -327,7 +329,7 @@
                   </ScrollViewer>
                   <Border Grid.RowSpan="3" Width="1" HorizontalAlignment="Right" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
                 </Grid>
-                <Grid Name="FileCanvas" Grid.Column="1" RowDefinitions="40,*" Background="{DynamicResource RaisedBrush}" AutomationProperties.AutomationId="class:workbench-canvas">
+                <Grid Name="FileCanvas" Grid.Column="1" RowDefinitions="40,*,Auto" Background="{DynamicResource RaisedBrush}" AutomationProperties.AutomationId="class:workbench-canvas">
                   <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6" UseLayoutRounding="False" AutomationProperties.AutomationId="class:workbench-filebar">
                     <TextBlock Name="WorkbenchTitle" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" TextTrimming="CharacterEllipsis" />
                     <Button Name="EndTerminal" Grid.Column="1" IsVisible="False" />
@@ -345,6 +347,14 @@
                            ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
                   <ScrollViewer Grid.Row="1" Name="RenderedFile" Padding="10" IsVisible="False"/>
                   <ContentControl Grid.Row="1" Name="TerminalSurface" IsVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+                  <workbench:WorkbenchLauncher Name="WorkbenchStart" Grid.Row="1" IsVisible="False"/>
+                  <Border Name="FileStatus" Grid.Row="2" IsVisible="False" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="10,4" Background="{DynamicResource RaisedBrush}">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                      <TextBlock Name="FileLanguage" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource FaintBrush}"/>
+                      <TextBlock Name="FileLine" Grid.Column="2" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource FaintBrush}"/>
+                      <TextBlock Name="FileDirty" Grid.Column="3" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource WarnInkBrush}" IsVisible="False"/>
+                    </Grid>
+                  </Border>
                 </Grid>
               </Grid>
             </Grid>

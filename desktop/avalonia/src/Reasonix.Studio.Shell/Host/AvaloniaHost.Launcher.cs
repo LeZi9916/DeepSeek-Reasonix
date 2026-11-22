@@ -15,6 +15,17 @@ namespace Reasonix.Studio.Shell.Host;
 /// </remarks>
 public sealed partial class AvaloniaHost
 {
+    /// <summary>The injected platform file verbs, when provided by a host test.</summary>
+    private readonly NativeFileActions? _fileActions;
+
+    /// <summary>Initializes a new instance of the <see cref="AvaloniaHost"/> class.Initializes a native file boundary with explicit platform acknowledgments.</summary>
+    /// <param name="window">The native window.</param><param name="actions">The platform file verbs.</param>
+    internal AvaloniaHost(Avalonia.Controls.Window? window, NativeFileActions actions)
+        : this(window)
+    {
+        _fileActions = actions;
+    }
+
     /// <summary>
     /// Reports whether a path stays inside a workspace base.
     /// </summary>
@@ -68,7 +79,7 @@ public sealed partial class AvaloniaHost
     /// <inheritdoc/>
     public Task<Refusal?> RevealWorkspaceAsync(string root)
     {
-        return LauncherOf() is null
+        return FileActionsOf() is null
             ? Task.FromResult<Refusal?>(new Refusal(null, "this shell cannot show files"))
             : ShowInFileManagerAsync(root);
     }
@@ -76,7 +87,7 @@ public sealed partial class AvaloniaHost
     /// <inheritdoc/>
     public Task<Refusal?> RevealLogsAsync()
     {
-        return LauncherOf() is null
+        return FileActionsOf() is null
             ? Task.FromResult<Refusal?>(new Refusal(null, "this shell cannot show files"))
             : ShowInFileManagerAsync(ShellLog.Directory());
     }
@@ -84,7 +95,7 @@ public sealed partial class AvaloniaHost
     /// <inheritdoc/>
     public Task<Refusal?> OpenWorkspaceAsync(string root)
     {
-        return LauncherOf() is null
+        return FileActionsOf() is null
             ? Task.FromResult<Refusal?>(new Refusal(null, "this shell cannot open folders"))
             : ShowInFileManagerAsync(root);
     }
@@ -113,7 +124,7 @@ public sealed partial class AvaloniaHost
         string unsupported,
         Func<string, Task<Refusal?>> verb)
     {
-        if (LauncherOf() is null)
+        if (FileActionsOf() is null)
         {
             return Task.FromResult<Refusal?>(new Refusal(null, unsupported));
         }
@@ -135,36 +146,31 @@ public sealed partial class AvaloniaHost
     /// </summary>
     /// <param name="path">The path to show.</param>
     /// <returns>Null once shown, otherwise why it was not.</returns>
-    private Task<Refusal?> ShowInFileManagerAsync(string path)
+    private async Task<Refusal?> ShowInFileManagerAsync(string path)
     {
-        var launcher = LauncherOf();
+        var launcher = FileActionsOf();
         if (launcher is null)
         {
-            return Task.FromResult<Refusal?>(new Refusal(null, "this shell cannot show files"));
+            return new Refusal(null, "this shell cannot show files");
         }
 
         try
         {
             if (Directory.Exists(path))
             {
-                _ = launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(path));
-                return Task.FromResult<Refusal?>(null);
+                return await launcher.OpenFolder(new DirectoryInfo(path)).ConfigureAwait(true) ? null : new Refusal("shell.launch.failed", "the platform could not show that folder");
             }
 
             if (File.Exists(path))
             {
-                // The platform's file manager selects the entry when handed the
-                // file itself, which is what "reveal" means to the person asking.
-                _ = launcher.LaunchFileInfoAsync(new FileInfo(path));
-                return Task.FromResult<Refusal?>(null);
+                return await launcher.SelectFile(new FileInfo(path)).ConfigureAwait(true) ? null : new Refusal("shell.launch.failed", "the platform could not show that file");
             }
 
-            return Task.FromResult<Refusal?>(
-                new Refusal("shell.path.missing", "that path is no longer there"));
+            return new Refusal("shell.path.missing", "that path is no longer there");
         }
         catch (Exception error)
         {
-            return Task.FromResult<Refusal?>(new Refusal("shell.launch.failed", error.Message));
+            return new Refusal("shell.launch.failed", error.Message);
         }
     }
 
@@ -173,22 +179,26 @@ public sealed partial class AvaloniaHost
     /// </summary>
     /// <param name="path">The path to open.</param>
     /// <returns>Null once opened, otherwise why it was not.</returns>
-    private Task<Refusal?> OpenWithDefaultAsync(string path)
+    private async Task<Refusal?> OpenWithDefaultAsync(string path)
     {
-        var launcher = LauncherOf();
+        var launcher = FileActionsOf();
         if (launcher is null)
         {
-            return Task.FromResult<Refusal?>(new Refusal(null, "this shell cannot open files"));
+            return new Refusal(null, "this shell cannot open files");
         }
 
         try
         {
-            _ = launcher.LaunchFileInfoAsync(new FileInfo(path));
-            return Task.FromResult<Refusal?>(null);
+            if (!File.Exists(path))
+            {
+                return new Refusal("shell.path.missing", "that path is no longer there");
+            }
+
+            return await launcher.OpenFile(new FileInfo(path)).ConfigureAwait(true) ? null : new Refusal("shell.launch.failed", "the platform could not open that file");
         }
         catch (Exception error)
         {
-            return Task.FromResult<Refusal?>(new Refusal("shell.launch.failed", error.Message));
+            return new Refusal("shell.launch.failed", error.Message);
         }
     }
 
@@ -199,5 +209,18 @@ public sealed partial class AvaloniaHost
     private ILauncher? LauncherOf()
     {
         return _window?.Launcher;
+    }
+
+    /// <summary>Reads the platform's three distinct file operations.</summary>
+    /// <returns>The native file boundary, or null before a launcher exists.</returns>
+    private NativeFileActions? FileActionsOf()
+    {
+        if (_fileActions is not null)
+        {
+            return _fileActions;
+        }
+
+        var launcher = LauncherOf();
+        return launcher is null ? null : new NativeFileActions(launcher.LaunchDirectoryInfoAsync, launcher.LaunchFileInfoAsync, file => NativeFileSelection.SelectAsync(file, launcher.LaunchDirectoryInfoAsync));
     }
 }

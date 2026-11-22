@@ -107,6 +107,7 @@ public sealed partial class MainWindow
         RailSearch.TextChanged += async (_, _) => await LoadTreeAsync().ConfigureAwait(true);
         InitializeFind();
         InitializeWorkbench();
+        InitializeWorkbenchActions();
         LayoutRoot.SizeChanged += (_, _) => LayoutPanels();
         ThemeSwitch.Click += (_, _) =>
         {
