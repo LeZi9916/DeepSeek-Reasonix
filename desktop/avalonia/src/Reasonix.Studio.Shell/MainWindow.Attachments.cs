@@ -94,6 +94,61 @@ public sealed partial class MainWindow
         RebuildAttachments();
     }
 
+    /// <summary>Asks the host to keep one long paste as a file.</summary>
+    /// <param name="attachment">The paste chip.</param>
+    /// <returns>The save.</returns>
+    private async Task SavePasteAsync(AttachmentChip attachment)
+    {
+        if (_engine is null || attachment.PasteBody.Length == 0 || attachment.Saving)
+        {
+            return;
+        }
+
+        var at = _attachments.IndexOf(attachment);
+        if (at < 0)
+        {
+            return;
+        }
+
+        _attachments[at] = attachment with
+        {
+            Saving = true,
+            SaveError = string.Empty,
+        };
+        RebuildAttachments();
+        try
+        {
+            var kept = await _engine.Pages.KeepTextAsync(attachment.PasteBody, _closing.Token).ConfigureAwait(true);
+            at = _attachments.IndexOf(attachment);
+            if (at >= 0)
+            {
+                _attachments[at] = attachment with
+                {
+                    Saving = false,
+                    KeptPath = kept.Path,
+                    KeptPointer = kept.Pointer,
+                };
+            }
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            at = _attachments.IndexOf(attachment);
+            if (at >= 0)
+            {
+                _attachments[at] = attachment with
+                {
+                    Saving = false,
+                    SaveError = DescribeError(error),
+                };
+            }
+        }
+
+        RebuildAttachments();
+    }
+
     /// <summary>Recognizes a paste long enough to hold out of the box.</summary>
     /// <param name="text">Clipboard text.</param>
     /// <returns>Whether the paste should become a chip.</returns>
@@ -117,6 +172,31 @@ public sealed partial class MainWindow
             row.Children.Add(name);
             if (attachment.PasteBody.Length > 0)
             {
+                if (attachment.KeptPointer.Length > 0)
+                {
+                    row.Children.Add(new TextBlock
+                    {
+                        Text = MessageCatalog.Get("composer.saved_as_a_file_the", Language),
+                        Classes = { "attachment-meta" },
+                    });
+                }
+                else
+                {
+                    var save = new Button
+                    {
+                        Content = MessageCatalog.Get(attachment.Saving ? "common.saving_2" : "composer.save_as_file", Language),
+                        Classes = { "attachment-retry" },
+                    };
+                    save.IsEnabled = !attachment.Saving;
+                    save.Click += async (_, _) => await SavePasteAsync(attachment).ConfigureAwait(true);
+                    row.Children.Add(save);
+                }
+
+                if (attachment.SaveError.Length > 0)
+                {
+                    row.Children.Add(new TextBlock { Text = attachment.SaveError, Classes = { "attachment-error" } });
+                }
+
                 var lines = attachment.PasteBody.Count(character => character == '\n') + 1;
                 var restore = new Button
                 {
@@ -223,7 +303,7 @@ public sealed partial class MainWindow
     {
         var parts = _attachments
             .Where(chip => chip.Error.Length == 0)
-            .Select(chip => chip.QuoteBody.Length > 0 ? QuoteBlock(chip) : chip.PasteBody.Length > 0 ? chip.PasteBody : chip.Token)
+            .Select(chip => chip.QuoteBody.Length > 0 ? QuoteBlock(chip) : chip.KeptPointer.Length > 0 ? chip.KeptPointer : chip.PasteBody.Length > 0 ? chip.PasteBody : chip.Token)
             .Where(part => part.Length > 0)
             .ToArray();
         return parts.Length == 0 ? line : string.Join("\n\n", parts) + "\n\n" + line;
@@ -296,5 +376,21 @@ public sealed partial class MainWindow
     /// <param name="QuoteBody">Selected text for a quote chip, empty for an attachment.</param>
     /// <param name="QuoteSource">File the quoted text came from.</param>
     /// <param name="PasteBody">Long pasted text held out of the box, empty otherwise.</param>
-    private sealed record AttachmentChip(string Token, string Name, string SourcePath, bool Image, string Error = "", string QuoteBody = "", string QuoteSource = "", string PasteBody = "");
+    /// <param name="KeptPath">Host file holding the paste, empty until saved.</param>
+    /// <param name="KeptPointer">Text that points the model at the saved file.</param>
+    /// <param name="Saving">Whether a save-as-file request is in flight.</param>
+    /// <param name="SaveError">Why saving the paste failed.</param>
+    private sealed record AttachmentChip(
+        string Token,
+        string Name,
+        string SourcePath,
+        bool Image,
+        string Error = "",
+        string QuoteBody = "",
+        string QuoteSource = "",
+        string PasteBody = "",
+        string KeptPath = "",
+        string KeptPointer = "",
+        bool Saving = false,
+        string SaveError = "");
 }

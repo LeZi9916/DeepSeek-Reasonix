@@ -84,8 +84,13 @@ public sealed partial class MainWindow
             return;
         }
 
-        _draftKey = DraftStore.KeyFor(_engine.DraftHost, status.WorkspaceRoot, status.SessionPath);
-        ClearAttachments();
+        var draftKey = DraftStore.KeyFor(_engine.DraftHost, status.WorkspaceRoot, status.SessionPath);
+        if (draftKey != _draftKey)
+        {
+            _draftKey = draftKey;
+            ClearAttachments();
+        }
+
         Composer.Text = DraftStore.Read(_drafts, _draftKey);
         Composer.CaretIndex = Composer.Text?.Length ?? 0;
         DismissRefinement();

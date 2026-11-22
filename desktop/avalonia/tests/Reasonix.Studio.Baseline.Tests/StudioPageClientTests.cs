@@ -35,6 +35,29 @@ public sealed class StudioPageClientTests
         Assert.Equal(409, refusal.Status);
     }
 
+    /// <summary>Long paste keeping sends text kind and reads the saved pointer.</summary>
+    /// <returns>The saved pointer.</returns>
+    [Fact]
+    public async Task KeepingTextCarriesTheTextKind()
+    {
+        using var handler = new Handler(async request =>
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal("/attachments", request.RequestUri!.AbsolutePath);
+            using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync());
+            Assert.Equal("text", body.RootElement.GetProperty("kind").GetString());
+            Assert.Equal("held text", body.RootElement.GetProperty("text").GetString());
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"path":"workspace/.reasonix/paste.txt","pointer":"[kept paste]"}""", Encoding.UTF8, "application/json"),
+            };
+        });
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("http://127.0.0.1:1234/") };
+        var kept = await new StudioPageClient(http).KeepTextAsync("held text", default);
+        Assert.Equal("workspace/.reasonix/paste.txt", kept.Path);
+        Assert.Equal("[kept paste]", kept.Pointer);
+    }
+
     /// <summary>Uses UTF-16 caret positions and the requesting window's language.</summary>
     /// <returns>The completion read.</returns>
     [Fact]
