@@ -177,6 +177,9 @@ public sealed partial class NativeDomainTests
         };
         string? isolated = null;
         panel.IsolateRequested += reference => isolated = reference;
+        panel.Show([new BranchChoice("main", true, string.Empty)], "main", "/repo", InterfaceLanguage.Zh);
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(panel.FindControl<Border>("WorktreeModes")!.IsVisible);
         panel.Show([new BranchChoice("main", true, string.Empty)], "main", "/repo", InterfaceLanguage.Zh, sources);
         Dispatcher.UIThread.RunJobs();
         Assert.True(panel.FindControl<Border>("WorktreeModes")!.IsVisible);
