@@ -159,6 +159,7 @@ public sealed partial class MainWindow
             {
                 ShowComposeStatus(status);
                 await RefreshModelCatalogAsync().ConfigureAwait(true);
+                ModelPicker.Refresh(_modelCatalog, status, Language);
                 await LoadComposeTelemetryAsync().ConfigureAwait(true);
             }
         }).ConfigureAwait(true);

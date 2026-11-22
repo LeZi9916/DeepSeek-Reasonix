@@ -138,6 +138,33 @@ public sealed partial class ModelPicker : UserControl
     /// <param name="focusEffort">Whether the effort column should take focus first.</param>
     public void Show(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language, bool focusEffort = false)
     {
+        Bind(models, status, language);
+        Open(focusEffort);
+    }
+
+    /// <summary>Rebuilds an already open picker after a model write read back.</summary>
+    /// <param name="models">Chat models the kernel listed.</param>
+    /// <param name="status">The settled session status.</param>
+    /// <param name="language">Language for the labels.</param>
+    public void Refresh(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language)
+    {
+        if (!IsOpen)
+        {
+            return;
+        }
+
+        Bind(models, status, language);
+    }
+
+    /// <summary>Closes the popup without changing the session.</summary>
+    public void Close() => Surface.IsOpen = false;
+
+    /// <summary>Takes a catalog and session status into the panel's fields.</summary>
+    /// <param name="models">Chat models the kernel listed.</param>
+    /// <param name="status">The session status.</param>
+    /// <param name="language">Language for the labels.</param>
+    private void Bind(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language)
+    {
         _models = models;
         _status = status;
         _language = language;
@@ -147,11 +174,7 @@ public sealed partial class ModelPicker : UserControl
         DrawChips();
         DrawModels();
         DrawEfforts();
-        Open(focusEffort);
     }
-
-    /// <summary>Closes the popup without changing the session.</summary>
-    public void Close() => Surface.IsOpen = false;
 
     /// <summary>Positions the surface inside the window and opens it.</summary>
     /// <param name="focusEffort">Whether the effort column should take focus first.</param>
@@ -365,7 +388,6 @@ public sealed partial class ModelPicker : UserControl
     /// <param name="reference">Model reference.</param>
     private void Choose(string reference)
     {
-        Close();
         ModelPicked?.Invoke(reference);
     }
 

@@ -77,6 +77,7 @@ public sealed partial class NativeDomainTests
         row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Dispatcher.UIThread.RunJobs();
         Assert.Contains("/model", calls);
+        Assert.True(picker.IsOpen);
         Assert.Equal("kimi-k2-vision", w.FindControl<TextBlock>("ModelLabel")!.Text);
     });
 }
