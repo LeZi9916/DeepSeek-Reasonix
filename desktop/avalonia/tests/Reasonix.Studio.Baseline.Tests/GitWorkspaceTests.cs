@@ -14,6 +14,60 @@ namespace Reasonix.Studio.Baseline.Tests;
 /// <summary>Checks native Git actions against a throwaway repository in a separately launched kernel.</summary>
 public sealed class GitWorkspaceTests
 {
+    /// <summary>Creates a real isolated worktree from a branch and reads the new root.</summary>
+    /// <returns>The temporary-repository worktree check.</returns>
+    [Fact]
+    public async Task IsolatedWorktreeCreatesBranchCopy()
+    {
+        var binary = HostLauncher.Locate();
+        if (binary is null)
+        {
+            Assert.NotEqual("1", Environment.GetEnvironmentVariable("STUDIO_TEST_HOST_REQUIRED"));
+            return;
+        }
+
+        var scratch = Directory.CreateTempSubdirectory("studio-worktree-");
+        try
+        {
+            var root = scratch.CreateSubdirectory("project");
+            var hooks = scratch.CreateSubdirectory("empty-hooks");
+            var profile = scratch.CreateSubdirectory("profile");
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
+            var token = timeout.Token;
+            await GitAsync(root, hooks, token, "init", "-q", "-b", "main");
+            await GitAsync(root, hooks, token, "config", "core.autocrlf", "false");
+            await File.WriteAllTextAsync(Path.Combine(root.FullName, "README.md"), "worktree fixture\n", token);
+            await GitAsync(root, hooks, token, "add", "--", "README.md");
+            await GitAsync(root, hooks, token, "commit", "-qm", "baseline");
+            await GitAsync(root, hooks, token, "branch", "topic");
+
+            using var kernel = await HostLauncher.StartAsync(binary, Array.Empty<string>(), token, profile.FullName);
+            await using var initial = new SessionEngine(kernel);
+            await using var engine = await initial.OpenProjectAsync(root.FullName, token);
+            var api = engine.Pages;
+            var inventory = await api.WorkspaceInventoryAsync(token);
+            Assert.True(inventory.CanIsolate, "host did not offer worktree isolation");
+            var sources = await api.WorktreeSourcesAsync(token);
+            Assert.True(sources.Available);
+            Assert.Contains(sources.Sources, source => source.Ref == "refs/heads/topic");
+            var isolated = await api.IsolateWorkspaceAsync(root.FullName, "refs/heads/topic", [], token);
+            Assert.NotEqual(root.FullName, isolated);
+            Assert.True(Directory.Exists(isolated), isolated);
+            Assert.True(File.Exists(Path.Combine(isolated, "README.md")));
+            var status = await engine.StatusAsync(token);
+            Assert.Equal(isolated, status!.WorkspaceRoot);
+        }
+        finally
+        {
+            foreach (var file in scratch.EnumerateFiles("*", SearchOption.AllDirectories))
+            {
+                file.Attributes &= ~FileAttributes.ReadOnly;
+            }
+
+            scratch.Delete(true);
+        }
+    }
+
     /// <summary>Exercises partial staging, index reset, discard and historical file patches.</summary>
     /// <returns>The temporary-repository check.</returns>
     [Fact]
@@ -97,5 +151,25 @@ public sealed class GitWorkspaceTests
 
             scratch.Delete(true);
         }
+    }
+
+    /// <summary>Runs one git command in a fixture repository.</summary>
+    /// <param name="root">Repository directory.</param>
+    /// <param name="hooks">Empty hooks directory.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <param name="args">Git arguments.</param>
+    /// <returns>The completed command.</returns>
+    private static async Task GitAsync(DirectoryInfo root, DirectoryInfo hooks, CancellationToken token, params string[] args)
+    {
+        var start = new ProcessStartInfo("git") { UseShellExecute = false, WorkingDirectory = root.FullName, RedirectStandardError = true };
+        foreach (var arg in new[] { "-c", "user.name=Studio Test", "-c", "user.email=fixture@localhost", "-c", "core.autocrlf=false", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=" + hooks.FullName }.Concat(args))
+        {
+            start.ArgumentList.Add(arg);
+        }
+
+        using var git = Process.Start(start)!;
+        var stderr = await git.StandardError.ReadToEndAsync(token);
+        await git.WaitForExitAsync(token);
+        Assert.True(git.ExitCode == 0, stderr);
     }
 }
