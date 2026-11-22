@@ -55,6 +55,26 @@ public sealed partial class NativeDomainTests
             Assert.True(string.IsNullOrEmpty(w.FindControl<TextBox>("Composer")!.Text));
         });
 
+    /// <summary>A long paste is held above the prompt and can be put back.</summary>
+    /// <returns>The paste chip.</returns>
+    [Fact]
+    public Task LongPasteBecomesAChip() => WithSettings(
+        "conversation",
+        (w, _) =>
+        {
+            var body = new string('x', 4001);
+            var add = typeof(MainWindow).GetMethod("AddPasteChip", BindingFlags.Instance | BindingFlags.NonPublic)!;
+            add.Invoke(w, [body]);
+            Dispatcher.UIThread.RunJobs();
+            var strip = w.FindControl<WrapPanel>("AttachmentStrip")!;
+            Assert.Contains("粘贴的文本", strip.GetVisualDescendants().OfType<TextBlock>().Select(text => text.Text));
+            var restore = strip.GetVisualDescendants().OfType<Button>().First(button => button.Classes.Contains("attachment-undo"));
+            restore.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(body, w.FindControl<TextBox>("Composer")!.Text);
+            Assert.False(w.FindControl<StackPanel>("AttachmentArea")!.IsVisible);
+        });
+
     /// <summary>A refused drop keeps its reason and a retry action.</summary>
     /// <returns>The failure chip.</returns>
     [Fact]

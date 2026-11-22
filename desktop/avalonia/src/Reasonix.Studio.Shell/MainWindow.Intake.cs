@@ -255,7 +255,14 @@ public sealed partial class MainWindow
             }
             else if (draft == _draftKey && !_closing.IsCancellationRequested && Composer.IsKeyboardFocusWithin)
             {
-                Composer.Paste();
+                if (await clipboard.TryGetTextAsync().ConfigureAwait(true) is { Length: > 0 } text && IsLongPaste(text))
+                {
+                    AddPasteChip(text);
+                }
+                else
+                {
+                    Composer.Paste();
+                }
             }
         }
         catch (Exception error) when (!_closing.IsCancellationRequested)

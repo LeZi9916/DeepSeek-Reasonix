@@ -81,6 +81,24 @@ public sealed partial class MainWindow
         RebuildAttachments();
     }
 
+    /// <summary>Holds a long paste beside the prompt instead of letting it become the prompt.</summary>
+    /// <param name="text">Clipboard text.</param>
+    private void AddPasteChip(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return;
+        }
+
+        _attachments.Add(new AttachmentChip(string.Empty, MessageCatalog.Get("composer.pasted_text", Language), string.Empty, false, PasteBody: text));
+        RebuildAttachments();
+    }
+
+    /// <summary>Recognizes a paste long enough to hold out of the box.</summary>
+    /// <param name="text">Clipboard text.</param>
+    /// <returns>Whether the paste should become a chip.</returns>
+    private bool IsLongPaste(string text) => text.Length > 4000 || text.Count(character => character == '\n') > 80;
+
     /// <summary>Builds the reference chips above the prompt.</summary>
     private void RebuildAttachments()
     {
@@ -88,11 +106,33 @@ public sealed partial class MainWindow
         foreach (var attachment in _attachments.ToArray())
         {
             var chip = new Border { Classes = { "attachment-chip" } };
-            ToolTip.SetTip(chip, attachment.SourcePath.Length > 0 ? attachment.SourcePath : attachment.Token);
+            if (attachment.SourcePath.Length > 0 || attachment.Token.Length > 0)
+            {
+                ToolTip.SetTip(chip, attachment.SourcePath.Length > 0 ? attachment.SourcePath : attachment.Token);
+            }
+
             var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
             row.Children.Add(AttachmentGlyph(attachment.Image, attachment.QuoteBody.Length > 0));
             var name = new TextBlock { Text = attachment.Name, Classes = { "attachment-name" } };
             row.Children.Add(name);
+            if (attachment.PasteBody.Length > 0)
+            {
+                var lines = attachment.PasteBody.Count(character => character == '\n') + 1;
+                var restore = new Button
+                {
+                    Content = MessageCatalog.Get("composer.n_lines_put_it_back", Language, ("n", lines.ToString(System.Globalization.CultureInfo.CurrentCulture))),
+                    Classes = { "attachment-undo" },
+                };
+                restore.Click += (_, _) =>
+                {
+                    var body = attachment.PasteBody;
+                    _attachments.Remove(attachment);
+                    RebuildAttachments();
+                    InsertPastedText(body);
+                };
+                row.Children.Add(restore);
+            }
+
             if (attachment.Error.Length > 0)
             {
                 var reason = new TextBlock { Text = attachment.Error, Classes = { "attachment-error" } };
@@ -183,10 +223,21 @@ public sealed partial class MainWindow
     {
         var parts = _attachments
             .Where(chip => chip.Error.Length == 0)
-            .Select(chip => chip.QuoteBody.Length > 0 ? QuoteBlock(chip) : chip.Token)
+            .Select(chip => chip.QuoteBody.Length > 0 ? QuoteBlock(chip) : chip.PasteBody.Length > 0 ? chip.PasteBody : chip.Token)
             .Where(part => part.Length > 0)
             .ToArray();
         return parts.Length == 0 ? line : string.Join("\n\n", parts) + "\n\n" + line;
+    }
+
+    /// <summary>Puts a held paste back at the composer caret.</summary>
+    /// <param name="text">The held text.</param>
+    private void InsertPastedText(string text)
+    {
+        var start = Math.Min(Composer.SelectionStart, Composer.SelectionEnd);
+        Composer.SelectionStart = start;
+        Composer.SelectionEnd = start;
+        Composer.SelectedText = text;
+        Composer.Focus();
     }
 
     /// <summary>Builds the provider-visible quote block for a quote chip.</summary>
@@ -244,5 +295,6 @@ public sealed partial class MainWindow
     /// <param name="Error">Why the drop was refused, empty for a ready chip.</param>
     /// <param name="QuoteBody">Selected text for a quote chip, empty for an attachment.</param>
     /// <param name="QuoteSource">File the quoted text came from.</param>
-    private sealed record AttachmentChip(string Token, string Name, string SourcePath, bool Image, string Error = "", string QuoteBody = "", string QuoteSource = "");
+    /// <param name="PasteBody">Long pasted text held out of the box, empty otherwise.</param>
+    private sealed record AttachmentChip(string Token, string Name, string SourcePath, bool Image, string Error = "", string QuoteBody = "", string QuoteSource = "", string PasteBody = "");
 }
