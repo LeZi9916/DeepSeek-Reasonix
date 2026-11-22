@@ -1,0 +1,22 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light"><SolidColorBrush x:Key="SidebarLogoBrush" Color="#0153E5"/></ResourceDictionary>
+        <ResourceDictionary x:Key="Dark"><SolidColorBrush x:Key="SidebarLogoBrush" Color="#F0FFFFFF"/></ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Styles.Resources>
+  <Style Selector="Button.rail-settings">
+    <Setter Property="Template"><ControlTemplate>
+      <Border Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
+        <Grid ColumnDefinitions="15,*" ColumnSpacing="8">
+          <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.common}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+          <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" VerticalContentAlignment="Center" TextElement.FontFamily="{TemplateBinding FontFamily}"
+                            TextElement.FontSize="{DynamicResource StudioType13}" TextElement.FontWeight="Medium"/>
+        </Grid>
+      </Border>
+    </ControlTemplate></Setter>
+  </Style>
+  <Style Selector="Button.rail-settings:pointerover /template/ Border"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+</Styles>

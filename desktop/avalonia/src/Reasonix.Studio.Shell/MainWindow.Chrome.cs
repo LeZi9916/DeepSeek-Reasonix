@@ -138,6 +138,7 @@ public sealed partial class MainWindow
         ConversationView.Header = MessageCatalog.Get(MessageKey.Feedback.Conversation, Language);
         AnalysisView.Header = MessageCatalog.Get(MessageKey.Common.RunAnalysis, Language);
         LabelTheme();
+        LabelSidebar();
     }
 
     /// <summary>Updates the action's accessible name and pointer hint together.</summary>

@@ -1,0 +1,385 @@
+{
+  "page": "sidebar",
+  "results": [
+    {
+      "file": "1440x900-light.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "light",
+      "referenceLocalRows": [
+        {
+          "role": "project",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(41, 43, 41)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "project",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(41, 43, 41)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        }
+      ],
+      "scope": "Local project rows, shared navigation and footer. The reference also lists remote projects, which the native sidebar does not yet project."
+    },
+    {
+      "file": "1440x900-dark.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "dark",
+      "referenceLocalRows": [
+        {
+          "role": "project",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(231, 232, 227)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "project",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(231, 232, 227)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        }
+      ],
+      "scope": "Local project rows, shared navigation and footer. The reference also lists remote projects, which the native sidebar does not yet project."
+    },
+    {
+      "file": "760x480-light.png",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "light",
+      "referenceLocalRows": [
+        {
+          "role": "project",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(41, 43, 41)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "project",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(41, 43, 41)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(94, 98, 92)"
+        }
+      ],
+      "scope": "Local project rows, shared navigation and footer. The reference also lists remote projects, which the native sidebar does not yet project."
+    },
+    {
+      "file": "760x480-dark.png",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "dark",
+      "referenceLocalRows": [
+        {
+          "role": "project",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(231, 232, 227)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "project",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "600",
+          "color": "rgb(231, 232, 227)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        },
+        {
+          "role": "session",
+          "height": 30,
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "color": "rgb(180, 183, 176)"
+        }
+      ],
+      "scope": "Local project rows, shared navigation and footer. The reference also lists remote projects, which the native sidebar does not yet project."
+    }
+  ]
+}

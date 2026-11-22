@@ -50,12 +50,7 @@ public sealed partial class MainWindow
     private void InitializePreferences()
     {
         OpenSettings.Click += (_, _) => OpenPreferences();
-        OpenAccount.Click += (_, _) =>
-        {
-            OpenPreferences();
-            SettingsNav.SelectedItem = SettingsNav.Items.OfType<SectionEntry>().First(s => s.Id == "account");
-        };
-        Label(OpenAccount, MessageKey.Settings.Account);
+        InitializeSidebar();
         Label(OpenProject, MessageKey.App.OpenProjectFolder);
         OpenProject.Click += async (_, _) =>
         {

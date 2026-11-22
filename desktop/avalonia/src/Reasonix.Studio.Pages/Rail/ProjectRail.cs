@@ -1,6 +1,6 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Reasonix.Studio.Contracts.Tree;
@@ -23,7 +23,7 @@ namespace Reasonix.Studio.Pages.Rail;
 /// conversation cannot fill the column with files the person never made.
 ///
 /// </remarks>
-public sealed class ProjectRail : UserControl
+public sealed partial class ProjectRail : UserControl
 {
     /// <summary>
     /// The column's rows.
@@ -48,30 +48,50 @@ public sealed class ProjectRail : UserControl
     /// </summary>
     private string? _current;
 
+    /// <summary>The selected projection of canonical session state.</summary>
+    private string _scope = "all";
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ProjectRail"/> class.
     /// </summary>
     public ProjectRail()
     {
-        _rows = new StackPanel
+        InitializeComponent();
+        _rows = Rows;
+        FoldAll.Click += (_, _) =>
         {
-            Orientation = Orientation.Vertical,
-            Spacing = 1,
-            Margin = new Thickness(8, 4, 8, 8),
-        };
+            var allFolded = _tree.Count > 0 && _tree.All(w => _collapsed.Contains(w.Root));
+            foreach (var workspace in _tree)
+            {
+                if (allFolded)
+                {
+                    _collapsed.Remove(workspace.Root);
+                }
+                else
+                {
+                    _collapsed.Add(workspace.Root);
+                }
+            }
 
-        Content = new ScrollViewer
-        {
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            Content = _rows,
+            Rebuild();
         };
+        AddProject.Click += (_, _) => AddRequested?.Invoke();
+        RecentTab.Click += (_, _) => ShowRecent();
+        ProjectTab.Click += (_, _) =>
+        {
+            _scope = "all";
+            Rebuild();
+        };
+        RefreshLabels();
     }
 
     /// <summary>
     /// Raised when the person asks to open a conversation.
     /// </summary>
     public event Action<string>? Opened;
+
+    /// <summary>Raised when the person asks to choose another project folder.</summary>
+    public event Action? AddRequested;
 
     /// <summary>
     /// Raised when the person pins or unpins a conversation.
@@ -101,7 +121,29 @@ public sealed class ProjectRail : UserControl
     } = InterfaceLanguage.Zh;
 
     /// <summary>Updates the visible row labels using the selected language.</summary>
-    public void RefreshLabels() => Rebuild();
+    public void RefreshLabels()
+    {
+        ProjectTab.Content = MessageCatalog.Get("common.project", Language);
+        RecentTab.Content = MessageCatalog.Get("session.recent", Language);
+        RecentTitle.Text = MessageCatalog.Get("session.recent_sessions", Language);
+        AutomationProperties.SetName(AddProject, MessageCatalog.Get("session.open_project", Language));
+        ToolTip.SetTip(AddProject, MessageCatalog.Get("session.open_project", Language));
+        var menu = new MenuFlyout();
+        foreach (var (scope, key) in new[] { ("all", "common.all"), ("unread", "common.unread"), ("pinned", "session.pinned_2"), ("archived", "common.archived") })
+        {
+            var item = new MenuItem { Header = MessageCatalog.Get(key, Language) };
+            AutomationProperties.SetAutomationId(item, "action:session.scope." + scope);
+            item.Click += (_, _) =>
+            {
+                _scope = scope;
+                Rebuild();
+            };
+            menu.Items.Add(item);
+        }
+
+        Scope.Flyout = menu;
+        Rebuild();
+    }
 
     /// <summary>
     /// Draws one tree.
@@ -122,6 +164,21 @@ public sealed class ProjectRail : UserControl
     {
         _rows.Children.Clear();
 
+        FoldAll.IsEnabled = _tree.Count > 0;
+        RecentTab.IsEnabled = _tree.Any(w => w.Sessions.Count > 0);
+        var allFolded = _tree.All(w => _collapsed.Contains(w.Root));
+        FoldShape.Data = Geometry.Parse(allFolded ? "M15 3h6v6 M21 3l-7 7 M3 15v6h6 M3 21l7-7" : "m14 10 7-7 M20 10h-6V4 m-11 17 7-7 M4 14h6v6");
+        AutomationProperties.SetName(FoldAll, MessageCatalog.Get(allFolded ? "session.expand_all_projects" : "session.collapse_all_projects", Language));
+        ToolTip.SetTip(FoldAll, AutomationProperties.GetName(FoldAll));
+        ScopeLabel.Text = MessageCatalog.Get(
+            _scope switch
+            {
+                "unread" => "common.unread",
+                "pinned" => "session.pinned_2",
+                "archived" => "common.archived",
+                _ => "common.all",
+            },
+            Language);
         if (_tree.Count == 0)
         {
             _rows.Children.Add(EmptyState());
@@ -130,30 +187,41 @@ public sealed class ProjectRail : UserControl
 
         foreach (var workspace in _tree)
         {
-            _rows.Children.Add(ProjectRow(workspace));
+            var sessions = RailPresenter.Sorted(workspace.Sessions).Where(MatchesScope).ToArray();
+            if (_scope != "all" && sessions.Length == 0)
+            {
+                continue;
+            }
+
+            _rows.Children.Add(new ProjectEntry(workspace, _collapsed.Contains(workspace.Root), () =>
+            {
+                if (!_collapsed.Remove(workspace.Root))
+                {
+                    _collapsed.Add(workspace.Root);
+                }
+
+                Rebuild();
+            }));
             if (_collapsed.Contains(workspace.Root))
             {
                 continue;
             }
 
-            var sessions = RailPresenter.Sorted(workspace.Sessions);
             var showAll = _expanded.Contains(workspace.Root) || sessions.Skip(5).Any(s => RailPresenter.Same(s.Path, _current));
-            var visible = showAll ? sessions.Count : 5;
-
+            var visible = showAll ? sessions.Length : 5;
             foreach (var session in sessions.Take(visible))
             {
                 _rows.Children.Add(SessionRow(session));
             }
 
-            if (sessions.Count > visible)
+            if (sessions.Length > visible)
             {
                 var more = new Button
                 {
-                    Content = MessageCatalog.Get(MessageKey.Common.ShowMoreNLeft, Language, ("n", Format.Count(sessions.Count - visible, Language))),
-                    [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
-                    Background = Brushes.Transparent,
-                    BorderThickness = new Thickness(0),
+                    Content = MessageCatalog.Get(MessageKey.Common.ShowMoreNLeft, Language, ("n", Format.Count(sessions.Length - visible, Language))),
+                    Classes = { "rail-button", "session-more" },
                 };
+                AutomationProperties.SetAutomationId(more, "action:session.more");
                 more.Click += (_, _) =>
                 {
                     _expanded.Add(workspace.Root);
@@ -161,6 +229,28 @@ public sealed class ProjectRail : UserControl
                 };
                 _rows.Children.Add(more);
             }
+        }
+    }
+
+    /// <summary>Projects only facts explicitly carried by the canonical tree.</summary>
+    /// <param name="session">Session to project.</param>
+    /// <returns>Whether it belongs in the selected scope.</returns>
+    private bool MatchesScope(TreeSession session) => _scope switch
+    {
+        "unread" => session.Unread && !session.Archived,
+        "pinned" => session.Pinned && !session.Archived,
+        "live" => session.RuntimeId.Length > 0 && !session.Archived,
+        "archived" => session.Archived,
+        _ => !session.Archived,
+    };
+
+    /// <summary>Fills the recent-session flyout from the current canonical tree.</summary>
+    private void ShowRecent()
+    {
+        RecentRows.Children.Clear();
+        foreach (var session in _tree.SelectMany(w => w.Sessions).Where(s => !s.Archived).OrderByDescending(s => s.LastActiveAt))
+        {
+            RecentRows.Children.Add(SessionRow(session));
         }
     }
 
@@ -185,145 +275,14 @@ public sealed class ProjectRail : UserControl
         };
     }
 
-    /// <summary>
-    /// Builds one project's row.
-    /// </summary>
-    /// <param name="workspace">The project.</param>
-    /// <returns>The row, whose press folds the project.</returns>
-    private Control ProjectRow(TreeWorkspace workspace)
-    {
-        var folded = _collapsed.Contains(workspace.Root);
-        var text = new StackPanel
+    /// <summary>Builds the session's native row and its authoritative action menu.</summary>
+    /// <param name="session">Canonical conversation.</param>
+    /// <returns>The row.</returns>
+    private Control SessionRow(TreeSession session) => new SessionEntry(session, RailPresenter.Same(session.Path, _current), SessionMenu(session), () =>
         {
-            Orientation = Orientation.Horizontal,
-            Spacing = 6,
-        };
-        text.Children.Add(new TextBlock
-        {
-            Text = folded ? "▸" : "▾",
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(10),
-            Opacity = 0.6,
-            VerticalAlignment = VerticalAlignment.Center,
+            RecentTab.Flyout?.Hide();
+            Opened?.Invoke(session.Path);
         });
-        text.Children.Add(new TextBlock
-        {
-            Text = workspace.Name,
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
-            FontWeight = FontWeight.SemiBold,
-            Opacity = workspace.Missing ? 0.5 : 0.9,
-            VerticalAlignment = VerticalAlignment.Center,
-        });
-
-        var row = RowButton(text, workspace.Missing);
-        row.Click += (_, _) =>
-        {
-            if (!_collapsed.Remove(workspace.Root))
-            {
-                _collapsed.Add(workspace.Root);
-            }
-
-            Rebuild();
-        };
-        return row;
-    }
-
-    /// <summary>
-    /// Builds one conversation's row.
-    /// </summary>
-    /// <param name="session">The conversation.</param>
-    /// <returns>The row, with its marks and its menu.</returns>
-    private Control SessionRow(TreeSession session)
-    {
-        var current = RailPresenter.Same(session.Path, _current);
-        var grid = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
-            Height = 30,
-            Margin = new Thickness(12, 0, 0, 0),
-        };
-
-        var marks = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 4,
-            VerticalAlignment = VerticalAlignment.Center,
-            Width = 18,
-        };
-        if (session.Unread)
-        {
-            marks.Children.Add(new TextBlock
-            {
-                Text = "●",
-                [!TextBlock.FontSizeProperty] = StudioTypography.Size(8),
-                VerticalAlignment = VerticalAlignment.Center,
-            });
-        }
-
-        if (session.Pinned)
-        {
-            marks.Children.Add(new TextBlock
-            {
-                Text = "★",
-                [!TextBlock.FontSizeProperty] = StudioTypography.Size(9),
-                Opacity = 0.75,
-                VerticalAlignment = VerticalAlignment.Center,
-            });
-        }
-
-        if (session.RuntimeId is { Length: > 0 } || current)
-        {
-            marks.Children.Add(new TextBlock
-            {
-                Text = "▸",
-                [!TextBlock.FontSizeProperty] = StudioTypography.Size(9),
-                Opacity = 0.5,
-                VerticalAlignment = VerticalAlignment.Center,
-            });
-        }
-
-        var title = new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            Spacing = 0,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        title.Children.Add(new TextBlock
-        {
-            Text = string.IsNullOrWhiteSpace(session.Title) ? session.Name : session.Title,
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
-            FontWeight = current ? FontWeight.SemiBold : FontWeight.Normal,
-            Opacity = session.Archived ? 0.45 : 0.92,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-        });
-
-        var open = new Button
-        {
-            Content = title,
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Padding = new Thickness(0),
-            HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            VerticalContentAlignment = VerticalAlignment.Center,
-        };
-        open.Click += (_, _) => Opened?.Invoke(session.Path);
-
-        var menu = new Button
-        {
-            Content = new TextBlock { Text = "⋯", [!TextBlock.FontSizeProperty] = StudioTypography.Size(12), Opacity = 0.6 },
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Padding = new Thickness(4, 0, 4, 0),
-            VerticalAlignment = VerticalAlignment.Center,
-            Flyout = SessionMenu(session),
-        };
-
-        grid.Children.Add(marks);
-        Grid.SetColumn(open, 1);
-        grid.Children.Add(open);
-        Grid.SetColumn(menu, 2);
-        grid.Children.Add(menu);
-        return grid;
-    }
 
     /// <summary>
     /// Builds the menu one conversation offers.
@@ -364,25 +323,5 @@ public sealed class ProjectRail : UserControl
         }
 
         return menu;
-    }
-
-    /// <summary>
-    /// Builds a button that fills its row and shows the given content.
-    /// </summary>
-    /// <param name="content">What the row says.</param>
-    /// <param name="faded">Whether the row stands for something that is gone.</param>
-    /// <returns>The button.</returns>
-    private Button RowButton(Control content, bool faded)
-    {
-        return new Button
-        {
-            Content = content,
-            Background = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Padding = new Thickness(4, 4, 4, 4),
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Left,
-            Opacity = faded ? 0.7 : 1,
-        };
     }
 }

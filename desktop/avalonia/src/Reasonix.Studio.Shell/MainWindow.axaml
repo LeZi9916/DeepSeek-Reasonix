@@ -13,6 +13,7 @@
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Settings.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Workbench.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Conversation.axaml" />
+    <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Sidebar.axaml" />
     <Style Selector="Window.illustrated ctl|StudioPane"><Setter Property="Background" Value="Transparent"/></Style>
     <Style Selector="Window.illustrated ctl|StudioRail"><Setter Property="Background" Value="{DynamicResource ArtworkRailBrush}"/></Style>
     <Style Selector="Window.illustrated ctl|StudioChrome"><Setter Property="Background" Value="{DynamicResource ArtworkChromeBrush}"/></Style>
@@ -302,13 +303,13 @@
         </Grid>
       </ctl:StudioPane>
     </Grid>
-    <ctl:StudioRail Name="Rail" Grid.Column="0" HorizontalAlignment="Stretch">
+    <ctl:StudioRail Name="Rail" Grid.Column="0" HorizontalAlignment="Stretch" FontFamily="{DynamicResource WorkbenchUiFamily}" FontWeight="Medium">
       <Grid RowDefinitions="44,40,44,*,52">
         <Grid Margin="20,12,13,0" ColumnDefinitions="*,28">
           <StackPanel Name="BrandLockup" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-            <Image Source="/Assets/wordmark.png" Stretch="Uniform" Margin="5,0,2,0" Width="72" Height="17" />
-            <Border BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="5" Padding="6,0">
-              <TextBlock Text="STUDIO" FontSize="{DynamicResource StudioType10}" LetterSpacing="1.2" Foreground="{DynamicResource MutedBrush}"/>
+            <Border Name="BrandLogo" Background="{DynamicResource SidebarLogoBrush}" Margin="5,0,2,0" Width="72" Height="17"><Border.OpacityMask><ImageBrush Source="/Assets/wordmark.png" Stretch="Uniform"/></Border.OpacityMask></Border>
+            <Border Name="BrandTag" BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" CornerRadius="5" Padding="6,0,5,0" Height="17" VerticalAlignment="Center">
+              <TextBlock Text="STUDIO" FontSize="{DynamicResource StudioType11}" FontWeight="SemiBold" LineHeight="11" VerticalAlignment="Center" LetterSpacing="1.2" Foreground="{DynamicResource MutedBrush}"/>
             </Border>
           </StackPanel>
           <Button Name="CollapseRail" Classes="icon" Grid.Column="1" AutomationProperties.AutomationId="action:chrome.rail"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.collapse}"/></Canvas></Viewbox></Button>
@@ -328,18 +329,23 @@
               </Grid>
             </Border>
           </ControlTemplate></Button.Template>
-          <TextBlock Name="NewSessionLabel" />
+          <TextBlock Name="NewSessionLabel" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" />
         </Button>
         <Grid Grid.Row="2" Margin="10,6,10,6">
-          <TextBox Name="RailSearch" FontSize="{DynamicResource StudioType13}" Height="30" MinHeight="0" Padding="32,0,8,0" VerticalContentAlignment="Center"
+          <TextBox Name="RailSearch" FontSize="{DynamicResource StudioType13}" Height="30" MinHeight="0" Padding="32,0,52,0" VerticalContentAlignment="Center" Foreground="{DynamicResource FaintBrush}" PlaceholderForeground="{DynamicResource FaintBrush}"
                    BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}" CornerRadius="7"/>
           <Border Margin="10,0" HorizontalAlignment="Left" VerticalAlignment="Center" IsHitTestVisible="False"><Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.search}"/></Canvas></Viewbox></Border>
+          <TextBlock Text="Ctrl K" Margin="0,0,10,0" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource FaintBrush}" FontSize="{DynamicResource StudioType11}" IsHitTestVisible="False"/>
         </Grid>
         <rail:ProjectRail Grid.Row="3" Name="Projects" />
-        <Grid Grid.Row="4" Margin="10,0" ColumnDefinitions="*,28" ColumnSpacing="5">
-          <Button Name="OpenSettings" Classes="icon" Width="NaN" Height="32" FontWeight="Medium" AutomationProperties.AutomationId="action:chrome.settings"
-                  HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10,0" />
-          <Button Name="OpenAccount" Classes="icon" Grid.Column="1">○</Button>
+        <Grid Grid.Row="4" Margin="10,0,10,10" Height="32" VerticalAlignment="Bottom" ColumnDefinitions="*,28" ColumnSpacing="5">
+            <Border Grid.ColumnSpan="2" Height="1" VerticalAlignment="Top" Margin="4,-7,4,0" Background="{DynamicResource HairBrush}"/>
+            <Button Name="OpenSettings" Classes="icon rail-settings" Width="NaN" Height="32" FontWeight="Medium" AutomationProperties.AutomationId="action:chrome.settings"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10,0" />
+            <Button Name="OpenAccount" Classes="icon" Grid.Column="1" Tag="action:sidebar.tools">
+              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round" Data="m18 15-6-6-6 6"/></Canvas></Viewbox>
+              <Button.Flyout><MenuFlyout><MenuItem Name="SidebarAccount"/><MenuItem Name="SidebarModels"/><MenuItem Name="SidebarTools"/><MenuItem Name="SidebarConnections"/></MenuFlyout></Button.Flyout>
+            </Button>
         </Grid>
 
       </Grid>

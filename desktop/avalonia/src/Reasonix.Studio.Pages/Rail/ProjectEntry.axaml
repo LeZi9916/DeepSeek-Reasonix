@@ -1,0 +1,11 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Pages.Rail.ProjectEntry" Height="30" Margin="0,1,0,0">
+  <Button Name="Fold" Classes="rail-button" AutomationProperties.AutomationId="action:workspace.fold"
+          Height="30" Padding="6,0,4,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+    <Grid ColumnDefinitions="10,16,*" ColumnSpacing="6">
+      <Viewbox Width="10" Height="10"><Canvas Width="24" Height="24"><Path Name="Chevron" Classes="rail-glyph" Data="m6 9 6 6 6-6"/></Canvas></Viewbox>
+      <Viewbox Grid.Column="1" Width="14" Height="14"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="{StaticResource Glyph.folder}"/></Canvas></Viewbox>
+      <TextBlock Grid.Column="2" Name="Title" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+    </Grid>
+  </Button>
+</UserControl>
