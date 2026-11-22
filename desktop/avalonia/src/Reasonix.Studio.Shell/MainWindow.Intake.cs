@@ -248,7 +248,7 @@ public sealed partial class MainWindow
                         var pasted = await _engine.Pages.PasteImageAsync(bytes, _closing.Token).ConfigureAwait(true);
                         if (draft == _draftKey && pasted.Ref is { Length: > 0 } reference)
                         {
-                            InsertReferences(reference);
+                            AddAttachmentReference(reference);
                         }
                     }
                 }
@@ -292,12 +292,7 @@ public sealed partial class MainWindow
                 return;
             }
 
-            var insert = string.Join(" ", refs.Select(r => r.Ref).Where(r => !string.IsNullOrWhiteSpace(r)));
-            if (insert.Length > 0)
-            {
-                InsertReferences(insert);
-            }
-
+            AddAttachments(refs);
             var refused = string.Join(Environment.NewLine, refs.Select(r => r.Error).Where(r => !string.IsNullOrEmpty(r)));
             if (refused.Length > 0)
             {

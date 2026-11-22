@@ -479,13 +479,19 @@ public sealed partial class MainWindow : Window
 
         var draft = _draftKey;
         var steer = Conversation.State.Running && !QueueDuringRun;
+        var submit = ComposeSubmitText(line);
         Composer.IsReadOnly = true;
         try
         {
-            await _engine.SendAsync(line, steer, _closing.Token).ConfigureAwait(true);
-            if (draft == _draftKey && Composer.Text == line)
+            await _engine.SendAsync(line, submit, steer, _closing.Token).ConfigureAwait(true);
+            if (draft == _draftKey)
             {
-                Composer.Text = string.Empty;
+                if (Composer.Text == line)
+                {
+                    Composer.Text = string.Empty;
+                }
+
+                ClearAttachments();
             }
 
             if (DraftStore.Read(_drafts, draft) == line)

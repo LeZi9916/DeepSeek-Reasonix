@@ -28,6 +28,7 @@
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Conversation.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerPicker.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerMenus.axaml" />
+    <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerAttachments.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Sidebar.axaml" />
     <Style Selector="Window.illustrated ctl|StudioPane"><Setter Property="Background" Value="Transparent"/></Style>
     <Style Selector="Window.illustrated ctl|StudioRail"><Setter Property="Background" Value="{DynamicResource ArtworkRailBrush}"/></Style>
@@ -210,21 +211,22 @@
               </ScrollViewer>
   <Grid>
                 <ctl:StudioComposer Name="ComposeSurface" Margin="0,0,0,35" HorizontalAlignment="Stretch" Height="NaN" MinHeight="98">
-                  <Grid Name="ComposeRows" RowDefinitions="30,Auto,46">
+                  <Grid Name="ComposeRows" RowDefinitions="30,Auto,Auto,46">
                     <Grid Name="ComposeRunState" Grid.Row="0" ColumnDefinitions="*,Auto" Margin="12,6,12,0" Height="24">
                       <ctl:StudioLineText Name="ComposerHint" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" IsVisible="False"/>
                       <Button Name="ChangedFiles" Grid.Column="1" Classes="compose-changes compose-pill" IsVisible="False" VerticalAlignment="Center" AutomationProperties.AutomationId="action:changes.open">
                         <StackPanel Orientation="Horizontal" Spacing="5"><ctl:StudioLineText Name="ChangedFilesLabel"/><ctl:StudioLineText Name="ChangedAdded" Foreground="{DynamicResource AddBrush}"/><ctl:StudioLineText Name="ChangedRemoved" Foreground="{DynamicResource DelBrush}"/></StackPanel>
                       </Button>
                     </Grid>
-                    <TextBox Name="Composer" Classes="compose-input" Grid.Row="1" AcceptsReturn="True" TextWrapping="Wrap"
+                    <WrapPanel Name="AttachmentStrip" Grid.Row="1" Margin="16,6,16,0" IsVisible="False"/>
+                    <TextBox Name="Composer" Classes="compose-input" Grid.Row="2" AcceptsReturn="True" TextWrapping="Wrap"
                              Background="Transparent" BorderThickness="0" CornerRadius="0" Padding="0" MinHeight="42" MaxHeight="168"
                              FontFamily="{DynamicResource ConversationUiFamily}" FontWeight="Medium" FontSize="{DynamicResource StudioType14}" LineHeight="{DynamicResource StudioUserHeight}"
                              Foreground="{DynamicResource TextBrush}" PlaceholderForeground="{DynamicResource FaintBrush}" VerticalContentAlignment="Top"
                              Margin="16,10,16,0" AutomationProperties.AutomationId="role:combobox" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                       <TextBox.Resources><Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness><SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent"/></TextBox.Resources>
                     </TextBox>
-                    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto,Auto" Margin="8,6,8,8" ColumnSpacing="2">
+                    <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto,Auto" Margin="8,6,8,8" ColumnSpacing="2">
                       <StackPanel Name="ComposeTools" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
                         <Button Name="Attach" Classes="compose-tool compose-icon"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
                         <Button Name="SideQuestion" Classes="compose-tool compose-icon" AutomationProperties.AutomationId="action:side.toggle"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.session}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
@@ -243,18 +245,18 @@
                       <Button Name="Stop" Grid.Column="2" Classes="compose-tool compose-stop" Width="32" Height="32" IsVisible="False" CornerRadius="16" Margin="4,0,0,0"><PathIcon Width="15" Height="15" Data="M5 5H19V19H5Z"/></Button>
                       <Button Name="Send" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Grid.Column="3" Classes="compose-tool compose-send" Width="32" Height="32" Margin="4,0,0,0" CornerRadius="16" Padding="0" AutomationProperties.AutomationId="action:session.send"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="18" Height="18"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.arrow}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="SendIntent" IsVisible="False" VerticalAlignment="Center"/></StackPanel></Button>
                     </Grid>
-                    <composer:ModelPicker Name="ModelPicker" Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
-                    <composer:ComposerPopup Name="ModePopup" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="300" MenuPadding="0,0,0,6">
+                    <composer:ModelPicker Name="ModelPicker" Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                    <composer:ComposerPopup Name="ModePopup" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="300" MenuPadding="0,0,0,6">
                       <composer:ComposerPopup.Panel>
                         <composer:ModePanel Name="ModePanel"/>
                       </composer:ComposerPopup.Panel>
                     </composer:ComposerPopup>
-                    <composer:ComposerPopup Name="PolicyPopup" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="8">
+                    <composer:ComposerPopup Name="PolicyPopup" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="8">
                       <composer:ComposerPopup.Panel>
                         <composer:PolicyPanel Name="PolicyPanel"/>
                       </composer:ComposerPopup.Panel>
                     </composer:ComposerPopup>
-                    <composer:ComposerPopup Name="BranchPopup" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="0">
+                    <composer:ComposerPopup Name="BranchPopup" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="0">
                       <composer:ComposerPopup.Panel>
                         <composer:BranchPanel Name="BranchPanel"/>
                       </composer:ComposerPopup.Panel>

@@ -131,6 +131,24 @@ public sealed class SessionEngineTests
     }
 
     /// <summary>
+    /// Checks that attachment references travel in the submit text while the visible
+    /// line stays as the person typed it.
+    /// </summary>
+    /// <returns>A task that completes when the case has run.</returns>
+    [Fact]
+    public async Task AttachmentReferencesRideWithTheSubmitText()
+    {
+        var client = new FakeClient();
+        var engine = Engine(client, new FakeTransport());
+
+        await engine.SendAsync("look at this", "@shot.png\n\nlook at this", steer: false);
+
+        var queued = Assert.Single(client.Queued);
+        Assert.Equal("look at this", queued.Input);
+        Assert.Equal("@shot.png\n\nlook at this", queued.Submit);
+    }
+
+    /// <summary>
     /// Checks that a hole the replay could not close is counted, because a view has
     /// to be able to say it is behind.
     /// </summary>

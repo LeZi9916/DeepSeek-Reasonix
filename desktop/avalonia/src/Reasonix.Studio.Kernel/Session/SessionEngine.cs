@@ -394,15 +394,30 @@ public sealed partial class SessionEngine : IAsyncDisposable
     /// as a follow-up when the turn ended first. The receipt is returned so the
     /// row this window drew can be joined to that entry.
     /// </remarks>
-    public Task<InboxReceipt> SendAsync(string line, bool steer, CancellationToken cancellationToken = default)
+    public Task<InboxReceipt> SendAsync(string line, bool steer, CancellationToken cancellationToken = default) =>
+        SendAsync(line, line, steer, cancellationToken);
+
+    /// <summary>Sends a line whose visible text differs from what the model reads.</summary>
+    /// <param name="line">The line as the person typed it.</param>
+    /// <param name="submit">The line with resolved attachment references.</param>
+    /// <param name="steer">Whether this is guidance for the running turn.</param>
+    /// <param name="cancellationToken">Cancels the send.</param>
+    /// <returns>The receipt naming the durable entry the line became.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when either text is null.</exception>
+    public Task<InboxReceipt> SendAsync(string line, string submit, bool steer, CancellationToken cancellationToken = default)
     {
         if (line is null)
         {
             throw new ArgumentNullException(nameof(line));
         }
 
+        if (submit is null)
+        {
+            throw new ArgumentNullException(nameof(submit));
+        }
+
         var intent = steer ? SubmitRequest.IntentSteer : SubmitRequest.IntentFollowUp;
-        return _client.EnqueueAsync(new SubmitRequest(line, line, intent), cancellationToken);
+        return _client.EnqueueAsync(new SubmitRequest(line, submit, intent), cancellationToken);
     }
 
     /// <summary>

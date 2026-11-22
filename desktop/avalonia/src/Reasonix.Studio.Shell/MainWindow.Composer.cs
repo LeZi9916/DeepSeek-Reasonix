@@ -85,6 +85,7 @@ public sealed partial class MainWindow
         }
 
         _draftKey = DraftStore.KeyFor(_engine.DraftHost, status.WorkspaceRoot, status.SessionPath);
+        ClearAttachments();
         Composer.Text = DraftStore.Read(_drafts, _draftKey);
         Composer.CaretIndex = Composer.Text?.Length ?? 0;
         DismissRefinement();
