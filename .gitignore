@@ -102,3 +102,4 @@ scripts/official-theme-art/__pycache__/
 *.exe
 *.exe~
 /relayfake
+desktop/avalonia/.vs
