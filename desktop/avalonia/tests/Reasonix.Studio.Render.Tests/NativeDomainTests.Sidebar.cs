@@ -131,7 +131,7 @@ public sealed partial class NativeDomainTests
         Assert.Equal(Reasonix.Studio.Pages.I18n.MessageCatalog.Get("settings.account_and_about", Reasonix.Studio.Pages.I18n.InterfaceLanguage.Zh), w.FindControl<TextBlock>("SettingsHeading")!.Text);
     });
 
-    /// <summary>Captures the actual local sidebar at both theme and viewport combinations.</summary>
+    /// <summary>Captures local and remote sidebars at both theme and viewport combinations.</summary>
     /// <param name="width">Client width.</param>
     /// <param name="height">Client height.</param>
     /// <param name="dark">Requested palette.</param>
@@ -143,10 +143,25 @@ public sealed partial class NativeDomainTests
     [InlineData(760, 480, true)]
     public Task SidebarCapturesBothThemes(int width, int height, bool dark) => WithSettings("conversation", (w, reads) =>
     {
+        reads.Exchange = request =>
+        {
+            if (request.RequestUri!.AbsolutePath != "/remotes/gpu-box/tree")
+            {
+                return Task.FromResult<System.Net.Http.HttpResponseMessage?>(null);
+            }
+
+            var tree = reads.Read<System.Text.Json.Nodes.JsonArray>("/remotes/gpu-box/tree");
+            tree[0]!["sessions"]![0]!["lastActiveAt"] = DateTimeOffset.Now.AddHours(-2).ToUnixTimeMilliseconds();
+            tree[0]!["sessions"]![1]!["lastActiveAt"] = DateTimeOffset.Now.AddDays(-7).ToUnixTimeMilliseconds();
+            return Task.FromResult<System.Net.Http.HttpResponseMessage?>(JsonReply(tree));
+        };
         w.Width = width;
         w.Height = height;
         w.RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light;
         w.FindControl<ProjectRail>("Projects")!.Show(reads.Read<TreeWorkspace[]>("/tree"), null);
+        w.FindControl<TextBox>("RailSearch")!.Text = " ";
+        Dispatcher.UIThread.RunJobs();
+        w.FindControl<TextBox>("RailSearch")!.Text = string.Empty;
         Dispatcher.UIThread.RunJobs();
         var rail = w.FindControl<Control>("Rail")!;
         if (!rail.IsEffectivelyVisible)
@@ -160,9 +175,18 @@ public sealed partial class NativeDomainTests
         if (!string.IsNullOrEmpty(output))
         {
             Directory.CreateDirectory(output);
-            using var image = new RenderTargetBitmap(new PixelSize(264, height), new Vector(96, 96));
-            image.Render(rail);
-            image.Save(Path.Combine(output, $"sidebar-{width}x{height}.{(dark ? "dark" : "light")}.png"), PngBitmapEncoderOptions.Default);
+            Save(string.Empty);
+            var scroll = w.FindControl<ProjectRail>("Projects")!.FindControl<ScrollViewer>("TreeScroll")!;
+            scroll.Offset = new Vector(0, double.MaxValue);
+            Dispatcher.UIThread.RunJobs();
+            Save("-remote");
+
+            void Save(string state)
+            {
+                using var image = new RenderTargetBitmap(new PixelSize(264, height), new Vector(96, 96));
+                image.Render(rail);
+                image.Save(Path.Combine(output, $"sidebar{state}-{width}x{height}.{(dark ? "dark" : "light")}.png"), PngBitmapEncoderOptions.Default);
+            }
         }
     });
 }

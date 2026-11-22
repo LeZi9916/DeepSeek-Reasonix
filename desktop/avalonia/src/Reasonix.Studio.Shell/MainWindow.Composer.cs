@@ -82,7 +82,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        _draftKey = DraftStore.KeyFor(_engine.Host, status.WorkspaceRoot, status.SessionPath);
+        _draftKey = DraftStore.KeyFor(_engine.DraftHost, status.WorkspaceRoot, status.SessionPath);
         Composer.Text = DraftStore.Read(_drafts, _draftKey);
         Composer.CaretIndex = Composer.Text?.Length ?? 0;
     }
@@ -109,6 +109,7 @@ public sealed partial class MainWindow
     /// <param name="state">The state the fold produced.</param>
     private void ShowComposerState(SessionState state)
     {
+        ShowSidebarState(state);
         var running = state.Running;
 
         // While a turn runs, a line is guidance unless the person chose to queue.

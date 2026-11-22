@@ -177,14 +177,17 @@ public sealed partial class MainWindow
     /// <param name="register">Whether to register a newly picked folder.</param>
     /// <param name="session">Transcript to activate, or null to start a new task.</param>
     /// <param name="current">Checks that another navigation has not superseded this one.</param>
-    private async System.Threading.Tasks.Task ActivateProjectAsync(string path, bool register, string? session = null, Func<bool>? current = null)
+    /// <param name="remoteHost">Optional machine owning the project.</param>
+    private async System.Threading.Tasks.Task ActivateProjectAsync(string path, bool register, string? session = null, Func<bool>? current = null, string? remoteHost = null)
     {
         if (_engine is not { } previous)
         {
             return;
         }
 
-        var next = await previous.OpenProjectAsync(path, _closing.Token, register, session, NewTaskPreset).ConfigureAwait(true);
+        var next = remoteHost is null
+            ? await previous.OpenProjectAsync(path, _closing.Token, register, session, NewTaskPreset).ConfigureAwait(true)
+            : await previous.OpenRemoteProjectAsync(remoteHost, path, _closing.Token, session, NewTaskPreset).ConfigureAwait(true);
         Kernel.Client.SessionStatus? status;
         try
         {
@@ -210,6 +213,7 @@ public sealed partial class MainWindow
         previous.TreeChanged -= OnTreeChanged;
         _launchOwner ??= previous;
         _engine = next;
+        _sidebarHost = remoteHost ?? string.Empty;
         next.Changed += OnChanged;
         next.QueueChanged += OnQueueChanged;
         next.TreeChanged += OnTreeChanged;

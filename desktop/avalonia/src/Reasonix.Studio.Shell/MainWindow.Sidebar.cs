@@ -11,6 +11,58 @@ public sealed partial class MainWindow
     /// <summary>Connects the sidebar's project picker and anchored settings shortcuts.</summary>
     private void InitializeSidebar()
     {
+        Projects.RemoteOpened += async (host, root, path) =>
+        {
+            var key = System.Text.Json.JsonSerializer.Serialize(new[] { host, path.Length > 0 ? path : root });
+            var ticket = _switch.Begin(key);
+            try
+            {
+                await ActivateProjectAsync(root, false, path.Length > 0 ? path : null, () => _switch.IsCurrent(ticket), host).ConfigureAwait(true);
+            }
+            catch (Exception error)
+            {
+                if (_switch.IsCurrent(ticket))
+                {
+                    ShowRefusal(error);
+                }
+            }
+            finally
+            {
+                _switch.End(ticket);
+            }
+        };
+        Projects.RemoteWritten += async (host, path, action, value) =>
+        {
+            try
+            {
+                if (_engine is not null)
+                {
+                    await _engine.Pages.WriteRemoteSessionAsync(host, path, action, value, _closing.Token).ConfigureAwait(true);
+                    await LoadTreeAsync().ConfigureAwait(true);
+                }
+            }
+            catch (Exception error)
+            {
+                ShowRefusal(error);
+            }
+        };
+        Projects.RemoteRefreshRequested += async () => await LoadTreeAsync().ConfigureAwait(true);
+        _sidebarRefresh.Tick += async (_, _) =>
+        {
+            _sidebarRefresh.Stop();
+            try
+            {
+                await LoadRemoteSidebarAsync(new Contracts.Tree.TreeWindow { Query = RailSearch.Text?.Trim() ?? string.Empty, HideLegacy = HideLegacySessions }, _treeRead).ConfigureAwait(true);
+            }
+            finally
+            {
+                if (!_closing.IsCancellationRequested)
+                {
+                    _sidebarRefresh.Start();
+                }
+            }
+        };
+        Closed += (_, _) => _sidebarRefresh.Stop();
         LayoutRoot.SizeChanged += (_, _) =>
         {
             var compact = LayoutRoot.Bounds.Width <= 760;

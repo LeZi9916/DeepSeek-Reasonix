@@ -34,7 +34,18 @@ try {
         await compare.locator("img").evaluateAll(images => Promise.all(images.map(image => image.decode())));
         const file = `${width}x${height}-${scheme}.png`;
         await compare.screenshot({ path: join(out, file) });
-        results.push({ file, viewport: { width, height }, scheme, referenceLocalRows: rows, scope: "Local project rows, shared navigation and footer. The reference also lists remote projects, which the native sidebar does not yet project." });
+        results.push({ file, viewport: { width, height }, scheme, referenceLocalRows: rows, scope: "Local and remote projects, session ages, machine identities, connection progress, shared navigation and footer." });
+        await page.locator(".rail .scroll").evaluate(node => { node.scrollTop = node.scrollHeight; });
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+        const remoteReference = await rail.screenshot();
+        const remoteNative = await readFile(join(root, "native", `sidebar-remote-${width}x${height}.${scheme}.png`));
+        await compare.locator("img").evaluateAll((images, data) => {
+          images.forEach((image, index) => { image.src = `data:image/png;base64,${data[index]}`; });
+          return Promise.all(images.map(image => image.decode()));
+        }, [remoteReference.toString("base64"), remoteNative.toString("base64")]);
+        const remoteFile = `${width}x${height}-${scheme}-remote.png`;
+        await compare.screenshot({ path: join(out, remoteFile) });
+        results.push({ file: remoteFile, viewport: { width, height }, scheme, scope: "The same sidebar scrolled to its remote project and connection rows." });
         await compare.close();
       } finally { await context.close(); }
     }

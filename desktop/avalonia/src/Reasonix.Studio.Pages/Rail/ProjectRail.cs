@@ -60,16 +60,17 @@ public sealed partial class ProjectRail : UserControl
         _rows = Rows;
         FoldAll.Click += (_, _) =>
         {
-            var allFolded = _tree.Count > 0 && _tree.All(w => _collapsed.Contains(w.Root));
-            foreach (var workspace in _tree)
+            var keys = _tree.Select(w => w.Root).Concat(_remotes.SelectMany(h => h.Projects.Select(w => RemoteKey(h.Name, w.Root)))).ToArray();
+            var allFolded = keys.Length > 0 && keys.All(_collapsed.Contains);
+            foreach (var key in keys)
             {
                 if (allFolded)
                 {
-                    _collapsed.Remove(workspace.Root);
+                    _collapsed.Remove(key);
                 }
                 else
                 {
-                    _collapsed.Add(workspace.Root);
+                    _collapsed.Add(key);
                 }
             }
 
@@ -164,9 +165,9 @@ public sealed partial class ProjectRail : UserControl
     {
         _rows.Children.Clear();
 
-        FoldAll.IsEnabled = _tree.Count > 0;
-        RecentTab.IsEnabled = _tree.Any(w => w.Sessions.Count > 0);
-        var allFolded = _tree.All(w => _collapsed.Contains(w.Root));
+        FoldAll.IsEnabled = _tree.Count > 0 || _remotes.Count > 0;
+        RecentTab.IsEnabled = _tree.Any(w => w.Sessions.Count > 0) || _remotes.Any(h => h.Projects.Any(w => w.Sessions.Count > 0));
+        var allFolded = _tree.Select(w => w.Root).Concat(_remotes.SelectMany(h => h.Projects.Select(w => RemoteKey(h.Name, w.Root)))).All(_collapsed.Contains);
         FoldShape.Data = Geometry.Parse(allFolded ? "M15 3h6v6 M21 3l-7 7 M3 15v6h6 M3 21l7-7" : "m14 10 7-7 M20 10h-6V4 m-11 17 7-7 M4 14h6v6");
         AutomationProperties.SetName(FoldAll, MessageCatalog.Get(allFolded ? "session.expand_all_projects" : "session.collapse_all_projects", Language));
         ToolTip.SetTip(FoldAll, AutomationProperties.GetName(FoldAll));
@@ -179,7 +180,7 @@ public sealed partial class ProjectRail : UserControl
                 _ => "common.all",
             },
             Language);
-        if (_tree.Count == 0)
+        if (_tree.Count == 0 && _remotes.Count == 0)
         {
             _rows.Children.Add(EmptyState());
             return;
@@ -230,6 +231,8 @@ public sealed partial class ProjectRail : UserControl
                 _rows.Children.Add(more);
             }
         }
+
+        RebuildRemotes();
     }
 
     /// <summary>Projects only facts explicitly carried by the canonical tree.</summary>
@@ -248,9 +251,11 @@ public sealed partial class ProjectRail : UserControl
     private void ShowRecent()
     {
         RecentRows.Children.Clear();
-        foreach (var session in _tree.SelectMany(w => w.Sessions).Where(s => !s.Archived).OrderByDescending(s => s.LastActiveAt))
+        var local = _tree.SelectMany(w => w.Sessions.Select(s => (Host: string.Empty, Root: w.Root, Session: s)));
+        var remote = _remotes.SelectMany(h => h.Projects.SelectMany(w => w.Sessions.Select(s => (Host: h.Name, Root: w.Root, Session: s))));
+        foreach (var row in local.Concat(remote).Where(row => !row.Session.Archived).OrderByDescending(row => row.Session.LastActiveAt))
         {
-            RecentRows.Children.Add(SessionRow(session));
+            RecentRows.Children.Add(row.Host.Length == 0 ? SessionRow(row.Session) : RemoteSessionRow(row.Host, row.Root, row.Session));
         }
     }
 
@@ -278,11 +283,17 @@ public sealed partial class ProjectRail : UserControl
     /// <summary>Builds the session's native row and its authoritative action menu.</summary>
     /// <param name="session">Canonical conversation.</param>
     /// <returns>The row.</returns>
-    private Control SessionRow(TreeSession session) => new SessionEntry(session, RailPresenter.Same(session.Path, _current), SessionMenu(session), () =>
+    private Control SessionRow(TreeSession session) => new SessionEntry(
+        session,
+        _currentHost.Length == 0 && RailPresenter.Same(session.Path, _current),
+        SessionMenu(session),
+        () =>
         {
             RecentTab.Flyout?.Hide();
             Opened?.Invoke(session.Path);
-        });
+        },
+        Language,
+        RunFor(string.Empty, session.Path));
 
     /// <summary>
     /// Builds the menu one conversation offers.

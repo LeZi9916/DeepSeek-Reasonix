@@ -73,6 +73,7 @@ public sealed partial class MainWindow
             if (ticket == _treeRead)
             {
                 ShowTree(tree);
+                await LoadRemoteSidebarAsync(query, ticket).ConfigureAwait(true);
             }
         }
         catch (OperationCanceledException)

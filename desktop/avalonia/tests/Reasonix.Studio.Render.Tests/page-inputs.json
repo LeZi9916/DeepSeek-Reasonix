@@ -2033,5 +2033,32 @@
     "path": "docs/notes.md",
     "diff": "--- a/docs/notes.md\n+++ b/docs/notes.md\n@@ -1,6 +1,7 @@\n package permission\n \n-func allows(cmd string) bool {\n-\treturn strings.Contains(cmd, \"rm -rf\")\n+func allows(cmd string) bool {\n+\tast, err := shellparse.Parse(cmd)\n+\tif err != nil {\n+\t\treturn false\n+\t}\n }",
     "truncated": false
-  }
+  },
+  "/remotes/gpu-box/tree": [
+    {
+      "root": "/srv/training",
+      "name": "training",
+      "sessions": [
+        {
+          "path": "/srv/sessions/pipeline.jsonl",
+          "name": "pipeline",
+          "title": "数据管线",
+          "turns": 7,
+          "lastActiveAt": 1795318918878
+        },
+        {
+          "path": "/srv/sessions/eval.jsonl",
+          "name": "eval",
+          "title": "跑一遍评测",
+          "turns": 2,
+          "lastActiveAt": 1794721318878
+        }
+      ]
+    },
+    {
+      "root": "/srv/scratch",
+      "name": "scratch",
+      "sessions": []
+    }
+  ]
 }

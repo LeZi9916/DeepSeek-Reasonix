@@ -94,7 +94,16 @@
           "color": "rgb(94, 98, 92)"
         }
       ],
-      "scope": "Local project rows, shared navigation and footer. The reference also lists remote projects, which the native sidebar does not yet project."
+      "scope": "Local and remote projects, session ages, machine identities, connection progress, shared navigation and footer."
+    },
+    {
+      "file": "1440x900-light-remote.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "light",
+      "scope": "The same sidebar scrolled to its remote project and connection rows."
     },
     {
       "file": "1440x900-dark.png",
@@ -189,7 +198,16 @@
           "color": "rgb(180, 183, 176)"
         }
       ],
-      "scope": "Local project rows, shared navigation and footer. The reference also lists remote projects, which the native sidebar does not yet project."
+      "scope": "Local and remote projects, session ages, machine identities, connection progress, shared navigation and footer."
+    },
+    {
+      "file": "1440x900-dark-remote.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "dark",
+      "scope": "The same sidebar scrolled to its remote project and connection rows."
     },
     {
       "file": "760x480-light.png",
@@ -284,7 +302,16 @@
           "color": "rgb(94, 98, 92)"
         }
       ],
-      "scope": "Local project rows, shared navigation and footer. The reference also lists remote projects, which the native sidebar does not yet project."
+      "scope": "Local and remote projects, session ages, machine identities, connection progress, shared navigation and footer."
+    },
+    {
+      "file": "760x480-light-remote.png",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "light",
+      "scope": "The same sidebar scrolled to its remote project and connection rows."
     },
     {
       "file": "760x480-dark.png",
@@ -379,7 +406,16 @@
           "color": "rgb(180, 183, 176)"
         }
       ],
-      "scope": "Local project rows, shared navigation and footer. The reference also lists remote projects, which the native sidebar does not yet project."
+      "scope": "Local and remote projects, session ages, machine identities, connection progress, shared navigation and footer."
+    },
+    {
+      "file": "760x480-dark-remote.png",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "dark",
+      "scope": "The same sidebar scrolled to its remote project and connection rows."
     }
   ]
 }

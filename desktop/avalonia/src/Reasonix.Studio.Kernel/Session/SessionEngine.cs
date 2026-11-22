@@ -31,7 +31,7 @@ namespace Reasonix.Studio.Kernel.Session;
 /// subscription becomes state, and that a reopened session opens on its transcript;
 /// neither of those depends on a listener existing.
 /// </remarks>
-public sealed class SessionEngine : IAsyncDisposable
+public sealed partial class SessionEngine : IAsyncDisposable
 {
     /// <summary>
     /// How many bytes one page of a call's output carries.
@@ -292,15 +292,9 @@ public sealed class SessionEngine : IAsyncDisposable
     /// <param name="preset">Device-selected composition for a new session.</param>
     public async Task<SessionEngine> OpenProjectAsync(string path, CancellationToken token, bool register = true, string? session = null, string? preset = null)
     {
-        var host = _kernel ?? throw new InvalidOperationException("This engine has no running workspace host.");
+        var kernel = _kernel ?? throw new InvalidOperationException("This engine has no running workspace host.");
         var descriptor = await Pages.OpenProjectRuntimeAsync(path, register, session, preset, token).ConfigureAwait(false);
-        var id = (string?)descriptor["id"];
-        if (string.IsNullOrEmpty(id) || id.Length < 2 || id[0] != 'r' || !id[1..].All(char.IsAsciiDigit) || (string?)descriptor["base"] != "/rt/" + id)
-        {
-            throw new System.IO.InvalidDataException("Invalid workspace runtime base.");
-        }
-
-        return new SessionEngine(host, "/rt/" + id, !string.IsNullOrEmpty((string?)descriptor["host"]));
+        return EngineForRuntime(kernel, descriptor);
     }
 
     /// <summary>Stops watching a replaced pane while its owning host remains available.</summary>

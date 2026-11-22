@@ -4,6 +4,8 @@
     <Style Selector="Button.session-menu"><Setter Property="Opacity" Value="0"/></Style>
     <Style Selector="Grid.session-frame:pointerover Button.session-menu, Grid.session-frame:focus-within Button.session-menu"><Setter Property="Opacity" Value="1"/></Style>
     <Style Selector="TextBlock.session-title"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+    <Style Selector="TextBlock.session-title.unread"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+    <Style Selector="Grid.session-frame:pointerover TextBlock.session-tail, Grid.session-frame:focus-within TextBlock.session-tail"><Setter Property="IsVisible" Value="False"/></Style>
     <Style Selector="Button.session-open"><Setter Property="Padding" Value="14,0,8,0"/></Style>
     <Style Selector="TextBlock.session-title.current"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
     <Style Selector="Button.session-open.current"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
@@ -13,11 +15,12 @@
     <Button Name="Open" Grid.ColumnSpan="2" Classes="rail-button session-open" Height="30" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" AutomationProperties.AutomationId="action:session.open">
       <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="8">
         <Grid Width="14" Height="14" VerticalAlignment="Center">
-          <Ellipse Name="Unread" Width="5" Height="5" Fill="{DynamicResource AccentBrush}" IsVisible="False"/>
+          <Ellipse Name="Unread" Width="7" Height="7" Fill="{DynamicResource TextBrush}" IsVisible="False"/>
           <Viewbox Name="Pin" Width="11" Height="11" IsVisible="False"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M16 9V3 M8 3v6 M6 3h12 M8 9l-3 3v3h14v-3l-3-3 M12 15v7"/></Canvas></Viewbox>
-          <Ellipse Name="Running" Width="6" Height="6" Stroke="{DynamicResource NetBrush}" StrokeThickness="1.5" IsVisible="False"/>
+          <Ellipse Name="Running" Width="7" Height="7" Fill="{DynamicResource NetBrush}" IsVisible="False"/>
         </Grid>
         <TextBlock Name="Title" Grid.Column="1" Classes="session-title" FontSize="{DynamicResource StudioType13}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+        <TextBlock Name="Tail" Grid.Column="2" Classes="session-tail" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center"/>
       </Grid>
     </Button>
     <Button Name="Menu" Grid.Column="1" Classes="rail-button rail-icon session-menu" Width="24" Height="24" VerticalAlignment="Center" AutomationProperties.AutomationId="action:session.menu">
