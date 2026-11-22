@@ -78,6 +78,11 @@ public sealed partial class ModelPicker
             Spacing = 6,
             VerticalAlignment = VerticalAlignment.Center,
         };
+        if (HealthBadge(model.Provider) is { } health)
+        {
+            tail.Children.Add(health);
+        }
+
         if (model.Vision)
         {
             tail.Children.Add(Badge(MessageCatalog.Get("common.reads_images", _language)));
@@ -325,6 +330,37 @@ public sealed partial class ModelPicker
         chip.Background = new SolidColorBrush(tone, 0.16);
         chip.CornerRadius = new CornerRadius(size >= 20 ? 6 : 5);
         return chip;
+    }
+
+    /// <summary>Builds the provider health reading for a model row.</summary>
+    /// <param name="provider">Configuration entry name.</param>
+    /// <returns>The badge, or null when checks are off or the reading is silent.</returns>
+    private Control? HealthBadge(string provider)
+    {
+        if (!_health.TryGetValue(provider, out var health) || health.Connection.Length == 0 || health.Connection == "disabled")
+        {
+            return null;
+        }
+
+        var (key, tone) = health.Connection switch
+        {
+            "reachable" when health.Wallet == "insufficient" => ("common.insufficient_balance", "warning"),
+            "reachable" when health.Wallet == "auth" => ("models.balance_check_failed", "warning"),
+            "reachable" => ("models.connected", "positive"),
+            "auth" => ("models.auth_failed", "warning"),
+            "missing_key" => ("models.missing_key", "warning"),
+            "payment_required" => ("models.payment_required", "warning"),
+            "quota_exhausted" => ("models.quota_exhausted", "warning"),
+            "rate_limited" => ("models.rate_limited", "warning"),
+            "timeout" => ("models.timed_out", "warning"),
+            "unreachable" => ("models.connection_failed", "warning"),
+            "redirect_refused" => ("models.redirect_refused", "warning"),
+            _ => ("models.unconfirmed", "neutral"),
+        };
+        var badge = (Border)Badge(MessageCatalog.Get(key, _language));
+        badge.Classes.Set("warning", tone == "warning");
+        badge.Classes.Set("positive", tone == "positive");
+        return badge;
     }
 
     /// <summary>Builds a small muted badge.</summary>

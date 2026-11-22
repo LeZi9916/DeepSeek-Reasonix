@@ -3,9 +3,12 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Reasonix.Studio.Kernel.Client;
+using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages.I18n;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell;
@@ -14,6 +17,9 @@ public sealed partial class MainWindow
 {
     /// <summary>The chat catalog the composer's labels and picker read.</summary>
     private IReadOnlyList<ModelChoice> _modelCatalog = [];
+
+    /// <summary>Provider health readings for the current catalog.</summary>
+    private IReadOnlyDictionary<string, ProviderHealth> _providerHealth = new Dictionary<string, ProviderHealth>();
 
     /// <summary>Names a model the way the picker does.</summary>
     /// <param name="model">The model.</param>
@@ -74,13 +80,58 @@ public sealed partial class MainWindow
             }
 
             _modelCatalog = models;
+            _providerHealth = await LoadProviderHealthAsync(engine, models, _closing.Token).ConfigureAwait(true);
             if (status is not null)
             {
                 ShowComposeStatus(status);
             }
 
-            ModelPicker.Show(models, _composerStatus, Language, focusEffort);
+            ModelPicker.Show(models, _composerStatus, Language, focusEffort, _providerHealth);
         }).ConfigureAwait(true);
+    }
+
+    /// <summary>Checks the providers in the catalog when the installation enables it.</summary>
+    /// <param name="engine">Session whose pages hold the health routes.</param>
+    /// <param name="models">Catalog about to be shown.</param>
+    /// <param name="token">Cancels the checks.</param>
+    /// <returns>Readings by provider name, empty when checks are off or fail.</returns>
+    private async Task<IReadOnlyDictionary<string, ProviderHealth>> LoadProviderHealthAsync(
+        SessionEngine engine,
+        IReadOnlyList<ModelChoice> models,
+        CancellationToken token)
+    {
+        try
+        {
+            if (!await engine.Pages.ProviderHealthEnabledAsync(token).ConfigureAwait(true))
+            {
+                return new Dictionary<string, ProviderHealth>();
+            }
+
+            var names = models.Select(model => model.Provider).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).ToArray();
+            var gate = new SemaphoreSlim(3, 3);
+            var reads = names.Select(async name =>
+            {
+                await gate.WaitAsync(token).ConfigureAwait(true);
+                try
+                {
+                    return (Name: name, Reading: (ProviderHealth?)await engine.Pages.ProviderHealthAsync(name, token).ConfigureAwait(true));
+                }
+                catch (Exception)
+                {
+                    return (Name: name, Reading: null);
+                }
+                finally
+                {
+                    gate.Release();
+                }
+            });
+            var readings = await Task.WhenAll(reads).ConfigureAwait(true);
+            return readings.Where(read => read.Reading is not null).ToDictionary(read => read.Name, read => read.Reading!, StringComparer.Ordinal);
+        }
+        catch (Exception)
+        {
+            return new Dictionary<string, ProviderHealth>();
+        }
     }
 
     /// <summary>Reads the catalog again so the trigger names the model the kernel chose.</summary>

@@ -149,6 +149,12 @@
     <Setter Property="FontSize" Value="{DynamicResource StudioType10}"/>
     <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
   </Style>
+  <Style Selector="Border.model-badge.warning TextBlock.model-badge-text">
+    <Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/>
+  </Style>
+  <Style Selector="Border.model-badge.positive TextBlock.model-badge-text">
+    <Setter Property="Foreground" Value="{DynamicResource OkInkBrush}"/>
+  </Style>
   <Style Selector="Button.model-manage">
     <Setter Property="MinHeight" Value="38"/>
     <Setter Property="Padding" Value="10,0"/>

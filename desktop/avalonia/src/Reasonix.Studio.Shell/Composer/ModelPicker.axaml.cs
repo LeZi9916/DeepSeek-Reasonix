@@ -71,6 +71,9 @@ public sealed partial class ModelPicker : UserControl
     /// <summary>The language this opening draws its labels in.</summary>
     private InterfaceLanguage _language = InterfaceLanguage.Zh;
 
+    /// <summary>Provider health readings for this opening, when checks are enabled.</summary>
+    private IReadOnlyDictionary<string, ProviderHealth> _health = new Dictionary<string, ProviderHealth>();
+
     /// <summary>Initializes a new instance of the <see cref="ModelPicker"/> class.</summary>
     public ModelPicker()
     {
@@ -136,9 +139,10 @@ public sealed partial class ModelPicker : UserControl
     /// <param name="status">The session status the composer last read.</param>
     /// <param name="language">Language for the panel's labels.</param>
     /// <param name="focusEffort">Whether the effort column should take focus first.</param>
-    public void Show(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language, bool focusEffort = false)
+    /// <param name="health">Provider health readings, when checks are enabled.</param>
+    public void Show(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language, bool focusEffort = false, IReadOnlyDictionary<string, ProviderHealth>? health = null)
     {
-        Bind(models, status, language);
+        Bind(models, status, language, health);
         Open(focusEffort);
     }
 
@@ -146,14 +150,15 @@ public sealed partial class ModelPicker : UserControl
     /// <param name="models">Chat models the kernel listed.</param>
     /// <param name="status">The settled session status.</param>
     /// <param name="language">Language for the labels.</param>
-    public void Refresh(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language)
+    /// <param name="health">Provider health readings, when checks are enabled.</param>
+    public void Refresh(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language, IReadOnlyDictionary<string, ProviderHealth>? health = null)
     {
         if (!IsOpen)
         {
             return;
         }
 
-        Bind(models, status, language);
+        Bind(models, status, language, health);
     }
 
     /// <summary>Closes the popup without changing the session.</summary>
@@ -163,11 +168,13 @@ public sealed partial class ModelPicker : UserControl
     /// <param name="models">Chat models the kernel listed.</param>
     /// <param name="status">The session status.</param>
     /// <param name="language">Language for the labels.</param>
-    private void Bind(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language)
+    /// <param name="health">Provider health readings, when checks are enabled.</param>
+    private void Bind(IReadOnlyList<ModelChoice> models, SessionStatus status, InterfaceLanguage language, IReadOnlyDictionary<string, ProviderHealth>? health)
     {
         _models = models;
         _status = status;
         _language = language;
+        _health = health ?? new Dictionary<string, ProviderHealth>();
         _accounts = Group(models, status.ModelRef);
         _chosen.IntersectWith(_accounts.Select(account => account.Key));
         BuildChrome();
