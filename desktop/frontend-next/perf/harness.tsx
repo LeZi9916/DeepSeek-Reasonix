@@ -637,15 +637,22 @@ declare global {
     __toast: (text: string) => void;
     __nativeReference: () => Promise<Record<string, unknown>>;
     __nativeTrajectory: () => ReturnType<AgentPort["trajectory"]>;
+    __nativeStatus: (patch: Partial<Awaited<ReturnType<AgentPort["status"]>>>) => void;
     __syntax: { apply: typeof applyPack; mount: typeof mountEditor };
   }
 }
 window.__nativeTrajectory = () => hub.machinePort().trajectory();
+window.__nativeStatus = (patch) => hub.feeds.forEach((port) => {
+  const status = port.status.bind(port);
+  port.status = async () => ({ ...await status(), ...patch });
+  port.feed({ kind: "turn_done" });
+});
 window.__nativeReference = async () => {
   const port = hub.machinePort();
   const reads: Record<string, Promise<unknown>> = {
-    "/tree": hub.tree(), "/status": port.status(), "/appearance": port.appearance(),
+    "/tree": hub.tree(), "/tree?order=recent": hub.tree({ order: "recent", scope: "active", limit: 50, offset: 0 }), "/status": port.status(), "/appearance": port.appearance(),
     "/context": port.context(), "/balance": port.balance(),
+    "/share": hub.shareStatus(), "/mcp": port.mcp(),
     "/models": port.models("chat").then(models => ({ models })), "/provider-setup": port.providerSetup(),
     "/git/repos": port.gitRepos(), "/workspace/git": port.workspaceGit(), "/workspace/git/log": port.workspaceGitLog(100),
     "/workspace/branches": port.branches(),

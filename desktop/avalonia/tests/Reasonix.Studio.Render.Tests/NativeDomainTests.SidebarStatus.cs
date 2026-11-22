@@ -54,7 +54,7 @@ public sealed partial class NativeDomainTests
         Dispatcher.UIThread.RunJobs();
         Assert.True(pinned);
         Assert.Equal(1, writes);
-        var remoteFold = rail.GetVisualDescendants().OfType<Button>().Single(button => AutomationProperties.GetName(button) == "training");
+        var remoteFold = rail.GetVisualDescendants().OfType<Button>().Single(button => AutomationProperties.GetName(button) == "training" && AutomationProperties.GetAutomationId(button) == "action:workspace.fold");
         remoteFold.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         w.FindControl<TextBox>("RailSearch")!.Text = "  ";
         Dispatcher.UIThread.RunJobs();

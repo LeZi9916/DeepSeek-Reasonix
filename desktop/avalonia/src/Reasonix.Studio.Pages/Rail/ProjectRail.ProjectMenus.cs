@@ -69,7 +69,7 @@ public sealed partial class ProjectRail
     {
         var machine = _remotes.First(host => host.Name == target.Host);
         var position = _remotes.ToList().FindIndex(host => host.Name == target.Host);
-        var menu = new MenuFlyout();
+        var menu = WorkspaceMenu();
         var name = machine.Projects.First(project => project.Root == target.WorkspaceRoot).Name;
         menu.Items.Add(MenuHeader(name, target.Host + " · " + target.WorkspaceRoot));
         var refresh = MenuActionItem("remote.read", MessageCatalog.Get("remote.refresh_the_sessions_on_name", Language, ("name", target.Host)));

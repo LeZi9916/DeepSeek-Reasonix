@@ -7,52 +7,24 @@ reviewed: 2026-11-22
 
 # Workspace sidebar review
 
-The eight pairs capture the actual sidebar at 1440 × 900 and 760 × 480 in both themes, at its initial position and scrolled to the remote projects. Each image retains the 264-pixel sidebar at its original scale: Electron on the left, Avalonia on the right.
+Eight pairs capture the native and Electron sidebars at 1440 × 900 and 760 × 480 in both themes. Each retains the 264-pixel rail at its original scale. The second position shows the remote projects and connection progress.
 
-Compact captures open the sidebar through the normal rail toggle.
+Project and session rows are 30 DIPs high with a one-DIP gap. Fonts use the same bundled Inter and Noto faces. Semantic resources supply light and dark inks; saved interface-font preferences still override the default.
 
-`ProjectRail.axaml`, `ProjectEntry.axaml` and `SessionEntry.axaml` own the native toolbar and rows. Project and conversation rows are 30 DIPs high with a one-DIP gap.
+The default preview retains five rows and the current conversation. More both expands loaded previews and requests the next bounded canonical window. Non-default scopes show their complete loaded matching population. At 300 rows the caption points to search.
 
-Folder and disclosure icons, indentation, title truncation, hidden session menus, selected rows and status marks use the reference geometry and semantic inks.
+The six scopes use real unread, pin, archive and reducer-owned activity state. Archive has no misleading active-window count. Clear, same-scope retry and per-machine paging preserve canonical ownership.
 
-Typeface resources use the same static Inter and Noto faces as the workbench; saved interface-font preferences still override them.
+Menus, quick actions, branch, kept histories, multi-selection and dynamic installed editors reuse kernel APIs. Move-to selects an acknowledged project and preserves a partial result. MRU search entries retain canonical identities.
 
-The project toolbar provides recent sessions, project folding, unread/pinned/archive scopes and the existing project folder picker. These projections include both local and remote session books.
+The rail reads `/remotes` and each machine's tree. It retains usable rows after transient errors and rejects older queries. Machine labels, connection progress and bootstrap steps remain beside the correct project.
 
-Recent sessions come from the canonical tree in timestamp order. Pagination and individual folds survive tree refreshes. Pin, archive and mark-read actions retain the kernel-owned paths and acknowledgements.
+Session age comes from `lastActiveAt`. An open runtime alone does not imply an active turn. Runtime machine identity also scopes drafts when multiple machines use the same path.
 
-The brand uses the wordmark's alpha mask: its original blue in light mode and 94% white in dark mode. Compact windows hide the STUDIO badge.
+Real pointer coverage includes titles, blank row space, timestamps, native double-click rename and keyboard activation. A canonical refresh between press and release preserves the pressed target. Late navigation cannot replace a later row or tab selection.
 
-The footer restores the settings icon and opens an anchored shortcuts menu containing the existing account, model, extension and connection settings routes.
+Recent selection clears its previous scope, unfolds the acknowledged project, scrolls the selected row into view and restores focus. Its own canonical search supports machine selection, pagination and retry.
 
-All eleven sidebar render cases pass. They cover pagination, folds, refresh, scopes, host-scoped pin dispatch, mark-read dispatch, account navigation, fonts and inks, actual running/failure/settled transitions, stale remote reads, transient failure and recovery, plus both capture sizes and themes.
+The affected suite passed 63 tests, including real Windows navigation, real background model streaming through a loopback provider, gestures and eight capture theories. Geometry, coverage and age validation passed 14 separate cases.
 
-A selected title resolves to 600 weight; hovering reserves space for its menu and hides the timestamp.
-
-The affected render project builds without compiler warnings or errors. The session-age boundary test passes for minute, hour, yesterday, calendar-date and unknown timestamp cases.
-
-The geometry gate earns five mapped identities: the project header, projects tab, recent tab, fold-all and add-project action. Their former missing entries are removed from the debt file and added to the coverage record. No new debt entry is added.
-
-The sidebar reads the real `/remotes` address book and each connected machine's `/remotes/{host}/tree` response. It merges acknowledged projects with saved workspace paths, retains the last acknowledged tree through a failed read, and rejects responses belonging to an older query or engine.
-
-A three-second refresh projects connection progress independently of transcript traffic.
-
-Machine labels, connecting/offline state and bootstrap steps now remain visible beside the correct project. The fixture therefore shows training, scratch, eval and notes on gpu-box, and work on builder with the installing-reasonix step.
-
-Remote opening reuses the existing runtime switch and validates the returned same-origin runtime path; row mutations write to the owning host and re-read its book.
-
-Session age comes from canonical `lastActiveAt`. The active conversation's reducer supplies running and needs-confirmation marks; an open runtime alone no longer claims that a turn is running.
-
-Remote runtime descriptors also retain their machine name for draft isolation when two machines use identical paths.
-
-The captures and tests use the authenticated HTTP fixture rather than a live SSH machine. Remote credential prompts and state subscriptions for additional simultaneously running panes were not exercised locally.
-
-The native search field queries session/project titles; the reference search entry also opens an action palette. These are functional gaps, not screenshot fixture differences hidden by the capture.
-
-Go vet passes and gofmt produces no Go changes. Go lint reports six existing findings outside this change.
-
-The builtin-tool suite fails in the existing Git metadata denial attribution fixture.
-
-WSL boot tests report unavailable bubblewrap isolation and time out after 60 seconds.
-
-`make check` reports existing global budgets for CSS size (8883 > 8876), essays (2551 > 2538), release notes (679 > 661) and wire parity (78 > 0); it reports no path violation in this change.
+See `../workspace/verification.md` for reproducible capture tools and validation boundaries. Internet pairing, SSH credential prompts and non-Windows platform accessibility remain unmeasured.

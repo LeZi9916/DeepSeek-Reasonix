@@ -30,6 +30,9 @@
     <InternalsVisibleTo Include="Reasonix.Studio.Render.Tests" />
     <InternalsVisibleTo Include="Reasonix.Studio.WebView.Smoke" />
     <AvaloniaResource Include="Assets/wordmark.png" />
+    <AvaloniaResource Include="Assets/Community/qq-group-qr.png" />
+    <AvaloniaResource Include="../../../frontend-next/src/assets/douyin-qr.jpg" Link="Assets/Community/douyin-qr.jpg" />
+    <AvaloniaResource Include="../../../frontend-next/src/data/contributors.json" Link="Assets/Community/contributors.json" />
     <AvaloniaResource Include="Assets/DataFonts/*.ttf" />
     <AvaloniaResource Include="Assets/WorkbenchFonts/*.ttf" />
     <None Include="../../../frontend-next/public/fonts/NotoSansSC-OFL.txt;../../../frontend-next/public/fonts/IBMPlexMono-OFL.txt;../../../frontend-next/public/fonts/Inter-OFL.txt" Link="licenses/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

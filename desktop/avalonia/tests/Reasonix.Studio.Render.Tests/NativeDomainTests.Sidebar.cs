@@ -86,11 +86,10 @@ public sealed partial class NativeDomainTests
     /// <summary>Scopes and session menus use canonical unread, pin and archive state.</summary>
     /// <returns>The row actions and footer navigation.</returns>
     [Fact]
-    public Task SidebarScopesAndMenusUseCanonicalState() => WithSettings("conversation", (w, _) =>
+    public Task SidebarScopesAndMenusUseCanonicalState() => WithSettings("conversation", (w, reads) =>
     {
         var rail = w.FindControl<ProjectRail>("Projects")!;
-        rail.Show(
-            new[]
+        var tree = new[]
             {
                 new TreeWorkspace
                 {
@@ -103,8 +102,9 @@ public sealed partial class NativeDomainTests
                         new TreeSession { Path = "/archived", Title = "archived", Archived = true },
                     },
                 },
-            },
-            "/pin");
+            };
+        reads.Exchange = request => Task.FromResult<System.Net.Http.HttpResponseMessage?>(request.RequestUri!.AbsolutePath == "/tree" ? JsonReply(System.Text.Json.JsonSerializer.SerializeToNode(tree)!) : null);
+        rail.Show(tree, "/pin");
         Dispatcher.UIThread.RunJobs();
         var selected = rail.GetVisualDescendants().OfType<TextBlock>().Single(t => t.Classes.Contains("session-title") && t.Text == "pinned");
         Assert.Equal(FontWeight.SemiBold, selected.FontWeight);
@@ -120,7 +120,7 @@ public sealed partial class NativeDomainTests
         Assert.Equal("unread", AutomationProperties.GetName(open));
         string? marked = null;
         rail.MarkedViewed += path => marked = path;
-        Assert.IsType<MenuFlyout>(open.ContextFlyout).Items.OfType<MenuItem>().Last().RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        Assert.IsType<MenuFlyout>(open.ContextFlyout).Items.OfType<MenuItem>().Single(item => AutomationProperties.GetAutomationId(item) == "action:session.mark-read").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         Assert.Equal("/unread", marked);
         scope.Items.OfType<MenuItem>().Single(i => AutomationProperties.GetAutomationId(i) == "action:session.scope.archived").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         Dispatcher.UIThread.RunJobs();

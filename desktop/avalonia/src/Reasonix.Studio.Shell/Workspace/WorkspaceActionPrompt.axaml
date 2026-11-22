@@ -1,0 +1,10 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Shell.Workspace.WorkspaceActionPrompt" Background="#66000000" IsVisible="False">
+  <Border MaxWidth="460" Margin="16" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="{DynamicResource RaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="24">
+    <StackPanel Spacing="14">
+      <TextBlock Name="Title" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+      <TextBlock Name="Detail" FontSize="12" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+      <TextBox Name="Value" AutomationProperties.AutomationId="field:workspace.action"/>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8"><Button Name="Cancel" AutomationProperties.AutomationId="action:workspace.cancel"/><Button Name="Confirm" AutomationProperties.AutomationId="action:workspace.confirm"/></StackPanel>
+    </StackPanel>
+  </Border>
+</UserControl>

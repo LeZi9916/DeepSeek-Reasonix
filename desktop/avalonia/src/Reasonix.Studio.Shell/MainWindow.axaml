@@ -7,11 +7,13 @@
         xmlns:rail="using:Reasonix.Studio.Pages.Rail"
         xmlns:workbench="using:Reasonix.Studio.Shell.Workbench"
         xmlns:session="using:Reasonix.Studio.Shell.Session"
+        xmlns:workspace="using:Reasonix.Studio.Shell.Workspace"
         x:Class="Reasonix.Studio.Shell.MainWindow"
         Title="Reasonix Studio" Width="1440" Height="900"
         MinWidth="760" MinHeight="480" Background="{DynamicResource SurfaceBrush}">
   <Window.Resources>
     <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries><ResourceInclude Source="avares://Reasonix.Studio.Pages/Rail/WorkspaceMenu.axaml"/></ResourceDictionary.MergedDictionaries>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light"><SolidColorBrush x:Key="ComposeMaskBrush" Color="{DynamicResource Ghost}"/><SolidColorBrush x:Key="ComposeContextProgressBrush" Color="#858981"/><SolidColorBrush x:Key="ComposeContextHoleBrush" Color="{DynamicResource Surface}"/></ResourceDictionary>
         <ResourceDictionary x:Key="Dark"><SolidColorBrush x:Key="ComposeMaskBrush" Color="{DynamicResource Muted}"/><SolidColorBrush x:Key="ComposeContextProgressBrush" Color="{DynamicResource Accent}"/><SolidColorBrush x:Key="ComposeContextHoleBrush" Color="{DynamicResource Raised}"/></ResourceDictionary>
@@ -79,27 +81,32 @@
     <appearance:ThemeBackdrop Name="Backdrop" Grid.ColumnSpan="2"/>
     <Grid Name="MainArea" Grid.Column="1" RowDefinitions="48,Auto,*">
       <ctl:StudioChrome Name="TitleChrome">
-        <Grid ColumnDefinitions="Auto,*,Auto">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
           <Button Name="ExpandRail" Classes="icon" IsVisible="False" Margin="0,0,8,0"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.expand}"/></Canvas></Viewbox></Button>
           <ctl:StudioCrumb Grid.Column="1" Height="19" ClipToBounds="True">
-            <Grid ColumnDefinitions="16,Auto,Auto,*" ColumnSpacing="8">
+            <Grid ColumnDefinitions="16,Auto,Auto,Auto,Auto,*">
               <Button Name="OpenProject" Classes="icon" Width="16" Height="16" CornerRadius="0"
                       AutomationProperties.AutomationId="action:chrome.open-project">
                 <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
                   <Path Data="M3,5 Q3,4 5,4 H10 L12,7 H20 Q22,7 22,9 V18 Q22,20 20,20 H5 Q3,20 3,18 Z" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.7" StrokeJoin="Round"/>
                 </Canvas></Viewbox>
               </Button>
-              <TextBlock Name="ProjectName" Grid.Column="1" Text="Reasonix Studio" FontSize="{DynamicResource StudioType13}" />
-              <TextBlock Grid.Column="2" Text="/" FontSize="{DynamicResource StudioType13}" Opacity="0.5" />
-              <TextBlock Name="CrumbTitle" Grid.Column="3" FontSize="{DynamicResource StudioType13}" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+              <TextBlock Name="ProjectName" Grid.Column="1" Margin="8,0,0,0" Text="Reasonix Studio" FontSize="{DynamicResource StudioType13}" />
+              <Border Name="IsolatedBadge" Grid.Column="2" Margin="8,0,0,0" CornerRadius="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="5,0" IsVisible="False"><TextBlock Name="IsolatedBadgeLabel" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}"/></Border>
+              <Border Name="HostBadge" Grid.Column="3" Margin="8,0,0,0" CornerRadius="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="5,0" IsVisible="False"><TextBlock Name="HostBadgeLabel" MaxWidth="100" TextTrimming="CharacterEllipsis" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}"/></Border>
+              <TextBlock Grid.Column="4" Margin="8,0,0,0" Text="/" FontSize="{DynamicResource StudioType13}" Opacity="0.5" />
+              <TextBlock Name="CrumbTitle" Grid.Column="5" Margin="8,0,0,0" FontSize="{DynamicResource StudioType13}" Opacity="0.7" TextTrimming="CharacterEllipsis" />
             </Grid>
           </ctl:StudioCrumb>
-          <Grid Grid.Column="2" Width="132" ColumnDefinitions="*,28,4,28">
+          <Border Name="QueuedBadge" Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" CornerRadius="5" Background="{DynamicResource OverlayBrush}" Padding="6,3" IsVisible="False"><TextBlock Name="QueuedBadgeLabel" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource MutedBrush}"/></Border>
+          <Grid Name="ChromeGroup" Grid.Column="3" Width="132">
+          <Grid Name="ChromeTools" Width="132" ColumnDefinitions="*,28,4,28">
             <Button Name="FindButton" Classes="icon" HorizontalAlignment="Left" Margin="8,0,0,0" AutomationProperties.AutomationId="action:transcript.find">
               <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
                 <Path Data="M18,10 A8,8 0 1 1 2,10 A8,8 0 1 1 18,10 M16,16 L22,22" Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round"/>
               </Canvas></Viewbox>
             </Button>
+            <workspace:WorkspaceChromeStatus Name="WorkspaceStatus" HorizontalAlignment="Left" Margin="40,0,0,0"/>
             <Button Name="ThemeSwitch" Grid.Column="1" Classes="icon" AutomationProperties.AutomationId="action:appearance.theme">
               <ContentControl Name="ThemeGlyph" Width="16" Height="16" HorizontalContentAlignment="Center">
                 <Viewbox Width="16" Height="16">
@@ -122,6 +129,8 @@
                 </MenuFlyout>
               </Button.Flyout>
             </Button>
+          </Grid>
+          <Button Name="ChromeMore" Classes="icon" IsVisible="False" AutomationProperties.AutomationId="action:chrome.more"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="M5 12h.01 M12 12h.01 M19 12h.01" Stroke="{DynamicResource MutedBrush}" StrokeThickness="3" StrokeLineCap="Round"/></Canvas></Viewbox></Button>
           </Grid>
         </Grid>
       </ctl:StudioChrome>

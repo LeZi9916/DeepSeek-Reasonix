@@ -93,6 +93,14 @@ internal sealed partial class SessionEntry
                 return;
             }
 
+            if (e.Key == Key.Apps || (e.Key == Key.F10 && e.KeyModifiers == KeyModifiers.Shift))
+            {
+                e.Handled = true;
+                menu.ShowAt(Open);
+                Dispatcher.UIThread.Post(() => menu.Items.OfType<MenuItem>().FirstOrDefault(item => item.IsEnabled)?.Focus(NavigationMethod.Tab));
+                return;
+            }
+
             var delete = e.KeyModifiers.HasFlag(KeyModifiers.Alt) || e.KeyModifiers.HasFlag(KeyModifiers.Shift)
                 ? false
                 : (e.Key == Key.Delete && !e.KeyModifiers.HasFlag(KeyModifiers.Meta))

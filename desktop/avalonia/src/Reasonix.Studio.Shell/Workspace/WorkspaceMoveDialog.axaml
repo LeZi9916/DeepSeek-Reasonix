@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:tree="using:Reasonix.Studio.Contracts.Tree" x:Class="Reasonix.Studio.Shell.Workspace.WorkspaceMoveDialog" Background="#66000000" IsVisible="False" FontFamily="{DynamicResource WorkbenchUiFamily}" Foreground="{DynamicResource TextBrush}" KeyboardNavigation.TabNavigation="Cycle" AutomationProperties.AutomationId="class:move-session">
+  <Border MaxWidth="520" Margin="20" Padding="24" CornerRadius="12" Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+    <ScrollViewer MaxHeight="560" HorizontalScrollBarVisibility="Disabled"><StackPanel Spacing="14">
+      <TextBlock Name="Title" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
+      <TextBlock Name="TargetLabel" FontSize="12"/>
+      <ListBox Name="ProjectChoices" MaxHeight="190" Background="Transparent" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" AutomationProperties.AutomationId="action:session.move-to-target"><ListBox.ItemTemplate><DataTemplate x:DataType="tree:TreeWorkspace"><StackPanel Spacing="3" Margin="6"><TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"/><TextBlock Text="{Binding Root}" FontSize="11" Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
+      <StackPanel Name="EmptyProjects" Spacing="8" IsVisible="False"><TextBlock Name="EmptyLabel" FontSize="12" TextWrapping="Wrap"/><Button Name="AddProject" HorizontalAlignment="Left" AutomationProperties.AutomationId="action:session.move-to-add"/></StackPanel>
+      <Grid Name="Travels" ColumnDefinitions="*,*" ColumnSpacing="18"><StackPanel Spacing="6"><TextBlock Name="TravelsLabel" FontWeight="SemiBold" FontSize="12"/><TextBlock Name="TravelsDetail" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/></StackPanel><StackPanel Grid.Column="1" Spacing="6"><TextBlock Name="StaysLabel" FontWeight="SemiBold" FontSize="12"/><TextBlock Name="StaysDetail" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/></StackPanel></Grid>
+      <TextBlock Name="PolicyNote" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}"/>
+      <TextBlock Name="Failure" IsVisible="False" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap" FontSize="12"/>
+      <TextBlock Name="MoveNote" IsVisible="False" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" FontSize="12"/>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8"><Button Name="Cancel" AutomationProperties.AutomationId="action:session.move-to-cancel"/><Button Name="MoveSession" AutomationProperties.AutomationId="action:session.move-to"/></StackPanel>
+    </StackPanel></ScrollViewer>
+  </Border>
+</UserControl>

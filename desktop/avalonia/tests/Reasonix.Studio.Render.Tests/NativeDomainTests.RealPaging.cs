@@ -14,6 +14,7 @@ using Reasonix.Studio.Pages.Rail;
 using Reasonix.Studio.Shell;
 using Reasonix.Studio.State.Transcript;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -40,11 +41,13 @@ public sealed partial class NativeDomainTests
         }
 
         var scratch = Directory.CreateTempSubdirectory("studio-real-paging-");
+        Process? hosted = null;
         try
         {
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
             var token = timeout.Token;
             using var kernel = await HostLauncher.StartAsync(binary, [], token, scratch.CreateSubdirectory("profile").FullName);
+            hosted = Process.GetProcessById(kernel.Pid);
             await using var owner = new SessionEngine(kernel);
             var project = scratch.CreateSubdirectory("project");
             await using var seed = await owner.OpenProjectAsync(project.FullName, token);
@@ -129,7 +132,7 @@ public sealed partial class NativeDomainTests
         }
         finally
         {
-            scratch.Delete(true);
+            await RemoveHostProfileAsync(hosted, scratch);
         }
     }
 }

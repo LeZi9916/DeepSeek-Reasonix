@@ -98,6 +98,8 @@ public sealed partial class MainWindow : Window
         InitializeIntake();
         InitializePreferences();
         InitializeNavigation();
+        InitializeWorkspaceSearch();
+        WorkspaceStatus.DeviceAccessRequested += OpenDeviceAccess;
         Conversation.SubmitAnswers = (id, answers) => TryAnswerAsync(() => _engine!.AnswerAsync(id, answers, _closing.Token));
         Conversation.EngageQuestion = id => TryAnswerAsync(() => _engine!.Pages.EngageAsync(id, _closing.Token));
         Label(DismissError, MessageKey.Common.Close);

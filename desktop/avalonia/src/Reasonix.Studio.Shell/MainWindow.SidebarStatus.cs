@@ -36,7 +36,7 @@ public sealed partial class MainWindow
     {
         var waiting = state.Items.Any(item => item is ApprovalItem { Open: true } or AskItem { Answered: null, Outcome: null });
         var run = waiting || state.Terminal is FailedTerminal ? "halt" : state.Running ? "running" : string.Empty;
-        Projects.ShowRun(_sidebarHost, _sessionPath, run);
+        Projects.ShowRun(_sidebarHost, _sessionPath, run, state.Running);
     }
 
     /// <summary>Reads machine state and connected project books without opening a remote pane.</summary>
@@ -70,7 +70,7 @@ public sealed partial class MainWindow
                 {
                     try
                     {
-                        trees[name] = await engine.Pages.RemoteTreeAsync(name, query, _closing.Token).ConfigureAwait(true);
+                        trees[name] = await engine.Pages.RemoteTreeAsync(name, Projects.WindowFor(query.Query, query.HideLegacy, name), _closing.Token).ConfigureAwait(true);
                     }
                     catch (OperationCanceledException) when (_closing.IsCancellationRequested)
                     {
@@ -105,6 +105,8 @@ public sealed partial class MainWindow
                     Status = status,
                     Step = (string?)entry["step"] ?? string.Empty,
                     Error = error,
+                    DefaultRoot = primary ?? string.Empty,
+                    SavedRoots = saved,
                     Projects = projects,
                 });
             }

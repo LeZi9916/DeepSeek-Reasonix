@@ -128,7 +128,7 @@ public sealed partial class MainWindow
     private void LabelChrome()
     {
         NewSessionLabel.Text = MessageCatalog.Get(MessageKey.Common.StartANewSession, Language);
-        RailSearch.PlaceholderText = MessageCatalog.Get(MessageKey.Chat.SearchSessionsOrProjects, Language);
+        RailSearch.PlaceholderText = MessageCatalog.Get("app.search_conversations_or_actions", Language);
         Label(ExpandRail, MessageKey.App.ShowTheWorkspaceRail);
         Label(CollapseRail, MessageKey.Common.CollapseTheWorkspaceRail);
         Label(RailGrip, MessageKey.App.ResizeTheWorkspaceRail);
@@ -288,13 +288,7 @@ public sealed partial class MainWindow
         }
         else if (e.Key == Key.K && e.KeyModifiers == primary)
         {
-            if (!Rail.IsVisible)
-            {
-                ToggleRail();
-            }
-
-            RailSearch.Focus();
-            RailSearch.SelectAll();
+            OpenWorkspaceSearch();
         }
         else if (e.Key == Key.N && e.KeyModifiers == KeyModifiers.Alt)
         {

@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="using:Reasonix.Studio.Shell.Workspace" x:Class="Reasonix.Studio.Shell.Workspace.DeviceAccessCard" Width="320" MaxHeight="620" FontFamily="{DynamicResource WorkbenchUiFamily}" FontWeight="Medium" Foreground="{DynamicResource TextBrush}" AutomationProperties.AutomationId="class:phone-card">
+  <UserControl.Resources><ControlTheme x:Key="DeviceSwitch" TargetType="ToggleButton">
+    <Setter Property="Width" Value="34"/><Setter Property="Height" Value="20"/><Setter Property="MinWidth" Value="0"/><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="Template"><ControlTemplate><Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="3"><Ellipse Name="Thumb" Width="12" Height="12" HorizontalAlignment="Left" Fill="{DynamicResource MutedBrush}"/></Border></ControlTemplate></Setter>
+    <Style Selector="^:checked"><Setter Property="Background" Value="{DynamicResource AccentBrush}"/></Style>
+    <Style Selector="^:checked /template/ Ellipse#Thumb"><Setter Property="HorizontalAlignment" Value="Right"/><Setter Property="Fill" Value="{DynamicResource AccentFgBrush}"/></Style>
+  </ControlTheme></UserControl.Resources>
+  <Border Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled"><StackPanel Spacing="14">
+    <StackPanel Spacing="3"><TextBlock Name="Title" FontSize="13" FontWeight="SemiBold"/><TextBlock Name="Subtitle" FontSize="11" Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap"/></StackPanel>
+    <TextBlock Name="Failure" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap" IsVisible="False"/>
+    <StackPanel Spacing="8"><TextBlock Name="ConnectedCount" FontSize="12" FontWeight="SemiBold" IsVisible="False"/><StackPanel Name="Devices" Spacing="8"/></StackPanel>
+    <TextBlock Name="ReachLabel" FontSize="11" Foreground="{DynamicResource FaintBrush}"/>
+    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
+      <StackPanel Spacing="10"><Grid ColumnDefinitions="*,Auto"><TextBlock Name="LocalLabel" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/><ToggleButton Name="AllowLocal" Grid.Column="1" Theme="{StaticResource DeviceSwitch}" AutomationProperties.AutomationId="action:share.toggle"/></Grid>
+        <ComboBox Name="Address" HorizontalAlignment="Stretch" AutomationProperties.AutomationId="action:share.address"/>
+        <Grid Name="LocalCode" ColumnDefinitions="148,*" ColumnSpacing="10" IsVisible="False"><local:QrCodeImage Name="LocalQr" Width="148" Height="148"/><StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center"><TextBlock Name="Expires" FontSize="11" TextWrapping="Wrap"/><Button Name="CopyLocal" AutomationProperties.AutomationId="action:share.copy"/><Button Name="NewLocal" AutomationProperties.AutomationId="action:share.offer"/></StackPanel></Grid>
+        <Button Name="MintLocal" HorizontalAlignment="Left" IsVisible="False" AutomationProperties.AutomationId="action:share.offer"/>
+      </StackPanel>
+    </Border>
+    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12"><StackPanel Spacing="10"><TextBlock Name="CloudLabel" FontSize="12" FontWeight="SemiBold"/><TextBlock Name="CloudNote" FontSize="11" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/><local:QrCodeImage Name="CloudQr" Width="148" Height="148" HorizontalAlignment="Left" IsVisible="False"/><StackPanel Orientation="Horizontal" Spacing="8"><Button Name="CopyCloud" IsVisible="False" AutomationProperties.AutomationId="action:share.cloud-copy"/><Button Name="NewCloud" IsVisible="False" AutomationProperties.AutomationId="action:share.cloud-offer"/></StackPanel></StackPanel></Border>
+  </StackPanel></ScrollViewer>
+  </Border>
+</UserControl>

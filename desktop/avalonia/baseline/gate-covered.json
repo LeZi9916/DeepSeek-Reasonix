@@ -14,6 +14,7 @@
   "action:session.recent#0",
   "action:session.send#0",
   "action:session.view#0",
+  "action:share.card#0",
   "action:side.toggle#0",
   "action:transcript.find#0",
   "action:workspace.add#0",

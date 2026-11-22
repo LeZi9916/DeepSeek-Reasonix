@@ -236,7 +236,7 @@ public sealed partial class MainWindow
         SettingsIndex.Padding = new Thickness(0, parent == "storage" ? 12 : 10);
         SettingsPanel.Classes.Set("data-page", parent == "storage");
         SettingsHeadingBlock.IsVisible = true;
-        SettingsHeading.Text = MessageCatalog.Get(s_sections.First(s => s.Id == parent).Title, Language);
+        SettingsHeading.Text = MessageCatalog.Get(parent == "usage" ? "app.usage" : s_sections.First(s => s.Id == parent).Title, Language);
         SettingsDescription.Text = SectionDescription(parent);
         SettingsDescription.IsVisible = SettingsDescription.Text.Length > 0;
         SettingsUsual.Text = MessageCatalog.Get("settings.page_usual", Language);
@@ -289,6 +289,7 @@ public sealed partial class MainWindow
                     break;
                 case "controls":
                     SessionLimitControl(column);
+                    SessionQuickActionsControl(column);
                     var keys = Card(column, "settings.keyboard_shortcuts");
                     ShortcutChoice(keys);
                     ShortcutReference(keys);
@@ -370,6 +371,9 @@ public sealed partial class MainWindow
                     await FlagControlAsync(previews, StudioSetting.ChangedFiles, "settings.file_changes").ConfigureAwait(true);
                     await FlagControlAsync(previews, StudioSetting.PresentFiles, "settings.ai_file_delivery_cards").ConfigureAwait(true);
                     break;
+                case "usage" when api is not null:
+                    await AddUsageAsync(Card(column, "app.usage"), api).ConfigureAwait(true);
+                    break;
                 case "storage":
                     if (api is not null)
                     {
@@ -409,6 +413,7 @@ public sealed partial class MainWindow
                     await VersionSettingsAsync(diagnostics, api).ConfigureAwait(true);
                     await FlagControlAsync(diagnostics, StudioSetting.TraceExport, "data.trace_export").ConfigureAwait(true);
                     LogsAction(diagnostics);
+                    CommunityControl(column);
                     break;
                 case "advanced":
                     var advanced = Card(column, "settings.not_in_this_version_yet");

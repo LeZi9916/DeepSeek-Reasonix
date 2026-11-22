@@ -2129,5 +2129,194 @@
         "granted": "¥10.00"
       }
     ]
-  }
+  },
+  "/share": {
+    "open": false,
+    "addresses": [
+      {
+        "interface": "Wi-Fi",
+        "ip": "192.168.1.20",
+        "kind": "lan"
+      },
+      {
+        "interface": "Tailscale",
+        "ip": "100.101.7.3",
+        "kind": "tailnet"
+      },
+      {
+        "interface": "vEthernet (WSL)",
+        "ip": "172.28.160.1",
+        "kind": "virtual"
+      }
+    ],
+    "devices": [],
+    "cloudDevices": [],
+    "cloudRemote": {
+      "online": false,
+      "reason": "signed_out"
+    }
+  },
+  "/mcp": {
+    "servers": [
+      {
+        "name": "time",
+        "state": "ready",
+        "enabled": true,
+        "transport": "stdio",
+        "source": "built-in",
+        "description": "Current time in any IANA zone, and conversion between two of them.",
+        "tools": 2,
+        "toolList": [
+          {
+            "name": "get_current_time",
+            "description": "Current time in a given IANA timezone.",
+            "readOnly": true
+          },
+          {
+            "name": "convert_time",
+            "description": "Convert a wall-clock time between two zones.",
+            "readOnly": true
+          }
+        ]
+      },
+      {
+        "name": "context7",
+        "state": "standby",
+        "enabled": true,
+        "tools": 1,
+        "transport": "http",
+        "remembered": true,
+        "description": "Up-to-date library documentation, pulled per package and version.",
+        "toolList": [
+          {
+            "name": "get_library_docs",
+            "description": "Fetch docs for a resolved library ID.",
+            "readOnly": true
+          }
+        ]
+      },
+      {
+        "name": "figma",
+        "state": "failed",
+        "enabled": true,
+        "transport": "http",
+        "tools": 1,
+        "httpStatus": 401,
+        "error": "401 unauthorized: figma-mcp needs a personal access token with file_read scope; set FIGMA_TOKEN and reconnect",
+        "description": "Read Figma files, frames and comments.",
+        "remembered": true,
+        "stale": true,
+        "toolList": [
+          {
+            "name": "get_file",
+            "description": "Read one Figma file's node tree."
+          }
+        ]
+      }
+    ],
+    "scope": {
+      "root": "F:Reasonix",
+      "name": "Reasonix",
+      "key": "repo:8f3c1a92d4e05b17",
+      "repo": true,
+      "trees": 3,
+      "branch": "studio",
+      "overrides": 0,
+      "current": true
+    }
+  },
+  "/tree?order=recent": [
+    {
+      "root": "~/projects/workspace-0",
+      "name": "workspace-0",
+      "remembered": true,
+      "open": true,
+      "sessions": [
+        {
+          "path": "/sessions/w0-s0.jsonl",
+          "name": "w0-s0",
+          "title": "第 0 次会话，标题是内核起的一句话",
+          "turns": 1
+        },
+        {
+          "path": "/sessions/w0-s1.jsonl",
+          "name": "w0-s1",
+          "title": "第 1 次会话，标题是内核起的一句话",
+          "turns": 2
+        },
+        {
+          "path": "/sessions/w0-s2.jsonl",
+          "name": "w0-s2",
+          "title": "第 2 次会话，标题是内核起的一句话",
+          "turns": 3
+        },
+        {
+          "path": "/sessions/w0-s3.jsonl",
+          "name": "w0-s3",
+          "title": "第 3 次会话，标题是内核起的一句话",
+          "turns": 4
+        },
+        {
+          "path": "/sessions/w0-s4.jsonl",
+          "name": "w0-s4",
+          "title": "第 4 次会话，标题是内核起的一句话",
+          "turns": 5
+        },
+        {
+          "path": "/sessions/w0-s5.jsonl",
+          "name": "w0-s5",
+          "title": "第 5 次会话，标题是内核起的一句话",
+          "turns": 6
+        }
+      ],
+      "recentOffset": 0,
+      "remaining": 0
+    },
+    {
+      "root": "~/projects/workspace-1",
+      "name": "workspace-1",
+      "remembered": true,
+      "open": false,
+      "sessions": [
+        {
+          "path": "/sessions/w1-s0.jsonl",
+          "name": "w1-s0",
+          "title": "第 0 次会话，标题是内核起的一句话",
+          "turns": 1
+        },
+        {
+          "path": "/sessions/w1-s1.jsonl",
+          "name": "w1-s1",
+          "title": "第 1 次会话，标题是内核起的一句话",
+          "turns": 2
+        },
+        {
+          "path": "/sessions/w1-s2.jsonl",
+          "name": "w1-s2",
+          "title": "第 2 次会话，标题是内核起的一句话",
+          "turns": 3
+        },
+        {
+          "path": "/sessions/w1-s3.jsonl",
+          "name": "w1-s3",
+          "title": "第 3 次会话，标题是内核起的一句话",
+          "turns": 4
+        },
+        {
+          "path": "/sessions/w1-s4.jsonl",
+          "name": "w1-s4",
+          "title": "第 4 次会话，标题是内核起的一句话",
+          "turns": 5
+        },
+        {
+          "path": "/sessions/w1-s5.jsonl",
+          "name": "w1-s5",
+          "title": "第 5 次会话，标题是内核起的一句话",
+          "turns": 6
+        }
+      ],
+      "recentOffset": 0,
+      "remaining": 0
+    }
+  ]
 }

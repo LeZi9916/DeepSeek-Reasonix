@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Host;
 using System;
+using System.Linq;
 
 namespace Reasonix.Studio.Shell;
 
@@ -11,6 +12,20 @@ public sealed partial class MainWindow
     /// <summary>Connects the sidebar's project picker and anchored settings shortcuts.</summary>
     private void InitializeSidebar()
     {
+        Projects.WindowRequested += ReadSidebarWindowAsync;
+        Projects.RecentRequested += OpenRecentSessions;
+        Projects.BatchRequested += RunSidebarBatchAsync;
+        Projects.OpenWithRequested += async () =>
+        {
+            var owner = _launchOwner ?? _engine;
+            if (owner is null)
+            {
+                return Array.Empty<Reasonix.Studio.Pages.Rail.WorkspaceOpenTarget>();
+            }
+
+            var catalog = await owner.Pages.WorkspaceEditorsAsync(_closing.Token).ConfigureAwait(true);
+            return (catalog["targets"] as System.Text.Json.Nodes.JsonArray)?.OfType<System.Text.Json.Nodes.JsonObject>().Select(editor => new Reasonix.Studio.Pages.Rail.WorkspaceOpenTarget((string?)editor["id"] ?? string.Empty, (string?)editor["name"] ?? string.Empty, (bool?)editor["available"] == true, (string?)editor["why"] ?? string.Empty)).ToArray() ?? Array.Empty<Reasonix.Studio.Pages.Rail.WorkspaceOpenTarget>();
+        };
         Projects.RemoteOpened += async (host, root, path) =>
         {
             var key = System.Text.Json.JsonSerializer.Serialize(new[] { host, path.Length > 0 ? path : root });
@@ -76,7 +91,7 @@ public sealed partial class MainWindow
             {
                 try
                 {
-                    await ActivateProjectAsync(path, true).ConfigureAwait(true);
+                    await AddSidebarProjectAsync(path).ConfigureAwait(true);
                 }
                 catch (Exception error)
                 {

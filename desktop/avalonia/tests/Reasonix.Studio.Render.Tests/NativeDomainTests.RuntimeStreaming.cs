@@ -16,6 +16,7 @@ using Reasonix.Studio.Pages.Rail;
 using Reasonix.Studio.Shell;
 using Reasonix.Studio.State.Transcript;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -42,6 +43,7 @@ public sealed partial class NativeDomainTests
         }
 
         var scratch = Directory.CreateTempSubdirectory("studio-sidebar-stream-");
+        Process? hosted = null;
         try
         {
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(90));
@@ -72,6 +74,7 @@ public sealed partial class NativeDomainTests
                 """,
                 token);
             using var kernel = await HostLauncher.StartAsync(binary, Array.Empty<string>(), token, profile.FullName);
+            hosted = Process.GetProcessById(kernel.Pid);
             await using var owner = new SessionEngine(kernel);
             await using var first = await owner.OpenProjectAsync(firstRoot.FullName, token, preset: "builtin:minimal");
             await using var second = await owner.OpenProjectAsync(secondRoot.FullName, token, preset: "builtin:minimal");
@@ -107,7 +110,7 @@ public sealed partial class NativeDomainTests
                         var tree = await owner.TreeAsync(null, token).ConfigureAwait(true);
                         window.FindControl<ProjectRail>("Projects")!.Show(tree, firstPath);
                         Dispatcher.UIThread.RunJobs();
-                        ClickSession(secondPath);
+                        await ClickSession(secondPath).ConfigureAwait(true);
                         await Wait(() => window.FindControl<SessionPage>("Conversation")!.State.Items.OfType<SayItem>().Any(item => item.Text == "second ready")).ConfigureAwait(true);
                         Assert.Equal(string.Empty, draft.Text);
                         draft.Text = "second unsent draft";
@@ -119,12 +122,12 @@ public sealed partial class NativeDomainTests
                         Assert.DoesNotContain(window.FindControl<SessionPage>("Conversation")!.State.Items.OfType<SayItem>(), item => item.Text.Contains("background progress", StringComparison.Ordinal));
                         window.FindControl<ProjectRail>("Projects")!.Show(await owner.TreeAsync(null, token).ConfigureAwait(true), secondPath);
                         Dispatcher.UIThread.RunJobs();
-                        ClickSession(firstPath);
+                        await ClickSession(firstPath).ConfigureAwait(true);
                         await Wait(() => draft.Text == "first unsent draft" && window.FindControl<SessionPage>("Conversation")!.State.Running).ConfigureAwait(true);
                         Assert.Contains(window.FindControl<SessionPage>("Conversation")!.State.Items.OfType<SayItem>(), item => item.Text.Contains("background progress", StringComparison.Ordinal));
                         provider.Finish.TrySetResult(true);
                         await Wait(() => !first.State.Running && Text(first).Contains("finished", StringComparison.Ordinal)).ConfigureAwait(true);
-                        ClickSession(secondPath);
+                        await ClickSession(secondPath).ConfigureAwait(true);
                         await Wait(() => draft.Text == "second unsent draft").ConfigureAwait(true);
                         Assert.Equal(1, provider.SlowRequests);
                         Assert.Equal(string.Empty, provider.Failure);
@@ -137,15 +140,15 @@ public sealed partial class NativeDomainTests
 
                     return 0;
 
-                    void ClickSession(string path)
+                    async Task ClickSession(string path)
                     {
                         var rail = window.FindControl<ProjectRail>("Projects")!;
-                        var entry = rail.SearchEntries.Single(entry => entry.Target.Host.Length == 0 && entry.Target.SessionPath == path);
-                        var title = entry.Session.Title.Length > 0 ? entry.Session.Title : entry.Session.Name;
-                        var row = rail.GetVisualDescendants().OfType<Button>().Single(button => AutomationProperties.GetAutomationId(button) == "action:session.open" && AutomationProperties.GetName(button) == title);
+                        Button? Row() => rail.GetVisualDescendants().OfType<Button>().SingleOrDefault(button => AutomationProperties.GetAutomationId(button) == "action:session.open" && AutomationProperties.GetHelpText(button) == path);
+                        await Wait(() => Row() is { IsEffectivelyVisible: true }).ConfigureAwait(true);
+                        var row = Row()!;
                         row.BringIntoView();
                         Dispatcher.UIThread.RunJobs();
-                        row = rail.GetVisualDescendants().OfType<Button>().Single(button => AutomationProperties.GetAutomationId(button) == "action:session.open" && AutomationProperties.GetName(button) == title);
+                        row = Row()!;
                         ClickControl(row);
                     }
 
@@ -178,7 +181,7 @@ public sealed partial class NativeDomainTests
         }
         finally
         {
-            scratch.Delete(true);
+            await RemoveHostProfileAsync(hosted, scratch);
         }
 
         static string Text(SessionEngine engine) => string.Join("\n", engine.State.Items.OfType<SayItem>().Select(item => item.Text));

@@ -62,7 +62,7 @@ public sealed partial class ProjectRail
         var workspace = _tree.FirstOrDefault(workspace => workspace.Root == target.WorkspaceRoot);
         var remembered = _tree.Where(workspace => workspace.Remembered).ToArray();
         var position = Array.FindIndex(remembered, workspace => workspace.Root == target.WorkspaceRoot);
-        var menu = new MenuFlyout();
+        var menu = WorkspaceMenu();
         menu.Items.Add(MenuHeader(target.WorkspaceRoot.TrimEnd('/', '\\').Split('/', '\\').Last(), string.Join(" · ", new[] { target.Host, target.WorkspaceRoot }.Where(part => part.Length > 0))));
         foreach (var (action, label) in new[]
         {
@@ -118,8 +118,10 @@ public sealed partial class ProjectRail
     /// <returns>The anchored menu.</returns>
     private MenuFlyout BuildSessionMenu(SessionOpenTarget target, TreeSession session)
     {
-        var menu = new MenuFlyout();
-        menu.Items.Add(MenuHeader(session.Title.Length > 0 ? session.Title : session.Name, target.Host.Length > 0 ? target.Host : MessageCatalog.Get("session.local_workspace", Language)));
+        var menu = WorkspaceMenu();
+        var live = IsLive(target);
+        var detail = target.Host.Length > 0 ? target.Host : MessageCatalog.Get(live ? "session.running" : "common.done_2", Language) + " · " + MessageCatalog.Get("session.local_workspace", Language);
+        menu.Items.Add(MenuHeader(session.Title.Length > 0 ? session.Title : session.Name, detail));
         void Add(string action, string label, Action run, bool enabled = true)
         {
             var header = MessageCatalog.Get(label, Language) + (action == "session.export-md" ? " · Markdown" : action == "session.export" ? " · JSON" : string.Empty);
@@ -150,9 +152,14 @@ public sealed partial class ProjectRail
             }
         }
 
-        var live = IsLive(target);
+        if (target.Host.Length == 0 && session.RuntimeId.Length > 0 && live)
+        {
+            Add("session.pause", "session.pause_run", () => RequestAction(new WorkspaceAction("session.pause", target, session)));
+            menu.Items.Add(MenuDivider());
+        }
+
         Add("session.pin", session.Pinned ? "common.unpin" : "common.pin_session", () => Write("pin", !session.Pinned));
-        if (session.Unread)
+        if (target.Host.Length > 0 && session.Unread)
         {
             Add("session.mark-read", "common.mark_as_read", () => Write("viewed", true));
         }
@@ -163,11 +170,35 @@ public sealed partial class ProjectRail
             {
                 ("session.move-up", "common.move_up"), ("session.move-down", "common.move_down"),
                 ("session.rename-start", "common.renamed"), ("session.auto-name", "session.auto_name"),
-                ("session.copy-info", "session.copy_session_information"), ("session.export", "session.export_session"),
-                ("session.export-md", "session.export_session"),
+                ("session.copy-info", "session.copy_session_information"),
                 ("session.move-to-start", "session.move_to_a_project"),
             })
             {
+                if (action == "session.copy-info" && session.Unread)
+                {
+                    Add("session.mark-read", "common.mark_as_read", () => Write("viewed", true));
+                }
+
+                if (action is "session.rename-start" or "session.copy-info")
+                {
+                    menu.Items.Add(MenuDivider());
+                }
+
+                if (action == "session.copy-info" && session.RuntimeId.Length > 0)
+                {
+                    Add("session.branch", "session.branch_from_the_latest_reply", () => RequestAction(new WorkspaceAction("session.branch", target, session)));
+                }
+
+                if (action == "session.move-to-start")
+                {
+                    menu.Items.Add(ExportMenuItem(menu, target, session));
+                    menu.Items.Add(MenuDivider());
+                    if (session.Versions.Count + session.Copies.Count > 0)
+                    {
+                        menu.Items.Add(KeptMenuItem(session));
+                    }
+                }
+
                 var enabled = action switch
                 {
                     "session.move-up" => CanMoveSession(target, session, true),
@@ -180,33 +211,13 @@ public sealed partial class ProjectRail
         }
 
         Add("session.archive", session.Archived ? "common.unarchive" : "common.archive_session", () => Write("archive", !session.Archived), !live);
-        if (session.RuntimeId.Length > 0)
+        if (target.Host.Length == 0)
         {
-            if (target.Host.Length == 0)
+            menu.Items.Add(MenuDivider());
+            if (session.RuntimeId.Length > 0)
             {
-                Add("session.branch", "session.branch_from_the_latest_reply", () => ActionRequested?.Invoke(new WorkspaceAction("session.branch", target, session)));
+                Add("session.close", "session.close_conversation", () => RequestAction(new WorkspaceAction("session.close", target, session)), !live);
             }
-
-            if (live)
-            {
-                Add("session.pause", "session.pause_run", () => ActionRequested?.Invoke(new WorkspaceAction("session.pause", target, session)));
-            }
-
-            Add("session.close", "session.close_conversation", () => ActionRequested?.Invoke(new WorkspaceAction("session.close", target, session)), !live);
-        }
-
-        if (target.Host.Length == 0 && session.Versions.Count + session.Copies.Count > 0)
-        {
-            Add("session.kept", "session.earlier_versions_n", () =>
-            {
-                if (!_spread.Remove(session.Path))
-                {
-                    _spread.Add(session.Path);
-                }
-
-                Rebuild();
-            });
-            menu.Items.OfType<MenuItem>().Last().Header = MessageCatalog.Get("session.earlier_versions_n", Language, ("n", Format.Count(session.Versions.Count + session.Copies.Count, Language)));
         }
 
         Add("session.delete", "common.delete_session", () => ActionRequested?.Invoke(new WorkspaceAction("session.delete", target, session)));
@@ -221,6 +232,7 @@ public sealed partial class ProjectRail
         var data = action switch
         {
             "session.rename-start" => "M4 16 16 4l4 4L8 20H4z M13 7l4 4",
+            "session.auto-name" => "M12 3l2.7 6.3L21 12l-6.3 2.7L12 21l-2.7-6.3L3 12l6.3-2.7z",
             "session.pin" => "M8 3h8v6l3 3v3H5v-3l3-3z M12 15v7",
             "session.branch" => "M6 3v12a4 4 0 0 0 4 4h8 M18 3v5a4 4 0 0 1-4 4H6 M3 3h6 M15 3h6 M18 16l3 3-3 3",
             "session.kept" => "M3 12a9 9 0 1 0 3-6 M3 3v6h6 M12 7v5l3 2",
@@ -238,13 +250,19 @@ public sealed partial class ProjectRail
             _ => "M20 7v5h-5 M20 12a8 8 0 1 0-2.5 6",
         };
         var path = new Avalonia.Controls.Shapes.Path { Data = Geometry.Parse(data), StrokeThickness = 1.6, StrokeLineCap = PenLineCap.Round, StrokeJoin = PenLineJoin.Round };
-        path.Bind(Shape.StrokeProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("MutedBrush"));
-        return new MenuItem
+        path.Bind(Shape.StrokeProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension(action is "session.delete" or "workspace.remove" ? "ErrInkBrush" : "FaintBrush"));
+        var item = new MenuItem
         {
             Header = header,
             Theme = this.FindResource("WorkspaceMenuItemTheme") as ControlTheme,
             Icon = new Viewbox { Width = 14, Height = 14, Child = new Canvas { Width = 24, Height = 24, Children = { path } } },
         };
+        if (action is "session.delete" or "workspace.remove")
+        {
+            item.Bind(ForegroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("ErrInkBrush"));
+        }
+
+        return item;
     }
 
     /// <summary>Names the canonical object before its available operations.</summary>
@@ -252,14 +270,14 @@ public sealed partial class ProjectRail
     /// <returns>The noninteractive menu heading.</returns>
     private MenuItem MenuHeader(string title, string detail)
     {
-        var heading = new TextBlock { Text = title, FontSize = 13, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 230 };
+        var heading = new TextBlock { Text = title, FontSize = 11, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 230 };
         heading.Bind(TextBlock.ForegroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("TextBrush"));
         var note = new TextBlock { Text = detail, FontSize = 11, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 230 };
         note.Bind(TextBlock.ForegroundProperty, new Avalonia.Markup.Xaml.MarkupExtensions.DynamicResourceExtension("FaintBrush"));
         return new MenuItem
         {
             Theme = this.FindResource("WorkspaceMenuHeaderTheme") as ControlTheme,
-            Header = new StackPanel { Spacing = 3, Children = { heading, note } },
+            Header = new StackPanel { Spacing = 5, Children = { heading, note } },
         };
     }
 }

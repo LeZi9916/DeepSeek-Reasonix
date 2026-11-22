@@ -1,0 +1,345 @@
+{
+  "page": "workspace",
+  "results": [
+    {
+      "file": "1440x900-light-palette.png",
+      "surface": "palette",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "light",
+      "reference": {
+        "width": 1440,
+        "height": 900
+      },
+      "observed": {
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "file": "1440x900-light-session-menu.png",
+      "surface": "session-menu",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "light",
+      "reference": {
+        "width": 260,
+        "height": 471
+      },
+      "observed": {
+        "width": 260,
+        "height": 472
+      }
+    },
+    {
+      "file": "1440x900-light-recent.png",
+      "surface": "recent",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "light",
+      "reference": {
+        "width": 1440,
+        "height": 900
+      },
+      "observed": {
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "file": "1440x900-light-device-access.png",
+      "surface": "device-access",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "light",
+      "reference": {
+        "width": 318,
+        "height": 341
+      },
+      "observed": {
+        "width": 320,
+        "height": 324
+      }
+    },
+    {
+      "file": "1440x900-light-community.png",
+      "surface": "community",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "light",
+      "reference": {
+        "width": 1110,
+        "height": 434
+      },
+      "observed": {
+        "width": 1110,
+        "height": 431
+      }
+    },
+    {
+      "file": "1440x900-dark-palette.png",
+      "surface": "palette",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "dark",
+      "reference": {
+        "width": 1440,
+        "height": 900
+      },
+      "observed": {
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "file": "1440x900-dark-session-menu.png",
+      "surface": "session-menu",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "dark",
+      "reference": {
+        "width": 260,
+        "height": 471
+      },
+      "observed": {
+        "width": 260,
+        "height": 472
+      }
+    },
+    {
+      "file": "1440x900-dark-recent.png",
+      "surface": "recent",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "dark",
+      "reference": {
+        "width": 1440,
+        "height": 900
+      },
+      "observed": {
+        "width": 1440,
+        "height": 900
+      }
+    },
+    {
+      "file": "1440x900-dark-device-access.png",
+      "surface": "device-access",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "dark",
+      "reference": {
+        "width": 318,
+        "height": 341
+      },
+      "observed": {
+        "width": 320,
+        "height": 324
+      }
+    },
+    {
+      "file": "1440x900-dark-community.png",
+      "surface": "community",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scheme": "dark",
+      "reference": {
+        "width": 1110,
+        "height": 434
+      },
+      "observed": {
+        "width": 1110,
+        "height": 431
+      }
+    },
+    {
+      "file": "760x480-light-palette.png",
+      "surface": "palette",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "light",
+      "reference": {
+        "width": 760,
+        "height": 480
+      },
+      "observed": {
+        "width": 760,
+        "height": 480
+      }
+    },
+    {
+      "file": "760x480-light-session-menu.png",
+      "surface": "session-menu",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "light",
+      "reference": {
+        "width": 260,
+        "height": 456
+      },
+      "observed": {
+        "width": 260,
+        "height": 472
+      }
+    },
+    {
+      "file": "760x480-light-recent.png",
+      "surface": "recent",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "light",
+      "reference": {
+        "width": 760,
+        "height": 480
+      },
+      "observed": {
+        "width": 760,
+        "height": 480
+      }
+    },
+    {
+      "file": "760x480-light-device-access.png",
+      "surface": "device-access",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "light",
+      "reference": {
+        "width": 318,
+        "height": 341
+      },
+      "observed": {
+        "width": 320,
+        "height": 324
+      }
+    },
+    {
+      "file": "760x480-light-community.png",
+      "surface": "community",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "light",
+      "reference": {
+        "width": 430,
+        "height": 540
+      },
+      "observed": {
+        "width": 430,
+        "height": 530
+      }
+    },
+    {
+      "file": "760x480-dark-palette.png",
+      "surface": "palette",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "dark",
+      "reference": {
+        "width": 760,
+        "height": 480
+      },
+      "observed": {
+        "width": 760,
+        "height": 480
+      }
+    },
+    {
+      "file": "760x480-dark-session-menu.png",
+      "surface": "session-menu",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "dark",
+      "reference": {
+        "width": 260,
+        "height": 456
+      },
+      "observed": {
+        "width": 260,
+        "height": 472
+      }
+    },
+    {
+      "file": "760x480-dark-recent.png",
+      "surface": "recent",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "dark",
+      "reference": {
+        "width": 760,
+        "height": 480
+      },
+      "observed": {
+        "width": 760,
+        "height": 480
+      }
+    },
+    {
+      "file": "760x480-dark-device-access.png",
+      "surface": "device-access",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "dark",
+      "reference": {
+        "width": 318,
+        "height": 341
+      },
+      "observed": {
+        "width": 320,
+        "height": 324
+      }
+    },
+    {
+      "file": "760x480-dark-community.png",
+      "surface": "community",
+      "viewport": {
+        "width": 760,
+        "height": 480
+      },
+      "scheme": "dark",
+      "reference": {
+        "width": 430,
+        "height": 540
+      },
+      "observed": {
+        "width": 430,
+        "height": 530
+      }
+    }
+  ]
+}

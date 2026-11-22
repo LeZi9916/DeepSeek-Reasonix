@@ -49,6 +49,7 @@ internal sealed partial class SessionEntry : UserControl
         Menu.Flyout = menu;
         Open.ContextFlyout = menu;
         AutomationProperties.SetName(Open, Title.Text);
+        AutomationProperties.SetHelpText(Open, session.Path);
         AutomationProperties.SetName(Menu, Title.Text);
         ToolTip.SetTip(Open, Title.Text);
         Open.Click += (_, _) =>
