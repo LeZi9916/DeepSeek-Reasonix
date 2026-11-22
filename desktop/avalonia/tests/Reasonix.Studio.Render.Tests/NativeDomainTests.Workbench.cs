@@ -69,6 +69,27 @@ public sealed partial class NativeDomainTests
             Assert.Equal(first.Tag, w.FindControl<TextBlock>("WorkbenchTitle")!.Text);
         });
 
+    /// <summary>The file editor quotes a selection into the composer instead of replacing it.</summary>
+    /// <returns>The text action.</returns>
+    [Fact]
+    public Task WorkbenchSelectionQuotesIntoTheComposer() => WithSettings(
+        "workbench",
+        (w, _) =>
+        {
+            var editor = w.FindControl<TextBox>("FileEditor")!;
+            editor.Text = "first line\nsecond line";
+            editor.SelectionStart = 0;
+            editor.SelectionEnd = "first line".Length;
+            var menu = Assert.IsType<ContextMenu>(editor.ContextMenu);
+            menu.Open(editor);
+            Dispatcher.UIThread.RunJobs();
+            var quote = Assert.IsType<MenuItem>(menu.Items[0]);
+            Assert.True(quote.IsEnabled);
+            quote.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            Dispatcher.UIThread.RunJobs();
+            Assert.Contains("> first line", w.FindControl<TextBox>("Composer")!.Text);
+        });
+
     /// <summary>The explorer exposes its visible node count at the reference width.</summary>
     /// <returns>The explorer chrome.</returns>
     [Fact]

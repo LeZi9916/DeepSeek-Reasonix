@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -172,6 +173,73 @@ public sealed partial class MainWindow
             }
         };
         SaveFile.Click += OnSaveFile;
+        FileEditor.ContextMenu = BuildFileEditorContextMenu();
+    }
+
+    /// <summary>Builds the file editor's text actions, including quoting into the composer.</summary>
+    /// <returns>The context menu.</returns>
+    private ContextMenu BuildFileEditorContextMenu()
+    {
+        var menu = new ContextMenu();
+        var quote = new MenuItem { Header = MessageCatalog.Get("workbench.add_to_conversation", Language) };
+        quote.Click += (_, _) => InsertBlockQuote(FileEditor.SelectedText);
+        var cut = new MenuItem
+        {
+            Header = MessageCatalog.Get("workbench.cut", Language),
+            InputGesture = new KeyGesture(Key.X, KeyModifiers.Control),
+        };
+        cut.Click += (_, _) => FileEditor.Cut();
+        var copy = new MenuItem
+        {
+            Header = MessageCatalog.Get("common.copy", Language),
+            InputGesture = new KeyGesture(Key.C, KeyModifiers.Control),
+        };
+        copy.Click += (_, _) => FileEditor.Copy();
+        var paste = new MenuItem
+        {
+            Header = MessageCatalog.Get("workbench.paste", Language),
+            InputGesture = new KeyGesture(Key.V, KeyModifiers.Control),
+        };
+        paste.Click += (_, _) => FileEditor.Paste();
+        var selectAll = new MenuItem
+        {
+            Header = MessageCatalog.Get("workbench.select_all", Language),
+            InputGesture = new KeyGesture(Key.A, KeyModifiers.Control),
+        };
+        selectAll.Click += (_, _) => FileEditor.SelectAll();
+        var undo = new MenuItem
+        {
+            Header = MessageCatalog.Get("workbench.undo", Language),
+            InputGesture = new KeyGesture(Key.Z, KeyModifiers.Control),
+        };
+        undo.Click += (_, _) => FileEditor.Undo();
+        var redo = new MenuItem
+        {
+            Header = MessageCatalog.Get("workbench.redo", Language),
+            InputGesture = new KeyGesture(Key.Z, KeyModifiers.Control | KeyModifiers.Shift),
+        };
+        redo.Click += (_, _) => FileEditor.Redo();
+        menu.Items.Add(quote);
+        menu.Items.Add(new Separator());
+        menu.Items.Add(cut);
+        menu.Items.Add(copy);
+        menu.Items.Add(paste);
+        menu.Items.Add(selectAll);
+        menu.Items.Add(new Separator());
+        menu.Items.Add(undo);
+        menu.Items.Add(redo);
+        menu.Opening += (_, _) =>
+        {
+            var selected = FileEditor.SelectionStart != FileEditor.SelectionEnd;
+            var editable = !FileEditor.IsReadOnly;
+            quote.IsEnabled = selected;
+            cut.IsEnabled = editable && selected;
+            copy.IsEnabled = selected;
+            paste.IsEnabled = editable;
+            undo.IsEnabled = editable && FileEditor.CanUndo;
+            redo.IsEnabled = editable && FileEditor.CanRedo;
+        };
+        return menu;
     }
 
     /// <summary>Mounts the workbench retained by this runtime and canonical project.</summary>

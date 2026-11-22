@@ -326,4 +326,21 @@ public sealed partial class MainWindow
         Composer.SelectedText = prefix + insert + " ";
         Composer.Focus();
     }
+
+    /// <summary>Inserts selected file text as a block quote at the composer caret.</summary>
+    /// <param name="text">Selected file text.</param>
+    private void InsertBlockQuote(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+
+        var quoted = string.Join("\n", text.Split('\n').Select(line => "> " + line.TrimEnd('\r'))) + "\n\n";
+        var start = Math.Min(Composer.SelectionStart, Composer.SelectionEnd);
+        Composer.SelectionStart = start;
+        Composer.SelectionEnd = start;
+        Composer.SelectedText = quoted;
+        Composer.Focus();
+    }
 }
