@@ -6,6 +6,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Kernel.Client;
+using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Composer;
 using System.Collections.Generic;
 using System.Linq;
@@ -160,6 +161,30 @@ public sealed partial class NativeDomainTests
         Assert.True(switched, string.Join(",", calls) + " / " + panel.FindControl<TextBlock>("ErrorText")?.Text);
         Assert.False(popup.IsOpen);
         void Click(string name) => w.FindControl<Button>(name)!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    });
+
+    /// <summary>The branch palette offers a worktree source mode when the host can isolate.</summary>
+    /// <returns>The worktree source choice.</returns>
+    [Fact]
+    public Task ComposerBranchPaletteOffersIsolatedSources() => WithSettings("conversation", (w, _) =>
+    {
+        var panel = w.FindControl<BranchPanel>("BranchPanel")!;
+        var sources = new WorktreeSources
+        {
+            Available = true,
+            SourceRoot = "/repo",
+            Sources = [new WorktreeSource { Ref = "refs/heads/topic", Name = "topic" }],
+        };
+        string? isolated = null;
+        panel.IsolateRequested += reference => isolated = reference;
+        panel.Show([new BranchChoice("main", true, string.Empty)], "main", "/repo", InterfaceLanguage.Zh, sources);
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(panel.FindControl<StackPanel>("WorktreeModes")!.IsVisible);
+        panel.FindControl<Button>("IsolatedMode")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Dispatcher.UIThread.RunJobs();
+        var row = panel.FindControl<StackPanel>("Rows")!.Children.OfType<Button>().Single();
+        row.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Assert.Equal("refs/heads/topic", isolated);
     });
 
     /// <summary>A proposed rewrite stays separate until adopted, and a refusal leaves the original editable.</summary>

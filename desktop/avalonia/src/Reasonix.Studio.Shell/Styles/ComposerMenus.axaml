@@ -203,6 +203,22 @@
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     <Setter Property="CaretBrush" Value="{DynamicResource TextBrush}"/>
   </Style>
+  <Style Selector="Button.worktree-mode">
+    <Setter Property="Height" Value="26"/>
+    <Setter Property="Padding" Value="9,0"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+  </Style>
+  <Style Selector="Button.worktree-mode:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.worktree-mode.active">
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
   <Style Selector="Button.branch-row">
     <Setter Property="Height" Value="32"/>
     <Setter Property="Padding" Value="10,0"/>

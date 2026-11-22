@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
+using Reasonix.Studio.Pages.Rail;
 using Reasonix.Studio.Shell.Composer;
 using System;
 using System.Linq;
@@ -41,6 +42,7 @@ public sealed partial class MainWindow
         PolicyPanel.BoundaryRequested += OnPolicyBoundary;
         BranchPanel.Picked += OnBranchPicked;
         BranchPanel.RetryRequested += OnBranchRetry;
+        BranchPanel.IsolateRequested += OnIsolateRequested;
         BranchPanel.CloseRequested += BranchPopup.Close;
         ComposeBranch.Click += async (_, _) => await ShowComposeBranchesAsync().ConfigureAwait(true);
         SideQuestion.Click += async (_, _) => await ToggleSideAsync().ConfigureAwait(true);
@@ -333,7 +335,20 @@ public sealed partial class MainWindow
                     (string?)branch["worktree"] ?? string.Empty))
                 .Where(branch => branch.Name.Length > 0)
                 .ToList();
-            BranchPanel.Show(choices, ComposeBranchLabel.Text ?? string.Empty, _composerStatus.WorkspaceRoot, Language);
+            WorktreeSources? sources = null;
+            try
+            {
+                if ((await engine.Pages.WorkspaceInventoryAsync(_closing.Token).ConfigureAwait(true)).CanIsolate)
+                {
+                    sources = await engine.Pages.WorktreeSourcesAsync(_closing.Token).ConfigureAwait(true);
+                }
+            }
+            catch (Exception)
+            {
+                sources = null;
+            }
+
+            BranchPanel.Show(choices, ComposeBranchLabel.Text ?? string.Empty, _composerStatus.WorkspaceRoot, Language, sources);
             BranchPopup.Show();
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
@@ -344,6 +359,42 @@ public sealed partial class MainWindow
             BranchPanel.Show([], ComposeBranchLabel.Text ?? string.Empty, _composerStatus.WorkspaceRoot, Language);
             BranchPanel.ShowError(DescribeError(error));
             BranchPopup.Show();
+        }
+    }
+
+    /// <summary>Creates an isolated worktree and mounts its workspace.</summary>
+    /// <param name="reference">Git branch ref chosen as the source.</param>
+    private async void OnIsolateRequested(string reference)
+    {
+        if (_engine is not { } engine)
+        {
+            return;
+        }
+
+        BranchPanel.SetPending(reference);
+        try
+        {
+            var attachments = _attachments
+                .Where(chip => chip.SourcePath.Length > 0)
+                .Select(chip => chip.SourcePath)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            var root = await engine.Pages.IsolateWorkspaceAsync(_composerStatus.WorkspaceRoot, reference, attachments, _closing.Token).ConfigureAwait(true);
+            if (engine != _engine || root.Length == 0)
+            {
+                return;
+            }
+
+            BranchPopup.Close();
+            await OpenTargetCoreAsync(new SessionOpenTarget(string.Empty, root, string.Empty), false).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            BranchPanel.SetPending(null);
+            BranchPanel.ShowError(DescribeError(error));
         }
     }
 

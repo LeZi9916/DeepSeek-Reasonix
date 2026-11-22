@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,15 @@ public sealed partial class BranchPanel : UserControl
     /// <summary>The branch a switch is currently applying.</summary>
     private string? _switching;
 
+    /// <summary>The ordinary branch rows retained while the worktree mode is showing.</summary>
+    private IReadOnlyList<BranchChoice> _ordinary = [];
+
+    /// <summary>Branches that may seed an isolated worktree, when the host offers them.</summary>
+    private WorktreeSources? _sources;
+
+    /// <summary>Whether the palette is offering isolated worktree sources.</summary>
+    private bool _isolated;
+
     /// <summary>Initializes a new instance of the <see cref="BranchPanel"/> class.</summary>
     public BranchPanel()
     {
@@ -36,6 +46,8 @@ public sealed partial class BranchPanel : UserControl
         Search.TextChanged += (_, _) => Draw();
         Close.Click += (_, _) => CloseRequested?.Invoke();
         Retry.Click += (_, _) => RetryRequested?.Invoke();
+        CurrentFolder.Click += (_, _) => SetWorktreeMode(false);
+        IsolatedMode.Click += (_, _) => SetWorktreeMode(true);
         CopyPath.Click += async (_, _) =>
         {
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard)
@@ -51,6 +63,9 @@ public sealed partial class BranchPanel : UserControl
     /// <summary>Raised when the reader asked to read the branches again.</summary>
     public event Action? RetryRequested;
 
+    /// <summary>Raised when the reader chose a branch to seed an isolated worktree.</summary>
+    public event Action<string>? IsolateRequested;
+
     /// <summary>Raised when the reader dismissed the palette.</summary>
     public event Action? CloseRequested;
 
@@ -59,9 +74,18 @@ public sealed partial class BranchPanel : UserControl
     /// <param name="current">The branch the workspace is on.</param>
     /// <param name="workspaceRoot">The project folder the branches belong to.</param>
     /// <param name="language">Language for the labels.</param>
-    public void Show(IReadOnlyList<BranchChoice> branches, string current, string workspaceRoot, InterfaceLanguage language)
+    /// <param name="sources">Worktree branches the host offers, when available.</param>
+    public void Show(
+        IReadOnlyList<BranchChoice> branches,
+        string current,
+        string workspaceRoot,
+        InterfaceLanguage language,
+        WorktreeSources? sources = null)
     {
         _branches = branches;
+        _ordinary = branches;
+        _sources = sources;
+        _isolated = false;
         _current = current;
         _workspaceRoot = workspaceRoot;
         _language = language;
@@ -80,6 +104,11 @@ public sealed partial class BranchPanel : UserControl
         AutomationProperties.SetName(Close, MessageCatalog.Get("composer.close_workspace_configuration", language));
         ErrorBox.IsVisible = false;
         RowsScroll.IsVisible = true;
+        WorktreeModes.IsVisible = sources?.Available == true;
+        CurrentFolder.Content = MessageCatalog.Get("composer.current_folder", language);
+        IsolatedMode.Content = MessageCatalog.Get("common.isolated_worktree", language);
+        CurrentFolder.Classes.Set("active", !_isolated);
+        IsolatedMode.Classes.Set("active", _isolated);
         Draw();
     }
 
@@ -101,6 +130,30 @@ public sealed partial class BranchPanel : UserControl
         ErrorText.Text = message;
         ErrorBox.IsVisible = true;
         RowsScroll.IsVisible = false;
+    }
+
+    /// <summary>Switches between ordinary branches and worktree sources.</summary>
+    /// <param name="isolated">Whether worktree sources should be listed.</param>
+    private void SetWorktreeMode(bool isolated)
+    {
+        if (isolated && _sources?.Available != true)
+        {
+            return;
+        }
+
+        _isolated = isolated;
+        CurrentFolder.Classes.Set("active", !isolated);
+        IsolatedMode.Classes.Set("active", isolated);
+        _branches = isolated
+            ? _sources!.Sources.Select(source => new BranchChoice(source.Name, source.Current, string.Empty)).ToList()
+            : _ordinary;
+        Description.Text = MessageCatalog.Get(
+            isolated ? "composer.create_an_isolated_worktree_when" : "session.work_directly_in_the_opened",
+            _language);
+        Search.PlaceholderText = MessageCatalog.Get(
+            isolated ? "composer.search_source_branches" : "composer.search_local_branches",
+            _language);
+        Draw();
     }
 
     /// <summary>Rebuilds rows for the current query and pending state.</summary>
@@ -171,12 +224,23 @@ public sealed partial class BranchPanel : UserControl
         {
             Content = grid,
             Tag = branch.Name,
-            IsEnabled = branch.Name != _current && branch.Worktree.Length == 0 && _switching is null,
+            IsEnabled = _switching is null && (_isolated || (branch.Name != _current && branch.Worktree.Length == 0)),
         };
         button.Classes.Add("branch-row");
         button.Classes.Set("current", branch.Name == _current);
         AutomationProperties.SetName(button, branch.Name);
-        button.Click += (_, _) => Picked?.Invoke(branch.Name);
+        button.Click += (_, _) =>
+        {
+            if (_isolated)
+            {
+                var reference = _sources?.Sources.FirstOrDefault(source => source.Name == branch.Name)?.Ref ?? branch.Name;
+                IsolateRequested?.Invoke(reference);
+            }
+            else
+            {
+                Picked?.Invoke(branch.Name);
+            }
+        };
         return button;
     }
 
