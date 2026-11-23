@@ -29,6 +29,12 @@ public enum GlobalShortcutStatus
     /// This shell has no global shortcut surface at all.
     /// </summary>
     Unsupported,
+
+    /// <summary>The replacement could not be persisted.</summary>
+    SaveFailed,
+
+    /// <summary>The desktop is closing.</summary>
+    Quitting,
 }
 
 /// <summary>
@@ -42,4 +48,10 @@ public sealed record GlobalShortcutInfo(string Binding, GlobalShortcutStatus Sta
     /// Gets the answer a shell with no shortcut surface gives.
     /// </summary>
     public static GlobalShortcutInfo Unsupported { get; } = new GlobalShortcutInfo(string.Empty, GlobalShortcutStatus.Unsupported);
+
+    /// <summary>Gets the refusal of the most recent edit, while Status describes the active binding.</summary>
+    public GlobalShortcutStatus? Error
+    {
+        get; init;
+    }
 }

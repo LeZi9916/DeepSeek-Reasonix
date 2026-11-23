@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -208,16 +209,29 @@ public sealed partial class AvaloniaHost : IHostPort
     /// <inheritdoc/>
     public Task<GlobalShortcutInfo> GlobalShortcutAsync()
     {
-        // The cross-platform host has no global shortcut surface: Avalonia exposes
-        // one on Windows only, and claiming support on a platform that lacks it
-        // would show a binding that never fires.
-        return Task.FromResult(GlobalShortcutInfo.Unsupported);
+        return Task.FromResult(_window is MainWindow { WindowShortcut: { } shortcut }
+            ? new GlobalShortcutInfo(shortcut.Binding, shortcut.Status)
+            : GlobalShortcutInfo.Unsupported);
     }
 
     /// <inheritdoc/>
     public Task<GlobalShortcutInfo> SetGlobalShortcutAsync(string binding)
     {
-        return Task.FromResult(GlobalShortcutInfo.Unsupported);
+        if (_window is not MainWindow { WindowShortcut: { } shortcut })
+        {
+            return Task.FromResult(GlobalShortcutInfo.Unsupported);
+        }
+
+        return Dispatcher.UIThread.CheckAccess() ? Task.FromResult(Apply()) : Dispatcher.UIThread.InvokeAsync(Apply).GetTask();
+
+        GlobalShortcutInfo Apply()
+        {
+            var outcome = shortcut.Apply(binding);
+            return new GlobalShortcutInfo(shortcut.Binding, shortcut.Status)
+            {
+                Error = outcome is GlobalShortcutStatus.Disabled or GlobalShortcutStatus.Registered ? null : outcome,
+            };
+        }
     }
 
     /// <inheritdoc/>

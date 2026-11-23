@@ -30,7 +30,7 @@ public sealed partial class MainWindow
         [
             "settings.icon_rail", "settings.navigation_entries", "session.session_row_buttons",
             "settings.session_tabs_kept_open", "settings.session_tabs_kept_live", "settings.keep_finished_sessions_in_running",
-            "settings.messages_sent_while_running", "settings.keyboard_shortcuts", "safety.esc_stops_a_task",
+            "settings.messages_sent_while_running", "settings.global_show_hide_shortcut", "settings.keyboard_shortcuts", "safety.esc_stops_a_task",
             "settings.idle_page_sleep", "session.session_tabs", "composer.composer_hint",
         ],
         ["appearance"] = ["settings.light_and_dark", "look.interface_theme", "look.typeface", "look.visual_effects", "look.interface_size"],
@@ -156,7 +156,7 @@ public sealed partial class MainWindow
                 foreach (var label in labels)
                 {
                     var title = MessageCatalog.Get(label, Language);
-                    if (title.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+                    if (SettingAvailable(label) && title.Contains(query, StringComparison.CurrentCultureIgnoreCase))
                     {
                         hits.Add(new SettingHit(target, label, path, title));
                     }
@@ -172,6 +172,11 @@ public sealed partial class MainWindow
         NoSettingsHits.Text = MessageCatalog.Get("settings.no_matching_setting", Language);
         SearchResultsPanel.IsVisible = true;
     }
+
+    /// <summary>Tests whether the local host exposes this setting.</summary>
+    /// <param name="key">The setting's canonical key.</param>
+    /// <returns>Whether search can open the setting.</returns>
+    private bool SettingAvailable(string key) => key != "settings.global_show_hide_shortcut" || WindowShortcut is not null;
 
     /// <summary>Search owns its keys while its result list is open.</summary>
     /// <param name="sender">The search box.</param>

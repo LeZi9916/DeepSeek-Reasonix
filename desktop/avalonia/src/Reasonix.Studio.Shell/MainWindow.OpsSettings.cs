@@ -10,6 +10,12 @@ namespace Reasonix.Studio.Shell;
 
 public sealed partial class MainWindow
 {
+    /// <summary>Gets or sets the shortcut owned by the desktop window's lifetime.</summary>
+    internal GlobalShortcut? WindowShortcut
+    {
+        get; set;
+    }
+
     /// <summary>Builds the four cards for workspace interaction and performance.</summary>
     /// <param name="column">The mounted settings column.</param>
     private void ShowOpsSettings(StackPanel column)
@@ -18,6 +24,15 @@ public sealed partial class MainWindow
         var sheet = new KeyboardShortcutSheet { Tag = "settings.keyboard_shortcuts" };
         keys.Children.Add(sheet);
         sheet.Open(Language);
+        if (WindowShortcut is { } shortcut)
+        {
+            keys.Children.Add(
+                new SettingsGroup("settings.global_show_hide_shortcut", "settings.off_by_default_while_studio", new GlobalShortcutView(Language, new AvaloniaHost(this), new GlobalShortcutInfo(shortcut.Binding, shortcut.Status)), Language)
+                {
+                    Classes = { "global-shortcut-setting" },
+                });
+        }
+
         SegmentChoice(
             keys,
             "safety.esc_stops_a_task",

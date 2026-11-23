@@ -164,6 +164,7 @@ public sealed partial class App : Application
     {
         var window = new MainWindow();
         window.ConfigureNativeTitleBar();
+        ConfigureGlobalShortcut(window);
         var store = new WindowStateStore(GeometryPath());
         var geometry = store.Load();
         window.QueueDuringRun = geometry.QueueDuringRun;

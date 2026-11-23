@@ -94,6 +94,9 @@
     <Setter Property="Margin" Value="0,0,2,0"/><Setter Property="VerticalAlignment" Value="Top"/>
   </Style>
   <Style Selector="Grid#SettingsPanel.compact TextBlock.nav-count"><Setter Property="IsVisible" Value="False"/></Style>
+  <Style Selector="settings|SettingsGroup.global-shortcut-setting TextBlock#Heading">
+    <Setter Property="FontWeight" Value="Medium"/>
+  </Style>
   <Style Selector="Border.settings-card">
     <Setter Property="Padding" Value="20,18,20,8"/><Setter Property="CornerRadius" Value="15"/>
     <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>

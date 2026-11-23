@@ -28,7 +28,8 @@ public sealed partial class MainWindow
             KeyDownEvent,
             (_, e) =>
             {
-                if (!e.Handled && e.Key == Key.K && e.KeyModifiers == (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control))
+                if (!e.Handled && e.Key == Key.K && e.KeyModifiers == (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control) &&
+                    (e.Source is not Visual source || !source.GetVisualAncestors().OfType<Settings.GlobalShortcutView>().Any(view => view.IsRecording)))
                 {
                     OpenWorkspaceSearch();
                     e.Handled = true;
@@ -110,7 +111,7 @@ public sealed partial class MainWindow
 
         foreach (var (section, labels) in s_destinations)
         {
-            foreach (var key in labels)
+            foreach (var key in labels.Where(SettingAvailable))
             {
                 entries.Add(new WorkspaceSearchHit(
                     "settings",

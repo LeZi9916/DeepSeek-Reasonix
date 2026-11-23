@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.GlobalShortcutView">
+  <UserControl.Styles>
+    <Style Selector="Button.global-shortcut-action">
+      <Setter Property="Height" Value="24"/><Setter Property="Margin" Value="0"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button.global-shortcut-action:pointerover:not(:disabled)">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    </Style>
+    <Style Selector="Button.global-shortcut-action:disabled"><Setter Property="Opacity" Value="0.5"/></Style>
+    <Style Selector="TextBox#ShortcutInput:not(:disabled) /template/ TextBlock#PART_Placeholder">
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="TextBox#ShortcutInput:focus /template/ Border#PART_BorderElement">
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+    </Style>
+    <Style Selector="TextBox#ShortcutInput.recording /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource NetWashBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource NetBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+  </UserControl.Styles>
+  <StackPanel>
+    <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="0,10">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+        <StackPanel Spacing="2" VerticalAlignment="Center">
+          <TextBlock Name="BindingLabel" FontSize="{DynamicResource StudioType13}" FontWeight="Medium" TextWrapping="Wrap"/>
+          <TextBlock Name="Reading" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}"
+                     TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
+        <TextBox Grid.Column="1" Name="ShortcutInput" Height="28" MinHeight="0" Width="220"
+                 Background="Transparent" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                 Padding="10,0" CornerRadius="7" FontFamily="{DynamicResource StudioMonoFamily}"
+                 FontSize="{DynamicResource StudioType12}" FontWeight="Normal" PlaceholderForeground="{DynamicResource FaintBrush}"
+                 VerticalAlignment="Center" VerticalContentAlignment="Center"
+                 AutomationProperties.AutomationId="action:window.global-shortcut.binding"/>
+      </Grid>
+    </Border>
+
+    <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="0,10,0,16">
+      <Grid Name="ActionsLayout" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="0">
+        <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center">
+          <Border Name="Keycap" IsVisible="False" Margin="0,0,10,0" CornerRadius="7" Padding="8,0" Height="22"
+                  Background="{DynamicResource RaisedBrush}" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
+            <TextBlock Name="KeycapText" VerticalAlignment="Center" FontSize="{DynamicResource StudioType11}" FontWeight="Normal" FontFamily="{DynamicResource StudioMonoFamily}"/>
+          </Border>
+          <TextBlock Grid.Column="1" Name="Instructions" FontSize="{DynamicResource StudioType12}" LineHeight="18.6"
+                     Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap"/>
+        </Grid>
+        <WrapPanel Grid.Column="1" Name="ActionButtons" ItemSpacing="8" LineSpacing="6" VerticalAlignment="Center">
+          <Button Name="Record" Classes="page-link global-shortcut-action" AutomationProperties.AutomationId="action:window.global-shortcut.record"/>
+          <Button Name="Apply" Classes="page-link global-shortcut-action" AutomationProperties.AutomationId="action:window.global-shortcut.apply"/>
+          <Button Name="Clear" Classes="page-link global-shortcut-action" AutomationProperties.AutomationId="action:window.global-shortcut.disable"/>
+        </WrapPanel>
+      </Grid>
+    </Border>
+
+    <TextBlock Name="Error" Margin="0,6,0,0" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource ErrInkBrush}"
+               TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive" IsVisible="False"/>
+  </StackPanel>
+</UserControl>
