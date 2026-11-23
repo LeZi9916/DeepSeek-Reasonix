@@ -93,11 +93,10 @@ public sealed partial class MainWindow
 
     /// <summary>Draws the sidebar, page and accent of one pack in the current scheme.</summary>
     /// <param name="pack">The pack, or null for Studio's built-in colors.</param>
-    /// <param name="name">Displayed pack name.</param>
-    /// <returns>The swatch and its name.</returns>
-    private static StackPanel PaletteSample(JsonObject? pack, string name)
+    /// <returns>The swatch.</returns>
+    private static Grid PaletteSample(JsonObject? pack)
     {
-        var art = new Grid { Width = 150, Height = 80, ColumnDefinitions = new ColumnDefinitions("25,*") };
+        var art = new Grid { Width = 190, Height = 104, ColumnDefinitions = new ColumnDefinitions("29,*") };
         var dictionary = pack is null ? new ResourceDictionary() : PaletteResources(pack);
         foreach (var variant in new[] { ThemeVariant.Light, ThemeVariant.Dark })
         {
@@ -121,20 +120,17 @@ public sealed partial class MainWindow
         var rail = new Border();
         rail.Bind(Border.BackgroundProperty, rail.GetResourceObservable("SurfaceBrush"));
         art.Children.Add(rail);
-        var lines = new StackPanel { Margin = new Thickness(9, 12), Spacing = 6 };
+        var lines = new StackPanel { Margin = new Thickness(12, 16), Spacing = 7 };
         Grid.SetColumn(lines, 1);
         art.Children.Add(lines);
-        foreach (var (width, brush) in new[] { (91, "MutedBrush"), (60, "MutedBrush"), (32, "AccentBrush") })
+        foreach (var (width, brush) in new[] { (116, "MutedBrush"), (76, "MutedBrush"), (40, "AccentBrush") })
         {
             var line = new Border { Width = width, Height = brush == "AccentBrush" ? 5 : 2, HorizontalAlignment = HorizontalAlignment.Left };
             line.Bind(Border.BackgroundProperty, line.GetResourceObservable(brush));
             lines.Children.Add(line);
         }
 
-        var tile = new StackPanel { Spacing = 4 };
-        tile.Children.Add(art);
-        tile.Children.Add(new TextBlock { Text = name, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) });
-        return tile;
+        return art;
     }
 
     /// <summary>Reads the kernel's selection and applies it to both window theme variants.</summary>
@@ -204,7 +200,7 @@ public sealed partial class MainWindow
             {
                 var id = (string?)pack?["id"] ?? string.Empty;
                 var name = (string?)pack?["name"] ?? MessageCatalog.Get(MessageKey.Common.Default, Language);
-                var button = new Button { Content = PaletteSample(pack, name), Padding = new Thickness(7), Margin = new Thickness(0, 0, 9, 6), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1) };
+                var button = new Button { Content = PaletteSample(pack), Padding = new Thickness(7), CornerRadius = new CornerRadius(10), BorderThickness = new Thickness(1) };
                 button.Bind(Button.BorderBrushProperty, button.GetResourceObservable(ReferenceEquals(active, pack) ? "AccentBrush" : "BorderBrush"));
                 AutomationProperties.SetAutomationId(button, "action:theme.activate");
                 AutomationProperties.SetName(button, name);
@@ -235,8 +231,23 @@ public sealed partial class MainWindow
                         group.IsEnabled = true;
                     }
                 };
+                var tile = new StackPanel { Spacing = 4, Margin = new Thickness(0, 0, 14, 10) };
+                tile.Children.Add(button);
+                tile.Children.Add(new TextBlock
+                {
+                    Text = name,
+                    Margin = new Thickness(7, 2, 0, 0),
+                    [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
+                });
+                tile.Children.Add(new TextBlock
+                {
+                    Text = (string?)pack?["author"] ?? MessageCatalog.Get("common.built_in", Language),
+                    Margin = new Thickness(7, 0, 0, 0),
+                    [!TextBlock.FontSizeProperty] = StudioTypography.Size(10),
+                    Foreground = Brushes.Gray,
+                });
                 var container = pack?["sky"] is not null || (bool?)pack?["background"]?["image"] == true ? illustrated : featured;
-                container.Children.Add(button);
+                container.Children.Add(tile);
             }
 
             more.IsVisible = illustrated.Children.Count > 0;
