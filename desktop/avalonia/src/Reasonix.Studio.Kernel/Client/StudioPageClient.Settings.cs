@@ -50,6 +50,14 @@ public sealed partial class StudioPageClient
     /// <returns>The response from the kernel.</returns>
     public Task<JsonArray> PluginsAsync(CancellationToken token) => ReadAsync<JsonArray>("/plugins", token);
 
+    /// <summary>Enables or disables one installed plugin.</summary>
+    /// <param name="name">Installed plugin name.</param>
+    /// <param name="enabled">New state.</param>
+    /// <param name="token">Cancels the write.</param>
+    /// <returns>The acknowledgement.</returns>
+    public Task SetPluginEnabledAsync(string name, bool enabled, CancellationToken token) =>
+        PostAsync("/plugins/enabled", new JsonObject { ["name"] = name, ["enabled"] = enabled }, token);
+
     /// <summary>Reads the community package catalog.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The response from the kernel.</returns>
