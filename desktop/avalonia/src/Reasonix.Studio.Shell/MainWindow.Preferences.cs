@@ -405,6 +405,28 @@ public sealed partial class MainWindow
                     await PersonaSettingsAsync(persona, api).ConfigureAwait(true);
                     break;
                 case "tools" when api is not null:
+                    var approvals = Card(column, "settings.approval");
+                    var approvalChoices = new[]
+                    {
+                        new SectionEntry("dontAsk", MessageCatalog.Get("safety.do_not_ask", Language)),
+                        new SectionEntry("ask", MessageCatalog.Get("safety.ask", Language)),
+                        new SectionEntry("auto", MessageCatalog.Get("safety.auto_approve", Language)),
+                        new SectionEntry("yolo", MessageCatalog.Get("safety.allow_all", Language)),
+                    };
+                    SegmentChoice(
+                        approvals,
+                        "settings.tool_approvals",
+                        "settings.tool-approval",
+                        approvalChoices,
+                        _composerStatus.ToolApprovalMode,
+                        async mode =>
+                        {
+                            await api.SetApprovalModeAsync(mode, _closing.Token).ConfigureAwait(true);
+                            _composerStatus = _composerStatus with
+                            {
+                                ToolApprovalMode = mode,
+                            };
+                        });
                     await ToolSettingsAsync(Card(column, "settings.sandbox_and_execution"), api).ConfigureAwait(true);
                     await FlagControlAsync(Card(column, "safety.web"), StudioSetting.BrowserTools, "common.built_in_browser").ConfigureAwait(true);
                     break;
