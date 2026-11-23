@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.MarketVoteView" UseLayoutRounding="False">
+  <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="16,10">
+    <StackPanel Spacing="6">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+        <WrapPanel ItemSpacing="10" LineSpacing="4" VerticalAlignment="Center">
+          <Border Name="RateTrack" Width="120" Height="6" CornerRadius="3" VerticalAlignment="Center" Background="{DynamicResource OverlayBrush}">
+            <Border Name="RateFill" HorizontalAlignment="Left" Width="0" CornerRadius="3" Background="{DynamicResource OkBrush}"/>
+          </Border>
+          <TextBlock Name="RateLabel" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"
+                     AutomationProperties.LiveSetting="Polite"/>
+        </WrapPanel>
+        <StackPanel Name="VoteButtons" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+          <Button Name="Up" Classes="market-detail-action vote" Tag="up" Height="28"
+                  AutomationProperties.AutomationId="action:market.vote">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
+                <Path Data="M7 10v12 M15 5l-1 5h5.8a2 2 0 0 1 2 2.4l-1.1 6.5A4 4 0 0 1 16.7 22H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2l4.6-7.9A1.9 1.9 0 0 1 15 5Z"
+                      Stroke="{DynamicResource TextBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+              </Canvas></Viewbox>
+              <TextBlock Name="UpText" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Name="Down" Classes="market-detail-action vote" Tag="down" Height="28"
+                  AutomationProperties.AutomationId="action:market.vote">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <Viewbox Width="14" Height="14" RenderTransform="scale(1,-1)"><Canvas Width="24" Height="24">
+                <Path Data="M7 10v12 M15 5l-1 5h5.8a2 2 0 0 1 2 2.4l-1.1 6.5A4 4 0 0 1 16.7 22H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2l4.6-7.9A1.9 1.9 0 0 1 15 5Z"
+                      Stroke="{DynamicResource TextBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+              </Canvas></Viewbox>
+              <TextBlock Name="DownText" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+      <WrapPanel ItemSpacing="8" LineSpacing="4">
+        <Button Name="SignInVote" Classes="market-detail-action" IsVisible="False" AutomationProperties.AutomationId="action:market.signin"/>
+        <TextBlock Name="VoteNote" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap" IsVisible="False"/>
+        <TextBlock Name="VoteFailure" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap"
+                   IsVisible="False" AutomationProperties.LiveSetting="Polite"/>
+        <Button Name="RetryVote" Classes="market-detail-action" IsVisible="False" AutomationProperties.AutomationId="action:market.vote-retry"/>
+      </WrapPanel>
+    </StackPanel>
+  </Border>
+</UserControl>

@@ -1,0 +1,18 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.NavigationEntriesSettings">
+  <local:SettingsFormView.Styles>
+    <Style Selector="Border.navigation-entry">
+      <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/><Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="MinHeight" Value="25"/><Setter Property="Padding" Value="12,0"/>
+    </Style>
+    <Style Selector="Button.navigation-move"><Setter Property="Width" Value="38"/><Setter Property="Padding" Value="0"/></Style>
+  </local:SettingsFormView.Styles>
+  <Border Classes="safety-section">
+    <StackPanel>
+      <TextBlock Tag="settings.navigation_entries" Classes="safety-title"/>
+      <TextBlock Tag="settings.which_entries_the_left_rail_shows" Classes="safety-hint" Margin="0,2,0,10"/>
+      <StackPanel Name="NavigationRows"/>
+      <Button Name="Reset" Tag="settings.reset_arrangement" Classes="preset-act safety-action" HorizontalAlignment="Stretch" Margin="12,0,12,0" AutomationProperties.AutomationId="action:appearance.nav-entries-reset"/>
+    </StackPanel>
+  </Border>
+</local:SettingsFormView>

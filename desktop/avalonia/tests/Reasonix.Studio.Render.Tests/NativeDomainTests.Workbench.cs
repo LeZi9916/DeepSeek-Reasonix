@@ -205,7 +205,13 @@ public sealed partial class NativeDomainTests
         "conversation",
         (w, _) =>
         {
-            w.FindControl<MenuItem>("SidebarFiles")!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            w.FindControl<Button>("OpenAccount")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var shortcuts = w.FindControl<Avalonia.Controls.Primitives.Popup>("QuickLinksPopup")!;
+            Assert.True(shortcuts.IsOpen);
+            var files = w.FindControl<StackPanel>("QuickLinksRows")!.Children.OfType<Button>()
+                .Single(button => AutomationProperties.GetAutomationId(button) == "action:files.open");
+            files.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.False(shortcuts.IsOpen);
             var opened = SpinWait.SpinUntil(
                 () =>
                 {
@@ -227,8 +233,11 @@ public sealed partial class NativeDomainTests
             reads.Exchange = req => Task.FromResult(req.RequestUri!.AbsolutePath == "/changes/diff" ? JsonReply(new JsonObject { ["diff"] = patch }) : null);
             w.FindControl<Button>("DiffFile")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Dispatcher.UIThread.RunJobs();
-            var text = ControlAt<SelectableTextBlock>(w, "class:workbench-diff");
-            Assert.Equal(patch, string.Concat(text.Inlines!.OfType<Avalonia.Controls.Documents.Run>().Select(r => r.Text)));
-            Assert.True(text.Inlines!.OfType<Avalonia.Controls.Documents.Run>().Select(r => r.Foreground).Distinct().Count() >= 3);
+            var view = ControlAt<Control>(w, "class:workbench-diff");
+            var text = Assert.Single(view.GetVisualDescendants().OfType<SelectableTextBlock>());
+            Assert.Equal("@@ -1 +1 @@oldnew", string.Concat(text.Inlines!.OfType<Avalonia.Controls.Documents.Run>().Select(r => r.Text)));
+            var markers = view.GetVisualDescendants().OfType<TextBlock>().Where(block => block.Classes.Contains("diff-sign")).ToArray();
+            Assert.Equal(new[] { string.Empty, "-", "+" }, markers.Select(block => block.Text));
+            Assert.Equal(3, markers.Select(block => block.Foreground).Distinct().Count());
         });
 }

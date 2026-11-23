@@ -143,7 +143,7 @@ public sealed partial class MainWindow
     /// <summary>Projects file language, caret line and unsaved state without replacing the editor.</summary>
     private void DrawFileStatus()
     {
-        FileStatus.IsVisible = _openFile is not null && !WorkbenchStart.IsVisible && !TerminalSurface.IsVisible;
+        FileStatus.IsVisible = _openFile is not null && FileEditor.IsVisible && !WorkbenchStart.IsVisible && !TerminalSurface.IsVisible;
         if (_openFile is not { } file)
         {
             return;
@@ -151,10 +151,10 @@ public sealed partial class MainWindow
 
         var extension = Path.GetExtension(file.Original.Path).TrimStart('.').ToLowerInvariant();
         FileLanguage.Text = WorkspaceReference.Language(extension);
-        var text = FileEditor.Text ?? string.Empty;
-        var line = 1 + text.Take(Math.Min(FileEditor.CaretIndex, text.Length)).Count(c => c == '\n');
-        FileLine.Text = MessageCatalog.Get("workbench.line_n", Language, ("n", line.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+        FileLine.Text = MessageCatalog.Get("workbench.line_n", Language, ("n", FileEditor.CurrentLine.ToString(System.Globalization.CultureInfo.CurrentCulture)));
         FileDirty.Text = MessageCatalog.Get("workbench.unsaved", Language);
         FileDirty.IsVisible = file.Dirty;
+        FileTabs.Children.OfType<Workbench.WorkbenchHeaderTab>()
+            .FirstOrDefault(tab => Equals(tab.Tag, file.Original.Path))?.ShowDirty(file.Dirty);
     }
 }

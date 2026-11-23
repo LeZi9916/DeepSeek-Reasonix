@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -30,6 +31,39 @@ public sealed partial class PresetWorkspace : SettingsFormView
     /// <summary>Gets a value indicating whether closing the editor would lose changes.</summary>
     internal bool HasChanges => Editor.IsVisible && (!Modules.IsValid || !JsonNode.DeepEquals(_original, _draft));
 
+    /// <summary>Returns the labels shown when discarding an edited preset.</summary>
+    /// <returns>The changed fields and module families.</returns>
+    internal IReadOnlyList<string> Changes()
+    {
+        if (_original is null || _draft is null)
+        {
+            return [];
+        }
+
+        var changes = new List<string>();
+        if (!JsonNode.DeepEquals(_original["name"], _draft["name"]) || !JsonNode.DeepEquals(_original["description"], _draft["description"]))
+        {
+            changes.Add(Text("persona.preset_name"));
+        }
+
+        if (!JsonNode.DeepEquals(_original["persona"], _draft["persona"]))
+        {
+            changes.Add(Text("persona.persona_and_instructions"));
+        }
+
+        Modules.AddChanges(changes, _original, _draft);
+        return changes;
+    }
+
+    /// <summary>Mirrors the new-task composer's mode-picker setting.</summary>
+    /// <param name="visible">Whether the chooser is shown.</param>
+    /// <param name="setVisible">Persists a change and updates the composer.</param>
+    internal void ConnectModePicker(bool visible, Action<bool> setVisible)
+    {
+        ModePicker.IsChecked = visible;
+        ModePicker.IsCheckedChanged += (_, _) => setVisible(ModePicker.IsChecked == true);
+    }
+
     /// <summary>Connects the catalog and the editor to this workspace.</summary>
     /// <param name="api">The active kernel.</param>
     /// <param name="language">The shell language.</param>
@@ -38,11 +72,17 @@ public sealed partial class PresetWorkspace : SettingsFormView
     /// <param name="preferred">Reads this device's new-task default.</param>
     /// <param name="setDefault">Saves the selected new-task default.</param>
     /// <param name="leave">The shell's unsaved-edit prompt.</param>
+    /// <param name="editPersona">Opens the shared system persona editor.</param>
     /// <param name="describe">Localizes a refusal.</param>
     /// <param name="token">Window lifetime.</param>
-    internal void Open(StudioPageClient api, InterfaceLanguage language, JsonObject catalog, JsonObject? active, Func<string?> preferred, Action<string?> setDefault, Func<Task<bool>> leave, Func<Exception, string> describe, CancellationToken token)
+    internal void Open(StudioPageClient api, InterfaceLanguage language, JsonObject catalog, JsonObject? active, Func<string?> preferred, Action<string?> setDefault, Func<Task<bool>> leave, Func<Task> editPersona, Func<Exception, string> describe, CancellationToken token)
     {
         Translate(language);
+        AutomationProperties.SetName(Create, Text("persona.new_preset"));
+        Extra.Header = Text("common.more_actions");
+        ExplicitDefault.Header = Text("persona.explicit_default_configuration");
+        FooterHint.Text = Text("persona.available_to_new_conversations_after");
+        How.Click += (_, _) => HowCopy.IsVisible = !HowCopy.IsVisible;
         ActivePreset.IsVisible = active is not null;
         if (active is not null)
         {
@@ -63,7 +103,7 @@ public sealed partial class PresetWorkspace : SettingsFormView
         Import.Open(api, language, PreviewImported, error => Message(describe(error), true), token);
         void PreviewImported(JsonObject imported)
         {
-            Start(imported["definition"]!.AsObject(), null, true, Create);
+            Start(imported["definition"]!.AsObject(), null, true, Create, Text("persona.imported_preset"));
             var diagnostics = (imported["diagnostics"]?.AsArray() ?? []).Select(d => (string?)d?["detail"]).Where(value => !string.IsNullOrEmpty(value));
             var summary = string.Join(Environment.NewLine, diagnostics);
             if (summary.Length > 0)
@@ -78,6 +118,7 @@ public sealed partial class PresetWorkspace : SettingsFormView
             versions = (catalog["presets"] ??= new JsonArray()).AsArray();
             List(null);
         }).ConfigureAwait(true);
+        EditPersona.Click += async (_, _) => await editPersona().ConfigureAwait(true);
         Export.Click += async (_, _) => await RunExtraAsync(async () =>
         {
             var definition = await api.ExportPresetAsync((string)version!["definition"]!["id"]!, token).ConfigureAwait(true);
@@ -91,8 +132,8 @@ public sealed partial class PresetWorkspace : SettingsFormView
                 await new Host.AvaloniaHost(window).SaveTextAsync("agent-preset.json", exported).ConfigureAwait(true);
             }
         }).ConfigureAwait(true);
-        Remove.Click += (_, _) => ConfirmRemove.IsVisible = Keep.IsVisible = true;
-        Keep.Click += (_, _) => ConfirmRemove.IsVisible = Keep.IsVisible = false;
+        Remove.Click += (_, _) => DeleteWarning.IsVisible = true;
+        Keep.Click += (_, _) => DeleteWarning.IsVisible = false;
         ConfirmRemove.Click += async (_, _) => await RunExtraAsync(async () =>
         {
             var id = (string)version!["definition"]!["id"]!;
@@ -192,79 +233,84 @@ public sealed partial class PresetWorkspace : SettingsFormView
                     continue;
                 }
 
-                Groups.Children.Add(new TextBlock { Text = scope.Label, FontWeight = FontWeight.SemiBold });
+                var group = new StackPanel { Spacing = 12 };
+                var title = new TextBlock { Text = scope.Label, FontWeight = FontWeight.Medium };
+                title.Bind(TextBlock.ForegroundProperty, title.GetResourceObservable("MutedBrush"));
+                group.Children.Add(title);
+                Groups.Children.Add(group);
+                var builtIn = scope.Id == "builtin";
                 var tiles = new Avalonia.Controls.Primitives.UniformGrid { Columns = 1 };
-                if (scope.Id == "builtin")
+                var rows = new StackPanel();
+                var entries = new System.Collections.Generic.List<PresetCatalogEntry>();
+                if (builtIn)
                 {
-                    tiles.SizeChanged += (_, e) => tiles.Columns = e.NewSize.Width >= 650 ? 2 : 1;
+                    group.Children.Add(tiles);
+                    tiles.SizeChanged += (_, e) => ArrangeCards(e.NewSize.Width);
+                }
+                else
+                {
+                    var list = new Border { BorderThickness = new Thickness(0, 1, 0, 0), Child = rows };
+                    list.Bind(Border.BorderBrushProperty, list.GetResourceObservable("HairBrush"));
+                    group.Children.Add(list);
                 }
 
-                Groups.Children.Add(tiles);
                 foreach (var v in items)
                 {
                     var d = v["definition"]!.AsObject();
                     var id = (string)d["id"]!;
                     var selected = scope.Id != "project" && id == (preferred() ?? "builtin:general");
-                    var copy = new StackPanel { Spacing = 8 };
-                    var card = new Border { Padding = new Thickness(16), MinHeight = 148, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1), Margin = new Thickness(0, 0, 8, 8), Child = copy };
-                    card.Bind(Border.BorderBrushProperty, card.GetResourceObservable(selected ? "AccentBrush" : "HairBrush"));
-                    var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
-                    var title = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
-                    title.Children.Add(new TextBlock { Text = Label(d, "name"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
-                    if (selected)
+                    var entry = new PresetCatalogEntry();
+                    entry.Open(id, Label(d, "name"), Label(d, "description"), selected, language);
+                    entry.ViewAction.Click += (_, _) => Start(d, v, false, entry.ViewAction);
+                    entry.CopyAction.Click += (_, _) => Start(d, null, true, entry.CopyAction);
+                    entry.DefaultAction.Click += (_, _) =>
                     {
-                        var badge = new Border
+                        if (preferred() == id || (preferred() is null && id == "builtin:general"))
                         {
-                            CornerRadius = new CornerRadius(4),
-                            Padding = new Thickness(6, 1),
-                            VerticalAlignment = VerticalAlignment.Center,
-                            Child = new TextBlock { Text = Text("persona.new_task_default"), FontSize = 10 },
-                        };
-                        badge.Bind(Border.BackgroundProperty, badge.GetResourceObservable("OverlayBrush"));
-                        title.Children.Add(badge);
+                            return;
+                        }
+
+                        try
+                        {
+                            setDefault(id);
+                            List(id);
+                        }
+                        catch (Exception error)
+                        {
+                            Message(describe(error), true);
+                        }
+                    };
+                    if (builtIn)
+                    {
+                        entries.Add(entry);
+                        tiles.Children.Add(entry);
+                    }
+                    else
+                    {
+                        rows.Children.Add(entry);
                     }
 
-                    header.Children.Add(title);
-                    var scopeName = id[(id.IndexOf(':') + 1)..];
-                    var scopeLabel = new TextBlock { Text = scopeName, FontSize = 10, VerticalAlignment = VerticalAlignment.Center };
-                    scopeLabel.Bind(TextBlock.ForegroundProperty, scopeLabel.GetResourceObservable("FaintBrush"));
-                    Grid.SetColumn(scopeLabel, 1);
-                    header.Children.Add(scopeLabel);
-                    copy.Children.Add(header);
-                    copy.Children.Add(Caption(Label(d, "description")));
-                    var actions = new WrapPanel();
-                    var view = new Button { Tag = id, Content = Text(scope.Id == "builtin" ? "persona.mode_details" : "common.edit"), Margin = new Thickness(0, 0, 4, 0) };
-                    var duplicate = new Button { Tag = id, Content = Text("common.copy") };
-                    AutomationProperties.SetAutomationId(view, "action:agent-preset.view");
-                    AutomationProperties.SetAutomationId(duplicate, "action:agent-preset.copy");
-                    view.Click += (_, _) => Start(d, v, false, view);
-                    duplicate.Click += (_, _) => Start(d, null, true, duplicate);
-                    if (scope.Id != "project" && !selected)
-                    {
-                        var pick = new Button { Tag = id, Content = Text("common.make_default"), Margin = new Thickness(0, 0, 4, 0) };
-                        AutomationProperties.SetAutomationId(pick, "action:agent-preset.new-task-default");
-                        pick.Click += (_, _) =>
-                        {
-                            try
-                            {
-                                setDefault(id);
-                                List(id);
-                            }
-                            catch (Exception error)
-                            {
-                                Message(describe(error), true);
-                            }
-                        };
-                        actions.Children.Add(pick);
-                    }
-
-                    actions.Children.Add(view);
-                    actions.Children.Add(duplicate);
-                    copy.Children.Add(actions);
-                    tiles.Children.Add(card);
                     if (id == focus)
                     {
-                        view.Focus();
+                        entry.DefaultAction.Focus();
+                    }
+                }
+
+                if (builtIn)
+                {
+                    ArrangeCards(Catalog.Bounds.Width);
+                }
+
+                void ArrangeCards(double width)
+                {
+                    tiles.Columns = Math.Clamp((int)((width + 20) / 300), 1, entries.Count);
+                    for (var i = 0; i < entries.Count; i++)
+                    {
+                        var column = i % tiles.Columns;
+                        var top = i >= tiles.Columns ? 20 : 0;
+                        entries[i].Margin = tiles.Columns == 1
+                            ? new Thickness(0, top, 0, 0)
+                            : new Thickness(column == 0 ? 0 : 10, top, column == tiles.Columns - 1 ? 0 : 10, 0);
                     }
                 }
             }
@@ -277,7 +323,7 @@ public sealed partial class PresetWorkspace : SettingsFormView
 
         string Label(JsonObject d, string key) => ((string?)d["id"])?.StartsWith("builtin:", StringComparison.Ordinal) == true ? Text((string?)d[key] ?? string.Empty) : (string?)d[key] ?? string.Empty;
 
-        void Start(JsonObject basis, JsonObject? existing, bool duplicate, Button? origin)
+        void Start(JsonObject basis, JsonObject? existing, bool duplicate, Button? origin, string? source = null)
         {
             populating = true;
             version = existing;
@@ -298,11 +344,13 @@ public sealed partial class PresetWorkspace : SettingsFormView
 
             _original = _draft.DeepClone().AsObject();
             exported = null;
-            Download.IsVisible = ConfirmRemove.IsVisible = Keep.IsVisible = Extra.IsExpanded = false;
-            Extra.IsVisible = existing is not null;
+            Download.IsVisible = DeleteWarning.IsVisible = Extra.IsExpanded = ExplicitDefault.IsExpanded = false;
+            ActionsBorder.IsVisible = existing is not null;
             var id = ((string)_draft["id"]!).Split(':', 2);
             immutable = id[0] == "builtin";
             Remove.IsVisible = !immutable;
+            EditPersona.IsVisible = immutable && id[1] == "general";
+            Cancel.Content = Text(immutable ? "common.back" : "common.cancel");
             Personal.IsEnabled = id[0] != "project";
             PresetName.IsReadOnly = Purpose.IsReadOnly = Prefix.IsReadOnly = Suffix.IsReadOnly = immutable;
             OmitRuntime.IsEnabled = !immutable;
@@ -317,10 +365,11 @@ public sealed partial class PresetWorkspace : SettingsFormView
             OmitRuntime.IsChecked = (bool?)_draft["persona"]?["include_runtime_context"] != true;
             Modules.Open(_draft, catalog["modules"] as JsonObject, Language, immutable, Update);
             Heading.Text = Text(immutable ? "persona.preset_details" : existing is null ? "persona.new_preset" : "persona.edit_preset");
-            SourceLabel.Text = existing is not null ? Label(basis, "name") : Text("persona.based_on_name", ("name", Label(basis, "name")));
+            SourceLabel.Text = existing is not null ? Label(basis, "name") : Text("persona.based_on_name", ("name", source ?? Label(basis, "name")));
             var revision = (string?)existing?["revision"] ?? string.Empty;
             Revision.IsVisible = revision.Length > 0;
-            Revision.Text = Text("persona.preset_version") + " · " + revision[..Math.Min(12, revision.Length)];
+            Revision.Text = Text("persona.preset_version") + ": " + revision[..Math.Min(12, revision.Length)];
+            ReadOnlyHint.IsVisible = immutable;
             AutomationProperties.SetName(Back, Text("persona.back_to_presets"));
             Save.IsVisible = !immutable;
             Duplicate.IsVisible = immutable;
@@ -329,7 +378,7 @@ public sealed partial class PresetWorkspace : SettingsFormView
             Message(string.Empty, false);
             populating = false;
             Update();
-            this.BringIntoView();
+            EditorHeading.BringIntoView();
             (immutable ? (Control)Back : PresetName).Focus();
         }
 
@@ -347,7 +396,7 @@ public sealed partial class PresetWorkspace : SettingsFormView
             persona["prefix"] = Prefix.Text ?? string.Empty;
             persona["suffix"] = Suffix.Text ?? string.Empty;
             persona["include_runtime_context"] = OmitRuntime.IsChecked != true;
-            Extra.IsVisible = version is not null && !HasChanges;
+            ActionsBorder.IsVisible = version is not null && !HasChanges;
             Save.IsEnabled = !busy && Modules.IsValid && !string.IsNullOrWhiteSpace(PresetName.Text)
                 && IsPresetId((string)_draft["id"]!) && (version is null || HasChanges);
         }

@@ -125,10 +125,16 @@ public sealed partial class NativeDomainTests
         scope.Items.OfType<MenuItem>().Single(i => AutomationProperties.GetAutomationId(i) == "action:session.scope.archived").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         Dispatcher.UIThread.RunJobs();
         Assert.Equal("archived", AutomationProperties.GetName(rail.GetVisualDescendants().OfType<Button>().Single(b => AutomationProperties.GetAutomationId(b) == "action:session.open")));
-        w.FindControl<MenuItem>("SidebarAccount")!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        w.FindControl<Button>("OpenAccount")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        var shortcuts = w.FindControl<Avalonia.Controls.Primitives.Popup>("QuickLinksPopup")!;
+        Assert.True(shortcuts.IsOpen);
+        var destinations = w.FindControl<StackPanel>("QuickLinksRows")!.Children.OfType<Button>().ToArray();
+        Assert.Equal(new[] { "usage", "files", "tools", "ext", "memory", "remote" }, destinations.Select(button => Assert.IsType<string>(button.Tag)));
+        destinations.Single(button => Equals(button.Tag, "usage")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Dispatcher.UIThread.RunJobs();
+        Assert.False(shortcuts.IsOpen);
         Assert.True(w.FindControl<Control>("SettingsPanel")!.IsVisible);
-        Assert.Equal(Reasonix.Studio.Pages.I18n.MessageCatalog.Get("settings.account_and_about", Reasonix.Studio.Pages.I18n.InterfaceLanguage.Zh), w.FindControl<TextBlock>("SettingsHeading")!.Text);
+        Assert.Equal(Reasonix.Studio.Pages.I18n.MessageCatalog.Get("app.usage", Reasonix.Studio.Pages.I18n.InterfaceLanguage.Zh), w.FindControl<TextBlock>("SettingsHeading")!.Text);
     });
 
     /// <summary>Captures local and remote sidebars at both theme and viewport combinations.</summary>

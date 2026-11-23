@@ -1,7 +1,10 @@
+using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Collections.Generic;
@@ -16,19 +19,24 @@ public sealed partial class MainWindow
     private static readonly IReadOnlyDictionary<string, string[]> s_destinations = new Dictionary<string, string[]>
     {
         ["common"] = ["safety.how_new_conversations_start", "about.update_mode", "common.language", "composer.send_shortcut", "common.notifications", "settings.light_and_dark"],
-        ["model"] = ["common.model_services", "onboarding.connect_a_model_service", "models.automatically_check_connections_and_balances", "common.default_model"],
-        ["session"] = ["persona.system_persona", "persona.agent_presets", "safety.question_wait_time"],
+        ["model"] = ["settings.models_by_use", "settings.context_maintenance", "common.model_services", "models.automatically_check_connections_and_balances", "common.default_model", "onboarding.connect_a_model_service"],
+        ["session"] = ["safety.question_wait_time", "composer.size_of_a_referenced_conversation", "panels.long_stretches_without_progress", "settings.narration_between_tool_calls", "persona.agent_presets", "settings.plan_approval", "remote.messages_between_sessions_experimental", "session.sub_agent_write_scope", "panels.scheduled_runs", "settings.hooks", "persona.system_persona"],
         ["session:persona"] = ["persona.start_of_the_system_prompt", "persona.additional_instructions", "persona.do_not_inject_optional_runtime"],
-        ["tools"] = ["ext.tools_the_model_can_use", "common.built_in_browser"],
-        ["ext"] = ["ext.installed"],
+        ["tools"] = ["settings.tool_approvals", "settings.outside_text", "ext.tools_the_model_can_use", "settings.rules_you_spell_out", "settings.sandbox", "common.which_program_runs_commands", "session.several_sessions_writing_one_project", "models.web_search_and_fetch", "common.built_in_browser"],
+        ["ext"] = ["settings.plugin_packages", "ext.external_services", "settings.skills", "ext.installed"],
         ["ext:market"] = ["ext.community_market"],
-        ["display"] = ["settings.fold_the_work_in_between", "settings.file_changes", "settings.ai_file_delivery_cards"],
-        ["controls"] = ["settings.keyboard_shortcuts", "composer.send_shortcut", "settings.messages_sent_while_running"],
+        ["display"] = ["settings.file_changes", "settings.fold_the_work_in_between", "settings.ai_file_delivery_cards", "settings.new_answer_divider", "chat.transcript_folding", "plan.show_collapsed_plan_progress"],
+        ["controls"] =
+        [
+            "settings.icon_rail", "settings.navigation_entries", "session.session_row_buttons",
+            "settings.session_tabs_kept_open", "settings.session_tabs_kept_live", "settings.keep_finished_sessions_in_running",
+            "settings.messages_sent_while_running", "settings.keyboard_shortcuts", "safety.esc_stops_a_task",
+            "settings.idle_page_sleep", "session.session_tabs", "composer.composer_hint",
+        ],
         ["appearance"] = ["settings.light_and_dark", "look.interface_theme", "look.typeface", "look.visual_effects", "look.interface_size"],
         ["storage"] = ["data.auto_archive_inactive_conversations", "session.where_this_session_writes", "data.export_and_import_config", "data.cloud_backup", "data.memory", "usage.cost_display_currency", "usage.upload_volume", "usage.usage_cost", "common.storage", "data.sessions_from_1_x"],
-        ["network"] = ["models.proxy_mode", "models.test_saved_settings", "remote.add_a_machine"],
-        ["account"] = ["settings.account", "about.current_version", "data.trace_export", "feedback.open_logs_folder"],
-        ["advanced"] = ["settings.not_in_this_version_yet", "feedback.open_logs_folder"],
+        ["network"] = ["common.network", "models.proxy_mode", "models.test_saved_settings", "settings.remote", "remote.add_a_machine"],
+        ["account"] = ["data.trace_export", "settings.account", "common.version", "about.logs_and_abnormal_exit_records", "common.community_and_contributors", "about.support_the_project"],
     };
 
     /// <summary>The section owning the current controls, including any nested page.</summary>
@@ -39,6 +47,9 @@ public sealed partial class MainWindow
 
     /// <summary>Reports whether the currently mounted explicit-save form contains edits.</summary>
     private Func<bool>? _unsavedSettings;
+
+    /// <summary>Describes the fields changed in the current preset draft.</summary>
+    private Func<IReadOnlyList<string>>? _unsavedSettingsSummary;
 
     /// <summary>The leave decision presented to the user.</summary>
     private TaskCompletionSource<bool>? _leaveDecision;
@@ -59,7 +70,6 @@ public sealed partial class MainWindow
         "storage" => 10,
         "network" => 3,
         "account" => 6,
-        "advanced" => 2,
         _ => s_destinations.Where(pair => pair.Key.Split(':')[0] == section).SelectMany(pair => pair.Value).Distinct().Count(),
     };
 
@@ -67,9 +77,19 @@ public sealed partial class MainWindow
     private void InitializeSettingsSearch()
     {
         SettingsPanel.SizeChanged += (_, e) => SettingsPanel.Classes.Set("compact", e.NewSize.Width <= 760);
+        SettingsNav.AddHandler(PointerWheelChangedEvent, ScrollCompactSettingsNav, RoutingStrategies.Tunnel);
+        SettingsScroller.ScrollChanged += (_, _) => PinSettingsIndex();
+        SettingsHeadingBlock.SizeChanged += (_, _) => PinSettingsIndex();
         SettingsSearch.TextChanged += (_, _) => ShowSettingsHits();
         SettingsSearch.AddHandler(KeyDownEvent, OnSettingsSearchKey, RoutingStrategies.Tunnel);
-        SettingsHits.Tapped += async (_, _) => await OpenSettingHitAsync().ConfigureAwait(true);
+        SettingsHits.Tapped += async (_, e) =>
+        {
+            if (e.Source is Avalonia.Visual visual && (visual as ListBoxItem ?? visual.FindAncestorOfType<ListBoxItem>())?.Content is SettingHit hit)
+            {
+                SettingsHits.SelectedItem = hit;
+                await OpenSettingHitAsync().ConfigureAwait(true);
+            }
+        };
         SettingsHits.KeyDown += async (_, e) =>
         {
             if (e.Key == Key.Enter)
@@ -79,7 +99,31 @@ public sealed partial class MainWindow
             }
         };
         KeepSettings.Click += (_, _) => _leaveDecision?.TrySetResult(false);
+        DismissLeavePrompt.Click += (_, _) => _leaveDecision?.TrySetResult(false);
+        SettingsLeavePrompt.KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Escape)
+            {
+                e.Handled = true;
+                _leaveDecision?.TrySetResult(false);
+            }
+        };
         DiscardSettings.Click += (_, _) => _leaveDecision?.TrySetResult(true);
+    }
+
+    /// <summary>Scrolls the compact tab strip horizontally with a vertical mouse wheel.</summary>
+    /// <param name="sender">The settings navigation control.</param>
+    /// <param name="e">The wheel delta.</param>
+    private void ScrollCompactSettingsNav(object? sender, PointerWheelEventArgs e)
+    {
+        if (!SettingsPanel.Classes.Contains("compact") || e.Delta.X != 0 || e.Delta.Y == 0 ||
+            SettingsNav.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault() is not { } scroll)
+        {
+            return;
+        }
+
+        scroll.Offset -= new Vector(e.Delta.Y * scroll.SmallChange.Width * 3, 0);
+        e.Handled = true;
     }
 
     /// <summary>Offers sections and matching settings in the current language.</summary>
@@ -103,12 +147,18 @@ public sealed partial class MainWindow
 
             foreach (var (target, labels) in s_destinations.Where(p => p.Key.Split(':')[0] == id))
             {
+                var path = target switch
+                {
+                    "session:persona" => page + " › " + MessageCatalog.Get("persona.system_persona", Language),
+                    "ext:market" => page + " › " + MessageCatalog.Get("ext.community_market", Language),
+                    _ => page,
+                };
                 foreach (var label in labels)
                 {
                     var title = MessageCatalog.Get(label, Language);
                     if (title.Contains(query, StringComparison.CurrentCultureIgnoreCase))
                     {
-                        hits.Add(new SettingHit(target, label, page, title));
+                        hits.Add(new SettingHit(target, label, path, title));
                     }
                 }
             }
@@ -116,9 +166,10 @@ public sealed partial class MainWindow
 
         SettingsHits.ItemsSource = hits;
         SettingsHits.SelectedIndex = hits.Count == 0 ? -1 : 0;
+        SettingsHits.Classes.Remove("keyboard-search");
         SettingsHits.IsVisible = hits.Count != 0;
         NoSettingsHits.IsVisible = hits.Count == 0;
-        NoSettingsHits.Text = MessageCatalog.Get(MessageKey.Chat.NoMatches, Language);
+        NoSettingsHits.Text = MessageCatalog.Get("settings.no_matching_setting", Language);
         SearchResultsPanel.IsVisible = true;
     }
 
@@ -134,12 +185,13 @@ public sealed partial class MainWindow
 
         if (e.Key == Key.Escape)
         {
-            SearchResultsPanel.IsVisible = false;
+            DismissSettingsSearch();
         }
         else if (e.Key is Key.Up or Key.Down && SettingsHits.ItemCount > 0)
         {
             var n = SettingsHits.ItemCount;
             SettingsHits.SelectedIndex = (SettingsHits.SelectedIndex + (e.Key == Key.Up ? n - 1 : 1)) % n;
+            SettingsHits.Classes.Add("keyboard-search");
             SettingsHits.ScrollIntoView(SettingsHits.SelectedIndex);
         }
         else if (e.Key == Key.Enter)
@@ -153,6 +205,14 @@ public sealed partial class MainWindow
         }
 
         e.Handled = true;
+    }
+
+    /// <summary>Clears the query and returns keyboard focus to the search box.</summary>
+    private void DismissSettingsSearch()
+    {
+        SettingsSearch.Text = string.Empty;
+        SearchResultsPanel.IsVisible = false;
+        SettingsSearch.Focus();
     }
 
     /// <summary>Opens the result's real section and brings the corresponding setting into view.</summary>
@@ -177,11 +237,17 @@ public sealed partial class MainWindow
         }
 
         SelectSettingsNav(hit.Section.Split(':')[0]);
-        var target = SettingsBody.GetVisualDescendants().OfType<Control>().FirstOrDefault(c => Equals(c.Tag, hit.Key));
+        var anchor = hit.Key switch
+        {
+            "common.default_model" => "settings.models_by_use",
+            "ext.installed" => "settings.plugin_packages",
+            "onboarding.connect_a_model_service" => "common.model_services",
+            _ => hit.Key,
+        };
+        var target = SettingsBody.GetVisualDescendants().OfType<Control>().FirstOrDefault(c => Equals(c.Tag, anchor));
         if (target is not null)
         {
-            target.BringIntoView();
-            (target.Focusable ? target : target.GetVisualDescendants().OfType<Control>().FirstOrDefault(c => c.Focusable && c.IsEnabled))?.Focus();
+            FocusSetting(target);
         }
     }
 
@@ -216,7 +282,22 @@ public sealed partial class MainWindow
 
         _leaveDecision = new TaskCompletionSource<bool>();
         LeaveQuestion.Text = MessageCatalog.Get("persona.discard_unsaved_changes", Language);
-        KeepSettings.Content = MessageCatalog.Get(MessageKey.Common.Cancel, Language);
+        LeaveDetail.Text = MessageCatalog.Get("common.they_will_be_lost_if", Language);
+        KeepSettings.Content = MessageCatalog.Get("persona.keep_editing", Language);
+        AutomationProperties.SetName(DismissLeavePrompt, MessageCatalog.Get("common.close", Language));
+        LeaveChanges.Children.Clear();
+        foreach (var change in _unsavedSettingsSummary?.Invoke() ?? [])
+        {
+            LeaveChanges.Children.Add(new Border
+            {
+                CornerRadius = new CornerRadius(999),
+                Padding = new Thickness(8, 2),
+                [!Border.BackgroundProperty] = StudioTypography.Resource("OverlayBrush"),
+                Child = new TextBlock { Text = change, [!TextBlock.FontSizeProperty] = StudioTypography.Size(11) },
+            });
+        }
+
+        LeaveChanges.IsVisible = LeaveChanges.Children.Count > 0;
         DiscardSettings.Content = MessageCatalog.Get("persona.discard_changes", Language);
         var previous = FocusManager?.GetFocusedElement();
         SettingsSheet.IsEnabled = false;

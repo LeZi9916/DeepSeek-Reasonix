@@ -69,7 +69,17 @@ public sealed partial class NativeDomainTests
             await session.Dispatch(
                 async () =>
             {
-                var window = new MainWindow(false, owner, InterfaceLanguage.Zh, _ => Task.FromResult(false), new Reasonix.Studio.Shell.Host.FileDrafts(Path.Combine(profile.FullName, "native-drafts"))) { Width = 1440, Height = 900 };
+                var window = new MainWindow(
+                    false,
+                    owner,
+                    InterfaceLanguage.Zh,
+                    _ => Task.FromResult(false),
+                    new Reasonix.Studio.Shell.Host.FileDrafts(Path.Combine(profile.FullName, "native-drafts")),
+                    new Reasonix.Studio.Shell.Host.WorkspacePreferences { ShowSessionTabs = true, LiveStreamLimit = 1 })
+                {
+                    Width = 1440,
+                    Height = 900,
+                };
                 window.Show();
                 try
                 {

@@ -1,4 +1,48 @@
-<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:settings="using:Reasonix.Studio.Shell.Settings">
+  <Styles.Resources>
+    <ControlTheme x:Key="AgentSelectItem" TargetType="ComboBoxItem">
+      <Setter Property="MinHeight" Value="28"/><Setter Property="Padding" Value="12,2"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="4">
+          <Grid ColumnDefinitions="*,14" ColumnSpacing="8">
+            <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}" VerticalContentAlignment="Center"/>
+            <Viewbox Name="SelectedMark" Grid.Column="1" Width="13" Height="13" IsVisible="False">
+              <Canvas Width="24" Height="24">
+                <Path Data="{StaticResource Glyph.check}" Stroke="{DynamicResource TextBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/>
+              </Canvas>
+            </Viewbox>
+          </Grid>
+        </Border>
+      </ControlTemplate></Setter>
+      <Style Selector="^:selected /template/ Viewbox#SelectedMark"><Setter Property="IsVisible" Value="True"/></Style>
+      <Style Selector="^:pointerover, ^:focus-visible:not(:selected)"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+      <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.5"/></Style>
+    </ControlTheme>
+  </Styles.Resources>
+  <Style Selector="ComboBox.agent-select">
+    <Setter Property="ItemContainerTheme" Value="{StaticResource AgentSelectItem}"/>
+  </Style>
+  <Style Selector="ComboBox.agent-select /template/ Popup#PART_Popup">
+    <Setter Property="ShouldUseOverlayLayer" Value="True"/>
+    <Setter Property="Placement" Value="BottomEdgeAlignedLeft"/>
+    <Setter Property="VerticalOffset" Value="4"/>
+    <Setter Property="PlacementConstraintAdjustment" Value="SlideX,FlipY"/>
+  </Style>
+  <Style Selector="ComboBox.agent-select /template/ Border#PopupBorder">
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="9"/>
+    <Setter Property="Padding" Value="2,4"/><Setter Property="BoxShadow" Value="0 5 14 0 #28000000"/>
+  </Style>
+  <Style Selector="ComboBox.agent-select /template/ ItemsPresenter#PART_ItemsPresenter">
+    <Setter Property="Margin" Value="0"/>
+  </Style>
+  <Style Selector="ComboBox.agent-select#EventChoice /template/ Border#PopupBorder">
+    <Setter Property="MinWidth" Value="240"/>
+  </Style>
   <Style Selector="ListBox#SettingsNav ListBoxItem">
     <Setter Property="AutomationProperties.AutomationId" Value="action:settings.section"/>
     <Setter Property="Height" Value="30"/><Setter Property="MinHeight" Value="0"/><Setter Property="Margin" Value="0,0,0,2"/>
@@ -12,15 +56,35 @@
       </Border>
     </ControlTemplate></Setter>
   </Style>
-  <Style Selector="ListBox#SettingsNav ListBoxItem:pointerover"><Setter Property="Background" Value="{DynamicResource RaisedBrush}"/></Style>
+  <Style Selector="ListBox#SettingsNav ListBoxItem:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  <Style Selector="Path.settings-nav-glyph"><Setter Property="Stroke" Value="{DynamicResource MutedBrush}"/></Style>
+  <Style Selector="ListBox#SettingsNav ListBoxItem:selected Path.settings-nav-glyph"><Setter Property="Stroke" Value="{DynamicResource TextBrush}"/></Style>
   <Style Selector="ListBox#SettingsNav ListBoxItem:selected">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
   </Style>
   <Style Selector="ListBox#SettingsNav">
     <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
   </Style>
+  <Style Selector="TextBox#SettingsSearch:focus /template/ Border#PART_BorderElement">
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style Selector="ListBox#SettingsHits ListBoxItem">
+    <Setter Property="Padding" Value="9,7"/><Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Background" Value="Transparent"/><Setter Property="CornerRadius" Value="5"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="Template"><ControlTemplate>
+      <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalContentAlignment="Stretch"/>
+      </Border>
+    </ControlTemplate></Setter>
+  </Style>
+  <Style Selector="ListBox#SettingsHits ListBoxItem:pointerover, ListBox#SettingsHits.keyboard-search ListBoxItem:selected">
+    <Setter Property="Background" Value="{DynamicResource FloatHiBrush}"/>
+  </Style>
   <Style Selector="Grid#SettingsPanel.compact ListBox#SettingsNav">
-    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Hidden"/>
     <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
   </Style>
   <Style Selector="Grid#SettingsPanel.compact StackPanel.nav-strip">
@@ -35,14 +99,187 @@
     <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
   </Style>
+  <Style Selector="StackPanel#SettingsBody">
+    <Setter Property="Margin" Value="24,24,24,48"/>
+  </Style>
+  <Style Selector="StackPanel#SettingsBody.settings-card-footer">
+    <Setter Property="Margin" Value="24,24,24,64"/>
+  </Style>
   <Style Selector="Border.setting-row">
     <Setter Property="BorderThickness" Value="0,1,0,0"/><Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
-    <Setter Property="MinHeight" Value="52"/><Setter Property="Padding" Value="0,9"/>
+    <Setter Property="MinHeight" Value="36"/><Setter Property="Padding" Value="0,6"/>
   </Style>
-  <Style Selector="Button.page-link">
-    <Setter Property="Height" Value="26"/><Setter Property="Padding" Value="10,0"/><Setter Property="Margin" Value="0,2,6,2"/>
-    <Setter Property="CornerRadius" Value="13"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+  <Style Selector="TextBlock.setting-row-name">
+    <Setter Property="FontWeight" Value="Medium"/><Setter Property="LineHeight" Value="19"/>
+  </Style>
+  <Style Selector="TextBlock.setting-row-detail"><Setter Property="LineHeight" Value="18"/></Style>
+  <Style Selector="Border.progress-thresholds">
+    <Setter Property="Margin" Value="0,0,0,8"/>
+  </Style>
+  <Style Selector="Border.setting-row.progress-threshold">
+    <Setter Property="Padding" Value="16,8,0,8"/>
+  </Style>
+  <Style Selector="Border.setting-row.progress-threshold-last">
+    <Setter Property="BorderThickness" Value="0,1,0,1"/>
+  </Style>
+  <Style Selector="TextBlock.approval-warning">
+    <Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/>
+    <Setter Property="Margin" Value="0,6,0,8"/>
+  </Style>
+  <Style Selector="Border.safety-section, Border.safety-line">
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+  </Style>
+  <Style Selector="Border.safety-section"><Setter Property="Padding" Value="0,11,0,11"/></Style>
+  <Style Selector="Border.safety-warning">
+    <Setter Property="Background" Value="{DynamicResource WarnWashBrush}"/>
+    <Setter Property="Padding" Value="10,8"/><Setter Property="CornerRadius" Value="7"/>
+    <Setter Property="Margin" Value="0,0,0,6"/>
+  </Style>
+  <Style Selector="TextBlock.safety-title">
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="FontWeight" Value="Medium"/><Setter Property="LineHeight" Value="18.2"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <Style Selector="TextBlock.safety-note">
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="LineHeight" Value="22.1"/><Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <Style Selector="TextBlock.safety-hint">
+    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="LineHeight" Value="18.6"/><Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <Style Selector="Button.safety-action, Button.safety-ghost">
+    <Setter Property="Height" Value="24"/><Setter Property="CornerRadius" Value="999"/>
+    <Setter Property="Padding" Value="10,0"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+  </Style>
+  <Style Selector="Border.setting-apply">
+    <Setter Property="Margin" Value="8,0,0,0"/>
+    <Setter Property="Height" Value="18"/>
+    <Setter Property="Padding" Value="7,0"/>
+    <Setter Property="CornerRadius" Value="9"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Border.setting-apply TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+  </Style>
+  <Style Selector="Border.notification-option">
+    <Setter Property="Padding" Value="16,8,0,8"/>
+  </Style>
+  <Style Selector="Border.notification-option TextBlock.setting-row-name">
+    <Setter Property="FontWeight" Value="Normal"/>
+  </Style>
+  <Style Selector="Border.notification-option TextBlock.setting-row-detail">
+    <Setter Property="LineHeight" Value="18.6"/>
+  </Style>
+  <Style Selector="Border.notification-branch">
+    <Setter Property="Margin" Value="20,0,0,0"/><Setter Property="BorderThickness" Value="1,1,0,0"/>
+  </Style>
+  <Style Selector="Border.notification-branch.notification-last">
+    <Setter Property="Margin" Value="20,0,0,6"/><Setter Property="BorderThickness" Value="1,1,0,1"/>
+  </Style>
+  <Style Selector="Border.notification-inactive"><Setter Property="Opacity" Value="0.5"/></Style>
+  <Style Selector="Button.preset-act, Button.preset-flat, Button.preset-major">
+    <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Padding" Value="0"/><Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Template"><ControlTemplate>
+      <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+              Padding="{TemplateBinding Padding}">
+        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+      </Border>
+    </ControlTemplate></Setter>
+  </Style>
+  <Style Selector="Button.preset-muted"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+  <Style Selector="Button.preset-muted:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+  <Style Selector="Button.preset-act">
+    <Setter Property="Height" Value="24"/><Setter Property="Padding" Value="11,0"/><Setter Property="CornerRadius" Value="999"/>
     <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+  </Style>
+  <Style Selector="Button.preset-act:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  <Style Selector="Button.preset-major">
+    <Setter Property="Height" Value="36"/><Setter Property="Padding" Value="16,0"/><Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="Foreground" Value="{DynamicResource PageBrush}"/><Setter Property="Background" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+  </Style>
+  <Style Selector="Button.preset-major:pointerover"><Setter Property="Background" Value="{DynamicResource MutedBrush}"/></Style>
+  <Style Selector="Button.preset-act:disabled, Button.preset-major:disabled"><Setter Property="Opacity" Value="0.55"/></Style>
+  <Style Selector="Grid#SettingsPanel ToggleSwitch">
+    <Setter Property="Width" Value="34"/><Setter Property="Height" Value="20"/>
+    <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource GhostBrush}"/>
+    <Setter Property="KnobTransitions" Value="{x:Null}"/>
+    <Setter Property="FocusAdorner"><Template>
+      <Border Margin="-4" BorderBrush="{DynamicResource FocusBrush}" BorderThickness="2" CornerRadius="14" IsHitTestVisible="False"/>
+    </Template></Setter>
+    <Setter Property="Template"><ControlTemplate>
+      <Border Name="SwitchTrack" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="10">
+        <Canvas Name="PART_SwitchKnob" Width="14" Height="12" Margin="3,0,0,0"
+                HorizontalAlignment="Left" VerticalAlignment="Center" IsHitTestVisible="False">
+          <Panel Name="PART_MovingKnobs" Canvas.Left="0" Width="12" Height="12">
+            <Ellipse Name="SwitchThumb" Fill="{TemplateBinding Foreground}"/>
+          </Panel>
+        </Canvas>
+      </Border>
+    </ControlTemplate></Setter>
+    <Style Selector="^:pointerover:not(:disabled)">
+      <Setter Property="BorderBrush" Value="{DynamicResource MutedBrush}"/>
+    </Style>
+    <Style Selector="^:checked">
+      <Setter Property="Background" Value="{DynamicResource AccentWashBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+    <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.55"/></Style>
+  </Style>
+  <Style Selector="Window.motion Grid#SettingsPanel ToggleSwitch">
+    <Setter Property="KnobTransitions"><Transitions>
+      <DoubleTransition Property="Canvas.Left" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="Window.motion Grid#SettingsPanel ToggleSwitch /template/ Border#SwitchTrack">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="Window.motion Grid#SettingsPanel ToggleSwitch /template/ Ellipse#SwitchThumb">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Fill" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="Button.account-link">
+    <Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="0"/><Setter Property="MinHeight" Value="0"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="Template"><ControlTemplate>
+      <Grid>
+        <ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" VerticalAlignment="Center"/>
+        <Border Name="Underline" Height="1" Margin="0,0,0,1" VerticalAlignment="Bottom" Background="{TemplateBinding Foreground}"
+                IsVisible="False" IsHitTestVisible="False"/>
+      </Grid>
+    </ControlTemplate></Setter>
+  </Style>
+  <Style Selector="Button.account-link:pointerover /template/ Border#Underline"><Setter Property="IsVisible" Value="True"/></Style>
+  <Style Selector="Button.page-link">
+    <Setter Property="Height" Value="26"/><Setter Property="Padding" Value="10,0"/><Setter Property="Margin" Value="0,0,6,6"/>
+    <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+    <Setter Property="CornerRadius" Value="13"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
   </Style>
   <Style Selector="RadioButton.segmented">
@@ -59,6 +296,57 @@
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     <Setter Property="FontWeight" Value="Medium"/>
   </Style>
-  <Style Selector="Grid#SettingsPanel.data-page Border#SettingsIndex"><Setter Property="Padding" Value="0,12"/></Style>
-  <Style Selector="Grid#SettingsPanel.data-page Button.page-link"><Setter Property="Margin" Value="0,0,6,6"/><Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/></Style>
+  <Style Selector="TextBox.settings-input, ComboBox.settings-input">
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="CornerRadius" Value="7"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+  </Style>
+  <Style Selector="TextBox.settings-input">
+    <Setter Property="Height" Value="32"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="FontFamily" Value="{DynamicResource StudioMonoFamily}"/>
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+    <Setter Property="PlaceholderForeground" Value="#757575"/>
+  </Style>
+  <Style Selector="ComboBox.settings-input">
+    <Setter Property="Height" Value="30"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+  </Style>
+  <Style Selector="ComboBox.settings-input /template/ PathIcon#DropDownGlyph">
+    <Setter Property="Width" Value="8"/>
+    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+  </Style>
+  <Style Selector="TextBox.settings-input:focus /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+  </Style>
+  <Style Selector="TextBox.settings-input /template/ TextBlock#PART_Placeholder, TextBox#SettingsSearch:not(:disabled) /template/ TextBlock#PART_Placeholder">
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="Grid#SettingsPanel.browsing-remotes Grid#SettingsSheet, Grid#SettingsPanel.browsing-remotes Grid#SettingsTitleBar">
+    <Setter Property="Effect"><BlurEffect Radius="6"/></Setter>
+  </Style>
+  <Style Selector="Border.fold-option-surface">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Padding" Value="12,10"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+  </Style>
+  <Style Selector="TextBlock.fold-option-caption"><Setter Property="FontWeight" Value="Medium"/></Style>
+  <Style Selector="Window.motion Border.fold-option-surface, Window.motion Border.fold-example-part">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="Window.motion settings|FoldingPreviewFrame">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <ColorTransition Property="Outline" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
 </Styles>

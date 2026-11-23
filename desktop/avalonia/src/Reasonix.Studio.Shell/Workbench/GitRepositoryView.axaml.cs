@@ -228,6 +228,7 @@ public sealed partial class GitRepositoryView : SettingsFormView
             StageAll.IsEnabled = Board.IsEnabled = _changes.Length > 0;
             DrawTree();
             StatusChanged?.Invoke();
+            _board?.UpdateTabCount(_changes.Length > 0 ? _changes.Length.ToString(CultureInfo.CurrentCulture) : null);
             if (_board?.Parent is not null)
             {
                 DrawBoard(_board);
@@ -582,8 +583,13 @@ public sealed partial class GitRepositoryView : SettingsFormView
     private Control Patch(JsonObject data, string? path = null)
     {
         var view = new GitPatchView();
-        var patch = (string?)data["diff"];
-        view.Show(string.IsNullOrEmpty(patch) ? Text("workbench.no_changes") : patch, (bool?)data["truncated"] == true ? Text("workbench.diff_cut_short") : null, path is null ? null : () => _open(path));
+        view.Show(
+            (string?)data["diff"] ?? string.Empty,
+            path ?? (string?)data["path"],
+            Text("workbench.no_changes"),
+            (bool?)data["truncated"] == true ? Text("workbench.diff_cut_short") : null,
+            path is null ? null : () => _open(path),
+            showMetadata: path is null);
         return view;
     }
 }

@@ -1,0 +1,71 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.HookSettingsView">
+  <local:SettingsFormView.Styles>
+    <Style Selector="RadioButton.hook-scope">
+      <Setter Property="Padding" Value="12,8"/><Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="Background" Value="Transparent"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border CornerRadius="7" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}"
+                BorderThickness="1" BorderBrush="{TemplateBinding BorderBrush}">
+          <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="RadioButton.hook-scope:checked">
+      <Setter Property="BorderBrush" Value="{DynamicResource FaintBrush}"/>
+    </Style>
+    <Style Selector="RadioButton.hook-scope:disabled"><Setter Property="Opacity" Value="0.55"/></Style>
+    <Style Selector="TextBlock.hook-hint">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/><Setter Property="LineHeight" Value="18.6"/>
+    </Style>
+  </local:SettingsFormView.Styles>
+  <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="0,12,0,10">
+    <StackPanel Name="HookPanel">
+      <WrapPanel ItemSpacing="8" LineSpacing="4">
+        <TextBlock Tag="settings.hooks" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" LineHeight="18.2" VerticalAlignment="Center"/>
+        <Border Classes="setting-apply" Margin="0"><TextBlock Tag="settings.you_choose_where" VerticalAlignment="Center"/></Border>
+      </WrapPanel>
+      <TextBlock Name="HookHint" Classes="hook-hint" LineHeight="16.8" Margin="0,2,0,10"/>
+      <TextBlock Name="Error" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap" IsVisible="False"/>
+      <StackPanel Name="Controls" IsVisible="False">
+        <Grid Name="Scopes" ColumnDefinitions="*,*" ColumnSpacing="8" MaxWidth="460" HorizontalAlignment="Left"
+              Width="{Binding #HookPanel.Bounds.Width}">
+          <RadioButton Name="UserScope" Classes="hook-scope" GroupName="hook-scope" IsChecked="True"
+                       AutomationProperties.AutomationId="action:hooks.scope">
+            <StackPanel Spacing="4">
+              <TextBlock Tag="ext.mine" Foreground="{DynamicResource TextBrush}" LineHeight="18"/>
+              <TextBlock Tag="ext.this_machine_only" Classes="hook-hint" LineHeight="17"/>
+            </StackPanel>
+          </RadioButton>
+          <RadioButton Name="ProjectScope" Classes="hook-scope" Grid.Column="1" GroupName="hook-scope"
+                       AutomationProperties.AutomationId="action:hooks.scope">
+            <StackPanel Spacing="4">
+              <TextBlock Tag="ext.this_project" Foreground="{DynamicResource TextBrush}" LineHeight="18"/>
+              <TextBlock Tag="ext.written_into_the_repository_so" Classes="hook-hint" LineHeight="17"/>
+            </StackPanel>
+          </RadioButton>
+        </Grid>
+        <TextBlock Name="PathLabel" FontFamily="{DynamicResource WorkbenchMonoFamily}" FontSize="{DynamicResource StudioType12}"
+                   Foreground="{DynamicResource GhostBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+        <StackPanel Name="Sources" Margin="0,0,0,0"/>
+        <StackPanel Name="Recipes" Margin="0,14,0,0"/>
+        <Button Name="More" Classes="preset-flat preset-muted" Margin="0,14,0,0" AutomationProperties.AutomationId="action:hooks.expert">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Name="MoreLabel" FontSize="{DynamicResource StudioType12}"/>
+            <TextBlock Name="RuleCount" FontSize="{DynamicResource StudioType12}" FontFamily="{DynamicResource WorkbenchMonoFamily}"
+                       Foreground="{DynamicResource GhostBrush}"/>
+          </StackPanel>
+        </Button>
+        <StackPanel Name="Expert" Spacing="8" Margin="0,10,0,0" IsVisible="False">
+          <StackPanel Name="RuleList" Spacing="8"/>
+          <WrapPanel ItemSpacing="8" LineSpacing="6">
+            <Button Name="AddRule" Tag="common.add_a_rule" Classes="preset-act" AutomationProperties.AutomationId="action:hooks.add"/>
+            <Button Name="SaveRules" Tag="common.save" Classes="preset-major" Height="24" CornerRadius="999" AutomationProperties.AutomationId="action:hooks.save"/>
+          </WrapPanel>
+          <StackPanel Name="PluginRules" Spacing="4"/>
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</local:SettingsFormView>

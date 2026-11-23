@@ -1,0 +1,111 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.PermissionSettingsView">
+  <local:SettingsFormView.Styles>
+    <Style Selector="TextBlock.permission-detail">
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="LineHeight" Value="18.6"/><Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="TextBlock#SaveTitle.saved"><Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/></Style>
+    <Style Selector="Border.permission-count">
+      <Setter Property="Padding" Value="6,1"/><Setter Property="CornerRadius" Value="999"/>
+    </Style>
+    <Style Selector="Border.permission-line">
+      <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/><Setter Property="BorderThickness" Value="0,1,0,0"/>
+    </Style>
+    <Style Selector="Button.permission-ghost">
+      <Setter Property="Height" Value="24"/><Setter Property="Padding" Value="10,0"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    </Style>
+    <Style Selector="Button.permission-group">
+      <Setter Property="Height" Value="36"/><Setter Property="Padding" Value="12,0"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="Button.permission-group:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    <Style Selector="ComboBox.permission-verdict /template/ Border#PopupBorder"><Setter Property="MinWidth" Value="140"/></Style>
+  </local:SettingsFormView.Styles>
+  <StackPanel>
+    <Border Classes="permission-line" Padding="0,11,0,10">
+      <StackPanel>
+        <WrapPanel ItemSpacing="8" LineSpacing="4">
+          <TextBlock Tag="settings.rules_you_spell_out" Foreground="{DynamicResource TextBrush}" FontWeight="SemiBold" LineHeight="18.2"/>
+          <Border Classes="setting-apply" Margin="0"><TextBlock Tag="settings.rebuilds_the_runtime" VerticalAlignment="Center"/></Border>
+        </WrapPanel>
+        <TextBlock Tag="safety.allow_and_deny_by_command" Classes="permission-detail" Margin="0,2,0,10"/>
+        <TextBlock Name="ReadFailure" Tag="safety.cannot_read_the_permission_config" Classes="permission-detail" IsVisible="False"/>
+        <StackPanel Name="Rules" IsVisible="False">
+          <StackPanel Name="Warnings" Spacing="8"/>
+          <StackPanel Name="Recipes"/>
+          <WrapPanel Margin="0,18,0,0" ItemSpacing="12" LineSpacing="6">
+            <TextBlock Tag="safety.everything_else_that_writes" Classes="permission-detail" FontFamily="{DynamicResource WorkbenchMonoFamily}" VerticalAlignment="Center"/>
+            <Border Background="{DynamicResource OverlayBrush}" Padding="2" CornerRadius="7">
+              <StackPanel Name="Fallback" Orientation="Horizontal"/>
+            </Border>
+          </WrapPanel>
+          <TextBlock Name="FallbackHint" Classes="permission-detail" Margin="0,6,0,0"/>
+          <StackPanel Name="Remembered" Margin="0,12,0,0" Spacing="6" IsVisible="False">
+            <TextBlock Tag="safety.remembered_allow_rules_for_this" FontWeight="Medium"/>
+            <StackPanel Name="RememberedRows"/>
+            <TextBlock Name="RememberedPath" Classes="permission-detail" FontFamily="{DynamicResource WorkbenchMonoFamily}"/>
+          </StackPanel>
+          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="0,22,0,0">
+            <WrapPanel ItemSpacing="5" LineSpacing="4" VerticalAlignment="Center">
+              <TextBlock Name="Total" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,3,0"/>
+              <Border Name="CountDeny" Classes="permission-count" ><Border.Background><SolidColorBrush Color="{DynamicResource Err}" Opacity="0.13"/></Border.Background><TextBlock Name="Deny" Foreground="{DynamicResource ErrInkBrush}" FontSize="{DynamicResource StudioType11}"/></Border>
+              <Border Name="CountAsk" Classes="permission-count" Background="{DynamicResource WarnWashBrush}"><TextBlock Name="Ask" Foreground="{DynamicResource WarnInkBrush}" FontSize="{DynamicResource StudioType11}"/></Border>
+              <Border Name="CountAllow" Classes="permission-count" Background="{DynamicResource OkWashBrush}"><TextBlock Name="Allow" Foreground="{DynamicResource OkInkBrush}" FontSize="{DynamicResource StudioType11}"/></Border>
+            </WrapPanel>
+            <TextBox Name="Search" Grid.Column="1" Tag="safety.filter" MinHeight="28" Classes="settings-input"
+                     AutomationProperties.AutomationId="field:permissions.filter"/>
+            <Button Name="ToggleAdd" Grid.Column="2" Classes="preset-act" AutomationProperties.AutomationId="action:permissions.toggle-add"/>
+          </Grid>
+          <Border Name="AddForm" IsVisible="False" Margin="0,10,0,0" Padding="12" CornerRadius="7" Background="{DynamicResource OverlayBrush}"
+                  BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="168,*,94,Auto" ColumnSpacing="8">
+                <ComboBox Name="Tool" Classes="settings-input agent-select" AutomationProperties.AutomationId="field:permissions.tool"/>
+                <TextBox Name="Pattern" Grid.Column="1" Classes="settings-input" AutomationProperties.AutomationId="field:permissions.pattern"/>
+                <ComboBox Name="Level" Grid.Column="2" Classes="settings-input agent-select" AutomationProperties.AutomationId="field:permissions.verdict"/>
+                <Button Name="Add" Grid.Column="3" Tag="common.add" Classes="preset-major" Height="24" CornerRadius="999" VerticalAlignment="Center"
+                        AutomationProperties.AutomationId="action:permissions.add-rule"/>
+              </Grid>
+              <WrapPanel ItemSpacing="10" LineSpacing="4">
+                <TextBlock Name="Preview" Foreground="{DynamicResource TextBrush}" FontSize="{DynamicResource StudioType12}" FontFamily="{DynamicResource WorkbenchMonoFamily}" TextWrapping="Wrap"/>
+                <TextBlock Name="PreviewLevel" Classes="permission-detail"/>
+                <TextBlock Name="Explanation" Classes="permission-detail"/>
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+          <Border Name="SessionGrants" Classes="permission-line" Padding="0,8,0,0" Margin="0,12,0,0" IsVisible="False">
+            <StackPanel Spacing="6">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <StackPanel Spacing="2">
+                  <TextBlock Name="GrantTitle" FontWeight="Medium"/>
+                  <TextBlock Tag="safety.this_session_only_not_written" Classes="permission-detail"/>
+                </StackPanel>
+                <Button Name="RevokeAll" Grid.Column="1" Tag="safety.take_all_back" Classes="preset-act" VerticalAlignment="Center"
+                        AutomationProperties.AutomationId="action:permissions.revoke-session"/>
+              </Grid>
+              <StackPanel Name="GrantRows"/>
+            </StackPanel>
+          </Border>
+          <StackPanel Name="RuleTables" Margin="0,12,0,0"/>
+          <TextBlock Name="RulesPath" Classes="permission-detail" Margin="0,10,0,0" FontFamily="{DynamicResource WorkbenchMonoFamily}"/>
+        </StackPanel>
+        <StackPanel Name="SaveNote" Margin="0,8,0,0" Spacing="3" IsVisible="False">
+          <TextBlock Name="SaveTitle" FontWeight="SemiBold" Foreground="{DynamicResource ErrInkBrush}"/>
+          <TextBlock Name="SaveError" Classes="permission-detail"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+    <Border Name="OutsideText" Tag="settings.outside_text" Classes="setting-row">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+        <StackPanel Spacing="2" VerticalAlignment="Center">
+          <TextBlock Name="ExternalLabel" Tag="settings.outside_text" Classes="setting-row-name"/>
+          <TextBlock Name="ExternalHint" Tag="safety.ask_before_copied_text" Classes="permission-detail"/>
+        </StackPanel>
+        <ToggleSwitch Name="External" Grid.Column="1" AutomationProperties.AutomationId="action:permissions.ask-on-external-origin"
+                      AutomationProperties.LabeledBy="{Binding #ExternalLabel}" />
+      </Grid>
+    </Border>
+  </StackPanel>
+</local:SettingsFormView>

@@ -1,0 +1,16 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.OpsLimitView">
+  <Border Classes="safety-section" Padding="0,9,0,7">
+    <StackPanel>
+      <TextBlock Name="Title" Classes="safety-title"/>
+
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+        <StackPanel Spacing="1" VerticalAlignment="Center">
+          <TextBlock Name="Label" Classes="safety-title"/>
+          <TextBlock Name="Detail" Classes="safety-hint"/>
+        </StackPanel>
+        <local:SettingsUnitField Name="Editor" Width="86" Grid.Column="1" VerticalAlignment="Center"/>
+      </Grid>
+    </StackPanel>
+  </Border>
+</UserControl>

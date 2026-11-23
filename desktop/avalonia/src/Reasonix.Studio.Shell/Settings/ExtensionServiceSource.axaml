@@ -1,0 +1,29 @@
+<settings:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.ExtensionServiceSource"
+             UseLayoutRounding="False">
+  <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,12"
+          Background="{DynamicResource FloatBrush}">
+    <StackPanel Spacing="10">
+      <TextBox Name="Source" Classes="settings-input" Height="106.6" AcceptsReturn="True" Padding="9,6" VerticalContentAlignment="Top"
+               PlaceholderText="{}{&quot;mcpServers&quot;: {&quot;github&quot;: {&quot;command&quot;: &quot;npx&quot;, &quot;args&quot;: [&quot;-y&quot;, &quot;@modelcontextprotocol/server-github&quot;]}}}&#10;&#10;npx -y chrome-devtools-mcp@latest&#10;&#10;https://mcp.example.com/sse"
+               AutomationProperties.AutomationId="action:mcp.source"/>
+      <StackPanel Name="Preview" IsVisible="False" Spacing="8"/>
+      <StackPanel Name="Scope" IsVisible="False" Spacing="5">
+        <TextBlock Name="ScopeLabel" Tag="ext.where_to_install_it" Classes="extension-caption"/>
+        <WrapPanel ItemSpacing="8" LineSpacing="5">
+          <RadioButton Name="User" Classes="segmented" GroupName="service-install-scope" IsChecked="True"/>
+          <RadioButton Name="Local" Classes="segmented" GroupName="service-install-scope"/>
+          <RadioButton Name="Project" Classes="segmented" GroupName="service-install-scope"/>
+        </WrapPanel>
+        <TextBlock Name="ProjectWarning" Tag="ext.this_edits_a_config_file" Classes="extension-caption" IsVisible="False"/>
+      </StackPanel>
+      <TextBlock Name="Status" Classes="extension-caption failure" IsVisible="False" AutomationProperties.LiveSetting="Polite"/>
+      <WrapPanel ItemSpacing="8" LineSpacing="5">
+        <TextBlock Name="Hint" Tag="ext.a_block_of_json_a" Classes="extension-caption" VerticalAlignment="Center"/>
+        <Button Name="Cancel" Tag="common.cancel" Classes="extension-action" AutomationProperties.AutomationId="action:mcp.add.cancel"/>
+        <Button Name="Inspect" Tag="ext.see_what_it_is" Classes="extension-action primary" AutomationProperties.AutomationId="action:mcp.inspect"/>
+        <Button Name="Connect" Tag="ext.connect" Classes="extension-action primary" IsVisible="False" AutomationProperties.AutomationId="action:mcp.add"/>
+      </WrapPanel>
+    </StackPanel>
+  </Border>
+</settings:SettingsFormView>

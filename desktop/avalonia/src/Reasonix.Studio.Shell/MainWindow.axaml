@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="using:Avalonia.Data.Converters"
         xmlns:ctl="using:Reasonix.Studio.Controls"
         xmlns:pages="using:Reasonix.Studio.Pages"
         xmlns:appearance="using:Reasonix.Studio.Shell.Appearance"
@@ -29,24 +30,13 @@
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerPicker.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerMenus.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerAttachments.axaml" />
+    <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/PlanStrip.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Sidebar.axaml" />
     <Style Selector="Window.illustrated ctl|StudioPane"><Setter Property="Background" Value="Transparent"/></Style>
     <Style Selector="Window.illustrated ctl|StudioRail"><Setter Property="Background" Value="{DynamicResource ArtworkRailBrush}"/></Style>
     <Style Selector="Window.illustrated ctl|StudioChrome"><Setter Property="Background" Value="{DynamicResource ArtworkChromeBrush}"/></Style>
     <Style Selector="Window.illustrated ctl|StudioSidePanel"><Setter Property="Background" Value="{DynamicResource ArtworkSideBrush}"/></Style>
     <Style Selector="Window.illustrated ctl|StudioComposer"><Setter Property="Background" Value="{DynamicResource ArtworkComposeBrush}"/></Style>
-    <Style Selector="Border.readonly-badge">
-      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/><Setter Property="Padding" Value="6,2"/><Setter Property="VerticalAlignment" Value="Center"/>
-    </Style>
-    <Style Selector="Button.file-mode">
-      <Setter Property="Height" Value="26"/><Setter Property="Padding" Value="6,0"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
-      <Setter Property="BorderThickness" Value="0"/><Setter Property="CornerRadius" Value="5"/>
-      <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
-    </Style>
-    <Style Selector="Button.file-mode.active">
-      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-    </Style>
     <Style Selector="Button.caption">
       <Setter Property="Width" Value="46" />
       <Setter Property="Height" Value="48" />
@@ -83,6 +73,10 @@
     <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource OverlayBrush}" />
     </Style>
+    <Style Selector="Button.chrome-view.active-view">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
   </Window.Styles>
   <LayoutTransformControl Name="ScaledWindow">
   <Grid>
@@ -108,27 +102,43 @@
             </Grid>
           </ctl:StudioCrumb>
           <Border Name="QueuedBadge" Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" CornerRadius="5" Background="{DynamicResource OverlayBrush}" Padding="6,3" IsVisible="False"><TextBlock Name="QueuedBadgeLabel" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource MutedBrush}"/></Border>
-          <Grid Name="ChromeGroup" Grid.Column="3" Width="132">
-          <Grid Name="ChromeTools" Width="132" ColumnDefinitions="*,28,4,28">
-            <Button Name="FindButton" Classes="icon" HorizontalAlignment="Left" Margin="8,0,0,0" AutomationProperties.AutomationId="action:transcript.find">
-              <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
-                <Path Data="M18,10 A8,8 0 1 1 2,10 A8,8 0 1 1 18,10 M16,16 L22,22" Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round"/>
+          <Grid Name="ChromeGroup" Grid.Column="3">
+          <Grid Name="ChromeTools">
+            <StackPanel Name="ChromeActions" Orientation="Horizontal" Spacing="4">
+            <Button Name="FindButton" Classes="icon" HorizontalAlignment="Left" AutomationProperties.AutomationId="action:transcript.find">
+              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
+                <Path Data="{StaticResource Glyph.search}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.4" StrokeLineCap="Round"/>
               </Canvas></Viewbox>
             </Button>
-            <workspace:WorkspaceChromeStatus Name="WorkspaceStatus" HorizontalAlignment="Left" Margin="40,0,0,0"/>
-            <Button Name="ThemeSwitch" Grid.Column="1" Classes="icon" AutomationProperties.AutomationId="action:appearance.theme">
+            <workspace:WorkspaceChromeStatus Name="WorkspaceStatus" HorizontalAlignment="Left"/>
+            <Button Name="ThemeSwitch" Classes="icon" AutomationProperties.AutomationId="action:appearance.theme">
               <ContentControl Name="ThemeGlyph" Width="16" Height="16" HorizontalContentAlignment="Center">
                 <Viewbox Width="16" Height="16">
                   <Canvas Width="24" Height="24">
-                    <Path Name="ThemeShape" Stroke="{DynamicResource MutedBrush}" StrokeThickness="2"
+                    <Path Name="ThemeShape" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.4"
                           StrokeLineCap="Round" StrokeJoin="Round" />
                   </Canvas>
                 </Viewbox>
               </ContentControl>
             </Button>
-            <Button Name="ViewSwitch" Grid.Column="3" Classes="icon" AutomationProperties.AutomationId="action:pane.view">
-              <PathIcon Width="15" Height="15" Data="M2,3 L22,3 22,21 2,21 Z M4,5 L4,19 15,19 15,5 Z M17,5 L17,19 20,19 20,5 Z" />
-              <Button.Flyout>
+            <Button Name="ChromeAnalysis" Classes="icon chrome-view" IsVisible="False" AutomationProperties.AutomationId="action:pane.view">
+              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
+                <Path Data="M2 12h4l3-9 6 18 3-9h4" Stroke="{Binding #ChromeAnalysis.Foreground}" StrokeThickness="1.4" StrokeLineCap="Round" StrokeJoin="Round"/>
+              </Canvas></Viewbox>
+            </Button>
+            <Button Name="ViewSwitch" Classes="icon chrome-view" AutomationProperties.AutomationId="action:pane.view">
+              <Grid Width="28" Height="28">
+                <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
+                  <Path Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M9 3v18"
+                        Stroke="{Binding #ViewSwitch.Foreground}" StrokeThickness="1.4" StrokeLineCap="Round" StrokeJoin="Round"/>
+                </Canvas></Viewbox>
+                <Border Name="ChromeWorkbenchCount" MinWidth="14" Padding="3,0" Margin="0,-2,-2,0" IsVisible="False"
+                        HorizontalAlignment="Right" VerticalAlignment="Top" Background="{DynamicResource AccentInkBrush}" CornerRadius="6">
+                  <TextBlock Name="ChromeWorkbenchCountLabel" FontSize="{DynamicResource StudioType11}" LineHeight="14"
+                             Foreground="{DynamicResource PageBrush}" TextAlignment="Center"/>
+                </Border>
+              </Grid>
+              <Button.ContextFlyout>
                 <MenuFlyout>
                   <MenuItem Name="ConversationView" />
                   <MenuItem Name="AnalysisView" />
@@ -136,8 +146,9 @@
                   <MenuItem Name="TerminalAction" />
                   <MenuItem Name="BrowserAction" />
                 </MenuFlyout>
-              </Button.Flyout>
+              </Button.ContextFlyout>
             </Button>
+            </StackPanel>
           </Grid>
           <Button Name="ChromeMore" Classes="icon" IsVisible="False" AutomationProperties.AutomationId="action:chrome.more"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="M5 12h.01 M12 12h.01 M19 12h.01" Stroke="{DynamicResource MutedBrush}" StrokeThickness="3" StrokeLineCap="Round"/></Canvas></Viewbox></Button>
           </Grid>
@@ -184,9 +195,6 @@
                 </Grid>
               </Border>
               <StackPanel Name="MemorySuggestions" Spacing="5" IsVisible="False"/>
-              <ScrollViewer Name="QueueScroll" IsVisible="False" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Name="QueueStrip" Spacing="4" />
-              </ScrollViewer>
               <ScrollViewer Name="ComposeReviewScroll" IsVisible="False" MaxHeight="240" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Spacing="8">
               <Border Name="RefineCard" IsVisible="False" Classes="compose-review">
@@ -209,64 +217,77 @@
               </Border>
                 </StackPanel>
               </ScrollViewer>
-  <Grid>
-                <ctl:StudioComposer Name="ComposeSurface" Margin="0,0,0,35" HorizontalAlignment="Stretch" Height="NaN" MinHeight="98">
-                  <Grid Name="ComposeRows" RowDefinitions="30,Auto,Auto,46">
+              <Grid RowDefinitions="Auto,Auto">
+                <composer:PlanStrip Name="ComposerPlan" Margin="14,0,14,0" IsVisible="False"/>
+                <ctl:StudioComposer Grid.Row="1" Name="ComposeSurface" Margin="0,0,0,35" HorizontalAlignment="Stretch" Height="NaN" MinHeight="98">
+                  <Grid Name="ComposeRows" RowDefinitions="30,Auto,Auto,Auto,46">
                     <Grid Name="ComposeRunState" Grid.Row="0" ColumnDefinitions="*,Auto" Margin="12,6,12,0" Height="24">
-                      <ctl:StudioLineText Name="ComposerHint" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" IsVisible="False"/>
+                      <Border Name="ComposerRunBadge" HorizontalAlignment="Left" VerticalAlignment="Center" Classes="compose-run-badge"
+                              Padding="7,4" CornerRadius="5" Background="{DynamicResource NetWashBrush}" IsVisible="False">
+                        <composer:PlanRunMark/>
+                      </Border>
                       <Button Name="ChangedFiles" Grid.Column="1" Classes="compose-changes compose-pill" IsVisible="False" VerticalAlignment="Center" AutomationProperties.AutomationId="action:changes.open">
                         <StackPanel Orientation="Horizontal" Spacing="5"><ctl:StudioLineText Name="ChangedFilesLabel"/><ctl:StudioLineText Name="ChangedAdded" Foreground="{DynamicResource AddBrush}"/><ctl:StudioLineText Name="ChangedRemoved" Foreground="{DynamicResource DelBrush}"/></StackPanel>
                       </Button>
                     </Grid>
-                    <StackPanel Name="AttachmentArea" Grid.Row="1" Margin="16,6,16,0" Spacing="4" IsVisible="False">
+                    <ScrollViewer Name="QueueScroll" Grid.Row="1" Margin="12,6,12,0" IsVisible="False"
+                                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                      <StackPanel Name="QueueStrip" Spacing="6"/>
+                    </ScrollViewer>
+                    <StackPanel Name="AttachmentArea" Grid.Row="2" Margin="16,6,16,0" Spacing="4" IsVisible="False">
                       <WrapPanel Name="AttachmentStrip"/>
                       <TextBlock Name="AttachmentWarning" IsVisible="False" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource WarnInkBrush}" TextWrapping="Wrap"/>
                     </StackPanel>
-                    <TextBox Name="Composer" Classes="compose-input" Grid.Row="2" AcceptsReturn="True" TextWrapping="Wrap"
+                    <TextBox Name="Composer" Classes="compose-input" Grid.Row="3" AcceptsReturn="True" TextWrapping="Wrap"
                              Background="Transparent" BorderThickness="0" CornerRadius="0" Padding="0" MinHeight="42" MaxHeight="168"
                              FontFamily="{DynamicResource ConversationUiFamily}" FontWeight="Medium" FontSize="{DynamicResource StudioType14}" LineHeight="{DynamicResource StudioUserHeight}"
                              Foreground="{DynamicResource TextBrush}" PlaceholderForeground="{DynamicResource FaintBrush}" VerticalContentAlignment="Top"
                              Margin="16,10,16,0" AutomationProperties.AutomationId="role:combobox" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                       <TextBox.Resources><Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness><SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent"/></TextBox.Resources>
                     </TextBox>
-                    <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto,Auto" Margin="8,6,8,8" ColumnSpacing="2">
-                      <StackPanel Name="ComposeTools" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                    <Grid Name="ComposeFooter" Grid.Row="4" ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="*,0,0" Margin="8,6,8,8" ColumnSpacing="2">
+                      <WrapPanel Name="ComposeTools" Orientation="Horizontal" ItemSpacing="2" LineSpacing="2" VerticalAlignment="Center">
                         <Button Name="Attach" Classes="compose-tool compose-icon"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
                         <Button Name="SideQuestion" Classes="compose-tool compose-icon" AutomationProperties.AutomationId="action:side.toggle"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.session}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
                         <Button Name="RefinePrompt" Classes="compose-tool compose-icon" AutomationProperties.AutomationId="action:prompt.refine"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.fresh}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
                         <Button Name="PlanMode" BorderThickness="1" Classes="compose-tool compose-pill compose-plan" AutomationProperties.AutomationId="action:plan.mode"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.agent}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="PlanModeLabel" Text="Agent" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Classes="compose-plan-chevron" Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
                         <Button Name="ComposeBranch" BorderThickness="1" Classes="compose-tool compose-pill compose-branch"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.branch}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="ComposeBranchLabel" Text="main" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
-                        <Button Name="ApprovalMode" BorderThickness="1" Classes="compose-tool compose-pill compose-policy" AutomationProperties.AutomationId="action:chrome.policy"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.tools}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="ApprovalModeLabel" Text="询问" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Width="11" Margin="1,0,0,0" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
-                      </StackPanel>
+                        <Button Name="ApprovalMode" BorderThickness="1" Classes="compose-tool compose-pill compose-policy" AutomationProperties.AutomationId="action:chrome.policy"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Name="ApprovalShield" Data="{StaticResource Glyph.tools}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+                          <Path Name="ApprovalWarningIcon" IsVisible="False" Data="M10.3 4.1 2.4 18a1.9 1.9 0 0 0 1.7 2.9h15.8a1.9 1.9 0 0 0 1.7-2.9L13.7 4.1a2 2 0 0 0-3.4 0Z M12 9v4 M12 17h.01"
+                                Stroke="{DynamicResource WarnInkBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        </Canvas></Viewbox><ctl:StudioLineText Name="ApprovalModeLabel" Text="询问" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Classes="compose-policy-chevron" Width="11" Margin="1,0,0,0" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
+                      </WrapPanel>
                       <StackPanel Grid.Column="1" Name="ComposeModel" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="0" VerticalAlignment="Center">
                         <Button Name="ModelButton" Classes="compose-tool compose-model" BorderThickness="0" Padding="5,0,1,0" MinWidth="0" MaxWidth="180">
-                          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"><Viewbox Name="ModelMark" Width="14" Height="14" IsVisible="False"><Canvas Width="24" Height="24"><Path Name="ModelMarkPath" Data="{StaticResource Compose.deepseek}" Fill="#4D6BFE"/></Canvas></Viewbox><Border Name="ModelInitial" Width="14" Height="14" CornerRadius="4" IsVisible="False" VerticalAlignment="Center"><TextBlock Name="ModelInitialText" FontSize="{DynamicResource StudioType9}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ctl:StudioLineText Name="ModelLabel" ClipToBounds="True" LineHeight="{DynamicResource ComposeModelLineHeight}" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/></StackPanel>
+                          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"><Viewbox Name="ModelMark" Width="14" Height="14" IsVisible="False"><Canvas Width="24" Height="24"><Path Name="ModelMarkPath" Data="{StaticResource Compose.deepseek}" Fill="#4D6BFE"/></Canvas></Viewbox><Border Name="ModelInitial" Width="14" Height="14" CornerRadius="4" IsVisible="False" VerticalAlignment="Center"><TextBlock Name="ModelInitialText" FontSize="{DynamicResource StudioType9}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ctl:StudioLineText Name="ModelLabel" ClipToBounds="True" LineHeight="{DynamicResource ComposeModelLineHeight}" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/><Viewbox Classes="compose-compact-model-chevron" Width="10" Height="10"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel>
                         </Button>
                         <Border Name="EffortSeparator" Width="1" Height="12" Background="{DynamicResource HairBrush}" VerticalAlignment="Center" Margin="6,0,0,0"/>
                         <Button Name="EffortButton" Classes="compose-tool compose-effort" Padding="6,0,8,0" BorderThickness="0"><StackPanel Orientation="Horizontal" Spacing="6"><StackPanel Orientation="Horizontal" Spacing="3"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.model}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="EffortLabel" FontSize="{DynamicResource StudioType13}" LineHeight="{DynamicResource StudioType13}" VerticalAlignment="Center"/></StackPanel><Viewbox Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
                       </StackPanel>
-                      <Button Name="Stop" Grid.Column="2" Classes="compose-tool compose-stop" Width="32" Height="32" IsVisible="False" CornerRadius="16" Margin="4,0,0,0"><PathIcon Width="15" Height="15" Data="M5 5H19V19H5Z"/></Button>
-                      <Button Name="Send" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Grid.Column="3" Classes="compose-tool compose-send" Width="32" Height="32" Margin="4,0,0,0" CornerRadius="16" Padding="0" AutomationProperties.AutomationId="action:session.send"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="18" Height="18"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.arrow}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="SendIntent" IsVisible="False" VerticalAlignment="Center"/></StackPanel></Button>
+                      <Grid Name="NarrowComposeControls" Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*" Margin="0,2,0,0" IsVisible="False"/>
+                      <Grid Name="NarrowRunningModel" Grid.Row="3" Grid.ColumnSpan="4" Margin="0,2,0,0" IsVisible="False"/>
+                      <Button Name="Stop" Grid.RowSpan="2" Grid.Column="2" Classes="compose-tool compose-stop" Width="32" Height="32" IsVisible="False" CornerRadius="16" Margin="4,0,0,0"><PathIcon Width="15" Height="15" Data="M5 5H19V19H5Z"/></Button>
+                      <Button Name="Send" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Grid.RowSpan="2" Grid.Column="3" Classes="compose-tool compose-send" Width="32" Height="32" Margin="4,0,0,0" CornerRadius="16" Padding="0" AutomationProperties.AutomationId="action:session.send"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="18" Height="18"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.arrow}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="SendIntent" IsVisible="False" VerticalAlignment="Center"/></StackPanel></Button>
                     </Grid>
-                    <composer:ModelPicker Name="ModelPicker" Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
-                    <composer:ComposerPopup Name="ModePopup" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="300" MenuPadding="0,0,0,6">
+                    <composer:ModelPicker Name="ModelPicker" Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                    <composer:ComposerPopup Name="ModePopup" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="300" MenuPadding="0,0,0,6">
                       <composer:ComposerPopup.Panel>
                         <composer:ModePanel Name="ModePanel"/>
                       </composer:ComposerPopup.Panel>
                     </composer:ComposerPopup>
-                    <composer:ComposerPopup Name="PolicyPopup" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="8">
+                    <composer:ComposerPopup Name="PolicyPopup" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="8">
                       <composer:ComposerPopup.Panel>
                         <composer:PolicyPanel Name="PolicyPanel"/>
                       </composer:ComposerPopup.Panel>
                     </composer:ComposerPopup>
-                    <composer:ComposerPopup Name="BranchPopup" Grid.Row="3" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="0">
+                    <composer:ComposerPopup Name="BranchPopup" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="0">
                       <composer:ComposerPopup.Panel>
                         <composer:BranchPanel Name="BranchPanel"/>
                       </composer:ComposerPopup.Panel>
                     </composer:ComposerPopup>
                   </Grid>
                 </ctl:StudioComposer>
-                <Border Height="27" VerticalAlignment="Bottom" RenderTransform="translate(0px,-3px)" Padding="2,0" TextElement.FontSize="{DynamicResource StudioType11}" TextElement.Foreground="{DynamicResource GhostBrush}" AutomationProperties.AutomationId="class:studio-meterrail">
+                <Border Grid.Row="1" Height="27" VerticalAlignment="Bottom" RenderTransform="translate(0px,-3px)" Padding="2,0" TextElement.FontSize="{DynamicResource StudioType11}" TextElement.Foreground="{DynamicResource GhostBrush}" AutomationProperties.AutomationId="class:studio-meterrail">
                   <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto">
                   <ctl:StudioHoverCard Name="SpeedHover" CardWidth="268" OpenOnFocus="True">
                     <ctl:StudioHoverCard.Anchor><Button Name="SpeedToggle" Classes="compose-context"><StackPanel Orientation="Horizontal" Spacing="5"><ctl:StudioSparkline Name="SpeedSpark" Width="44" Height="13" IsVisible="False" Stroke="{DynamicResource FaintBrush}"/><ctl:StudioLineText Name="SpeedText" Classes="compose-reading" TextAlignment="Right" Text="—"/><ctl:StudioLineText Name="SpeedUnit" Text="tok/s"/><Border Name="SpeedLive" Width="4" Height="4" Margin="1,0,0,0" CornerRadius="2" Background="{DynamicResource GhostBrush}" VerticalAlignment="Center"/></StackPanel></Button></ctl:StudioHoverCard.Anchor>
@@ -293,36 +314,53 @@
                   Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" ClipToBounds="True">
             <Grid RowDefinitions="42,*">
               <Grid UseLayoutRounding="False" ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="2" AutomationProperties.AutomationId="class:workbench-tabs" Background="{DynamicResource PageBrush}">
-                <Button Name="ToggleExplorer" Classes="wb-tab" Width="53" Height="34" Margin="8,0,0,1" Padding="5,0" VerticalAlignment="Bottom" FontSize="{DynamicResource StudioType12}" AutomationProperties.AutomationId="action:workbench.files">
+                <Border Grid.ColumnSpan="5" VerticalAlignment="Bottom" Height="1" Background="{DynamicResource BorderBrush}" IsHitTestVisible="False"/>
+                <Button Name="ToggleExplorer" Classes="wb-header-button wb-header-files" Margin="8,0,0,1" AutomationProperties.AutomationId="action:workbench.files">
                   <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
-                    <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.folder}" Stroke="{DynamicResource TextBrush}" StrokeThickness="1.8"/></Canvas></Viewbox>
-                    <Border Name="GitCountBadge" Background="{DynamicResource AccentBrush}" CornerRadius="8" Padding="4,0" MinWidth="16" Height="16" IsVisible="False">
-                      <TextBlock Name="TotalGitCount" FontSize="11" TextAlignment="Center" Foreground="{DynamicResource AccentFgBrush}"/>
+                    <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.folder}" Stroke="{Binding #ToggleExplorer.Foreground}" StrokeThickness="1.8" StrokeJoin="Round" StrokeLineCap="Round"/></Canvas></Viewbox>
+                    <Border Name="GitCountBadge" Background="{DynamicResource TextBrush}" CornerRadius="8" Padding="4,0" MinWidth="16" Height="16" IsVisible="False">
+                      <TextBlock Name="TotalGitCount" FontSize="{DynamicResource StudioType11}" VerticalAlignment="Center" TextAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource PageBrush}"/>
                     </Border>
                   </StackPanel>
                 </Button>
-                <Grid Grid.Column="1" ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Bottom" Height="34" Margin="0,0,0,1">
-                  <TextBlock Name="BrowserTabTitle" Margin="4,0,8,0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"
-                             IsVisible="{Binding #ManualBrowserHost.IsVisible}"/>
-                  <ScrollViewer Name="TabViewport" Grid.Column="1" Height="34" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" VerticalAlignment="Center"
+                <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
+                  <ScrollViewer Name="TabViewport" Height="34" Margin="0,0,0,1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" VerticalAlignment="Bottom" VerticalContentAlignment="Top"
                                 AutomationProperties.AutomationId="role:tablist">
-                    <StackPanel Name="FileTabs" Orientation="Horizontal" Spacing="4" />
+                    <StackPanel Name="FileTabs" Orientation="Horizontal" Spacing="2" Height="35" VerticalAlignment="Top" />
                   </ScrollViewer>
-                  <Button Name="TabOverflow" Grid.Column="2" Height="28" Padding="5,0" IsVisible="False" AutomationProperties.AutomationId="action:workbench.tab-overflow">
+                  <Button Name="TabOverflow" Grid.Column="1" Classes="wb-header-button wb-header-overflow" Margin="2,0,0,1" IsVisible="False" AutomationProperties.AutomationId="action:workbench.tab-overflow">
                     <Button.Flyout><MenuFlyout/></Button.Flyout>
+                    <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
+                      <TextBlock Name="TabOverflowCount" VerticalAlignment="Center"/>
+                      <Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="m6 9 6 6 6-6" Stroke="{Binding #TabOverflow.Foreground}" StrokeThickness="1.8" StrokeJoin="Round" StrokeLineCap="Round"/></Canvas></Viewbox>
+                    </StackPanel>
                   </Button>
                 </Grid>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
-                <Button Name="BackToEditor" Height="28" IsVisible="False" />
-                <Button Name="NewSurface" Classes="icon" Content="+" Margin="0,0,0,1" AutomationProperties.AutomationId="action:workbench.new"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" Margin="0,0,0,1">
+                  <Panel>
+                    <Panel.IsVisible>
+                      <MultiBinding Converter="{x:Static conv:BoolConverters.And}">
+                        <Binding Path="#BackToEditor.IsVisible"/>
+                        <Binding Path="!#WorkbenchStart.IsVisible"/>
+                      </MultiBinding>
+                    </Panel.IsVisible>
+                    <Button Name="BackToEditor" Height="28" IsVisible="False"/>
+                  </Panel>
+                  <Button Name="NewSurface" Classes="wb-header-button" AutomationProperties.AutomationId="action:workbench.new">
+                    <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}" Stroke="{Binding #NewSurface.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox>
+                  </Button>
                 </StackPanel>
-                <Button Name="FullWorkbench" Grid.Column="3" Classes="icon" Content="⛶" Margin="0,0,0,1" AutomationProperties.AutomationId="action:browser.full"/>
-                <Button Name="CloseWorkbench" AutomationProperties.AutomationId="action:workbench.dismiss" Grid.Column="4" Classes="icon" Margin="0,0,6,0">×</Button>
-                <Border Grid.ColumnSpan="5" VerticalAlignment="Bottom" Height="1" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
+                <Button Name="FullWorkbench" Grid.Column="3" Classes="wb-header-button" Margin="0,0,0,1" AutomationProperties.AutomationId="action:browser.full">
+                  <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="M15 3h6v6 m0-6-7 7 m-11 11 7-7 M9 21H3v-6" Stroke="{Binding #FullWorkbench.Foreground}" StrokeThickness="1.8" StrokeJoin="Round" StrokeLineCap="Round"/></Canvas></Viewbox>
+                </Button>
+                <Button Name="CloseWorkbench" Grid.Column="4" Classes="wb-header-button" Margin="0,0,6,1" AutomationProperties.AutomationId="action:workbench.dismiss">
+                  <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="m18 6-12 12 M6 6l12 12" Stroke="{Binding #CloseWorkbench.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox>
+                </Button>
               </Grid>
-              <ctl:StudioSurfaceHost Name="ManualBrowserHost" Grid.Row="1" IsVisible="False"/>
-              <Grid Name="WorkspaceBody" Grid.Row="1" ColumnDefinitions="Auto,*" AutomationProperties.AutomationId="class:workbench-body">
-                <Grid Name="ExplorerPane" UseLayoutRounding="False" Width="190" RowDefinitions="34,48,*" Background="{DynamicResource PageBrush}" AutomationProperties.AutomationId="class:workbench-explorer">
+              <Grid Name="WorkspaceBody" Grid.Row="1" ColumnDefinitions="Auto,*" IsVisible="{Binding !#WorkbenchStart.IsVisible}"
+                    AutomationProperties.AutomationId="class:workbench-body">
+                <Grid Name="ExplorerPane" UseLayoutRounding="False" Width="190" RowDefinitions="34,48,*" Background="{DynamicResource PageBrush}"
+                      IsVisible="False" AutomationProperties.AutomationId="class:workbench-explorer">
                   <Border Padding="6,0,10,0" Margin="0,0,1,0" AutomationProperties.AutomationId="class:workbench-explorer-head"><Grid ColumnDefinitions="18,*,28,28,28" ColumnSpacing="8">
                     <Button Name="FilesTab" Classes="icon" Width="18" Height="22" Content="⌄"/>
                     <StackPanel Grid.Column="1" Margin="4,0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
@@ -365,35 +403,55 @@
                   <Thumb Name="ExplorerGrip" Grid.RowSpan="3" Width="5" HorizontalAlignment="Right" Background="Transparent"
                          Cursor="SizeWestEast" ZIndex="2"/>
                 </Grid>
-                <Grid Name="FileCanvas" Grid.Column="1" RowDefinitions="40,*,Auto" Background="{DynamicResource RaisedBrush}" AutomationProperties.AutomationId="class:workbench-canvas">
-                  <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6" UseLayoutRounding="False" AutomationProperties.AutomationId="class:workbench-filebar">
-                    <TextBlock Name="WorkbenchTitle" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Name="Breadcrumb" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" TextTrimming="CharacterEllipsis" IsVisible="False"/>
-                    <Button Name="EndTerminal" Grid.Column="1" IsVisible="False" />
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                      <Border Name="ReadOnlyBadge" Classes="readonly-badge" IsVisible="False">
-                        <TextBlock Name="ReadOnlyBadgeText" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource MutedBrush}"/>
+                <Grid Grid.Column="1" AutomationProperties.AutomationId="class:workbench-canvas">
+                  <Grid Name="FileCanvas" RowDefinitions="40,*,Auto" Background="{DynamicResource RaisedBrush}"
+                        IsVisible="{Binding !#ManualBrowserHost.IsVisible}">
+                  <Grid UseLayoutRounding="False" AutomationProperties.AutomationId="class:workbench-filebar">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6" Margin="12,0,8,0">
+                      <TextBlock Name="WorkbenchTitle" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Name="Breadcrumb" VerticalAlignment="Center" FontFamily="{DynamicResource StudioMonoFamily}"
+                                 FontSize="{DynamicResource StudioType12}" FontWeight="Normal" TextTrimming="CharacterEllipsis" IsVisible="False"/>
+                      <Button Name="EndTerminal" Grid.Column="1" IsVisible="False"/>
+                      <Border Name="FileModeSelector" Grid.Column="1" Background="{DynamicResource OverlayBrush}" CornerRadius="7" Padding="2" VerticalAlignment="Center"
+                              IsVisible="{Binding #FileModes.IsVisible}">
+                        <StackPanel Name="FileModes" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" IsVisible="False">
+                          <Button Name="PreviewFile" Classes="file-mode" IsVisible="False"/>
+                          <Button Name="EditFile" Classes="file-mode"/>
+                          <Button Name="DiffFile" Classes="file-mode" Content="Diff"/>
+                        </StackPanel>
                       </Border>
-                      <StackPanel Name="FileModes" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" IsVisible="False">
-                        <Button Name="PreviewFile" Classes="file-mode" IsVisible="False" />
-                        <Button Name="EditFile" Classes="file-mode" />
-                        <Button Name="DiffFile" Classes="file-mode" Content="Diff" />
-                      </StackPanel>
-                    </StackPanel>
-                    <Button Name="SaveFile" Classes="wb-command" AutomationProperties.AutomationId="action:workbench.save" Grid.Column="2" Width="75" Margin="0,0,0,1" Padding="8,0" IsEnabled="False" Height="32">
-                      <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Viewbox Width="13" Height="13" VerticalAlignment="Center">
-                          <Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.check}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
-                        </Viewbox>
-                        <TextBlock Name="SaveFileLabel" FontSize="{DynamicResource StudioType12}" VerticalAlignment="Center"/>
-                      </StackPanel>
-                    </Button>
-                    <Button Name="FileMore" Grid.Column="3" Width="28" Height="28" Padding="0" Margin="0,0,8,1" Content="⋯" AutomationProperties.AutomationId="action:workbench.file-more"/>
-                    <Border Grid.ColumnSpan="4" Height="1" VerticalAlignment="Bottom" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
+                      <Grid Grid.Column="2">
+                        <Border Name="ReadOnlyBadge" Classes="readonly-badge" IsVisible="False">
+                          <TextBlock Name="ReadOnlyBadgeText" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}"/>
+                        </Border>
+                        <Button Name="SaveFile" Classes="wb-file-save" AutomationProperties.AutomationId="action:workbench.save" IsEnabled="False">
+                          <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                              <Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.check}" Stroke="{Binding #SaveFile.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+                            </Viewbox>
+                            <TextBlock Name="SaveFileLabel" VerticalAlignment="Center"/>
+                          </StackPanel>
+                        </Button>
+                      </Grid>
+                      <Button Name="FileMore" Grid.Column="3" Width="28" Height="28" Padding="0" AutomationProperties.AutomationId="action:workbench.file-more">
+                        <Viewbox Width="13" Height="13"><Canvas Width="24" Height="24">
+                          <Path Data="M5 12h.01 M12 12h.01 M19 12h.01" Stroke="{Binding #FileMore.Foreground}" StrokeThickness="2.8" StrokeLineCap="Round"/>
+                        </Canvas></Viewbox>
+                      </Button>
+                    </Grid>
+                    <Border Height="1" VerticalAlignment="Bottom" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
                   </Grid>
-                  <TextBox Name="FileEditor" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" AcceptsTab="True"
-                           Background="Transparent" BorderThickness="0" Padding="10" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType13}" TextWrapping="NoWrap"
-                           ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                  <workbench:WorkbenchFileEditor Name="FileEditor" Grid.Row="1" Classes="workbench-editor"
+                           IsReadOnly="True" AcceptsReturn="True" AcceptsTab="True" Background="Transparent" BorderThickness="0"
+                           Padding="4,4,0,0" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}" FontWeight="Normal"
+                           Foreground="{DynamicResource TextBrush}" CaretBrush="{DynamicResource TextBrush}" TextWrapping="NoWrap"
+                           CanvasBrush="{DynamicResource RaisedBrush}" ActiveLineBrush="{DynamicResource OverlayBrush}"
+                           LineNumberBrush="{DynamicResource GhostBrush}" ActiveLineNumberBrush="{DynamicResource MutedBrush}"
+                           ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <workbench:WorkbenchFileEditor.InnerLeftContent>
+                      <Border Width="{Binding #FileEditor.GutterWidth}" IsHitTestVisible="False"/>
+                    </workbench:WorkbenchFileEditor.InnerLeftContent>
+                  </workbench:WorkbenchFileEditor>
                   <ScrollViewer Grid.Row="1" Name="RenderedFile" Padding="10" IsVisible="False"/>
                   <Border Name="FileErrorPanel" Grid.Row="1" IsVisible="False" Background="{DynamicResource RaisedBrush}" Padding="24">
                     <StackPanel MaxWidth="420" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -405,16 +463,35 @@
                     </StackPanel>
                   </Border>
                   <ContentControl Grid.Row="1" Name="TerminalSurface" IsVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
-                  <workbench:WorkbenchLauncher Name="WorkbenchStart" Grid.Row="1" IsVisible="False"/>
-                  <Border Name="FileStatus" Grid.Row="2" IsVisible="False" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="10,4" Background="{DynamicResource RaisedBrush}">
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
-                      <TextBlock Name="FileLanguage" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource FaintBrush}"/>
-                      <TextBlock Name="FileLine" Grid.Column="2" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource FaintBrush}"/>
-                      <TextBlock Name="FileDirty" Grid.Column="3" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource WarnInkBrush}" IsVisible="False"/>
+                  <Border Name="FileStatus" Grid.Row="2" IsVisible="False" Height="28"
+                          BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="12,0"
+                          Background="{DynamicResource RaisedBrush}" AutomationProperties.AutomationId="class:workbench-status">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14" VerticalAlignment="Center">
+                      <TextBlock Name="FileLanguage" FontSize="{DynamicResource StudioType11}" FontWeight="Normal" Foreground="{DynamicResource FaintBrush}"/>
+                      <TextBlock Name="FileLine" Grid.Column="2" FontSize="{DynamicResource StudioType11}" FontWeight="Normal" Foreground="{DynamicResource FaintBrush}"/>
+                      <TextBlock Name="FileDirty" Grid.Column="3" FontSize="{DynamicResource StudioType11}" FontWeight="Normal" Foreground="{DynamicResource WarnInkBrush}" IsVisible="False"/>
                     </Grid>
+                  </Border>
+                  </Grid>
+                  <ctl:StudioSurfaceHost Name="ManualBrowserHost" IsVisible="False"/>
+                  <Border Name="WorkbenchEmpty" IsVisible="False" Margin="16,24" MaxWidth="320" Padding="18,20"
+                          VerticalAlignment="Center" Background="{DynamicResource RaisedBrush}"
+                          BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10"
+                          AutomationProperties.AutomationId="class:workbench-state">
+                    <StackPanel Spacing="6">
+                      <Viewbox Width="18" Height="18" HorizontalAlignment="Center"><Canvas Width="24" Height="24">
+                        <Path Data="{StaticResource Glyph.file-text}"
+                              Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeJoin="Round" StrokeLineCap="Round"/>
+                      </Canvas></Viewbox>
+                      <TextBlock Name="WorkbenchEmptyTitle" Foreground="{DynamicResource TextBrush}" FontSize="{DynamicResource StudioType13}"
+                                 FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap"/>
+                      <TextBlock Name="WorkbenchEmptyHint" Foreground="{DynamicResource MutedBrush}" FontSize="{DynamicResource StudioType12}"
+                                 TextAlignment="Center" TextWrapping="Wrap"/>
+                    </StackPanel>
                   </Border>
                 </Grid>
               </Grid>
+              <workbench:WorkbenchLauncher Name="WorkbenchStart" Grid.Row="1" IsVisible="False"/>
             </Grid>
           </Border>
           <ctl:StudioSidePanel Name="ContextPanel" Grid.Column="2" IsVisible="False">
@@ -425,6 +502,13 @@
           </ctl:StudioSidePanel>
         </Grid>
       </ctl:StudioPane>
+      <Border Name="StopHint" Grid.Row="2" IsVisible="False" IsHitTestVisible="False" ZIndex="6"
+              HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,52,0,0"
+              Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+              CornerRadius="999" Padding="14,7" BoxShadow="0 4 16 0 #24000000">
+        <TextBlock Name="StopHintText" Foreground="{DynamicResource TextBrush}" FontSize="{DynamicResource StudioType12}"
+                   AutomationProperties.LiveSetting="Polite"/>
+      </Border>
     </Grid>
     <ctl:StudioRail Name="Rail" Grid.Column="0" HorizontalAlignment="Stretch" FontFamily="{DynamicResource WorkbenchUiFamily}" FontWeight="Medium">
       <Grid RowDefinitions="44,40,44,*,52">
@@ -461,18 +545,25 @@
           <TextBlock Text="Ctrl K" Margin="0,0,10,0" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource FaintBrush}" FontSize="{DynamicResource StudioType11}" IsHitTestVisible="False"/>
         </Grid>
         <rail:ProjectRail Grid.Row="3" Name="Projects" />
-        <Grid Grid.Row="4" Margin="10,0,10,10" Height="32" VerticalAlignment="Bottom" ColumnDefinitions="*,28" ColumnSpacing="5">
+        <Grid Name="WorkspaceFooter" Grid.Row="4" Margin="10,0,10,10" Height="32" VerticalAlignment="Bottom" ColumnDefinitions="*,28" ColumnSpacing="5">
             <Border Grid.ColumnSpan="2" Height="1" VerticalAlignment="Top" Margin="4,-7,4,0" Background="{DynamicResource HairBrush}"/>
             <Button Name="OpenSettings" Classes="icon rail-settings" Width="NaN" Height="32" FontWeight="Medium" AutomationProperties.AutomationId="action:chrome.settings"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10,0" />
             <Button Name="OpenAccount" Classes="icon" Grid.Column="1" Tag="action:sidebar.tools">
               <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round" Data="m18 15-6-6-6 6"/></Canvas></Viewbox>
-              <Button.Flyout><MenuFlyout><MenuItem Name="SidebarFiles"/><MenuItem Name="SidebarAccount"/><MenuItem Name="SidebarModels"/><MenuItem Name="SidebarTools"/><MenuItem Name="SidebarConnections"/></MenuFlyout></Button.Flyout>
             </Button>
         </Grid>
 
       </Grid>
     </ctl:StudioRail>
+    <workspace:WorkspaceNavigationRail Name="NavigationRail" IsVisible="False" />
+    <Popup Name="QuickLinksPopup" PlacementTarget="{Binding #WorkspaceFooter}" Placement="TopEdgeAlignedLeft"
+           VerticalOffset="-6" PlacementConstraintAdjustment="SlideX" ShouldUseOverlayLayer="True" IsLightDismissEnabled="True">
+      <Border Name="QuickLinksFrame" Width="260" CornerRadius="15" Padding="10" BorderThickness="1"
+              BorderBrush="{DynamicResource BorderBrush}" Background="{DynamicResource FloatBrush}" BoxShadow="0 12 24 0 #20000000">
+        <StackPanel Name="QuickLinksRows"/>
+      </Border>
+    </Popup>
     <Thumb Name="RailGrip" Grid.Column="0" Width="7" Margin="0,48,-6,0" HorizontalAlignment="Right"
            Background="Transparent" Focusable="True" Cursor="SizeWestEast">
       <Thumb.Template><ControlTemplate><Border Background="{TemplateBinding Background}" /></ControlTemplate></Thumb.Template>
@@ -496,14 +587,15 @@
         <TextBlock Name="SettingsTitle" Margin="18,0" FontWeight="SemiBold" FontSize="{DynamicResource StudioType14}" VerticalAlignment="Center" />
         <Grid Grid.Row="1" Margin="10,0" AutomationProperties.AutomationId="class:prefs-find">
           <TextBox Name="SettingsSearch" Height="32" MinHeight="0" CornerRadius="7" Padding="32,0,10,0" FontSize="{DynamicResource StudioType13}"
-                   VerticalContentAlignment="Center" BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}" />
+                   VerticalContentAlignment="Center" BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}"
+                   PlaceholderForeground="{DynamicResource GhostBrush}" AutomationProperties.Name="{Binding #SettingsSearch.PlaceholderText}" />
           <Border HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0" IsHitTestVisible="False"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.search}" /></Canvas></Viewbox></Border>
         </Grid>
         <ListBox Grid.Row="3" Name="SettingsNav" AutoScrollToSelectedItem="False" AutomationProperties.AutomationId="role:tablist" Padding="10,0,10,14" Background="Transparent" BorderThickness="0">
           <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Classes="nav-strip" /></ItemsPanelTemplate></ListBox.ItemsPanel>
           <ListBox.ItemTemplate><DataTemplate>
             <Grid ColumnDefinitions="16,*,Auto">
-              <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{ReflectionBinding Glyph}" /></Canvas></Viewbox>
+              <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Classes="settings-nav-glyph" StrokeThickness="1.45" StrokeLineCap="Round" StrokeJoin="Round" Data="{ReflectionBinding Glyph}" /></Canvas></Viewbox>
               <TextBlock Grid.Column="1" Margin="9,0,0,0" FontSize="{DynamicResource StudioType13}" Text="{ReflectionBinding Title}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
               <TextBlock Classes="nav-count" Grid.Column="2" Margin="9,0,0,0" FontSize="{DynamicResource StudioType12}" Text="{ReflectionBinding CountText}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" />
             </Grid>
@@ -512,41 +604,67 @@
         <Border Grid.RowSpan="4" Width="1" HorizontalAlignment="Right" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
       </Grid>
       <ScrollViewer Grid.Column="1" Name="SettingsScroller" AutomationProperties.AutomationId="role:tabpanel" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Name="SettingsBody" Margin="24,24,24,48" HorizontalAlignment="Stretch">
+        <StackPanel Name="SettingsBody" HorizontalAlignment="Stretch" UseLayoutRounding="False">
           <StackPanel Name="SettingsHeadingBlock" Spacing="6" Margin="0,0,0,16" AutomationProperties.AutomationId="class:prefs-pagetitle">
             <TextBlock Name="SettingsHeading" FontSize="{DynamicResource StudioType22}" LineHeight="28.6" FontWeight="SemiBold" />
             <TextBlock Name="SettingsDescription" FontSize="{DynamicResource StudioType13}" LineHeight="19.5" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
             <TextBlock Name="SettingsUsual" FontSize="{DynamicResource StudioType12}" LineHeight="16.8" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}" />
           </StackPanel>
-          <Border Name="SettingsIndex" IsVisible="False" Padding="0,10" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,14"
+          <Border Name="SettingsIndex" IsVisible="False" ZIndex="1" Padding="0,12" Background="{DynamicResource SurfaceBrush}"
+                  BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,14"
                   AutomationProperties.AutomationId="class:page-index">
-            <WrapPanel Name="SettingsLinks" />
+            <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
+            <WrapPanel Name="SettingsLinks" Margin="0,0,0,-6"/>
           </Border>
           <ContentControl Name="SettingsContent" HorizontalContentAlignment="Stretch" AutomationProperties.AutomationId="class:prefs-col"/>
         </StackPanel>
       </ScrollViewer>
+      <Border Grid.Column="1" Name="SearchResultsPanel" ZIndex="1" IsVisible="False"
+              Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource HairBrush}"
+              BorderThickness="1,0,0,0" CornerRadius="0,15,15,0" Padding="22,58,22,14">
+        <Grid>
+          <TextBlock Name="NoSettingsHits" IsVisible="False" Margin="9" Foreground="{DynamicResource FaintBrush}"
+                     FontSize="{DynamicResource StudioType13}" LineHeight="19" TextWrapping="Wrap"/>
+          <ListBox Name="SettingsHits" Background="Transparent" BorderThickness="0" Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                   AutomationProperties.Name="{Binding #SettingsSearch.PlaceholderText}">
+            <ListBox.ItemTemplate><DataTemplate>
+              <StackPanel Spacing="4">
+                <TextBlock Text="{ReflectionBinding Title}" FontSize="{DynamicResource StudioType13}" FontWeight="Medium"
+                           LineHeight="19" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/>
+                <TextBlock Text="{ReflectionBinding Page}" FontSize="{DynamicResource StudioType11}" LineHeight="16" Margin="0,1,0,0"
+                           TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}"/>
+              </StackPanel>
+            </DataTemplate></ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
     </Grid>
-    <Border Grid.Row="1" Name="SearchResultsPanel" ZIndex="1" IsVisible="False" VerticalAlignment="Top" HorizontalAlignment="Left"
-            Margin="10,82,10,0" Width="320" MaxHeight="300" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-            Background="{DynamicResource RaisedBrush}" CornerRadius="10" Padding="4" BoxShadow="0 5 16 0 #20191e19">
-      <Grid>
-      <TextBlock Name="NoSettingsHits" IsVisible="False" Margin="10" Foreground="{DynamicResource MutedBrush}"/>
-      <ListBox Name="SettingsHits" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-        <ListBox.ItemTemplate><DataTemplate>
-          <StackPanel Margin="6,2"><TextBlock Text="{ReflectionBinding Page}" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}"/>
-            <TextBlock Text="{ReflectionBinding Title}" FontSize="{DynamicResource StudioType13}" TextWrapping="Wrap"/></StackPanel>
-        </DataTemplate></ListBox.ItemTemplate>
-      </ListBox>
-      </Grid>
-    </Border>
-    <Border Grid.RowSpan="2" Name="SettingsLeavePrompt" ZIndex="2" IsVisible="False" Background="#55000000">
-      <Border VerticalAlignment="Center" HorizontalAlignment="Center" BorderBrush="{DynamicResource HairBrush}" BorderThickness="1"
-              Background="{DynamicResource RaisedBrush}" CornerRadius="12" Padding="20">
-        <StackPanel Spacing="16">
-          <TextBlock Name="LeaveQuestion" FontSize="{DynamicResource StudioType16}" FontWeight="SemiBold"/>
-          <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-            <Button Name="KeepSettings"/><Button Name="DiscardSettings"/>
+    <settings:RemoteDirectoryPicker Grid.RowSpan="2" Name="RemoteFolders" ZIndex="3" IsVisible="False"/>
+    <Border Grid.RowSpan="2" Name="SettingsLeavePrompt" KeyboardNavigation.TabNavigation="Cycle" ZIndex="2" IsVisible="False" Padding="12">
+      <Border.Background><SolidColorBrush Color="{DynamicResource Page}" Opacity="0.8"/></Border.Background>
+      <Border Width="380" VerticalAlignment="Center" HorizontalAlignment="Center" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+              Background="{DynamicResource SurfaceBrush}" CornerRadius="10" BoxShadow="0 10 24 0 #26000000">
+        <StackPanel>
+          <Grid ColumnDefinitions="*,24" ColumnSpacing="12" Margin="16,16,16,12">
+            <TextBlock Name="LeaveQuestion" FontSize="{DynamicResource StudioType14}" FontWeight="Bold"
+                       VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
+            <Button Name="DismissLeavePrompt" Grid.Column="1" Classes="preset-flat preset-muted" Width="24" Height="24">
+              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
+                <Path Data="M6 6l12 12 M18 6 6 18" Stroke="{Binding #DismissLeavePrompt.Foreground}" StrokeThickness="2" StrokeLineCap="Round"/>
+              </Canvas></Viewbox>
+            </Button>
+          </Grid>
+          <StackPanel Margin="16,0,16,14" Spacing="8">
+            <TextBlock Name="LeaveDetail" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" LineHeight="19"/>
+            <WrapPanel Name="LeaveChanges" ItemSpacing="6" LineSpacing="6"/>
           </StackPanel>
+          <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="16,10">
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+              <Button Name="DiscardSettings" Classes="preset-act" MinWidth="82" Height="32" CornerRadius="7" Padding="14,0"
+                      FontSize="{DynamicResource StudioType13}" Foreground="{DynamicResource ErrInkBrush}"/>
+              <Button Name="KeepSettings" Classes="preset-major" MinWidth="82" Height="32" CornerRadius="7" Padding="14,0" FontWeight="Medium"/>
+            </StackPanel>
+          </Border>
         </StackPanel>
       </Border>
     </Border>

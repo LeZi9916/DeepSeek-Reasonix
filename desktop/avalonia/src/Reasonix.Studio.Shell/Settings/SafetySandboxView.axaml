@@ -1,0 +1,122 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.SafetySandboxView">
+  <Border Classes="safety-section">
+    <StackPanel>
+      <WrapPanel ItemSpacing="8" LineSpacing="4">
+        <TextBlock Tag="settings.sandbox" Classes="safety-title"/>
+        <Border Classes="setting-apply" Margin="0"><TextBlock Tag="settings.rebuilds_the_runtime" VerticalAlignment="Center"/></Border>
+      </WrapPanel>
+      <TextBlock Tag="safety.commands_write_only_here" Classes="safety-hint" Margin="0,2,0,10"/>
+      <TextBlock Name="LoadIssue" Tag="safety.cannot_read_the_sandbox_config" Classes="safety-note" IsVisible="False"/>
+      <StackPanel Name="Controls" IsVisible="False">
+        <Border Name="ShadowNotice" Classes="safety-warning" IsVisible="False">
+          <StackPanel Spacing="4">
+            <TextBlock Tag="safety.this_project_ships_its_own_2" Classes="safety-title"/>
+            <TextBlock Name="ShadowMessage" Classes="safety-note" MaxWidth="504" HorizontalAlignment="Left"/>
+          </StackPanel>
+        </Border>
+        <StackPanel Spacing="6">
+          <TextBlock Tag="safety.where_writes_may_land" Classes="safety-title" LineHeight="19"/>
+          <TextBlock Tag="safety.even_an_approved_write_can" Classes="safety-note" MaxWidth="504" HorizontalAlignment="Left" Margin="0,0,0,6"/>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <StackPanel Spacing="4">
+              <TextBlock Name="RootLabel" Tag="safety.workspace_root" Classes="safety-hint"/>
+              <TextBox Name="WorkspaceRoot" Tag="safety.empty_the_sessions_own_directory" Classes="settings-input"
+                       AutomationProperties.AutomationId="field:sandbox.workspace-root" AutomationProperties.LabeledBy="{Binding #RootLabel}"/>
+            </StackPanel>
+            <Button Name="ChooseRoot" Grid.Column="1" Tag="common.choose_a_folder" Classes="preset-act safety-action"
+                    VerticalAlignment="Bottom" AutomationProperties.AutomationId="action:sandbox.workspace-root"/>
+          </Grid>
+          <StackPanel Margin="0,8,0,0" Spacing="6">
+            <TextBlock Tag="safety.also_writable" Classes="safety-title"/>
+            <StackPanel Name="WritableRows" Spacing="4"/>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <TextBox Name="ExtraRoot" Tag="safety.open_one_more_writable_directory" Classes="settings-input"
+                       AutomationProperties.AutomationId="field:sandbox.add-write-root"/>
+              <Button Name="AddRoot" Grid.Column="1" Tag="common.add" Classes="preset-act safety-action" VerticalAlignment="Center"
+                      AutomationProperties.AutomationId="action:sandbox.add-write-root"/>
+            </Grid>
+          </StackPanel>
+          <Border Classes="safety-line" Padding="0,8">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+              <TextBlock Tag="safety.actually_writable" Classes="safety-hint" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1" Name="EffectivePaths" Spacing="3" HorizontalAlignment="Left"/>
+            </Grid>
+          </Border>
+          <Border Classes="safety-line" Padding="12,6">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+              <StackPanel Spacing="2" VerticalAlignment="Center">
+                <TextBlock Name="ProtectLabel" Tag="safety.protect_changed_files" Classes="safety-title"/>
+                <TextBlock Tag="safety.if_a_file_the_model" Classes="safety-hint"/>
+              </StackPanel>
+              <ToggleSwitch Name="Protect" Grid.Column="1" AutomationProperties.AutomationId="action:sandbox.protect-changed-files"
+                            AutomationProperties.LabeledBy="{Binding #ProtectLabel}"/>
+            </Grid>
+          </Border>
+        </StackPanel>
+        <Border Classes="safety-line" Padding="0,20,0,0" Margin="0,28,0,0">
+          <StackPanel Spacing="6">
+            <TextBlock Tag="session.extra_folders_for_this_project" Classes="safety-title" LineHeight="19"/>
+            <Button Name="RetryFolders" Tag="common.retry" Classes="preset-act safety-action" IsVisible="False"
+                    AutomationProperties.AutomationId="action:folders.retry"/>
+            <TextBlock Name="FolderError" Classes="safety-note" Foreground="{DynamicResource ErrInkBrush}" IsVisible="False"/>
+            <StackPanel Name="FolderControls" Spacing="6" IsVisible="False">
+              <StackPanel Spacing="6" MaxWidth="504" HorizontalAlignment="Left">
+                <TextBlock Tag="session.the_agent_can_only_modify" Classes="safety-note"/>
+                <TextBlock Tag="session.once_added_the_agent_can" Classes="safety-note"/>
+                <TextBlock Tag="session.allow_everything_only_decides_whether" Classes="safety-note"/>
+              </StackPanel>
+              <TextBlock Tag="session.project_folders" Classes="safety-title" Margin="0,6,0,0"/>
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Margin="0,4">
+                <TextBlock Tag="session.this_project" Classes="safety-hint"/>
+                <TextBlock Name="PrimaryFolder" Grid.Column="1" HorizontalAlignment="Right" TextWrapping="Wrap"
+                           FontFamily="{DynamicResource WorkbenchMonoFamily}"/>
+              </Grid>
+              <StackPanel Name="ProjectFolders" Spacing="4"/>
+              <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <TextBox Name="ProjectPath" Tag="session.absolute_path_for_example_users" Classes="settings-input"
+                         AutomationProperties.AutomationId="field:folders.add"/>
+                <Button Name="PickProject" Grid.Column="1" Tag="common.choose_a_folder" Classes="preset-act safety-action" VerticalAlignment="Center"
+                        AutomationProperties.AutomationId="action:folders.pick"/>
+                <Button Name="AddProject" Grid.Column="2" Tag="common.add" Classes="preset-act safety-action" VerticalAlignment="Center"
+                        AutomationProperties.AutomationId="action:folders.add"/>
+              </Grid>
+              <TextBlock Name="RemovalNote" Tag="session.after_a_removal_panes_that" Classes="safety-note" MaxWidth="504" HorizontalAlignment="Left" IsVisible="False"/>
+              <TextBlock Name="Pending" Classes="safety-note" IsVisible="False"/>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+        <Border Classes="safety-line" Padding="0,20,0,0" Margin="0,28,0,0" Tag="safety.how_commands_run">
+          <StackPanel Spacing="6">
+            <TextBlock Tag="safety.how_commands_run" Classes="safety-title" LineHeight="19"/>
+            <TextBlock Name="CommandHint" Classes="safety-note" MaxWidth="504" HorizontalAlignment="Left"/>
+            <Border Name="Unavailable" Classes="safety-warning" IsVisible="False">
+              <StackPanel Spacing="4">
+                <TextBlock Tag="safety.this_machine_has_no_usable" Classes="safety-title"/>
+                <TextBlock Name="WhyUnavailable" Classes="safety-note" MaxWidth="504" HorizontalAlignment="Left"/>
+              </StackPanel>
+            </Border>
+            <Border CornerRadius="7" Background="{DynamicResource OverlayBrush}" Padding="2" HorizontalAlignment="Left" Margin="0,4,0,0">
+              <StackPanel Orientation="Horizontal">
+                <RadioButton Name="Confined" Tag="safety.jailed" Classes="segmented" GroupName="sandbox-command" AutomationProperties.AutomationId="action:sandbox.mode"/>
+                <RadioButton Name="Unconfined" Tag="safety.unconfined" Classes="segmented" GroupName="sandbox-command" AutomationProperties.AutomationId="action:sandbox.mode"/>
+              </StackPanel>
+            </Border>
+            <TextBlock Name="Overruled" Classes="safety-note" IsVisible="False"/>
+            <Border Name="NetworkRow" Classes="safety-line" Padding="12,6">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <StackPanel Spacing="2" VerticalAlignment="Center">
+                  <TextBlock Name="NetworkLabel" Tag="safety.allow_network_inside_the_sandbox" Classes="safety-title"/>
+                  <TextBlock Tag="safety.with_this_off_installing_dependencies" Classes="safety-hint"/>
+                </StackPanel>
+                <ToggleSwitch Name="Network" Grid.Column="1" AutomationProperties.AutomationId="action:sandbox.network"
+                              AutomationProperties.LabeledBy="{Binding #NetworkLabel}"/>
+              </Grid>
+            </Border>
+          </StackPanel>
+        </Border>
+        <TextBlock Name="Error" Classes="safety-note" Foreground="{DynamicResource ErrInkBrush}" Margin="0,6,0,0" IsVisible="False"/>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</local:SettingsFormView>

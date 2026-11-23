@@ -120,7 +120,23 @@ internal static class Program
             throw new InvalidOperationException("Switching browser tabs discarded native navigation history.");
         }
 
+        var addSurface = window.FindControl<Button>("NewSurface")!;
+        var launcher = window.FindControl<Control>("WorkbenchStart")!;
+        addSurface.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if (!launcher.IsEffectivelyVisible || pane.IsEffectivelyVisible || !guest.IsAttachedToVisualTree())
+        {
+            throw new InvalidOperationException("The launcher did not cover and retain the selected native web view.");
+        }
+
+        addSurface.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        await UntilAsync("document.title", "two").ConfigureAwait(true);
+        if (launcher.IsEffectivelyVisible || !pane.IsEffectivelyVisible || !guest.CanGoBack)
+        {
+            throw new InvalidOperationException("Dismissing the launcher did not restore the native web view and history.");
+        }
+
         tabs.GetVisualDescendants().OfType<Button>().Last(button => AutomationProperties.GetAutomationId(button) == "action:workbench.close-browser").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        window.UpdateLayout();
         if (tabs.GetVisualDescendants().OfType<Button>().Count(button => AutomationProperties.GetAutomationId(button) == "action:workbench.browser-tab") != 1)
         {
             throw new InvalidOperationException("Closing a background browser tab changed the surviving tab.");

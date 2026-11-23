@@ -1,0 +1,104 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.SystemPersonaView">
+  <local:SettingsFormView.Styles>
+    <Style Selector="TextBlock.persona-caption">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/><Setter Property="LineHeight" Value="19.2"/>
+    </Style>
+    <Style Selector="Button.persona-chip">
+      <Setter Property="Height" Value="26"/><Setter Property="Padding" Value="10,0"/>
+      <Setter Property="CornerRadius" Value="5"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    </Style>
+    <Style Selector="Button.persona-chip.active, Button.persona-chip:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+    </Style>
+    <Style Selector="TextBox.persona-prompt">
+      <Setter Property="Height" Value="119"/><Setter Property="Padding" Value="10,8"/>
+      <Setter Property="MaxLength" Value="32768"/><Setter Property="AcceptsReturn" Value="True"/>
+      <Setter Property="TextWrapping" Value="Wrap"/><Setter Property="VerticalContentAlignment" Value="Top"/>
+      <Setter Property="CornerRadius" Value="7"/>
+    </Style>
+  </local:SettingsFormView.Styles>
+  <StackPanel>
+    <StackPanel Name="PersonaHeading" Margin="32,24,32,20">
+      <Button Name="Back" Classes="preset-flat preset-muted" MinHeight="31" AutomationProperties.AutomationId="action:persona.back">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
+            <Path Data="M15 6l-6 6 6 6" Stroke="{Binding #Back.Foreground}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/>
+          </Canvas></Viewbox>
+          <TextBlock Tag="persona.back_to_presets" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+      <TextBlock Tag="persona.everyday_partner_persona" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"
+                 FontSize="{DynamicResource StudioType22}" LineHeight="28.6" Margin="0,18,0,6"/>
+      <TextBlock Tag="persona.edit_user_configuration_saved_separately" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" LineHeight="20.8"/>
+    </StackPanel>
+    <Border Name="PersonaFields" BorderBrush="{DynamicResource HairBrush}" BorderThickness="1" CornerRadius="15" Margin="32,0,32,28" Padding="22,20,22,18"
+            Background="{DynamicResource RaisedBrush}">
+      <StackPanel>
+        <WrapPanel ItemSpacing="8" LineSpacing="6">
+          <TextBlock Tag="persona.system_persona" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <Border CornerRadius="999" Background="{DynamicResource OverlayBrush}" Padding="7,0">
+            <TextBlock Tag="settings.applies_at_the_next_session" Classes="persona-caption" VerticalAlignment="Center"/>
+          </Border>
+          <TextBlock Name="CurrentProfile" Classes="persona-caption" VerticalAlignment="Center"/>
+        </WrapPanel>
+        <TextBlock Tag="persona.the_system_persona_shapes_the" Classes="persona-caption" FontSize="{DynamicResource StudioType13}"
+                   LineHeight="21.44" Margin="0,6,0,26" MaxWidth="554" HorizontalAlignment="Left"/>
+        <Border Name="Profiles" Background="{DynamicResource OverlayBrush}" CornerRadius="7" Padding="2"
+                HorizontalAlignment="Left" Margin="0,0,0,10">
+          <WrapPanel Name="Choices" ItemSpacing="2" LineSpacing="4"/>
+        </Border>
+        <TextBlock Name="ProfileDescription" Classes="persona-caption" Margin="0,0,0,10"/>
+        <StackPanel Spacing="0">
+          <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="12,10">
+            <StackPanel Spacing="6" Tag="persona.start_of_the_system_prompt">
+              <TextBlock Name="PrefixLabel" Tag="persona.start_of_the_system_prompt" FontWeight="Medium"/>
+              <TextBlock Tag="persona.leads_the_system_prompt_ahead" Classes="persona-caption"/>
+              <TextBox Name="Prefix" Classes="persona-prompt" AutomationProperties.AutomationId="field:persona.prefix"
+                       AutomationProperties.LabeledBy="{Binding #PrefixLabel}"/>
+            </StackPanel>
+          </Border>
+          <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="12,10">
+            <StackPanel Spacing="6" Tag="persona.additional_instructions">
+              <TextBlock Name="SuffixLabel" Tag="persona.additional_instructions" FontWeight="Medium"/>
+              <TextBlock Tag="persona.placed_after_the_built_in" Classes="persona-caption"/>
+              <TextBox Name="Suffix" Classes="persona-prompt" AutomationProperties.AutomationId="field:persona.suffix"
+                       AutomationProperties.LabeledBy="{Binding #SuffixLabel}"/>
+            </StackPanel>
+          </Border>
+          <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="12,10">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Tag="persona.do_not_inject_optional_runtime">
+              <StackPanel Spacing="4">
+                <TextBlock Name="RuntimeLabel" Tag="persona.do_not_inject_optional_runtime" FontWeight="Medium"/>
+                <TextBlock Tag="persona.when_on_the_probed_environment" Classes="persona-caption"/>
+              </StackPanel>
+              <ToggleSwitch Name="OmitRuntime" Grid.Column="1" OnContent="" OffContent="" AutomationProperties.AutomationId="action:persona.runtime-context"
+                            AutomationProperties.LabeledBy="{Binding #RuntimeLabel}"/>
+            </Grid>
+          </Border>
+          <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="12,10">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+              <StackPanel Spacing="4">
+                <TextBlock Tag="common.save" FontWeight="Medium"/>
+                <TextBlock Tag="persona.writes_the_user_config_applies" Classes="persona-caption"/>
+              </StackPanel>
+              <Button Name="Save" Grid.Column="1" Tag="common.save" Classes="preset-act" VerticalAlignment="Center"
+                      AutomationProperties.AutomationId="action:persona.save"/>
+            </Grid>
+          </Border>
+        </StackPanel>
+        <TextBlock Name="Error" IsVisible="False" TextWrapping="Wrap" Foreground="{DynamicResource ErrInkBrush}" AutomationProperties.LiveSetting="Polite"/>
+      </StackPanel>
+    </Border>
+    <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="32,16" Background="{DynamicResource SurfaceBrush}">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+        <TextBlock Tag="persona.applies_to_new_conversations_and" Classes="persona-caption" VerticalAlignment="Center"/>
+        <Button Name="BackFooter" Grid.Column="1" Tag="common.back" Classes="preset-act" Height="32" CornerRadius="7" MinWidth="84"
+                AutomationProperties.AutomationId="action:persona.back-footer"/>
+      </Grid>
+    </Border>
+  </StackPanel>
+</local:SettingsFormView>

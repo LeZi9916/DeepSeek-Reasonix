@@ -1,6 +1,6 @@
 import { chromium } from "playwright";
 const browser = await chromium.launch({ channel: "msedge", headless: true });
-for (const section of ["common", "session", "tools", "ext", "display", "controls", "appearance", "storage", "network", "account", "advanced"]) {
+for (const section of ["common", "session", "tools", "ext", "display", "controls", "appearance", "storage", "network", "account"]) {
   for (const scheme of ["dark", "light"]) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: scheme });
     await page.goto(`http://127.0.0.1:4399/perf.html?screen=settings:${section}`, { waitUntil: "networkidle" });

@@ -33,6 +33,7 @@
     <AvaloniaResource Include="Assets/wordmark.png" />
     <AvaloniaResource Include="Assets/Community/qq-group-qr.png" />
     <AvaloniaResource Include="../../../frontend-next/src/assets/douyin-qr.jpg" Link="Assets/Community/douyin-qr.jpg" />
+    <AvaloniaResource Include="../../../frontend-next/src/assets/wechat-pay.jpg;../../../frontend-next/src/assets/alipay.jpg" Link="Assets/Community/%(Filename)%(Extension)" />
     <AvaloniaResource Include="../../../frontend-next/src/data/contributors.json" Link="Assets/Community/contributors.json" />
     <AvaloniaResource Include="Assets/DataFonts/*.ttf" />
     <AvaloniaResource Include="Assets/WorkbenchFonts/*.ttf" />

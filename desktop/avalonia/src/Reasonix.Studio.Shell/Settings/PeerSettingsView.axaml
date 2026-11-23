@@ -1,0 +1,128 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.PeerSettingsView">
+  <local:SettingsFormView.Styles>
+    <Style Selector="TextBlock.peer-note">
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/><Setter Property="LineHeight" Value="18"/>
+    </Style>
+    <Style Selector="TextBlock.peer-hint">
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/><Setter Property="LineHeight" Value="18"/>
+    </Style>
+    <Style Selector="Grid.peer-choice">
+      <Setter Property="ColumnSpacing" Value="16"/>
+      <Setter Property="MinHeight" Value="40.6"/><Setter Property="Margin" Value="12,0"/>
+    </Style>
+    <Style Selector="StackPanel.peer-copy"><Setter Property="Spacing" Value="0"/><Setter Property="VerticalAlignment" Value="Center"/></Style>
+    <Style Selector="ComboBox.peer-field, TextBox.peer-field">
+      <Setter Property="MinHeight" Value="32"/><Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="CornerRadius" Value="7"/>
+    </Style>
+    <Style Selector="Button#Send:disabled, Button#ReleaseAdd:disabled">
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    </Style>
+    <Style Selector="TextBox.peer-field /template/ Border#PART_BorderElement">
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+    </Style>
+    <Style Selector="TextBox.peer-field:focus /template/ Border#PART_BorderElement">
+      <Setter Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+    </Style>
+    <Style Selector="Border.peer-projects.compact">
+      <Setter Property="Padding" Value="15,20,15,18"/>
+    </Style>
+    <Style Selector="Border.peer-projects">
+      <Setter Property="Padding" Value="22,20,22,18"/>
+    </Style>
+    <Style Selector="Border.peer-line"><Setter Property="BorderThickness" Value="0,1,0,0"/><Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/></Style>
+  </local:SettingsFormView.Styles>
+  <Border Classes="peer-line" Padding="0,12,0,6">
+    <StackPanel>
+      <WrapPanel ItemSpacing="8" LineSpacing="4">
+        <TextBlock Tag="remote.messages_between_sessions_experimental" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" LineHeight="18.2" VerticalAlignment="Center"/>
+        <Border Classes="setting-apply" Margin="0">
+          <TextBlock Tag="settings.applies_from_the_next_turn" VerticalAlignment="Center"/>
+        </Border>
+      </WrapPanel>
+      <TextBlock Tag="settings.sessions_send_each_other" Classes="peer-hint" Margin="0,2,0,19"/>
+      <TextBlock Name="SettingsFailure" Classes="peer-note" Foreground="{DynamicResource ErrInkBrush}" IsVisible="False"/>
+      <StackPanel Name="Switches" IsVisible="False">
+        <StackPanel Spacing="12">
+        <Border Classes="peer-line">
+          <Grid Classes="peer-choice" ColumnDefinitions="*,Auto">
+            <StackPanel Classes="peer-copy">
+              <TextBlock Name="EnableLabel" LineHeight="22" Tag="remote.turn_on_session_messages" FontWeight="Medium"/>
+              <TextBlock Tag="remote.sessions_on_this_machine_send" Classes="peer-note"/>
+            </StackPanel>
+            <ToggleSwitch Name="Enable" Grid.Column="1" AutomationProperties.AutomationId="action:peers.enable" AutomationProperties.LabeledBy="{Binding #EnableLabel}"/>
+          </Grid>
+        </Border>
+        <Border Classes="peer-line">
+          <Grid Classes="peer-choice" ColumnDefinitions="*,Auto">
+            <StackPanel Classes="peer-copy">
+              <TextBlock Name="DispatchLabel" LineHeight="22" Tag="remote.let_the_model_hand_a" FontWeight="Medium" TextWrapping="Wrap"/>
+              <TextBlock Name="DispatchHint" Classes="peer-note"/>
+            </StackPanel>
+            <ToggleSwitch Name="Dispatch" Grid.Column="1" AutomationProperties.AutomationId="action:peers.dispatch" AutomationProperties.LabeledBy="{Binding #DispatchLabel}"/>
+          </Grid>
+        </Border>
+        <Border Classes="peer-line">
+          <Grid Classes="peer-choice" ColumnDefinitions="*,Auto">
+            <StackPanel Classes="peer-copy">
+              <TextBlock Name="NestedLabel" LineHeight="22" Tag="remote.open_nested_folders_without_asking" FontWeight="Medium" TextWrapping="Wrap"/>
+              <TextBlock Tag="remote.open_nested_folders_without_asking_ds" Classes="peer-note"/>
+            </StackPanel>
+            <ToggleSwitch Name="Nested" Grid.Column="1" AutomationProperties.AutomationId="action:peers.open-nested" AutomationProperties.LabeledBy="{Binding #NestedLabel}"/>
+          </Grid>
+        </Border>
+        </StackPanel>
+        <TextBlock Name="Unavailable" Tag="remote.not_supported_in_this_session" Classes="peer-note" Margin="12,6" IsVisible="False"/>
+        <TextBlock Name="Pending" Tag="remote.saved_takes_effect_from_the" Classes="peer-note" Margin="12,6" IsVisible="False"/>
+        <TextBlock Name="SettingsPath" Classes="peer-note" Margin="12,6"/>
+      </StackPanel>
+      <TextBlock Name="PeerReadFailure" Tag="remote.could_not_read_the_state" Classes="peer-note" IsVisible="False"/>
+      <StackPanel Name="Messages" Spacing="6" Margin="0,6,0,0" IsVisible="False">
+        <StackPanel Name="Held" Spacing="8"/>
+        <TextBlock Name="NoPeer" Tag="remote.no_other_session_on_this" Classes="peer-note"/>
+        <StackPanel Name="SendForm" Spacing="6">
+          <TextBlock Name="TargetLabel" Tag="remote.send_to" Classes="peer-note"/>
+          <ComboBox Name="Target" Classes="agent-select peer-field settings-input" MinHeight="30" AutomationProperties.AutomationId="field:peers.target"
+                    AutomationProperties.LabeledBy="{Binding #TargetLabel}"/>
+          <TextBox Name="Message" Tag="remote.write_what_to_tell_the" Classes="peer-field" AcceptsReturn="True"
+                   MinHeight="74" TextWrapping="Wrap" AutomationProperties.AutomationId="field:peers.text"/>
+          <TextBlock Name="Receipt" Classes="peer-note" IsVisible="False"/>
+          <Button Name="Send" Tag="common.send" Classes="preset-major" Height="24" CornerRadius="999" HorizontalAlignment="Right"
+                  AutomationProperties.AutomationId="action:peers.send"/>
+        </StackPanel>
+      </StackPanel>
+      <Border Name="ProjectPanel" Classes="peer-projects" BorderThickness="1" BorderBrush="{DynamicResource HairBrush}"
+              CornerRadius="15" Background="{DynamicResource RaisedBrush}" Margin="0,14,0,0">
+        <StackPanel Name="Projects">
+          <WrapPanel ItemSpacing="8" LineSpacing="4">
+            <TextBlock Tag="remote.projects_allowed_through" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" LineHeight="19.5" VerticalAlignment="Center"/>
+            <Border Classes="setting-apply" Margin="0"><TextBlock Tag="settings.applies_from_the_next_turn" VerticalAlignment="Center"/></Border>
+          </WrapPanel>
+          <TextBlock Tag="remote.sessions_in_these_projects_take" Classes="peer-hint" Margin="0,2,0,10"/>
+          <StackPanel Name="ReleaseList"/>
+          <TextBlock Name="NoRelease" Tag="remote.no_project_is_allowed_through" Classes="peer-note" Margin="12,6"/>
+          <Border Classes="peer-line" Padding="12,10,12,4" Margin="0,6,0,0">
+            <StackPanel Spacing="6">
+              <TextBlock Name="ReleaseHint" Classes="peer-note"/>
+              <StackPanel Name="ReleaseForm" Spacing="6" IsVisible="False">
+                <TextBlock Name="ReleaseLabel" Tag="remote.allow_this_project_through" Classes="peer-note"/>
+                <ComboBox Name="ReleaseTarget" Classes="agent-select peer-field settings-input" MinHeight="30" AutomationProperties.AutomationId="field:peers.release-pick"
+                          AutomationProperties.LabeledBy="{Binding #ReleaseLabel}"/>
+                <Button Name="ReleaseAdd" Tag="common.allow" Classes="preset-major" Height="24" CornerRadius="999" HorizontalAlignment="Right"
+                        AutomationProperties.AutomationId="action:peers.release-add"/>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <TextBlock Name="ReleaseUnavailable" Tag="remote.not_supported_in_this_session" Classes="peer-note" Margin="12,6" IsVisible="False"/>
+          <TextBlock Name="ReleasePending" Tag="remote.saved_takes_effect_from_the" Classes="peer-note" Margin="12,6" IsVisible="False"/>
+          <TextBlock Name="Applies" Classes="peer-hint" Margin="0,8,0,0" FontSize="{DynamicResource StudioType11}"/>
+        </StackPanel>
+      </Border>
+      <TextBlock Name="WriteFailure" Classes="peer-note" Foreground="{DynamicResource ErrInkBrush}" Margin="12,6" IsVisible="False"/>
+    </StackPanel>
+  </Border>
+</local:SettingsFormView>

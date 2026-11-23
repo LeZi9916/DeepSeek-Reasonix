@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Reasonix.Studio.Controls;
+using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Host;
@@ -19,6 +20,12 @@ namespace Reasonix.Studio.Shell;
 
 public sealed partial class MainWindow
 {
+    /// <summary>The runtime for which the chrome has started a trajectory read.</summary>
+    private SessionEngine? _chromeTrajectoryEngine;
+
+    /// <summary>The selected transcript observed by the chrome.</summary>
+    private string _chromeTrajectoryPath = string.Empty;
+
     /// <summary>The run transition used to refresh a completed trajectory.</summary>
     private bool _analysisWasRunning;
 
@@ -54,34 +61,63 @@ public sealed partial class MainWindow
         grid.Children.Add(child);
     }
 
+    /// <summary>Refreshes the analysis button when the pane or its running state changes.</summary>
+    /// <param name="running">Whether the active runtime is running a turn.</param>
+    private void UpdateChromeTrajectory(bool running)
+    {
+        var changed = !ReferenceEquals(_chromeTrajectoryEngine, _engine) || _chromeTrajectoryPath != _sessionPath;
+        var runChanged = _analysisWasRunning != running;
+        _chromeTrajectoryEngine = _engine;
+        _chromeTrajectoryPath = _sessionPath;
+        _analysisWasRunning = running;
+        if (changed)
+        {
+            ChromeAnalysis.IsVisible = false;
+        }
+
+        if (_engine is not null && (changed || runChanged))
+        {
+            _ = LoadAnalysisAsync(quiet: !AnalysisPanel.IsVisible);
+        }
+    }
+
     /// <summary>Reads and presents the current kernel record without depending on the visible transcript.</summary>
+    /// <param name="quiet">Whether to refresh availability silently while the view is hidden.</param>
     /// <returns>The analysis read.</returns>
-    private async Task LoadAnalysisAsync()
+    private async Task LoadAnalysisAsync(bool quiet = false)
     {
         var ticket = ++_analysisRead;
         var draft = _draftKey;
-        AnalysisContent.Children.Clear();
-        if (_engine is null)
+        if (!quiet)
+        {
+            AnalysisContent.Children.Clear();
+        }
+
+        if (_engine is not { } engine)
         {
             return;
         }
 
         try
         {
-            var trace = await _engine.Pages.TrajectoryAsync(_closing.Token).ConfigureAwait(true);
-            if (ticket != _analysisRead || draft != _draftKey || !AnalysisPanel.IsVisible)
+            var trace = await engine.Pages.TrajectoryAsync(_closing.Token).ConfigureAwait(true);
+            if (ticket != _analysisRead || draft != _draftKey || _closing.IsCancellationRequested || !ReferenceEquals(engine, _engine))
             {
                 return;
             }
 
-            DrawTrajectory(trace);
+            ChromeAnalysis.IsVisible = RunTimeline.From(trace["events"] as JsonArray ?? []).Rows.Count > 0;
+            if (AnalysisPanel.IsVisible)
+            {
+                DrawTrajectory(trace);
+            }
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
         {
         }
         catch (Exception error)
         {
-            if (ticket == _analysisRead && draft == _draftKey)
+            if (!quiet && ticket == _analysisRead && draft == _draftKey && AnalysisPanel.IsVisible)
             {
                 ShowRefusal(error);
             }

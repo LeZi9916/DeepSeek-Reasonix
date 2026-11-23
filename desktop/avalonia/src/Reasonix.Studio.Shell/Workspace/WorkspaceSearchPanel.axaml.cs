@@ -83,6 +83,8 @@ public sealed partial class WorkspaceSearchPanel : UserControl
         Actions.Content = "> " + MessageCatalog.Get("app.action", language);
         Sessions.Content = "# " + MessageCatalog.Get("common.session", language);
         Settings.Content = ", " + MessageCatalog.Get("common.settings", language);
+        Hint.Text = language == InterfaceLanguage.Zh ? "↑ ↓ 选择 · Enter 打开 · Tab 切换范围" : "↑ ↓ Select · Enter Open · Tab Switch scope";
+        ScopeHint.Text = Actions.Content + " · " + Sessions.Content + " · " + Settings.Content;
         IsVisible = true;
         Filter();
         Dispatcher.UIThread.Post(() => Query.Focus());

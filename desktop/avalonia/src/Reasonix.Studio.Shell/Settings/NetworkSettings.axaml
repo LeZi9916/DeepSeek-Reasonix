@@ -1,0 +1,167 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:local="using:Reasonix.Studio.Shell.Settings"
+                        x:Class="Reasonix.Studio.Shell.Settings.NetworkSettings">
+  <UserControl.Styles>
+    <Style Selector="Border.proxy-value">
+      <Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+      <Setter Property="Padding" Value="12,10"/>
+    </Style>
+    <Style Selector="TextBlock.proxy-label">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="LineHeight" Value="17"/>
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    </Style>
+    <Style Selector="TextBlock.proxy-mono">
+      <Setter Property="FontFamily" Value="{DynamicResource StudioMonoFamily}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="LineHeight" Value="18"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="TextBlock.proxy-mono.failed">
+      <Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/>
+    </Style>
+    <Style Selector="TextBlock.proxy-note">
+      <Setter Property="Margin" Value="0,8,0,0"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="LineHeight" Value="20.8"/>
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="Button.proxy-action">
+      <Setter Property="Height" Value="24"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="Padding" Value="10,0"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button.proxy-action:pointerover:not(:disabled)">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    </Style>
+    <Style Selector="Button.proxy-action.primary:not(:disabled)">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource AccentFgBrush}"/>
+    </Style>
+  </UserControl.Styles>
+  <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="0,6">
+    <StackPanel>
+      <TextBlock Tag="common.network" Classes="setting-row-name" FontSize="{DynamicResource StudioType13}" LineHeight="18.2"/>
+      <TextBlock Tag="settings.network_hint" Classes="proxy-label" LineHeight="16.8"/>
+      <Border Name="InitialStatus" Margin="0,10,0,0" Padding="12,14" BorderThickness="0,1,0,1" BorderBrush="{DynamicResource HairBrush}">
+        <TextBlock Name="Loading" Tag="models.loading_network_settings" Classes="proxy-label" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+      </Border>
+      <StackPanel Name="Editor" IsVisible="False">
+        <Border Name="Modes" Tag="models.proxy_mode" Margin="0,10,0,0" Padding="2" CornerRadius="7"
+                HorizontalAlignment="Left" Background="{DynamicResource OverlayBrush}">
+          <StackPanel Orientation="Horizontal">
+            <RadioButton Name="SystemMode" Classes="segmented" Tag="look.follow_the_system" AutomationProperties.AutomationId="action:network.mode.auto"/>
+            <RadioButton Name="CustomMode" Classes="segmented" Tag="models.set_manually" AutomationProperties.AutomationId="action:network.mode.custom"/>
+            <RadioButton Name="DirectMode" Classes="segmented" Tag="models.direct" AutomationProperties.AutomationId="action:network.mode.off"/>
+          </StackPanel>
+        </Border>
+        <TextBlock Name="ModeNote" Classes="proxy-note"/>
+        <Border Classes="proxy-value">
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <TextBlock Tag="common.in_effect" Classes="proxy-label" VerticalAlignment="Center"/>
+            <TextBlock Name="Effective" Grid.Column="1" Classes="proxy-mono"/>
+          </Grid>
+        </Border>
+        <Border Name="EndpointRow" Classes="proxy-value">
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <TextBlock Tag="models.test_target" Classes="proxy-label" VerticalAlignment="Center"/>
+            <TextBlock Name="Endpoint" Grid.Column="1" Classes="proxy-mono"/>
+          </Grid>
+        </Border>
+        <Border Name="DirectRow" Classes="proxy-value">
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <TextBlock Tag="models.always_connect_directly" Classes="proxy-label" VerticalAlignment="Center" TextWrapping="Wrap"/>
+            <TextBlock Name="DirectHosts" Grid.Column="1" Classes="proxy-mono"/>
+          </Grid>
+        </Border>
+        <StackPanel Name="CustomFields" IsVisible="False" Margin="0,14,0,0" Spacing="10">
+          <local:ProxyFieldsPanel>
+            <StackPanel Width="140" Spacing="4">
+              <TextBlock Tag="models.protocol" Classes="proxy-label"/>
+              <ComboBox Name="Protocol" Classes="settings-input"/>
+            </StackPanel>
+            <StackPanel MinWidth="150" Spacing="4">
+              <TextBlock Tag="models.server" Classes="proxy-label"/>
+              <TextBox Name="Server" Classes="settings-input" PlaceholderText="proxy.corp" AutomationProperties.AutomationId="field:network.server"/>
+            </StackPanel>
+            <StackPanel Width="76" Spacing="4">
+              <TextBlock Tag="common.port" Classes="proxy-label"/>
+              <TextBox Name="PortNumber" Classes="settings-input" PlaceholderText="8080" AutomationProperties.AutomationId="field:network.port"/>
+            </StackPanel>
+            <StackPanel MinWidth="150" Spacing="4">
+              <TextBlock Tag="models.username_optional" Classes="proxy-label"/>
+              <TextBox Name="Username" Classes="settings-input"/>
+            </StackPanel>
+            <StackPanel MinWidth="150" Spacing="4">
+              <TextBlock Tag="models.password_optional" Classes="proxy-label"/>
+              <TextBox Name="Password" Classes="settings-input" PasswordChar="●" AutomationProperties.AutomationId="field:network.password"/>
+            </StackPanel>
+            <CheckBox Name="ClearPassword" Tag="models.delete_the_saved_password" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                      FontSize="{DynamicResource StudioType12}" AutomationProperties.AutomationId="field:network.clear-password"/>
+          </local:ProxyFieldsPanel>
+          <StackPanel Spacing="4">
+            <TextBlock Tag="models.reach_these_addresses_directly" Classes="proxy-label"/>
+            <TextBox Name="Bypass" Classes="settings-input" PlaceholderText="localhost, 127.0.0.1, *.internal"/>
+          </StackPanel>
+        </StackPanel>
+        <StackPanel Margin="14,14,0,0" Orientation="Horizontal" Spacing="8">
+          <Button Name="Diagnose" Tag="models.test_saved_settings" Classes="proxy-action" AutomationProperties.AutomationId="action:network.diagnose"/>
+          <Button Name="Save" Tag="common.save" Classes="proxy-action primary" AutomationProperties.AutomationId="action:network.save"/>
+        </StackPanel>
+        <TextBlock Name="Unsaved" Tag="models.there_are_unsaved_changes_connection" Classes="proxy-note" AutomationProperties.LiveSetting="Polite"/>
+        <Border Name="ProbeResults" IsVisible="False" Margin="0,14,0,0" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,0,1">
+          <ItemsControl Name="Probes">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="0,7">
+                  <Grid ColumnDefinitions="16,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="9">
+                    <Viewbox Width="16" Height="16" VerticalAlignment="Top">
+                      <Canvas Width="24" Height="24">
+                        <Path Data="{StaticResource Glyph.check}" Stroke="{DynamicResource OkBrush}" StrokeThickness="2"
+                              StrokeLineCap="Round" IsVisible="{ReflectionBinding Ok}"/>
+                        <Path Data="M18 6 6 18 M6 6l12 12" Stroke="{DynamicResource ErrBrush}" StrokeThickness="2"
+                              StrokeLineCap="Round" IsVisible="{ReflectionBinding !Ok}"/>
+                      </Canvas>
+                    </Viewbox>
+                    <Grid Grid.Column="1" ColumnDefinitions="68,*" ColumnSpacing="9">
+                      <TextBlock Text="{ReflectionBinding Label}" FontSize="{DynamicResource StudioType13}" LineHeight="20"
+                                 Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+                      <TextBlock Grid.Column="1" Text="{ReflectionBinding Detail}" Classes="proxy-mono"
+                                 Classes.failed="{ReflectionBinding !Ok}" LineHeight="20"/>
+                    </Grid>
+                    <TextBlock Grid.Column="2" Text="{ReflectionBinding Duration}" FontSize="{DynamicResource StudioType12}" LineHeight="20"
+                               FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource GhostBrush}"/>
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Margin="91,10,0,0" Text="{ReflectionBinding Advice}" IsVisible="{ReflectionBinding HasAdvice}"
+                               FontSize="{DynamicResource StudioType12}" LineHeight="19.2" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Border>
+        <TextBlock Name="Failure" IsVisible="False" Margin="0,10,0,0" FontSize="{DynamicResource StudioType13}" LineHeight="20.15"
+                   Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive"/>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</local:SettingsFormView>

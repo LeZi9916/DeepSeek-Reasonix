@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.ModelUsageView" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.usage-caption">
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+  </UserControl.Styles>
+  <StackPanel Margin="0,2,0,0">
+    <TextBlock Name="UsageFailure" Classes="usage-caption" Margin="0,0,0,10" IsVisible="False"
+               Foreground="{DynamicResource ErrInkBrush}" AutomationProperties.LiveSetting="Polite"/>
+    <Border Name="UsageHeader" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,0,1"
+            Margin="0,0,0,14" Padding="0,0,0,8">
+      <Grid ColumnDefinitions="*,1.6*,0.7*,*" ColumnSpacing="16">
+        <TextBlock Name="UseHeading" Classes="usage-caption"/>
+        <TextBlock Name="ModelHeading" Grid.Column="1" Classes="usage-caption"/>
+        <TextBlock Name="EffortHeading" Grid.Column="2" Classes="usage-caption"/>
+        <TextBlock Name="ConnectionHeading" Grid.Column="3" Classes="usage-caption"/>
+      </Grid>
+    </Border>
+    <StackPanel Name="UsageRows" Spacing="14"/>
+    <TextBlock Name="UsageMissing" Classes="usage-caption" IsVisible="False"/>
+    <TextBlock Name="VisionNote" Classes="usage-caption" Margin="0,12,0,0"/>
+  </StackPanel>
+</UserControl>

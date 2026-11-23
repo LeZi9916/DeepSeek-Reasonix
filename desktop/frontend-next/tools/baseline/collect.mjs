@@ -48,7 +48,7 @@ const DOMAINS = [
   { name: "analysis", screen: "analysis", proofs: [".run-analysis"] },
   { name: "workbench", screen: "workbench", proofs: ["section.workbench .workbench-tabs"] },
   { name: "onboarding", screen: "onboarding", proofs: [".onb"] },
-  ...["common", "model", "session", "tools", "ext", "display", "controls", "appearance", "storage", "network", "account", "advanced"].map(
+  ...["common", "model", "session", "tools", "ext", "display", "controls", "appearance", "storage", "network", "account"].map(
     (section) => ({ name: `settings-${section}`, screen: `settings:${section}`, proofs: [`.prefs .prefs-main[data-sec=${section}]`], root: ".prefs" }),
   ),
   { name: "settings-session-persona", screen: "settings:session:persona", proofs: ['.prefs [data-setting="persona"]'], absent: ['.prefs [data-setting="composition-picker"]'], root: ".prefs" },

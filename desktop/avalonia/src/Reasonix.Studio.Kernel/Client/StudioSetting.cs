@@ -23,7 +23,4 @@ public enum StudioSetting
 
     /// <summary>The <c>enabled</c> setting at <c>/auto-archive</c>.</summary>
     AutoArchive,
-
-    /// <summary>The <c>enabled</c> setting at <c>/observability</c>.</summary>
-    TraceExport,
 }

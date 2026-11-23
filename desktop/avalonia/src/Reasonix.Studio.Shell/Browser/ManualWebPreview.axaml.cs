@@ -1,7 +1,7 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Platform;
+using Avalonia.VisualTree;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Net;
@@ -23,6 +23,15 @@ public sealed partial class ManualWebPreview : UserControl
 
     /// <summary>The exact generated source authorized for the explicit workspace preview.</summary>
     private Uri? _documentAddress;
+
+    /// <summary>The last time this page was active or navigated.</summary>
+    private DateTimeOffset _lastSeen = DateTimeOffset.UtcNow;
+
+    /// <summary>The acknowledged URL retained while the native guest sleeps.</summary>
+    private Uri? _sleepAddress;
+
+    /// <summary>Whether the guest is still navigating.</summary>
+    private bool _navigating;
 
     /// <summary>Initializes a new instance of the <see cref="ManualWebPreview"/> class.</summary>
     public ManualWebPreview()
@@ -65,11 +74,53 @@ public sealed partial class ManualWebPreview : UserControl
         Address.SelectAll();
     }
 
+    /// <summary>Restores a slept browser surface at its previously loaded address.</summary>
+    internal void Wake()
+    {
+        _lastSeen = DateTimeOffset.UtcNow;
+        if (_sleepAddress is not { } address)
+        {
+            return;
+        }
+
+        _sleepAddress = null;
+        try
+        {
+            Guest().Source = address;
+        }
+        catch (Exception error)
+        {
+            ShowFailure(error.Message);
+        }
+    }
+
+    /// <summary>Releases a hidden guest after it has remained idle for fifteen minutes.</summary>
+    /// <param name="now">Time of the current sweep.</param>
+    internal void SleepWhenIdle(DateTimeOffset now)
+    {
+        if (IsEffectivelyVisible && this.IsAttachedToVisualTree())
+        {
+            _lastSeen = now;
+            return;
+        }
+
+        if (_guest is null || _documentAddress is not null || _navigating || now - _lastSeen < TimeSpan.FromMinutes(15)
+            || !PreviewAddress.TryRead(_guest.Source?.AbsoluteUri, _kernel, out var address))
+        {
+            return;
+        }
+
+        ClosePage();
+        _sleepAddress = address;
+    }
+
     /// <summary>Releases the native guest when its browser tab is explicitly closed.</summary>
     internal void ClosePage()
     {
         GuestHost.Child = null;
         _guest = null;
+        _sleepAddress = null;
+        _navigating = false;
     }
 
     /// <summary>Previews local HTML inside a script-free sandbox with no host file URL.</summary>
@@ -120,31 +171,11 @@ public sealed partial class ManualWebPreview : UserControl
             return _guest;
         }
 
-        var view = new NativeWebView
-        {
-            AdapterPreference = OperatingSystem.IsWindows()
-                ? new[] { WebViewAdapterType.WebView2 }
-                : OperatingSystem.IsMacOS() ? new[] { WebViewAdapterType.WkWebView } : new[] { WebViewAdapterType.WpeWebKit, WebViewAdapterType.WebKitGtk },
-        };
-        view.EnvironmentRequested += (_, options) =>
-        {
-            options.EnableDevTools = false;
-            switch (options)
-            {
-                case AppleWKWebViewEnvironmentRequestedEventArgs apple:
-                    apple.NonPersistentDataStore = true;
-                    break;
-                case WindowsWebView2EnvironmentRequestedEventArgs windows:
-                    windows.IsInPrivateModeEnabled = true;
-                    windows.AllowSingleSignOnUsingOSPrimaryAccount = false;
-                    break;
-                case GtkWebViewEnvironmentRequestedEventArgs gtk:
-                    gtk.EphemeralDataManager = true;
-                    break;
-            }
-        };
+        var view = WorkbenchWebGuest.Create();
         view.NavigationStarted += (sender, e) =>
         {
+            _lastSeen = DateTimeOffset.UtcNow;
+            _navigating = true;
             var destination = e.Request?.AbsoluteUri;
             if (_documentAddress is not null && (destination is null or "about:blank" || e.Request == _documentAddress))
             {
@@ -154,11 +185,14 @@ public sealed partial class ManualWebPreview : UserControl
             if (!PreviewAddress.TryRead(destination, _kernel, out _))
             {
                 e.Cancel = true;
+                _navigating = false;
                 ShowFailure(MessageCatalog.Get(MessageKey.Workbench.EnterAValidHttpOr, _language));
             }
         };
         view.NavigationCompleted += (_, e) =>
         {
+            _navigating = false;
+            _lastSeen = DateTimeOffset.UtcNow;
             if (!e.IsSuccess)
             {
                 ShowFailure(MessageCatalog.Get(MessageKey.Workbench.ThisPageCouldNotBe, _language));

@@ -97,6 +97,7 @@ public sealed partial class MainWindow
     {
         Projects.Language = Language;
         Projects.Show(tree, _sessionPath);
+        ObserveUnreadSpan();
     }
 
     /// <summary>

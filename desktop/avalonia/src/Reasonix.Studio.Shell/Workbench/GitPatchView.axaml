@@ -1,6 +1,86 @@
-<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Shell.Workbench.GitPatchView" UseLayoutRounding="False">
-  <StackPanel>
-    <StackPanel Name="Lines" Margin="0,4" TextElement.FontFamily="{DynamicResource WorkbenchMonoFamily}" TextElement.FontWeight="SemiBold" TextElement.FontSize="{DynamicResource StudioType12}"/>
-    <TextBlock Name="Truncated" IsVisible="False" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
-  </StackPanel>
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="using:Reasonix.Studio.Controls" xmlns:workbench="using:Reasonix.Studio.Shell.Workbench"
+             xmlns:sys="using:System" x:Class="Reasonix.Studio.Shell.Workbench.GitPatchView" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="Grid.diff-line.hunk > Border.diff-tint">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    </Style>
+    <Style Selector="Grid.diff-line.added > Border.diff-tint">
+      <Setter Property="Background" Value="{DynamicResource AddBrush}"/>
+      <Setter Property="Opacity" Value="0.12"/>
+    </Style>
+    <Style Selector="Grid.diff-line.removed > Border.diff-tint">
+      <Setter Property="Background" Value="{DynamicResource DelBrush}"/>
+      <Setter Property="Opacity" Value="0.12"/>
+    </Style>
+    <Style Selector="Grid.diff-line.added > TextBlock.diff-sign">
+      <Setter Property="Foreground" Value="{DynamicResource AddBrush}"/>
+    </Style>
+    <Style Selector="Grid.diff-line.removed > TextBlock.diff-sign">
+      <Setter Property="Foreground" Value="{DynamicResource DelBrush}"/>
+    </Style>
+    <Style Selector="Button.diff-number">
+      <Setter Property="Focusable" Value="False"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="VerticalAlignment" Value="Stretch"/>
+      <Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/>
+      <Setter Property="Padding" Value="0"/><Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Template">
+        <ControlTemplate><ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" Padding="{TemplateBinding Padding}"
+                                           HorizontalContentAlignment="Right" VerticalContentAlignment="Center"
+                                           Background="{TemplateBinding Background}"/></ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="workbench|GitPatchView.opens-line Button.diff-number">
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="TextBlock.diff-notice">
+      <Setter Property="Margin" Value="12,8"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="LineHeight" Value="{DynamicResource WorkbenchDiffNoticeHeight}"/>
+      <Setter Property="FontWeight" Value="Normal"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+  </UserControl.Styles>
+  <Grid>
+    <TextBlock Name="Empty" Classes="diff-notice"/>
+    <Border Name="NumberedPatch" IsVisible="False" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,0,1"
+            Background="{DynamicResource RaisedBrush}">
+      <StackPanel Margin="0,4" TextElement.FontFamily="{DynamicResource StudioMonoFamily}"
+                  TextElement.FontWeight="Medium" TextElement.FontSize="{DynamicResource StudioType12}">
+        <Grid>
+          <ItemsControl Name="Rows">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="workbench:GitPatchLine">
+                <Grid Classes="diff-line" Classes.hunk="{Binding IsHeading}" Classes.added="{Binding IsAddition}" Classes.removed="{Binding IsRemoval}"
+                      ColumnDefinitions="30,30,14,*" Height="{DynamicResource WorkbenchDiffLineHeight}">
+                  <Border Grid.ColumnSpan="4" Classes="diff-tint" IsHitTestVisible="False"/>
+                  <Button Classes="diff-number" Content="{Binding Old}" Click="OpenLine" AutomationProperties.AutomationId="action:workbench.change-open">
+                    <Button.ContentTemplate>
+                      <DataTemplate x:DataType="sys:String">
+                        <ctl:StudioLineText Text="{Binding}" Foreground="{DynamicResource GhostBrush}" LineHeight="{DynamicResource WorkbenchDiffLineHeight}"/>
+                      </DataTemplate>
+                    </Button.ContentTemplate>
+                  </Button>
+                  <Button Grid.Column="1" Classes="diff-number" Content="{Binding New}" Padding="0,0,6,0" Click="OpenLine"
+                          AutomationProperties.AutomationId="action:workbench.change-open">
+                    <Button.ContentTemplate>
+                      <DataTemplate x:DataType="sys:String">
+                        <ctl:StudioLineText Text="{Binding}" Foreground="{DynamicResource GhostBrush}" LineHeight="{DynamicResource WorkbenchDiffLineHeight}"/>
+                      </DataTemplate>
+                    </Button.ContentTemplate>
+                  </Button>
+                  <ctl:StudioLineText Grid.Column="2" Text="{Binding Sign}" Classes="diff-sign"
+                                      LineHeight="{DynamicResource WorkbenchDiffLineHeight}" Foreground="{DynamicResource GhostBrush}"/>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <SelectableTextBlock Name="Code" Margin="74,0,0,0" VerticalAlignment="Top" ClipToBounds="True"
+                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"
+                               LineHeight="{DynamicResource WorkbenchDiffLineHeight}"/>
+        </Grid>
+        <TextBlock Name="Truncated" Classes="diff-notice" IsVisible="False" FontFamily="{DynamicResource WorkbenchUiFamily}"/>
+      </StackPanel>
+    </Border>
+  </Grid>
 </UserControl>

@@ -1,0 +1,41 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.HookRuleEditor">
+  <local:SettingsFormView.Styles>
+    <Style Selector="TextBlock#Verdict.blocks"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
+  </local:SettingsFormView.Styles>
+  <Panel>
+    <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="1" CornerRadius="7" Padding="12,8" Background="{DynamicResource RaisedBrush}">
+      <StackPanel Spacing="0">
+        <Grid ColumnDefinitions="140,*,Auto,Auto" ColumnSpacing="8">
+          <ComboBox Name="EventChoice" MinHeight="30" Classes="agent-select settings-input" AutomationProperties.AutomationId="field:hooks.event"/>
+          <TextBox Name="Matcher" Grid.Column="1" Tag="ext.which_tools_to_match_regex" MinHeight="32" Classes="settings-input" AutomationProperties.AutomationId="field:hooks.match"/>
+          <Border Name="Blocking" Grid.Column="2" CornerRadius="999" Background="{DynamicResource WarnWashBrush}" Padding="6,1" VerticalAlignment="Center">
+            <TextBlock Tag="ext.can_stop_the_agent" Foreground="{DynamicResource WarnInkBrush}" FontSize="{DynamicResource StudioType11}"/>
+          </Border>
+          <Button Name="Remove" Grid.Column="3" Tag="common.delete" Classes="preset-flat preset-muted" Height="24" Padding="11,0"
+                  FontSize="{DynamicResource StudioType12}" VerticalAlignment="Center" AutomationProperties.AutomationId="action:hooks.remove"/>
+        </Grid>
+        <TextBox Name="Command" Tag="ext.the_command_to_run" MinHeight="32" Classes="settings-input" FontFamily="{DynamicResource WorkbenchMonoFamily}"
+                 AutomationProperties.AutomationId="field:hooks.command"/>
+        <TextBlock Name="Issues" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap" IsVisible="False"/>
+        <WrapPanel ItemSpacing="8" LineSpacing="4" Margin="0,6,0,0">
+          <Button Name="Try" Tag="ext.dry_run_once" Classes="preset-act" AutomationProperties.AutomationId="action:hooks.run-once"/>
+          <TextBlock Tag="ext.really_runs_this_command" Foreground="{DynamicResource FaintBrush}" FontSize="{DynamicResource StudioType12}"
+                     VerticalAlignment="Center"/>
+        </WrapPanel>
+        <StackPanel Name="Trial" Spacing="6" Margin="0,8,0,0" IsVisible="False">
+          <WrapPanel ItemSpacing="8" LineSpacing="4">
+            <TextBlock Name="Verdict" FontWeight="SemiBold"/>
+            <TextBlock Name="Timing" FontSize="{DynamicResource StudioType12}" FontFamily="{DynamicResource WorkbenchMonoFamily}"
+                       Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+          </WrapPanel>
+          <Border Name="TrialOutput" CornerRadius="6" Padding="8,6" Background="{DynamicResource OverlayBrush}">
+            <TextBlock Name="Output" FontFamily="{DynamicResource WorkbenchMonoFamily}" FontSize="{DynamicResource StudioType12}" TextWrapping="Wrap"/>
+          </Border>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+    <Border Width="2" HorizontalAlignment="Left" Margin="0,2" CornerRadius="5,0,0,5" IsHitTestVisible="False"
+            Background="{DynamicResource WarnBrush}" IsVisible="{Binding #Blocking.IsVisible}"/>
+  </Panel>
+</local:SettingsFormView>

@@ -30,6 +30,27 @@ public sealed partial class MainWindow
     /// <summary>Only the newest remote read may publish.</summary>
     private long _remoteRead;
 
+    /// <summary>Checks whether the rail omits a configured machine on this device.</summary>
+    /// <param name="name">The address-book name.</param><returns>Whether the rail hides this machine.</returns>
+    private bool IsRemoteHidden(string name) => _workspacePreferences.HiddenRemoteHosts.Contains(name, StringComparer.Ordinal);
+
+    /// <summary>Changes the device-local rail visibility and publishes a fresh remote snapshot.</summary>
+    /// <param name="name">The address-book name.</param><returns>The rail update.</returns>
+    private Task ToggleRemoteRailAsync(string name)
+    {
+        var hidden = _workspacePreferences.HiddenRemoteHosts;
+        _workspacePreferences = _workspacePreferences with
+        {
+            HiddenRemoteHosts = IsRemoteHidden(name) ? hidden.Where(host => host != name).ToArray() : hidden.Append(name).ToArray(),
+        };
+        if (_connectOnOpen)
+        {
+            _workspacePreferences.Save();
+        }
+
+        return LoadRemoteSidebarAsync(new TreeWindow { Query = RailSearch.Text?.Trim() ?? string.Empty, HideLegacy = HideLegacySessions }, _treeRead);
+    }
+
     /// <summary>Projects current turn state without treating an open pane as a running turn.</summary>
     /// <param name="state">The actual conversation reducer state.</param>
     private void ShowSidebarState(SessionState state)
@@ -58,12 +79,12 @@ public sealed partial class MainWindow
             var trees = new Dictionary<string, TreeWorkspace[]>(_remoteTrees, StringComparer.Ordinal);
             foreach (var entry in book?.OfType<JsonObject>() ?? Enumerable.Empty<JsonObject>())
             {
-                if ((bool?)entry["disabled"] == true)
+                var name = (string?)entry["name"] ?? string.Empty;
+                if ((bool?)entry["disabled"] == true || IsRemoteHidden(name))
                 {
                     continue;
                 }
 
-                var name = (string?)entry["name"] ?? string.Empty;
                 var status = (string?)entry["status"] ?? "idle";
                 var error = (string?)entry["error"] ?? string.Empty;
                 if (status is "connected" or "degraded")
@@ -137,6 +158,7 @@ public sealed partial class MainWindow
 
                 _sidebarSnapshot = snapshot;
                 Projects.ShowRemotes(hosts, query.Query, _sidebarHost);
+                ObserveUnreadSpan();
             }
 
             ShowSidebarState(engine.State);

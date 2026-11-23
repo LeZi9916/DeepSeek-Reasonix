@@ -91,18 +91,20 @@ public sealed partial class ComposerPopup : UserControl
     public bool IsOpen => Surface.IsOpen;
 
     /// <summary>Opens the panel above its trigger and puts keyboard focus on the first choice.</summary>
-    public void Show()
+    /// <param name="placementTarget">An alternate anchor when the pane uses a two-row toolbar.</param>
+    /// <param name="paneWidth">The width of the compact pane's content area.</param>
+    public void Show(Control? placementTarget = null, double? paneWidth = null)
     {
         if (Anchor is null || Panel is null)
         {
             return;
         }
 
-        Surface.PlacementTarget = Anchor;
+        Surface.PlacementTarget = placementTarget ?? Anchor;
         Surface.VerticalOffset = -13;
         var viewport = TopLevel.GetTopLevel(this)?.ClientSize ?? new Size(900, 700);
         Frame.Padding = MenuPadding;
-        Frame.Width = Math.Min(PreferredWidth, Math.Max(220, viewport.Width - 24));
+        Frame.Width = Math.Min(PreferredWidth, paneWidth ?? Math.Max(220, viewport.Width - 24));
         Panel.Width = Math.Max(0, Frame.Width - MenuPadding.Left - MenuPadding.Right - 2);
         Scroll.MaxHeight = Math.Clamp(viewport.Height - 180, 200, 560);
         Frame.BoxShadow = BoxShadows.Parse(ActualThemeVariant == ThemeVariant.Dark

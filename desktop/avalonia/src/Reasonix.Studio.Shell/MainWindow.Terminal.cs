@@ -121,9 +121,10 @@ public sealed partial class MainWindow
     /// <param name="api">The owning session.</param>
     private async void AttachTerminal(string id, StudioPageClient api)
     {
-        WorkbenchStart.IsVisible = false;
+        SetWorkbenchLauncher(false);
         DetachTerminal();
         HideBrowser();
+        ExplorerPane.IsVisible = false;
         _fileRead++;
         _openFile = null;
         ShowAnalysis(false);

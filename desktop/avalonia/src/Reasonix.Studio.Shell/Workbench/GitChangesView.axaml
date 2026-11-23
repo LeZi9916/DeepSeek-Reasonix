@@ -2,21 +2,40 @@
              x:Class="Reasonix.Studio.Shell.Workbench.GitChangesView"
              FontFamily="{DynamicResource WorkbenchUiFamily}" FontWeight="Medium">
   <Grid RowDefinitions="40,Auto,Auto,*">
-    <Border BorderThickness="0,0,0,1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource RaisedBrush}">
-      <ContentControl Name="CommandHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+    <Border BorderThickness="0,0,0,1" BorderBrush="{DynamicResource HairBrush}"
+            Background="{DynamicResource RaisedBrush}" Padding="12,0,8,0">
+      <Grid Name="ToolbarLayout" ColumnDefinitions="14,Auto,*,Auto" ColumnSpacing="6" UseLayoutRounding="False">
+        <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+          <Canvas Width="24" Height="24">
+            <Path Data="{StaticResource Glyph.git-branch}" Stroke="{DynamicResource MutedBrush}"
+                  StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+          </Canvas>
+        </Viewbox>
+        <TextBlock Name="BranchName" Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"
+                   FontFamily="{DynamicResource WorkbenchMonoFamily}" FontSize="{DynamicResource StudioType13}"
+                   FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+        <TextBlock Name="ChangeTotal" Grid.Column="2" Margin="0,0,6,0" VerticalAlignment="Center" Foreground="{DynamicResource FaintBrush}"
+                   FontSize="{DynamicResource StudioType12}" TextTrimming="CharacterEllipsis">
+          <Run Name="FileTotal"/><Run Text=" "/><Run Name="Added" Foreground="{DynamicResource AddBrush}"/><Run Text=" "/><Run Name="Removed" Foreground="{DynamicResource DelBrush}"/>
+        </TextBlock>
+        <ContentControl Name="CommandHost" Grid.Column="3" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/>
+      </Grid>
     </Border>
     <ScrollViewer Name="ReviewViewport" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" IsVisible="{Binding #ReviewHost.IsVisible}">
-    <Border Padding="12,10" Margin="0,8,0,6" CornerRadius="10" BorderThickness="1"
-            BorderBrush="{DynamicResource BorderBrush}" Background="{DynamicResource PageBrush}"
-            IsVisible="{Binding #ReviewHost.IsVisible}">
-      <StackPanel Name="ReviewHost" IsVisible="False" Spacing="8"/>
-    </Border>
+      <Border Padding="12,10" Margin="0,8,0,6" CornerRadius="10" BorderThickness="1"
+              BorderBrush="{DynamicResource BorderBrush}" Background="{DynamicResource PageBrush}"
+              IsVisible="{Binding #ReviewHost.IsVisible}">
+        <StackPanel Name="ReviewHost" IsVisible="False" Spacing="8"/>
+      </Border>
     </ScrollViewer>
     <TextBlock Name="Feedback" Grid.Row="2" IsVisible="False" Margin="12,4" TextWrapping="Wrap"
                FontSize="{DynamicResource StudioType12}" AutomationProperties.LiveSetting="Polite"/>
-    <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+    <ScrollViewer Name="Body" Grid.Row="3" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                   AutomationProperties.AutomationId="class:wb-changes-body">
       <StackPanel Name="ChangeFiles"/>
     </ScrollViewer>
+    <TextBlock Name="NoChanges" Grid.Row="3" IsVisible="False" IsHitTestVisible="False" Margin="0,7,0,0"
+               HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="{DynamicResource FaintBrush}"
+               FontSize="{DynamicResource StudioType11}"/>
   </Grid>
 </UserControl>

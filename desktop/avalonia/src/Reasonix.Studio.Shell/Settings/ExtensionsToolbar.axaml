@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.ExtensionsToolbar" Height="30" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="Button.ext-switch-tab, Button.ext-command, Button.ext-menu-item">
+      <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Padding="{TemplateBinding Padding}" CornerRadius="{TemplateBinding CornerRadius}" BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button.ext-switch-tab">
+      <Setter Property="Height" Value="25"/><Setter Property="Padding" Value="11,0"/><Setter Property="CornerRadius" Value="5"/>
+    </Style>
+    <Style Selector="Button.ext-switch-tab.active">
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.ext-command">
+      <Setter Property="Height" Value="30"/><Setter Property="Padding" Value="12,0"/><Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="Button.ext-command.scope">
+      <Setter Property="Height" Value="24"/><Setter Property="Padding" Value="10,0"/><Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.ext-menu-item">
+      <Setter Property="Padding" Value="10,6"/><Setter Property="CornerRadius" Value="7"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="Button.ext-command:pointerover, Button.ext-menu-item:pointerover, Button.ext-menu-item:focus-visible">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="Button.ext-switch-tab:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+  </UserControl.Styles>
+  <Grid Name="ExtensionBar" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+    <Border Background="{DynamicResource OverlayBrush}" Padding="2" CornerRadius="7" Height="29" VerticalAlignment="Center"
+            AutomationProperties.AutomationId="role:tablist">
+      <StackPanel Orientation="Horizontal" Spacing="2">
+        <Button Name="Installed" Classes="ext-switch-tab" Tag="installed" AutomationProperties.AutomationId="action:extensions.tab"/>
+        <Button Name="Market" Classes="ext-switch-tab" Tag="market" AutomationProperties.AutomationId="action:extensions.tab"/>
+      </StackPanel>
+    </Border>
+    <Button Name="Scope" Grid.Column="2" Classes="ext-command scope" VerticalAlignment="Center" IsVisible="False"
+            AutomationProperties.AutomationId="action:ext.scope">
+      <Grid VerticalAlignment="Center">
+        <TextBlock Name="ScopeCaption" VerticalAlignment="Center"/>
+        <Viewbox Width="10" Height="10" Margin="3,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Bottom" IsHitTestVisible="False">
+          <Viewbox.RenderTransform><TranslateTransform Y="13"/></Viewbox.RenderTransform>
+          <Canvas Width="24" Height="24"><Path Data="m6 9 6 6 6-6" Stroke="{DynamicResource FaintBrush}"
+                   StrokeThickness="2.4" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+        </Viewbox>
+      </Grid>
+    </Button>
+    <Button Name="Add" Grid.Column="3" Classes="ext-command" AutomationProperties.AutomationId="action:extensions.add">
+      <StackPanel Orientation="Horizontal" Spacing="5">
+        <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}"
+                 Stroke="{DynamicResource TextBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox>
+        <TextBlock Name="AddCaption" VerticalAlignment="Center"/>
+      </StackPanel>
+    </Button>
+    <Popup Name="AddMenu" PlacementTarget="{Binding #Add}" Placement="BottomEdgeAlignedRight" VerticalOffset="4"
+           IsLightDismissEnabled="True" ShouldUseOverlayLayer="True" WindowManagerAddShadowHint="False">
+      <Border Width="260" Padding="4" CornerRadius="10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+              Background="{DynamicResource FloatBrush}" BoxShadow="0 8 22 0 #2b000000">
+        <StackPanel Name="AddChoices"/>
+      </Border>
+    </Popup>
+    <Popup Name="ScopeMenu" PlacementTarget="{Binding #Scope}" Placement="BottomEdgeAlignedRight" VerticalOffset="4"
+           IsLightDismissEnabled="True" ShouldUseOverlayLayer="True" WindowManagerAddShadowHint="False">
+      <Border Width="268" Padding="5" CornerRadius="10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+              Background="{DynamicResource FloatBrush}" BoxShadow="0 8 22 0 #2b000000">
+        <StackPanel>
+          <CheckBox Name="ScopedOnly" FontSize="{DynamicResource StudioType12}"/>
+          <ScrollViewer MaxHeight="285" HorizontalScrollBarVisibility="Disabled"><StackPanel Name="ScopeChoices"/></ScrollViewer>
+        </StackPanel>
+      </Border>
+    </Popup>
+  </Grid>
+</UserControl>

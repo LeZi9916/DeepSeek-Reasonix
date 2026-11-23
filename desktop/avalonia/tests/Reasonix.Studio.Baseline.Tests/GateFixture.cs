@@ -10,6 +10,7 @@ using Reasonix.Studio.Kernel.Events;
 using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell;
+using Reasonix.Studio.Shell.Host;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -55,7 +56,10 @@ internal static class GateFixture
                 using var handler = new ComposerReads();
                 using var http = new HttpClient(handler) { BaseAddress = new Uri("http://127.0.0.1:4000") };
                 var engine = new SessionEngine(new KernelClient(http), new SseEventTransport(http.BaseAddress.ToString(), http));
-                var window = new MainWindow(false, engine, InterfaceLanguage.Zh)
+
+                // The captured composer has the optional mode picker switched on.
+                var preferences = new WorkspacePreferences { ShowModePicker = true };
+                var window = new MainWindow(false, engine, InterfaceLanguage.Zh, workspacePreferences: preferences)
                 {
                     RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light,
                 };
@@ -210,6 +214,15 @@ internal static class GateFixture
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var path = request.RequestUri!.AbsolutePath;
+            if (path == "/trajectory")
+            {
+                // The captured conversation has a transcript but no recorded analysis rows.
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""{"events":[]}""", System.Text.Encoding.UTF8, "application/json"),
+                });
+            }
+
             var key = _reads.ContainsKey(request.RequestUri.PathAndQuery) ? request.RequestUri.PathAndQuery : path;
             return Task.FromResult(new HttpResponseMessage(_reads.ContainsKey(key) ? HttpStatusCode.OK : HttpStatusCode.NotFound)
             {

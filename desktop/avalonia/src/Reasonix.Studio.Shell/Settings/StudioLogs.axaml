@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.StudioLogs">
+  <StackPanel Spacing="11">
+    <TextBlock Name="Status" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" LineHeight="19.8" TextWrapping="Wrap"/>
+    <StackPanel Name="Result" Spacing="11" IsVisible="False">
+      <WrapPanel ItemSpacing="5">
+        <SelectableTextBlock Name="Folder" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}" LineHeight="19.8"
+                             Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" VerticalAlignment="Center">
+          <SelectableTextBlock.ContextFlyout>
+            <MenuFlyout>
+              <MenuItem Name="Reveal" AutomationProperties.AutomationId="action:feedback.logs"/>
+            </MenuFlyout>
+          </SelectableTextBlock.ContextFlyout>
+        </SelectableTextBlock>
+        <Button Name="Copy" Width="29" Height="29" Padding="7" MinHeight="0" BorderThickness="0" Background="Transparent"
+                VerticalAlignment="Center" AutomationProperties.AutomationId="action:account.copy-log-folder">
+          <Viewbox Width="14" Height="14">
+            <Canvas Width="24" Height="24">
+              <Path Name="CopyGlyph" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeJoin="Round" StrokeLineCap="Round"
+                    Data="M8 8h13v13H8z M16 8V3H3v13h5"/>
+            </Canvas>
+          </Viewbox>
+        </Button>
+      </WrapPanel>
+      <TextBlock Name="RevealError" IsVisible="False" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap"/>
+      <TextBlock Name="RecordNote" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" LineHeight="19.8" TextWrapping="Wrap"/>
+      <StackPanel Name="Crashes" Spacing="11"/>
+      <TextBlock Name="More" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" LineHeight="19.8"
+                 TextWrapping="Wrap" IsVisible="False"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

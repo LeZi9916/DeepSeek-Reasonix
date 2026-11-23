@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.MarketplaceCard" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.market-meta">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    </Style>
+    <Style Selector="Button.market-card-body, Button.market-get">
+      <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+      <Setter Property="Padding" Value="14"/><Setter Property="CornerRadius" Value="15"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}"
+                Padding="{TemplateBinding Padding}" CornerRadius="{TemplateBinding CornerRadius}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button.market-card-body:pointerover"><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/></Style>
+    <Style Selector="Button.market-get">
+      <Setter Property="Padding" Value="11,0"/><Setter Property="Height" Value="28"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.market-get:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    <Style Selector="Border#PinnedMark.pinned"><Setter Property="Background" Value="{DynamicResource OkWashBrush}"/></Style>
+    <Style Selector="Border#PinnedMark.pinned TextBlock"><Setter Property="Foreground" Value="{DynamicResource OkInkBrush}"/></Style>
+  </UserControl.Styles>
+  <Grid>
+    <Button Name="Open" Classes="market-card-body" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalContentAlignment="Stretch"
+            AutomationProperties.AutomationId="action:market.open">
+      <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+        <Grid ColumnDefinitions="32,*" ColumnSpacing="10" Margin="0,0,60,0">
+          <Border Width="32" Height="32" CornerRadius="10" Background="{DynamicResource OverlayBrush}">
+            <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
+              <Path Name="Icon" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+            </Canvas></Viewbox>
+          </Border>
+          <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+            <Grid ColumnDefinitions="Auto,13" ColumnSpacing="5" HorizontalAlignment="Left">
+              <TextBlock Name="Title" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+              <Viewbox Name="Verified" Grid.Column="1" Width="13" Height="13">
+                <Canvas Width="24" Height="24"><Path Data="m5 12 4 4L19 6" Stroke="{DynamicResource OkInkBrush}"
+                         StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+              </Viewbox>
+            </Grid>
+            <TextBlock Name="Author" Classes="market-meta" TextTrimming="CharacterEllipsis"/>
+          </StackPanel>
+        </Grid>
+        <TextBlock Name="Summary" Grid.Row="1" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}"
+                   TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" LineHeight="19.2"/>
+        <Grid Name="FooterFacts" Grid.Row="2" ColumnDefinitions="Auto,Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="5" RowSpacing="5">
+            <Border Padding="7,2" CornerRadius="10" Background="{DynamicResource OverlayBrush}">
+              <TextBlock Name="Kind" Classes="market-meta" Foreground="{DynamicResource MutedBrush}"/>
+            </Border>
+            <Border Grid.Column="1" Name="PinnedMark" Padding="7,2" CornerRadius="10" Background="{DynamicResource OverlayBrush}">
+              <TextBlock Name="Pin" Classes="market-meta"/>
+            </Border>
+            <TextBlock Name="Installs" Grid.Column="3" Classes="market-meta" VerticalAlignment="Center"/>
+          <TextBlock Name="Approval" Grid.Row="1" Grid.ColumnSpan="4" Classes="market-meta" Margin="7,0,0,0" VerticalAlignment="Center"/>
+        </Grid>
+      </Grid>
+    </Button>
+    <Button Name="Get" Classes="market-get" Margin="0,15,14,0" HorizontalAlignment="Right" VerticalAlignment="Top"
+            AutomationProperties.AutomationId="action:market.card-inspect"/>
+    <TextBlock Name="InstalledBadge" Margin="0,20,14,0" Foreground="{DynamicResource OkInkBrush}" FontSize="{DynamicResource StudioType12}"
+               HorizontalAlignment="Right" VerticalAlignment="Top" IsHitTestVisible="False"/>
+  </Grid>
+</UserControl>

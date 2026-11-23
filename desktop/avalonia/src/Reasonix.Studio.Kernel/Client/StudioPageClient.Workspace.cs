@@ -37,12 +37,18 @@ public sealed partial class StudioPageClient
         return ReadAsync<JsonObject>("/workspace/preview/info?path=" + Uri.EscapeDataString(path), token);
     }
 
-    /// <summary>Reads image bytes from a granted workspace path.</summary>
+    /// <summary>Asks the desktop host to open a granted document in the default system application.</summary>
+    /// <param name="path">Workspace path.</param><param name="token">Cancels the request.</param>
+    /// <returns>The launch acknowledgement.</returns>
+    public Task OpenDocumentAsync(string path, CancellationToken token) =>
+        PostAsync("/workspace/open-document", new JsonObject { ["path"] = path }, token);
+
+    /// <summary>Reads a binary preview from a granted workspace path.</summary>
     /// <param name="path">Workspace path.</param>
     /// <param name="version">Version of the metadata that selected this preview.</param>
     /// <param name="token">Cancels the read.</param>
-    /// <returns>Image bytes, or null if the file changed during the read.</returns>
-    public async Task<byte[]?> PreviewImageAsync(string path, string version, CancellationToken token)
+    /// <returns>Binary content, or null if the file changed during the read.</returns>
+    public async Task<byte[]?> PreviewContentAsync(string path, string version, CancellationToken token)
     {
         using var response = await _http.GetAsync("/workspace/preview/content?path=" + Uri.EscapeDataString(path), HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
         await KernelClient.EnsureAsync(response, token).ConfigureAwait(false);

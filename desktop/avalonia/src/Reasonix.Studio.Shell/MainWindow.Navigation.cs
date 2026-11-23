@@ -76,7 +76,11 @@ public sealed partial class MainWindow
         }
 
         _navigation = new WindowSessionCoordinator(owner) { Limit = _workspacePreferences.OpenSessionLimit };
-        _navigation.Closed += pane => ReleaseWorkbenchFor(pane.Engine);
+        _navigation.Closed += pane =>
+        {
+            ReleaseWorkbenchFor(pane.Engine);
+            ReconcilePaneStreams();
+        };
         _navigation.Folded += title => ShowNote(MessageCatalog.Get("session.the_open_session_limit_n", Language, ("n", _navigation.Limit.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title)));
     }
 
@@ -87,9 +91,15 @@ public sealed partial class MainWindow
         {
             if (_activePane is { } pane && ConversationArea.IsEffectivelyVisible)
             {
+                if (RememberUnreadSince(pane))
+                {
+                    Conversation.RefreshNewAnswers();
+                }
+
                 await MarkPaneViewedAsync(pane).ConfigureAwait(true);
             }
         };
+        InitializePaneStreams();
         EarlierHistory.Click += async (_, _) => await ReadEarlierHistoryAsync().ConfigureAwait(true);
         Projects.NavigateRequested += async target => await OpenTargetAsync(target).ConfigureAwait(true);
         PaneTabs.FocusRequested += async pane => await NavigatePaneAsync(pane).ConfigureAwait(true);
@@ -108,6 +118,8 @@ public sealed partial class MainWindow
 
         EnsureNavigation(_launchOwner ?? engine);
         _activePane = _navigation!.Capture(engine, status);
+        Conversation.DisclosureChoices = _activePane.DisclosureChoices;
+        BindAnswerBoundary(_activePane);
         _navigation.Focused = _activePane;
         engine.HistoryChanged -= OnHistoryChanged;
         engine.HistoryChanged += OnHistoryChanged;
@@ -119,7 +131,17 @@ public sealed partial class MainWindow
     }
 
     /// <summary>Updates tab titles and activity without replacing runtime state.</summary>
-    private void DrawPaneTabs() => PaneTabs.Show(_navigation?.Panes ?? [], _activePane, Language);
+    private void DrawPaneTabs()
+    {
+        if (_workspacePreferences.ShowSessionTabs)
+        {
+            PaneTabs.Show(_navigation?.Panes ?? [], _activePane, Language);
+        }
+        else
+        {
+            PaneTabs.IsVisible = false;
+        }
+    }
 
     /// <summary>Locates a runtime and focuses it only for the current navigation.</summary>
     /// <param name="target">Canonical target.</param><param name="register">Whether to register the project.</param>
@@ -135,6 +157,8 @@ public sealed partial class MainWindow
         if (_activePane is null)
         {
             _activePane = _navigation!.Capture(previous, _composerStatus);
+            Conversation.DisclosureChoices = _activePane.DisclosureChoices;
+            BindAnswerBoundary(_activePane);
         }
 
         _navigation!.Focused = _activePane;
@@ -173,6 +197,7 @@ public sealed partial class MainWindow
             return;
         }
 
+        DisarmStop();
         SaveDraft();
         if (_activePane is { } previous)
         {
@@ -186,6 +211,10 @@ public sealed partial class MainWindow
         _activePane = pane;
         pane.Unread = false;
         _sidebarHost = pane.Host;
+        Conversation.DisclosureChoices = pane.DisclosureChoices;
+        BindAnswerBoundary(pane);
+        RememberUnreadSince(pane);
+        ComposerPlan.Reset();
         AdoptSessionPath(pane.Status.SessionPath);
         AdoptComposer(pane.Status);
         CrumbTitle.Text = pane.Status.Label.Length > 0 ? pane.Status.Label : MessageCatalog.Get("common.new_session", Language);
@@ -220,11 +249,19 @@ public sealed partial class MainWindow
     /// <param name="pane">The retained pane.</param>
     private void EnsurePaneWatching(SessionPaneState pane)
     {
-        if (pane.Watching is not null)
+        if (ReferenceEquals(pane, _activePane))
         {
+            pane.WatchedAt = DateTimeOffset.UtcNow;
+        }
+
+        if (pane.WatchBound)
+        {
+            ReconcilePaneStreams();
             return;
         }
 
+        pane.WatchBound = true;
+        _ = pane.Engine.EnsureTreeWatching();
         pane.Engine.Changed -= OnChanged;
         pane.Engine.Changed += OnChanged;
         pane.Engine.QueueChanged -= OnQueueChanged;
@@ -237,7 +274,7 @@ public sealed partial class MainWindow
         pane.Engine.FrameReceived += OnPaneFrame;
         pane.Engine.HistoryInvalidated -= OnPaneGap;
         pane.Engine.HistoryInvalidated += OnPaneGap;
-        pane.Watching = WatchPaneAsync(pane);
+        ReconcilePaneStreams();
     }
 
     /// <summary>Clears unread state through the owning host after the reader views a pane.</summary>
@@ -264,24 +301,6 @@ public sealed partial class MainWindow
         catch (Exception error)
         {
             if (ReferenceEquals(pane, _activePane))
-            {
-                ShowRefusal(error);
-            }
-        }
-    }
-
-    /// <summary>Keeps a pane subscribed while it is in the background.</summary>
-    /// <param name="pane">Owning pane.</param><returns>The runtime stream lifetime.</returns>
-    private async Task WatchPaneAsync(SessionPaneState pane)
-    {
-        try
-        {
-            await pane.Engine.StartAsync().ConfigureAwait(true);
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception error)
-        {
-            if (!_closing.IsCancellationRequested && ReferenceEquals(_activePane, pane))
             {
                 ShowRefusal(error);
             }
@@ -492,6 +511,9 @@ public sealed partial class MainWindow
                     SaveDraft();
                     AdoptSessionPath(status.SessionPath);
                     AdoptComposer(status);
+                    BindAnswerBoundary(pane);
+                    ObserveUnreadSpan();
+                    Conversation.RefreshNewAnswers();
                 }
                 else
                 {
@@ -504,6 +526,7 @@ public sealed partial class MainWindow
             }
 
             DrawPaneTabs();
+            ReconcilePaneStreams();
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested) { }
         catch (Exception error)

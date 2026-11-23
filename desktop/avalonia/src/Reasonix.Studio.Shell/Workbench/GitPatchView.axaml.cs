@@ -1,99 +1,79 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
-using Avalonia.Layout;
+using Avalonia.Controls.Documents;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using System;
-using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell.Workbench;
 
-/// <summary>Displays unified hunks with independent old and new line numbers and selectable patch text.</summary>
+/// <summary>Displays the unified diff used by file, change, and history views.</summary>
 public sealed partial class GitPatchView : UserControl
 {
+    /// <summary>Opens the working file where this diff offers that action.</summary>
+    private Func<Task>? _open;
+
     /// <summary>Initializes a new instance of the <see cref="GitPatchView"/> class.</summary>
     public GitPatchView() => InitializeComponent();
 
-    /// <summary>Draws the supplied hunk ranges. A binary or header-only response remains readable as text.</summary>
-    /// <param name="patch">Unmodified kernel patch.</param>
-    /// <param name="truncated">Optional truncation notice.</param>
-    /// <param name="open">Opens the working file when its line number is selected.</param>
-    internal void Show(string patch, string? truncated, Func<Task>? open)
+    /// <summary>Gets a value indicating whether the host patch contains displayable hunks.</summary>
+    internal bool HasHunks => Rows.ItemCount > 0;
+
+    /// <summary>Draws the supplied hunks with selectable code spanning all rows.</summary>
+    /// <param name="patch">Unmodified kernel patch.</param><param name="label">Accessible file name.</param>
+    /// <param name="empty">The localized empty state.</param><param name="truncated">The notice when the host shortened the patch.</param>
+    /// <param name="open">Opens the working file on a line number click.</param>
+    /// <param name="showMetadata">Whether commit history displays a non-empty header-only patch.</param>
+    internal void Show(string patch, string? label, string empty, string? truncated, Func<Task>? open, bool showMetadata = false)
     {
-        Lines.Children.Clear();
-        var old = 0;
-        var next = 0;
-        var started = false;
-        foreach (var line in patch.TrimEnd('\n').Split('\n'))
-        {
-            var header = Hunk().Match(line);
-            if (header.Success)
-            {
-                started = true;
-                old = int.Parse(header.Groups[1].Value, CultureInfo.InvariantCulture);
-                next = int.Parse(header.Groups[2].Value, CultureInfo.InvariantCulture);
-                var hunk = new SelectableTextBlock { Text = line, Margin = new Thickness(74, 0, 0, 0), FontSize = 12, LineHeight = 19.2, Height = 19.2 };
-                hunk.Bind(TextBlock.ForegroundProperty, hunk.GetResourceObservable("FaintBrush"));
-                var band = new Border { Child = hunk };
-                band.Bind(Border.BackgroundProperty, band.GetResourceObservable("OverlayBrush"));
-                Lines.Children.Add(band);
-                continue;
-            }
-
-            if (!started || line.Length == 0 || line[0] == '\\')
-            {
-                continue;
-            }
-
-            var added = line[0] == '+';
-            var removed = line[0] == '-';
-            var left = added ? string.Empty : (old++).ToString(CultureInfo.InvariantCulture);
-            var right = removed ? string.Empty : (next++).ToString(CultureInfo.InvariantCulture);
-            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("30,30,14,*"), Height = 19.2 };
-            var numbers = new Button { Content = left.PadLeft(3) + " " + right.PadLeft(3), Padding = default, FontSize = 12, FontWeight = FontWeight.SemiBold, MinWidth = 0, MinHeight = 0, IsEnabled = open is not null };
-            numbers.Bind(Button.ForegroundProperty, numbers.GetResourceObservable("GhostBrush"));
-            numbers.Classes.Add("git-flat");
-            Grid.SetColumnSpan(numbers, 2);
-            if (open is not null)
-            {
-                numbers.Click += async (_, _) => await open().ConfigureAwait(true);
-            }
-
-            row.Children.Add(numbers);
-            var sign = new TextBlock { Text = line[0].ToString(), HorizontalAlignment = HorizontalAlignment.Center };
-            sign.Bind(TextBlock.ForegroundProperty, sign.GetResourceObservable(added ? "AddBrush" : removed ? "DelBrush" : "GhostBrush"));
-            Grid.SetColumn(sign, 2);
-            row.Children.Add(sign);
-            var code = new SelectableTextBlock { Text = line[1..].TrimEnd('\r'), TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.CharacterEllipsis, LineHeight = 19.2 };
-            Grid.SetColumn(code, 3);
-            row.Children.Add(code);
-            var behind = new Border { Child = row };
-            if (added || removed)
-            {
-                var tint = new Border { Opacity = 0.12, IsHitTestVisible = false };
-                tint.Bind(Border.BackgroundProperty, tint.GetResourceObservable(added ? "AddBrush" : "DelBrush"));
-                var layers = new Grid();
-                behind.Child = null;
-                layers.Children.Add(tint);
-                layers.Children.Add(row);
-                behind.Child = layers;
-            }
-
-            Lines.Children.Add(behind);
-        }
-
-        if (!started)
-        {
-            Lines.Children.Add(new SelectableTextBlock { Text = patch, TextWrapping = TextWrapping.Wrap });
-        }
-
+        _open = open;
+        Classes.Set("opens-line", open is not null);
+        AutomationProperties.SetName(this, label ?? string.Empty);
+        var rows = GitPatchLine.Read(patch);
+        Rows.ItemsSource = rows;
+        var metadataOnly = rows.Count == 0 && showMetadata && !string.IsNullOrWhiteSpace(patch);
+        NumberedPatch.IsVisible = rows.Count > 0 || metadataOnly;
+        Empty.IsVisible = !NumberedPatch.IsVisible;
+        Empty.Text = empty;
         Truncated.Text = truncated;
         Truncated.IsVisible = truncated is not null;
+
+        var code = Code.Inlines!;
+        code.Clear();
+        Code.Margin = metadataOnly ? default : new Thickness(74, 0, 0, 0);
+        Code.TextWrapping = metadataOnly ? TextWrapping.Wrap : TextWrapping.NoWrap;
+        if (metadataOnly)
+        {
+            code.Add(new Run(patch));
+            return;
+        }
+
+        foreach (var row in rows)
+        {
+            if (code.Count > 0)
+            {
+                code.Add(new LineBreak());
+            }
+
+            var line = new Run(row.Text);
+            if (row.IsHeading)
+            {
+                line.Bind(TextElement.ForegroundProperty, Code.GetResourceObservable("FaintBrush"));
+            }
+
+            code.Add(line);
+        }
     }
 
-    /// <summary>Matches the old and new start positions of a unified diff hunk.</summary>
-    /// <returns>The hunk header expression.</returns>
-    [GeneratedRegex(@"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@")]
-    private static partial Regex Hunk();
+    /// <summary>Opens the file when the reader activates either line number.</summary>
+    /// <param name="sender">The clicked line number.</param><param name="e">The click.</param>
+    private async void OpenLine(object? sender, RoutedEventArgs e)
+    {
+        if (_open is { } open)
+        {
+            await open().ConfigureAwait(true);
+        }
+    }
 }

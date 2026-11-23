@@ -28,6 +28,49 @@ public sealed partial class MainWindow
     /// <summary>Discovery results are valid only for the endpoint and key that produced them.</summary>
     private ProviderProbe? _probe;
 
+    /// <summary>Opens setup for an existing provider or a new model service.</summary>
+    /// <param name="setup">State returned by the active kernel.</param>
+    internal void ShowSetup(ProviderSetup setup)
+    {
+        _setup = setup;
+        ProjectStep.IsVisible = false;
+        SetupServices.Children.Clear();
+        foreach (var service in s_setupServices)
+        {
+            var radio = new RadioButton { Tag = service.Label, Margin = new Avalonia.Thickness(0, 0, 6, 6) };
+            radio.Classes.Add("segmented");
+            AutomationProperties.SetAutomationId(radio, "action:onboarding.service");
+            radio.IsCheckedChanged += (_, _) =>
+            {
+                if (radio.IsChecked != true)
+                {
+                    return;
+                }
+
+                ServiceKey.Text = string.Empty;
+                ServiceAddress.Text = service.Address;
+                ServiceName.Text = service.Name;
+                ServiceAddress.IsReadOnly = service.Address.Length > 0;
+                ResetProbe();
+            };
+            SetupServices.Children.Add(radio);
+        }
+
+        SetupServices.Children.OfType<RadioButton>().First().IsChecked = true;
+        WelcomeCard.IsVisible = true;
+        SetupForm.IsVisible = false;
+        ServiceKey.Text = string.Empty;
+        ResetProbe();
+        SettingsPanel.IsVisible = false;
+        LayoutRoot.IsVisible = false;
+        SetupPanel.IsVisible = true;
+        ServiceFields.IsVisible = setup.NoProvider;
+        SetupError.IsVisible = !string.IsNullOrEmpty(setup.Error);
+        SetupError.Text = setup.Error;
+        LabelSetup();
+        BeginSetup.Focus();
+    }
+
     /// <summary>Connects the onboarding controls.</summary>
     private void InitializeSetup()
     {
@@ -110,49 +153,6 @@ public sealed partial class MainWindow
         Label(ServiceAddress, "onboarding.service_address");
         Label(ServiceName, MessageKey.Common.Name);
         Label(ServiceModels, MessageKey.Common.DefaultModel);
-    }
-
-    /// <summary>Opens setup for an existing provider or a new model service.</summary>
-    /// <param name="setup">State returned by the active kernel.</param>
-    private void ShowSetup(ProviderSetup setup)
-    {
-        _setup = setup;
-        ProjectStep.IsVisible = false;
-        SetupServices.Children.Clear();
-        foreach (var service in s_setupServices)
-        {
-            var radio = new RadioButton { Tag = service.Label, Margin = new Avalonia.Thickness(0, 0, 6, 6) };
-            radio.Classes.Add("segmented");
-            AutomationProperties.SetAutomationId(radio, "action:onboarding.service");
-            radio.IsCheckedChanged += (_, _) =>
-            {
-                if (radio.IsChecked != true)
-                {
-                    return;
-                }
-
-                ServiceKey.Text = string.Empty;
-                ServiceAddress.Text = service.Address;
-                ServiceName.Text = service.Name;
-                ServiceAddress.IsReadOnly = service.Address.Length > 0;
-                ResetProbe();
-            };
-            SetupServices.Children.Add(radio);
-        }
-
-        SetupServices.Children.OfType<RadioButton>().First().IsChecked = true;
-        WelcomeCard.IsVisible = true;
-        SetupForm.IsVisible = false;
-        ServiceKey.Text = string.Empty;
-        ResetProbe();
-        SettingsPanel.IsVisible = false;
-        LayoutRoot.IsVisible = false;
-        SetupPanel.IsVisible = true;
-        ServiceFields.IsVisible = setup.NoProvider;
-        SetupError.IsVisible = !string.IsNullOrEmpty(setup.Error);
-        SetupError.Text = setup.Error;
-        LabelSetup();
-        BeginSetup.Focus();
     }
 
     /// <summary>Invalidates a model list when its credential or service address changes.</summary>

@@ -1,29 +1,196 @@
 <local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.RemoteBook">
+ <UserControl.Styles>
+  <Style Selector="Button.remote-add">
+   <Setter Property="Height" Value="28"/><Setter Property="MinHeight" Value="0"/>
+   <Setter Property="Padding" Value="12,0"/><Setter Property="CornerRadius" Value="7"/>
+   <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+   <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+   <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+   <Setter Property="Template"><ControlTemplate>
+    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+            CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+      <Viewbox Width="13" Height="13"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}" Stroke="{DynamicResource TextBrush}" StrokeThickness="2" StrokeLineCap="Round"/></Canvas></Viewbox>
+      <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center"/>
+     </StackPanel>
+    </Border>
+   </ControlTemplate></Setter>
+  </Style>
+  <Style Selector="Button.remote-add:pointerover"><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Style>
+  <Style Selector="Button.remote-candidate">
+   <Setter Property="MinHeight" Value="0"/><Setter Property="Height" Value="22"/>
+   <Setter Property="Padding" Value="9,0"/>
+   <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+   <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+   <Setter Property="Template"><ControlTemplate>
+    <Grid>
+     <Rectangle Name="CandidateOutline" RadiusX="11" RadiusY="11" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1" StrokeDashArray="3,2"/>
+     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="4" Margin="{TemplateBinding Padding}">
+      <Viewbox Name="CandidatePlus" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="2" StrokeLineCap="Round"/></Canvas></Viewbox>
+      <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center"/>
+     </StackPanel>
+    </Grid>
+   </ControlTemplate></Setter>
+   <Style Selector="^.alias"><Setter Property="FontFamily" Value="{DynamicResource StudioMonoFamily}"/></Style>
+   <Style Selector="^:not(.alias) /template/ Viewbox#CandidatePlus"><Setter Property="IsVisible" Value="False"/></Style>
+   <Style Selector="^:pointerover"><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+   <Style Selector="^:pointerover /template/ Rectangle#CandidateOutline"><Setter Property="StrokeDashArray" Value="{x:Null}"/></Style>
+  </Style>
+  <Style Selector="TextBlock.editor-label">
+   <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="LineHeight" Value="18"/>
+   <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="VerticalAlignment" Value="Center"/>
+   <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+  <Style Selector="TextBlock.editor-hint">
+   <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="LineHeight" Value="18.6"/>
+   <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="TextWrapping" Value="Wrap"/>
+   <Setter Property="Margin" Value="110,-2,0,2"/>
+  </Style>
+  <Style Selector="RadioButton.remote-kind">
+   <Setter Property="Height" Value="28"/><Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/>
+   <Setter Property="Padding" Value="12,0"/><Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+   <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="Background" Value="Transparent"/>
+   <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Setter Property="BorderThickness" Value="1"/>
+   <Setter Property="Template"><ControlTemplate>
+    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+            CornerRadius="14" Padding="{TemplateBinding Padding}">
+     <ContentPresenter Content="{TemplateBinding Content}" VerticalContentAlignment="Center"/>
+    </Border>
+   </ControlTemplate></Setter>
+   <Style Selector="^:checked">
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource AccentWashBrush}"/>
+   </Style>
+  </Style>
+  <Style Selector="TextBox.directory-input">
+   <Setter Property="Height" Value="26"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+   <Setter Property="Padding" Value="8,0"/><Setter Property="CornerRadius" Value="5"/>
+   <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+  </Style>
+  <Style Selector="Button.directory-action, Button.editor-action">
+   <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+   <Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Height" Value="24"/>
+   <Setter Property="Padding" Value="10,0"/><Setter Property="BorderThickness" Value="1"/>
+   <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Setter Property="Background" Value="Transparent"/>
+   <Setter Property="CornerRadius" Value="12"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+   <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+   <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+   </Style>
+  </Style>
+  <Style Selector="Button.directory-action.ghost"><Setter Property="BorderBrush" Value="Transparent"/></Style>
+  <Style Selector="Button.editor-action">
+   <Setter Property="Height" Value="30"/><Setter Property="Padding" Value="14,0"/>
+   <Setter Property="CornerRadius" Value="5"/><Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+   <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+  </Style>
+  <Style Selector="Button.editor-action.primary">
+   <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+   <Setter Property="Foreground" Value="{DynamicResource AccentInkBrush}"/>
+  </Style>
+ </UserControl.Styles>
+ <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="0,6">
  <StackPanel Spacing="8">
-  <StackPanel Name="List" Spacing="6"><StackPanel Name="Rows" Spacing="4"/><WrapPanel>
-   <Button Name="Add" Tag="remote.add_a_machine" AutomationProperties.AutomationId="action:remote.add"/>
-   <ComboBox Name="Aliases" Margin="6,0,0,0" MaxWidth="300" IsVisible="False"/>
-  </WrapPanel></StackPanel>
-  <StackPanel Name="Editor" IsVisible="False" MaxWidth="700" HorizontalAlignment="Stretch" Spacing="6">
-   <StackPanel Spacing="2"><TextBlock Tag="common.name"/><TextBox Name="MachineName" AutomationProperties.AutomationId="field:remote.name" /></StackPanel>
-   <ComboBox Name="Kind" HorizontalAlignment="Stretch"/>
-   <ComboBox Name="Distro" HorizontalAlignment="Stretch"/>
-   <StackPanel Name="Ssh" Spacing="6">
-    <StackPanel Spacing="2"><TextBlock Tag="remote.address"/><TextBox Name="Host" AutomationProperties.AutomationId="field:remote.host" /></StackPanel>
-    <Grid ColumnDefinitions="*,*" ColumnSpacing="10"><StackPanel Spacing="2"><TextBlock Tag="common.port"/><NumericUpDown Name="Port" Minimum="0" Maximum="65535" FormatString="0"/></StackPanel><StackPanel Grid.Column="1" Spacing="2"><TextBlock Tag="remote.user"/><TextBox Name="User"/></StackPanel></Grid>
-    <CheckBox Name="SshConfig" Tag="remote.take_anything_left_blank_from"/>
-    <StackPanel Spacing="2"><TextBlock Tag="remote.private_key_file"/><TextBox Name="Identity" AutomationProperties.AutomationId="field:remote.identity" /></StackPanel>
-    <StackPanel Spacing="2"><TextBlock Tag="remote.jump_host"/><TextBox Name="Jump" AutomationProperties.AutomationId="field:remote.jump" /></StackPanel>
-    <StackPanel Spacing="2"><TextBlock Tag="remote.env_var_holding_the_key"/><TextBox Name="Passphrase" AutomationProperties.AutomationId="field:remote.passphrase" /></StackPanel>
-    <StackPanel Spacing="2"><TextBlock Tag="remote.env_var_with_the_password"/><TextBox Name="PasswordEnv" AutomationProperties.AutomationId="field:remote.passwordenv" /></StackPanel>
-   </StackPanel>
-   <StackPanel Spacing="2"><TextBlock Tag="remote.projects_on_this_machine"/><TextBox Name="Paths" AutomationProperties.AutomationId="field:remote.paths" AcceptsReturn="True" MinHeight="56"/></StackPanel>
-   <StackPanel Spacing="2"><TextBlock Tag="remote.model_credentials"/><ComboBox Name="Provider" HorizontalAlignment="Stretch"/></StackPanel>
-   <StackPanel Spacing="2"><TextBlock Tag="remote.installing"/><ComboBox Name="Installer" HorizontalAlignment="Stretch"/></StackPanel>
-   <CheckBox Name="Disabled" Tag="common.suspended"/>
-   <WrapPanel><Button Name="Save" Tag="common.save" AutomationProperties.AutomationId="action:remote.save"/><Button Name="Cancel" Tag="common.cancel" Margin="6,0" AutomationProperties.AutomationId="action:remote.cancel"/></WrapPanel>
+  <StackPanel>
+   <TextBlock Tag="settings.remote" Classes="setting-row-name" FontSize="{DynamicResource StudioType13}" LineHeight="18.2"/>
+   <TextBlock Tag="settings.remote_hint" FontSize="{DynamicResource StudioType12}" LineHeight="16.8" Foreground="{DynamicResource FaintBrush}"/>
   </StackPanel>
+  <Button Name="Add" Tag="remote.add_a_machine" Classes="remote-add" Margin="0,14,0,0" HorizontalAlignment="Right" AutomationProperties.AutomationId="action:remote.add"/>
+  <StackPanel Name="Rows" Spacing="8"/>
+  <TextBlock Name="Empty" Tag="remote.no_remote_machines_yet_add" IsVisible="False" TextWrapping="Wrap"
+             Margin="0,4,0,10" FontSize="{DynamicResource StudioType13}" LineHeight="22.1" Foreground="{DynamicResource FaintBrush}"/>
+  <WrapPanel Name="Candidates" IsVisible="False" Margin="0,10,0,2" ItemSpacing="6" LineSpacing="6">
+   <TextBlock Name="CandidateLabel" Tag="remote.also_in_ssh_config" VerticalAlignment="Center"
+              FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}"/>
+  </WrapPanel>
+  <Border Name="Editor" IsVisible="False" Margin="0,12,0,0" Padding="12" CornerRadius="7"
+          Background="{DynamicResource OverlayBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+   <StackPanel Spacing="8">
+    <Grid ColumnDefinitions="100,*" ColumnSpacing="10">
+     <TextBlock Name="NameLabel" Tag="common.name" Classes="editor-label"/>
+     <TextBox Name="MachineName" Grid.Column="1" Classes="settings-input" PlaceholderText="gpu-box"
+              AutomationProperties.LabeledBy="{Binding #NameLabel}" AutomationProperties.AutomationId="field:remote.name"/>
+    </Grid>
+    <Grid Name="KindField" ColumnDefinitions="100,*" ColumnSpacing="10">
+     <TextBlock Tag="remote.connection_type" Classes="editor-label"/>
+     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+      <RadioButton Name="SshChoice" Tag="remote.ssh_host" Classes="remote-kind"/>
+      <RadioButton Name="WslChoice" Tag="remote.wsl_distribution" Classes="remote-kind"/>
+     </StackPanel>
+    </Grid>
+    <Grid Name="DistroField" ColumnDefinitions="100,*" ColumnSpacing="10">
+     <TextBlock Name="DistroLabel" Tag="remote.distribution" Classes="editor-label"/>
+     <ComboBox Name="Distro" Grid.Column="1" Classes="settings-input" AutomationProperties.LabeledBy="{Binding #DistroLabel}"/>
+    </Grid>
+    <StackPanel Name="AddressFields" Spacing="8">
+     <Grid ColumnDefinitions="100,*" ColumnSpacing="10">
+      <TextBlock Name="HostLabel" Tag="remote.address" Classes="editor-label"/>
+      <TextBox Name="Host" Grid.Column="1" Classes="settings-input" PlaceholderText="10.0.0.4"
+               AutomationProperties.LabeledBy="{Binding #HostLabel}" AutomationProperties.AutomationId="field:remote.host"/>
+     </Grid>
+     <Grid ColumnDefinitions="100,*" ColumnSpacing="10">
+      <TextBlock Name="UserLabel" Tag="remote.user" Classes="editor-label"/>
+      <TextBox Name="User" Grid.Column="1" Classes="settings-input" PlaceholderText="ada" AutomationProperties.LabeledBy="{Binding #UserLabel}"/>
+     </Grid>
+     <Grid ColumnDefinitions="100,*" ColumnSpacing="10">
+      <TextBlock Name="PortLabel" Tag="common.port" Classes="editor-label"/>
+      <TextBox Name="Port" Grid.Column="1" Classes="settings-input" PlaceholderText="22" AutomationProperties.LabeledBy="{Binding #PortLabel}"/>
+     </Grid>
+     <Grid ColumnDefinitions="100,*" ColumnSpacing="10">
+      <TextBlock Name="JumpLabel" Tag="remote.jump_host" Classes="editor-label"/>
+      <TextBox Name="Jump" Grid.Column="1" Classes="settings-input" PlaceholderText="bastion.example.com"
+               AutomationProperties.LabeledBy="{Binding #JumpLabel}" AutomationProperties.AutomationId="field:remote.jump"/>
+     </Grid>
+    </StackPanel>
+    <TextBlock Name="WslHint" Tag="remote.the_kernel_runs_in_a" Classes="editor-hint"/>
+    <StackPanel Spacing="10">
+     <TextBlock Tag="remote.projects_on_this_machine" Classes="editor-label"/>
+     <StackPanel Name="Folders" Spacing="10"/>
+     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+      <TextBox Name="DirectoryDraft" Classes="settings-input directory-input" Tag="remote.a_project_directory_over_there"
+               AutomationProperties.AutomationId="field:remote.directory"/>
+      <Button Name="AddDirectory" Grid.Column="1" Tag="common.add" Classes="directory-action"
+              AutomationProperties.AutomationId="action:remote.directory.add"/>
+      <Button Name="Browse" Grid.Column="2" Tag="remote.browse" Classes="directory-action ghost"
+              AutomationProperties.AutomationId="action:remote.directory.browse"/>
+     </Grid>
+    </StackPanel>
+    <StackPanel Name="AuthenticationFields" Spacing="8">
+     <Grid ColumnDefinitions="100,*" ColumnSpacing="10">
+      <TextBlock Name="IdentityLabel" Tag="remote.private_key_file" Classes="editor-label"/>
+      <TextBox Name="Identity" Grid.Column="1" Classes="settings-input" PlaceholderText="~/.ssh/id_ed25519"
+               AutomationProperties.LabeledBy="{Binding #IdentityLabel}" AutomationProperties.AutomationId="field:remote.identity"/>
+     </Grid>
+     <TextBlock Tag="remote.left_blank_it_tries_in" Classes="editor-hint"/>
+     <Grid ColumnDefinitions="100,*" ColumnSpacing="10">
+      <TextBlock Name="PassphraseLabel" Tag="remote.env_var_holding_the_key" Classes="editor-label"/>
+      <TextBox Name="Passphrase" Grid.Column="1" Classes="settings-input" PlaceholderText="GPU_BOX_PASSPHRASE"
+               AutomationProperties.LabeledBy="{Binding #PassphraseLabel}" AutomationProperties.AutomationId="field:remote.passphrase"/>
+     </Grid>
+     <Grid ColumnDefinitions="100,*" ColumnSpacing="10">
+      <TextBlock Name="PasswordLabel" Tag="remote.env_var_with_the_password" Classes="editor-label"/>
+      <TextBox Name="PasswordEnv" Grid.Column="1" Classes="settings-input" PlaceholderText="GPU_BOX_PASSWORD"
+               AutomationProperties.LabeledBy="{Binding #PasswordLabel}" AutomationProperties.AutomationId="field:remote.passwordenv"/>
+     </Grid>
+    </StackPanel>
+    <Grid ColumnDefinitions="100,*" ColumnSpacing="10">
+     <TextBlock Name="InstallerLabel" Tag="remote.installing" Classes="editor-label"/>
+     <ComboBox Name="Installer" Grid.Column="1" Classes="settings-input" AutomationProperties.LabeledBy="{Binding #InstallerLabel}"/>
+    </Grid>
+    <Grid Name="ProviderField" ColumnDefinitions="100,*" ColumnSpacing="10">
+     <TextBlock Name="ProviderLabel" Tag="remote.model_credentials" Classes="editor-label"/>
+     <ComboBox Name="Provider" Grid.Column="1" Classes="settings-input" AutomationProperties.LabeledBy="{Binding #ProviderLabel}"/>
+    </Grid>
+    <CheckBox Name="SshConfig" Tag="remote.take_anything_left_blank_from" FontSize="{DynamicResource StudioType13}"/>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,2,0,0">
+     <Button Name="Cancel" Tag="common.cancel" Classes="editor-action" AutomationProperties.AutomationId="action:remote.cancel"/>
+     <Button Name="Save" Tag="common.save" Classes="editor-action primary" AutomationProperties.AutomationId="action:remote.save"/>
+    </StackPanel>
+   </StackPanel>
+  </Border>
   <TextBlock Name="Result" IsVisible="False" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
  </StackPanel>
+ </Border>
 </local:SettingsFormView>

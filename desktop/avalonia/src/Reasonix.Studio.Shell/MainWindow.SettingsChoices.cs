@@ -22,9 +22,14 @@ public sealed partial class MainWindow
     /// <param name="choices">Selectable values.</param>
     /// <param name="current">Current value.</param>
     /// <param name="save">Writes a new value.</param>
-    private void SegmentChoice(StackPanel card, string key, string action, SectionEntry[] choices, string current, Func<string, Task> save)
+    /// <param name="description">Supporting text.</param>
+    /// <param name="tooltip">Additional context shown on hover.</param>
+    /// <param name="isEnabled">Whether the current preference can be changed.</param>
+    /// <param name="applyKey">The lifecycle label for this setting.</param>
+    /// <param name="choiceNote">Supporting copy aligned under the choice.</param>
+    private void SegmentChoice(StackPanel card, string key, string action, SectionEntry[] choices, string current, Func<string, Task> save, string? description = null, string? tooltip = null, bool isEnabled = true, string? applyKey = null, string? choiceNote = null)
     {
-        var group = new WrapPanel();
+        var group = new WrapPanel { IsEnabled = isEnabled };
         var shell = new Border { Child = group, Padding = new Thickness(2), CornerRadius = new CornerRadius(7) };
         shell.Bind(Border.BackgroundProperty, shell.GetResourceObservable("OverlayBrush"));
         AutomationProperties.SetAutomationId(shell, "role:radiogroup");
@@ -33,7 +38,7 @@ public sealed partial class MainWindow
         var options = new List<(string Id, RadioButton Button)>();
         foreach (var choice in choices)
         {
-            var button = new RadioButton { GroupName = groupName, Content = choice.Title, IsChecked = choice.Id == current };
+            var button = new RadioButton { GroupName = groupName, Content = choice.Title, IsChecked = choice.Id == current, Tag = choice.Id };
             button.Classes.Add("segmented");
             AutomationProperties.SetAutomationId(button, "action:" + action);
             options.Add((choice.Id, button));
@@ -70,7 +75,21 @@ public sealed partial class MainWindow
             };
         }
 
-        AddRow(card, key, shell);
+        Control field = shell;
+        if (!string.IsNullOrEmpty(choiceNote))
+        {
+            shell.HorizontalAlignment = HorizontalAlignment.Right;
+            var note = Detail(choiceNote);
+            note.TextAlignment = Avalonia.Media.TextAlignment.Right;
+            note.MaxWidth = 320;
+            field = new StackPanel { Spacing = 3, HorizontalAlignment = HorizontalAlignment.Right, Children = { shell, note } };
+        }
+
+        var row = AddRow(card, key, field, description, applyKey);
+        if (tooltip is not null)
+        {
+            ToolTip.SetTip(row, tooltip);
+        }
     }
 
     /// <summary>Loads start-mode and update policy.</summary>
@@ -81,30 +100,19 @@ public sealed partial class MainWindow
     {
         var plan = await api.FlagAsync(StudioSetting.DefaultPlan, _closing.Token).ConfigureAwait(true);
         var modes = new[] { new SectionEntry("agent", "Agent"), new SectionEntry("plan", MessageCatalog.Get(MessageKey.Common.Plan, Language)) };
-        Choice(card, "safety.how_new_conversations_start", modes, plan ? "plan" : "agent", id => api.SetFlagAsync(StudioSetting.DefaultPlan, id == "plan", _closing.Token));
+        SegmentChoice(
+            card,
+            "safety.how_new_conversations_start",
+            "default-mode.plan",
+            modes,
+            plan ? "plan" : "agent",
+            id => api.SetFlagAsync(StudioSetting.DefaultPlan, id == "plan", _closing.Token),
+            applyKey: "settings.applies_to_new_sessions");
         var update = await api.UpdateModeAsync(_closing.Token).ConfigureAwait(true);
         if (update is not null)
         {
             var options = new[] { "manual", "notify", "download" }.Select(id => new SectionEntry(id, MessageCatalog.Get("about." + id, Language))).ToArray();
             Choice(card, "about.update_mode", options, update, id => api.SetUpdateModeAsync(id, _closing.Token));
-        }
-    }
-
-    /// <summary>Shows working shortcuts supported by the native window.</summary>
-    /// <param name="card">The keyboard card.</param>
-    private void ShortcutReference(StackPanel card)
-    {
-        var primary = OperatingSystem.IsMacOS() ? "⌘" : "Ctrl+";
-        foreach (var (label, chord) in new[]
-        {
-            (MessageKey.Common.StartANewSession, "Alt+N"),
-            (MessageKey.App.ShowTheWorkspaceRail, primary + "B"),
-            (MessageKey.Chat.SearchSessionsOrProjects, primary + "K"),
-            (MessageKey.Chat.Search, primary + "F"),
-            (MessageKey.Common.Settings, primary + ","),
-        })
-        {
-            AddRow(card, label, new TextBlock { Text = chord, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) });
         }
     }
 
@@ -122,7 +130,7 @@ public sealed partial class MainWindow
 
         var fields = new StackPanel();
         card.Children.Add(fields);
-        var toggles = new Dictionary<string, ToggleSwitch>(StringComparer.Ordinal);
+        var toggles = new Dictionary<string, (ToggleSwitch Switch, Border Row)>(StringComparer.Ordinal);
         var descriptions = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["enabled"] = "settings.a_system_notification_when_a",
@@ -130,6 +138,7 @@ public sealed partial class MainWindow
             ["turnDone"] = "settings.the_answer_is_written_or",
             ["approval"] = "common.the_model_wants_to_touch",
             ["ask"] = "common.the_model_stopped_to_ask",
+            ["feedbackReply"] = "settings.one_alert_when_a_report",
             ["diskLow"] = "settings.warns_when_the_drive_holding",
         };
         foreach (var (field, key, name) in new[]
@@ -145,12 +154,11 @@ public sealed partial class MainWindow
         {
             var toggle = new ToggleSwitch { OffContent = string.Empty, OnContent = string.Empty, MinWidth = 0 };
             AutomationProperties.SetAutomationId(toggle, "action:notify." + name);
-            toggles[field] = toggle;
-            AddRow(fields, key, toggle, descriptions.TryGetValue(field, out var description) ? MessageCatalog.Get(description, Language) : null);
-            if (field is not ("enabled" or "sound") && fields.Children[^1] is Border row)
-            {
-                row.Margin = new Avalonia.Thickness(18, 0, 0, 0);
-            }
+            var row = AddRow(fields, key, toggle, MessageCatalog.Get(descriptions[field], Language));
+            row.Classes.Set("notification-option", field != "enabled");
+            row.Classes.Set("notification-branch", field is not ("enabled" or "sound"));
+            row.Classes.Set("notification-last", field == "diskLow");
+            toggles[field] = (toggle, row);
 
             toggle.Click += async (_, _) =>
             {
@@ -187,92 +195,12 @@ public sealed partial class MainWindow
         void ShowValues()
         {
             var active = (bool?)prefs["enabled"] == true || (bool?)prefs["sound"] == true;
-            foreach (var (field, toggle) in toggles)
+            foreach (var (field, (toggle, row)) in toggles)
             {
                 toggle.IsChecked = (bool?)prefs[field] == true;
                 toggle.IsEnabled = active || field is "enabled" or "sound";
+                row.Classes.Set("notification-inactive", !toggle.IsEnabled);
             }
         }
-    }
-
-    /// <summary>Lists tool availability, including kernel-declared requirements and project overrides.</summary>
-    /// <param name="card">The owning settings card.</param>
-    /// <param name="api">Kernel endpoints.</param>
-    /// <returns>The tool inventory.</returns>
-    private async Task ToolSettingsAsync(StackPanel card, StudioPageClient api)
-    {
-        var inventory = await api.ToolsAsync(_closing.Token).ConfigureAwait(true);
-        var list = new StackPanel();
-        var disclosure = new Expander { Header = MessageCatalog.Get("ext.tools_the_model_can_use", Language), Content = list, HorizontalAlignment = HorizontalAlignment.Stretch, Tag = "ext.tools_the_model_can_use" };
-        card.Children.Add(disclosure);
-        Draw(inventory);
-
-        void Draw(JsonObject snapshot)
-        {
-            list.Children.Clear();
-            foreach (var tool in snapshot["tools"]?.AsArray().OfType<JsonObject>() ?? Enumerable.Empty<JsonObject>())
-            {
-                if ((string?)tool["name"] is not { } name)
-                {
-                    continue;
-                }
-
-                var toggle = new CheckBox { Content = name, IsChecked = (bool?)tool["disabled"] != true };
-                var required = (string?)tool["requiredBy"];
-                toggle.IsEnabled = string.IsNullOrEmpty(required) && (bool?)tool["byProject"] != true;
-                var hint = !string.IsNullOrEmpty(required)
-                    ? MessageCatalog.Get("ext.feature_needs_it_so_it", Language, ("feature", required))
-                    : (bool?)tool["byProject"] == true ? MessageCatalog.Get("ext.this_projects_config_file_turned", Language) : (string?)tool["description"];
-                ToolTip.SetTip(toggle, hint);
-                list.Children.Add(toggle);
-                toggle.Click += async (_, _) =>
-                {
-                    list.IsEnabled = false;
-                    try
-                    {
-                        inventory = await api.SetToolDisabledAsync(name, toggle.IsChecked != true, _closing.Token).ConfigureAwait(true);
-                    }
-                    catch (Exception error)
-                    {
-                        if (ReferenceEquals(TopLevel.GetTopLevel(list), this))
-                        {
-                            SettingsError.Text = DescribeError(error);
-                        }
-                    }
-                    finally
-                    {
-                        Draw(inventory);
-                        list.IsEnabled = true;
-                    }
-                };
-            }
-        }
-    }
-
-    /// <summary>Reads the installed and available application versions.</summary>
-    /// <param name="card">Version and diagnostics card.</param>
-    /// <param name="api">Desktop endpoints.</param>
-    /// <returns>The version read.</returns>
-    private async Task VersionSettingsAsync(StackPanel card, StudioPageClient api)
-    {
-        var reading = await api.VersionsAsync(false, _closing.Token).ConfigureAwait(true);
-        if (reading is null)
-        {
-            return;
-        }
-
-        var current = new TextBlock { Text = (string?)reading["current"] };
-        var latest = Detail((string?)reading["latest"] ?? string.Empty);
-        AddRow(card, "about.current_version", current);
-        AddRow(card, "common.version", latest);
-        AddAction(card, "common.reload", async () =>
-        {
-            var next = await api.VersionsAsync(true, _closing.Token).ConfigureAwait(true);
-            if (next is not null)
-            {
-                current.Text = (string?)next["current"];
-                latest.Text = (string?)next["err"] is { Length: > 0 } error ? error : (string?)next["latest"];
-            }
-        });
     }
 }

@@ -15,7 +15,7 @@
   <Style Selector="ctl|StudioSparkline:live"><Setter Property="Fill" Value="{DynamicResource Compose.curve-live}"/></Style>
   <Style Selector="TextBlock#TariffText"><Setter Property="Foreground" Value="{DynamicResource OkInkBrush}"/></Style>
   <Style Selector="TextBlock#TariffText.peak"><Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/></Style>
-  <Style Selector="Button.compose-tool, Button.compose-changes, Button.compose-context">
+  <Style Selector="Button.compose-tool, Button.compose-changes, Button.compose-context, Button.compose-queue-action">
     <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
     <Setter Property="FontFamily" Value="{DynamicResource ConversationUiFamily}"/><Setter Property="FontWeight" Value="Medium"/>
     <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="Padding" Value="8,0"/>
@@ -43,6 +43,7 @@
   <Style Selector="Button.compose-context TextBlock"><Setter Property="FontFeatures" Value="tnum"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
   <Style Selector="Button.compose-context TextBlock.compose-reading"><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
   <Style Selector="Button.compose-policy TextBlock"><Setter Property="FontSize" Value="{DynamicResource StudioType11}"/><Setter Property="LineHeight" Value="{DynamicResource StudioType11}"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
+  <Style Selector="Button.compose-policy.risk TextBlock"><Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/><Setter Property="FontWeight" Value="Medium"/></Style>
   <Style Selector="Button.compose-context Path.context-arc"><Setter Property="Stroke" Value="{DynamicResource ComposeContextProgressBrush}"/></Style>
   <Style Selector="Button.compose-context.high Path.context-arc"><Setter Property="Stroke" Value="{DynamicResource WarnBrush}"/></Style>
   <Style Selector="Button.compose-context.high TextBlock.compose-reading"><Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/></Style>
@@ -56,10 +57,65 @@
   <Style Selector="Button.compose-stop"><Setter Property="Background" Value="{DynamicResource Compose.stop-wash}"/><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
   <Style Selector="TextBox.compose-input, TextBox.compose-input:focus, TextBox.compose-input:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="CaretBrush" Value="{DynamicResource TextBrush}"/></Style>
   <Style Selector="TextBox.compose-input /template/ Border#PART_BorderElement, TextBox.compose-input:focus /template/ Border#PART_BorderElement, TextBox.compose-input:pointerover /template/ Border#PART_BorderElement"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
+  <Style Selector="Border.compose-queue-row">
+    <Setter Property="Background" Value="{DynamicResource PageBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="{DynamicResource RMd}"/>
+    <Setter Property="Padding" Value="10,6,8,6"/>
+  </Style>
+  <Style Selector="TextBlock.compose-queue-label, TextBlock.compose-queue-preview, TextBlock.compose-queue-reason">
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+  </Style>
+  <Style Selector="TextBlock.compose-queue-label, TextBlock.compose-queue-reason">
+    <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+  </Style>
+  <Style Selector="TextBlock.compose-queue-label.held">
+    <Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/>
+  </Style>
+  <Style Selector="Button.compose-queue-action">
+    <Setter Property="Height" Value="20"/>
+    <Setter Property="Padding" Value="7,0"/>
+    <Setter Property="CornerRadius" Value="10"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="Button.compose-queue-action:pointerover, Button.compose-queue-action:pressed">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
   <Style Selector="Border.compose-review"><Setter Property="Padding" Value="12"/><Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="10"/></Style>
   <Style Selector="StackPanel.compose-area.compact Button.compose-plan TextBlock.compose-tool-label, StackPanel.compose-area.compact Button.compose-plan Viewbox.compose-plan-chevron"><Setter Property="IsVisible" Value="False"/></Style>
   <Style Selector="StackPanel.compose-area.compact Button.compose-plan"><Setter Property="Width" Value="28"/><Setter Property="Padding" Value="0"/></Style>
+  <Style Selector="StackPanel.compose-area.tight Button.compose-policy TextBlock.compose-tool-label, StackPanel.compose-area.tight Button.compose-policy Viewbox.compose-policy-chevron">
+    <Setter Property="IsVisible" Value="False"/>
+  </Style>
+  <Style Selector="StackPanel.compose-area.tight Button.compose-policy">
+    <Setter Property="Width" Value="30"/><Setter Property="Padding" Value="0"/>
+  </Style>
+  <Style Selector="StackPanel.compose-area.narrow-policy Button.compose-icon">
+    <Setter Property="Width" Value="22"/>
+  </Style>
+  <Style Selector="Viewbox.compose-compact-model-chevron"><Setter Property="IsVisible" Value="False"/></Style>
+  <Style Selector="StackPanel.compose-area.narrow-policy Viewbox.compose-compact-model-chevron"><Setter Property="IsVisible" Value="True"/></Style>
+  <Style Selector="StackPanel.compose-area.narrow-policy Button.compose-branch TextBlock.compose-tool-label">
+    <Setter Property="IsVisible" Value="False"/>
+  </Style>
+  <Style Selector="StackPanel.compose-area.narrow-policy Button.compose-branch">
+    <Setter Property="Width" Value="30"/><Setter Property="Padding" Value="0"/>
+  </Style>
+  <Style Selector="StackPanel.compose-area.narrow-policy Button.compose-model">
+    <Setter Property="MaxWidth" Value="105"/>
+  </Style>
   <Style Selector="StackPanel.compose-area.tight Button.compose-tool"><Setter Property="Padding" Value="5,0"/></Style>
   <Style Selector="StackPanel.compose-area.tight Button.compose-icon"><Setter Property="Padding" Value="0"/></Style>
   <Style Selector="StackPanel.compose-area.tiny Button.compose-effort, StackPanel.compose-area.tiny Border#EffortSeparator"><Setter Property="IsVisible" Value="False"/></Style>
+  <Style Selector="Button.workspace-quick-link">
+    <Setter Property="Height" Value="36"/><Setter Property="Padding" Value="10,0"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="CornerRadius" Value="7"/>
+  </Style>
+  <Style Selector="Button.workspace-quick-link:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
 </Styles>

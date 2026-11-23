@@ -1,0 +1,93 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.ExtensionMarketplaceView" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="Button.market-option, Button.market-action">
+      <Setter Property="Height" Value="25"/><Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Padding" Value="12,0"/><Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button.market-option.active">
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Button.market-action">
+      <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="CornerRadius" Value="12"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="Button.market-action:pointerover, Button.market-option:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    </Style>
+    <Style Selector="Button.market-action:disabled, Button.market-option:disabled"><Setter Property="Opacity" Value=".45"/></Style>
+    <Style Selector="CheckBox.market-pin">
+      <Setter Property="Padding" Value="0"/><Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="Transparent">
+          <Grid ColumnDefinitions="13,Auto" ColumnSpacing="9">
+            <Border Name="PinOutline" Height="13" Width="13" VerticalAlignment="Center" CornerRadius="2"
+                    BorderBrush="{DynamicResource FaintBrush}" Background="{DynamicResource RaisedBrush}" BorderThickness="1">
+              <Viewbox Name="PinTick" Width="9" Height="9" IsVisible="False">
+                <Canvas Width="24" Height="24"><Path Data="m5 12 4 4L19 6" Stroke="#FFFFFF"
+                       StrokeThickness="3.6" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+              </Viewbox>
+            </Border>
+            <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" VerticalAlignment="Center"/>
+          </Grid>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="CheckBox.market-pin:checked /template/ Border#PinOutline">
+      <Setter Property="Background" Value="#0075FF"/><Setter Property="BorderBrush" Value="#0075FF"/>
+    </Style>
+    <Style Selector="CheckBox.market-pin:checked /template/ Viewbox#PinTick"><Setter Property="IsVisible" Value="True"/></Style>
+    <Style Selector="Button.market-option.account-tab, Button.market-option.publish-kind">
+      <Setter Property="Height" Value="27"/><Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="Padding" Value="11,0"/>
+    </Style>
+  </UserControl.Styles>
+  <StackPanel>
+    <TextBlock Name="MarketTitle" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+    <TextBlock Name="MarketHint" TextWrapping="Wrap" MaxWidth="555" HorizontalAlignment="Left" Margin="0,6,0,16"
+               FontSize="{DynamicResource StudioType13}" LineHeight="21.45" Foreground="{DynamicResource MutedBrush}"/>
+    <Border Name="SignInBar" Margin="0,0,0,12" Padding="10,8" CornerRadius="7" BorderThickness="1" BorderBrush="{DynamicResource HairBrush}">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <TextBlock Name="AccountHint" FontSize="{DynamicResource StudioType13}" TextWrapping="Wrap"
+                   Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+        <Button Name="SignIn" Grid.Column="1" Classes="market-action" AutomationProperties.AutomationId="action:market.sign-in"/>
+      </Grid>
+    </Border>
+    <Border Name="AccountViews" IsVisible="False" Background="{DynamicResource OverlayBrush}"
+            CornerRadius="7" Padding="2" Margin="0,0,0,12" HorizontalAlignment="Left" AutomationProperties.AutomationId="role:radiogroup">
+      <StackPanel Name="AccountTabs" Orientation="Horizontal" Spacing="2"/>
+    </Border>
+    <ContentControl Name="AccountPane" HorizontalContentAlignment="Stretch" IsVisible="False"/>
+    <ContentControl Name="DetailHost" HorizontalContentAlignment="Stretch" IsVisible="False"/>
+    <StackPanel Name="Browse">
+      <Grid Name="Filters" ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" Margin="0,0,0,10">
+        <TextBox Name="Search" Classes="settings-input" Height="30" AutomationProperties.AutomationId="action:market.search"/>
+        <Border Name="Kinds" Grid.Column="1" Padding="2" CornerRadius="7" Background="{DynamicResource OverlayBrush}" HorizontalAlignment="Left">
+          <StackPanel Name="KindOptions" Orientation="Horizontal"/>
+        </Border>
+        <Border Name="Order" Grid.Column="2" Padding="2" CornerRadius="7" Background="{DynamicResource OverlayBrush}" HorizontalAlignment="Left">
+          <StackPanel Name="SortOptions" Orientation="Horizontal"/>
+        </Border>
+        <CheckBox Name="Pinned" Grid.Column="3" Classes="market-pin" FontSize="{DynamicResource StudioType13}" IsChecked="True" MinHeight="0"
+                  AutomationProperties.AutomationId="action:market.pinned" VerticalAlignment="Center"/>
+      </Grid>
+      <StackPanel Name="Notice" Spacing="5" IsVisible="False" Margin="0,0,0,10">
+        <TextBlock Name="Feedback" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}"
+                   TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+        <Button Name="Retry" Classes="market-action" IsVisible="False" HorizontalAlignment="Left" AutomationProperties.AutomationId="action:market.retry"/>
+      </StackPanel>
+      <WrapPanel Name="Cards" ItemSpacing="12" LineSpacing="12"/>
+      <Button Name="More" Classes="market-action" IsVisible="False" HorizontalAlignment="Left" Margin="0,12,0,0" AutomationProperties.AutomationId="action:market.more"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

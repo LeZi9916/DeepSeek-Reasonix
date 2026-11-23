@@ -9,6 +9,7 @@ using Reasonix.Studio.Kernel.Events;
 using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell;
+using Reasonix.Studio.Shell.Host;
 using System;
 using System.Linq;
 using System.Net;
@@ -178,11 +179,18 @@ public sealed partial class NativeDomainTests
             Assert.Equal(1, dismisses);
         });
 
+    /// <summary>Opens the reference composer with the optional mode picker enabled.</summary>
+    /// <param name="run">The mounted composer interactions.</param>
+    /// <returns>The complete scenario.</returns>
+    private static Task WithComposerPicker(Action<MainWindow, ReferenceReads> run) =>
+        WithSettings("conversation", run, new WorkspacePreferences { ShowModePicker = true });
+
     /// <summary>Runs a scenario on the UI thread through the main settings entry point.</summary>
     /// <param name="section">Baseline page name.</param>
     /// <param name="run">The actions in the mounted window.</param>
+    /// <param name="workspacePreferences">The native window's saved device options, when already configured.</param>
     /// <returns>The complete scenario.</returns>
-    private static async Task WithSettings(string section, Action<MainWindow, ReferenceReads> run)
+    private static async Task WithSettings(string section, Action<MainWindow, ReferenceReads> run, WorkspacePreferences? workspacePreferences = null)
     {
         var session = HeadlessUnitTestSession.StartNew(typeof(RasterBuilder));
         await session.Dispatch(
@@ -191,7 +199,7 @@ public sealed partial class NativeDomainTests
             using var reads = new ReferenceReads();
             using var http = new HttpClient(reads) { BaseAddress = new Uri("http://127.0.0.1:4000") };
             var engine = new SessionEngine(new KernelClient(http), new SseEventTransport(http.BaseAddress.ToString(), http));
-            var window = new MainWindow(false, engine, InterfaceLanguage.Zh, _ => Task.FromResult(false)) { Width = 1440, Height = 900, RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light };
+            var window = new MainWindow(false, engine, InterfaceLanguage.Zh, _ => Task.FromResult(false), workspacePreferences: workspacePreferences) { Width = 1440, Height = 900, RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light };
             window.Show();
             try
             {
@@ -209,7 +217,9 @@ public sealed partial class NativeDomainTests
     /// <summary>Renders the settings state reached through the ordinary controls.</summary>
     /// <param name="window">The active window.</param>
     /// <param name="scene">The editor state.</param>
-    private static void CaptureFlow(MainWindow window, string scene)
+    /// <param name="resetScroll">Whether to capture the page from its beginning.</param>
+    /// <param name="region">A popup region when it is rendered in a separate layer.</param>
+    private static void CaptureFlow(MainWindow window, string scene, bool resetScroll = true, Control? region = null)
     {
         var output = Environment.GetEnvironmentVariable("STUDIO_PARITY_OUTPUT");
         if (string.IsNullOrEmpty(output))
@@ -217,7 +227,11 @@ public sealed partial class NativeDomainTests
             return;
         }
 
-        window.FindControl<ScrollViewer>("SettingsScroller")!.Offset = default;
+        if (resetScroll)
+        {
+            window.FindControl<ScrollViewer>("SettingsScroller")!.Offset = default;
+        }
+
         Dispatcher.UIThread.RunJobs();
         if (scene == "memory-history")
         {
@@ -226,9 +240,10 @@ public sealed partial class NativeDomainTests
         }
 
         System.IO.Directory.CreateDirectory(output);
-        using var image = new Avalonia.Media.Imaging.RenderTargetBitmap(Avalonia.PixelSize.FromSize(window.ClientSize, 1), new Avalonia.Vector(96, 96));
-        image.Render(window);
-        image.Save(System.IO.Path.Combine(output, scene + ".light.png"), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
+        using var image = new Avalonia.Media.Imaging.RenderTargetBitmap(Avalonia.PixelSize.FromSize(region?.Bounds.Size ?? window.ClientSize, 1), new Avalonia.Vector(96, 96));
+        image.Render(region ?? window);
+        var scheme = window.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark ? "dark" : "light";
+        image.Save(System.IO.Path.Combine(output, scene + "." + scheme + ".png"), Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
     }
 
     /// <summary>Gets one visible action or field from the mounted page.</summary>

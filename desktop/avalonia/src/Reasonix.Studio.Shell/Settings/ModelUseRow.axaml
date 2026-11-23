@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.ModelUseRow" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="ComboBox.settings-input">
+      <Setter Property="Template"><ControlTemplate>
+        <Grid>
+          <Border Name="ChoiceBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"/>
+          <ContentPresenter Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                            Margin="10,0,19,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+          <Viewbox Width="8" Height="8" Margin="0,0,10,0" HorizontalAlignment="Right" VerticalAlignment="Center" IsHitTestVisible="False">
+            <Canvas Width="24" Height="24"><Path Data="m6 9 6 6 6-6" Stroke="{DynamicResource FaintBrush}"
+                     StrokeThickness="2.4" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+          </Viewbox>
+          <Popup Name="PART_Popup" Placement="BottomEdgeAlignedLeft" PlacementTarget="{Binding #ChoiceBorder}" HorizontalOffset="10" VerticalOffset="3"
+                 IsOpen="{TemplateBinding IsDropDownOpen, Mode=TwoWay}" MinWidth="182" MaxWidth="330"
+                 MaxHeight="{TemplateBinding MaxDropDownHeight}" IsLightDismissEnabled="True"
+                 ShouldUseOverlayLayer="True" WindowManagerAddShadowHint="False">
+            <Border Background="{DynamicResource RaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="2,4" BoxShadow="0 5 12 0 #26000000">
+              <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" IsScrollChainingEnabled="False">
+                <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}"/>
+              </ScrollViewer>
+            </Border>
+          </Popup>
+        </Grid>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="ComboBox.settings-input:pointerover /template/ Border#ChoiceBorder">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    </Style>
+    <Style Selector="ComboBox.settings-input:focus-visible /template/ Border#ChoiceBorder">
+      <Setter Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
+    </Style>
+    <Style Selector="ComboBox.settings-input ComboBoxItem">
+      <Setter Property="MinHeight" Value="24"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="8,2">
+          <Grid ColumnDefinitions="*,17">
+            <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                       FontWeight="{TemplateBinding FontWeight}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+            <Viewbox Name="SelectedCheck" Grid.Column="1" Width="12" Height="12" VerticalAlignment="Center" IsVisible="False">
+              <Canvas Width="24" Height="24"><Path Data="m5 12 4 4L19 6" Stroke="{DynamicResource TextBrush}"
+                       StrokeThickness="2.2" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+            </Viewbox>
+          </Grid>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="ComboBox.settings-input ComboBoxItem:pointerover:not(:disabled)">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    </Style>
+    <Style Selector="ComboBox.settings-input ComboBoxItem:selected /template/ Viewbox#SelectedCheck">
+      <Setter Property="IsVisible" Value="True"/>
+    </Style>
+    <Style Selector="ComboBox.settings-input ComboBoxItem:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="Opacity" Value="1"/>
+      <Setter Property="MinHeight" Value="20"/>
+    </Style>
+  </UserControl.Styles>
+  <Border Name="UseFrame" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,0,1" Padding="0,10">
+    <Grid Name="Cells" ColumnDefinitions="*,1.6*,0.7*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="16">
+      <StackPanel Spacing="2" VerticalAlignment="Center">
+        <TextBlock Name="RoleTitle" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
+        <TextBlock Name="RoleHint" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}"
+                   TextWrapping="Wrap"/>
+      </StackPanel>
+      <StackPanel Name="ModelCell" Grid.Column="1" VerticalAlignment="Center" Spacing="5">
+        <ComboBox Name="ModelPicker" Classes="settings-input" Width="140" MaxDropDownHeight="260" HorizontalAlignment="Left"/>
+        <WrapPanel Name="Overrides" ItemSpacing="8" LineSpacing="4" IsVisible="False"/>
+      </StackPanel>
+      <StackPanel Name="EffortCell" Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <TextBlock Name="EffortCaption" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}"
+                   IsVisible="False" VerticalAlignment="Center"/>
+        <ComboBox Name="EffortPicker" Classes="settings-input" Width="140" MaxDropDownHeight="260" HorizontalAlignment="Left"/>
+        <TextBlock Name="EffortUnavailable" IsVisible="False" FontSize="{DynamicResource StudioType13}" VerticalAlignment="Center"/>
+      </StackPanel>
+      <StackPanel Name="ConnectionCell" Grid.Column="3" Spacing="2" VerticalAlignment="Center">
+        <TextBlock Name="Connection" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+        <TextBlock Name="ConnectionHint" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap"/>
+      </StackPanel>
+    </Grid>
+  </Border>
+</UserControl>

@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -100,76 +101,11 @@ public sealed partial class MainWindow
         _ = LoadGitAsync();
     }
 
-    /// <summary>Shows the model the kernel reported.</summary>
-    /// <param name="status">The current session status.</param>
-    private void SetModelLabel(SessionStatus status)
-    {
-        ShowComposeStatus(status);
-    }
-
-    /// <summary>
-    /// Keeps the line being written, so a switch or a relaunch finds it again.
-    /// </summary>
-    private void SaveDraft()
-    {
-        DraftStore.Write(_drafts, _draftKey, Composer.Text ?? string.Empty);
-    }
-
-    /// <summary>
-    /// Redraws the status line from the state the conversation now holds.
-    /// </summary>
-    /// <param name="state">The state the fold produced.</param>
-    private void ShowComposerState(SessionState state)
-    {
-        ShowSidebarState(state);
-        var running = state.Running;
-        ComposeBranch.IsEnabled = !running;
-        if (running)
-        {
-            BranchPopup.Close();
-        }
-
-        // While a turn runs, a line is guidance unless the person chose to queue.
-        // The preference is steer, which is the reading the reference frontend
-        // starts from too.
-        var intent = SendKey.IntentFor(running, QueueDuringRun ? SendKey.Intent.FollowUp : SendKey.Intent.Steer);
-        var shortcutHint = SendKey.Hint(_shortcut, running, Language, intent);
-        ComposerHint.Text = running ? MessageCatalog.Get(state.Doing, Language) : shortcutHint;
-        DrawComposeMeters(state);
-        ComposerHint.IsVisible = running;
-        Composer.PlaceholderText = MessageCatalog.Get(
-            running ? MessageKey.Composer.YouCanKeepTypingWhile : MessageKey.Composer.DescribeATaskQuestionOr,
-            Language);
-        var runLabel = QueueDuringRun ? MessageKey.Composer.Queue : MessageKey.Common.Steer;
-        Label(Send, running ? runLabel : MessageKey.Common.Send);
-        SendIntent.Text = MessageCatalog.Get(runLabel, Language);
-        SendIntent.IsVisible = running;
-        Send.Width = running ? double.NaN : 32;
-        Send.Padding = running ? new Thickness(10, 0, 12, 0) : default;
-        ToolTip.SetTip(Send, shortcutHint);
-        Send.IsEnabled = !string.IsNullOrWhiteSpace(Composer.Text);
-        Stop.IsVisible = running;
-        if (!running)
-        {
-            Stop.IsEnabled = true;
-        }
-
-        Label(Stop, Stop.IsEnabled ? MessageKey.Common.Stop : MessageKey.Common.Stopping);
-        if (AnalysisPanel.IsVisible && _analysisWasRunning && !running)
-        {
-            _ = LoadAnalysisAsync();
-        }
-
-        _analysisWasRunning = running;
-
-        DrawQueue(state);
-    }
-
     /// <summary>
     /// Reads the queue again, because the kernel said it moved.
     /// </summary>
     /// <returns>A task that completes once the strip is redrawn.</returns>
-    private async Task RefreshQueueAsync()
+    internal async Task RefreshQueueAsync()
     {
         if (_engine is null)
         {
@@ -192,6 +128,72 @@ public sealed partial class MainWindow
             _queue = null;
             DrawQueue(Conversation.State);
         }
+    }
+
+    /// <summary>Shows the model the kernel reported.</summary>
+    /// <param name="status">The current session status.</param>
+    private void SetModelLabel(SessionStatus status)
+    {
+        ShowComposeStatus(status);
+    }
+
+    /// <summary>
+    /// Keeps the line being written, so a switch or a relaunch finds it again.
+    /// </summary>
+    private void SaveDraft()
+    {
+        DraftStore.Write(_drafts, _draftKey, Composer.Text ?? string.Empty);
+    }
+
+    /// <summary>
+    /// Redraws the status line from the state the conversation now holds.
+    /// </summary>
+    /// <param name="state">The state the fold produced.</param>
+    private void ShowComposerState(SessionState state)
+    {
+        ShowSidebarState(state);
+        ShowPlanStrip(state);
+        var running = state.Running;
+        ComposeBranch.IsEnabled = !running;
+        if (running)
+        {
+            BranchPopup.Close();
+        }
+
+        // While a turn runs, a line is guidance unless the person chose to queue.
+        // The preference is steer, which is the reading the reference frontend
+        // starts from too.
+        var intent = SendKey.IntentFor(running, QueueDuringRun ? SendKey.Intent.FollowUp : SendKey.Intent.Steer);
+        var shortcutHint = SendKey.Hint(_shortcut, running, Language, intent);
+        var runningStatus = MessageCatalog.Get(state.Doing == "common.idle" ? MessageKey.Common.Running : state.Doing, Language);
+        AutomationProperties.SetName(ComposerRunBadge, runningStatus);
+        ToolTip.SetTip(ComposerRunBadge, runningStatus);
+        ComposerRunBadge.IsVisible = running;
+        ComposerRunBadge.Classes.Set("moving", running);
+        DrawComposeMeters(state);
+        Composer.PlaceholderText = _workspacePreferences.ShowComposerPlaceholder
+            ? MessageCatalog.Get(running ? MessageKey.Composer.YouCanKeepTypingWhile : MessageKey.Composer.DescribeATaskQuestionOr, Language)
+            : string.Empty;
+        var runLabel = QueueDuringRun ? MessageKey.Composer.Queue : MessageKey.Common.Steer;
+        Label(Send, running ? runLabel : MessageKey.Common.Send);
+        SendIntent.Text = MessageCatalog.Get(runLabel, Language);
+        SendIntent.IsVisible = running;
+
+        Send.Padding = running ? new Thickness(10, 0, 12, 0) : default;
+        ToolTip.SetTip(Send, shortcutHint);
+        Send.IsEnabled = !string.IsNullOrWhiteSpace(Composer.Text);
+        Stop.IsVisible = running;
+        if (!running)
+        {
+            DisarmStop();
+            Stop.IsEnabled = true;
+        }
+
+        Label(Stop, Stop.IsEnabled ? MessageKey.Common.Stop : MessageKey.Common.Stopping);
+        ArrangeComposeFooter(ComposerArea.Bounds.Width);
+        UpdateChromeTrajectory(running);
+
+        DrawQueue(state);
     }
 
     /// <summary>
@@ -225,39 +227,41 @@ public sealed partial class MainWindow
     /// <returns>The control, with the actions the kernel offers for it.</returns>
     private Control Row(QueueRow row)
     {
-        var text = new StackPanel
-        {
-            Spacing = 1,
-            Orientation = Orientation.Vertical,
-        };
-        text.Children.Add(new TextBlock
+        var label = new TextBlock
         {
             Text = row.Label,
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
-            Opacity = 0.7,
-        });
-        text.Children.Add(new TextBlock
+            Classes = { "compose-queue-label" },
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        var preview = new TextBlock
         {
             Text = row.Preview,
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
+            Classes = { "compose-queue-preview" },
             TextTrimming = TextTrimming.CharacterEllipsis,
-        });
+        };
+        ToolTip.SetTip(preview, row.Preview);
+        var text = new StackPanel
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            Children = { preview },
+        };
 
         if (row.Why is { Length: > 0 } why)
         {
+            label.Classes.Add("held");
             text.Children.Add(new TextBlock
             {
                 Text = why,
-                [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
-                Opacity = 0.55,
+                Classes = { "compose-queue-reason" },
                 TextWrapping = TextWrapping.Wrap,
             });
         }
 
-        var actions = new StackPanel
+        var actions = new WrapPanel
         {
-            Orientation = Orientation.Horizontal,
-            Spacing = 6,
+            ItemSpacing = 6,
+            LineSpacing = 3,
+            HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
         };
 
@@ -283,13 +287,27 @@ public sealed partial class MainWindow
 
         var grid = new Grid
         {
-            ColumnDefinitions = new ColumnDefinitions("*,Auto"),
-            Margin = new Thickness(16, 2, 16, 2),
+            ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"),
+            ColumnSpacing = 8,
         };
+        grid.Children.Add(label);
         grid.Children.Add(text);
-        Grid.SetColumn(actions, 1);
+        Grid.SetColumn(text, 1);
+        if (ComposerArea.Classes.Contains("narrow-policy"))
+        {
+            grid.RowDefinitions = new RowDefinitions("Auto,Auto");
+            grid.RowSpacing = 4;
+            Grid.SetColumnSpan(text, 2);
+            Grid.SetColumnSpan(actions, 3);
+            Grid.SetRow(actions, 1);
+        }
+        else
+        {
+            Grid.SetColumn(actions, 2);
+        }
+
         grid.Children.Add(actions);
-        return grid;
+        return new Border { Classes = { "compose-queue-row" }, Child = grid };
     }
 
     /// <summary>
@@ -303,9 +321,7 @@ public sealed partial class MainWindow
         var button = new Button
         {
             Content = MessageCatalog.Get(key, Language),
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
-            Padding = new Thickness(6, 2, 6, 2),
-            Background = Brushes.Transparent,
+            Classes = { "compose-queue-action" },
         };
         button.Click += async (_, _) => await Ask(run).ConfigureAwait(true);
         return button;

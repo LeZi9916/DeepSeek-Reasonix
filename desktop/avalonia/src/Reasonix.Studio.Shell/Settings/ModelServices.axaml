@@ -1,117 +1,116 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Reasonix.Studio.Shell.Settings.ModelServices">
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.ModelServices" UseLayoutRounding="False">
   <UserControl.Styles>
-    <Style Selector="Button.provider-item">
-      <Setter Property="HorizontalAlignment" Value="Stretch"/>
-      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-      <Setter Property="MinHeight" Value="54"/>
-      <Setter Property="Padding" Value="10,7"/>
-      <Setter Property="Margin" Value="0,0,0,4"/>
-      <Setter Property="Background" Value="Transparent"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="BorderBrush" Value="Transparent"/>
-      <Setter Property="CornerRadius" Value="7"/>
-    </Style>
-    <Style Selector="Button.provider-item:pointerover">
-      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
-    </Style>
-    <Style Selector="Button.provider-item.active">
-      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
-    </Style>
-    <Style Selector="TextBlock.provider-name">
-      <Setter Property="FontSize" Value="12"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-    </Style>
-    <Style Selector="TextBlock.provider-host">
-      <Setter Property="FontSize" Value="10"/>
-      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
-      <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-    </Style>
-    <Style Selector="Border.provider-detail">
-      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="8"/>
-      <Setter Property="Padding" Value="18"/>
-    </Style>
-    <Style Selector="TextBlock.provider-detail-name">
-      <Setter Property="FontSize" Value="14"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-    </Style>
-    <Style Selector="TextBlock.provider-detail-kind">
-      <Setter Property="FontSize" Value="10"/>
-      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
-    </Style>
-    <Style Selector="TextBlock.provider-label">
-      <Setter Property="FontSize" Value="10"/>
-      <Setter Property="FontWeight" Value="Medium"/>
-      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
-      <Setter Property="Margin" Value="0,12,0,4"/>
-    </Style>
-    <Style Selector="TextBlock.provider-value">
-      <Setter Property="FontSize" Value="12"/>
-      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-      <Setter Property="TextWrapping" Value="Wrap"/>
+    <Style Selector="Button.provider-action, Button.provider-kind, Button.provider-glyph">
+      <Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}"
+                CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
     </Style>
     <Style Selector="Button.provider-action">
-      <Setter Property="Height" Value="28"/>
-      <Setter Property="Padding" Value="10,0"/>
-      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="Height" Value="24"/><Setter Property="Padding" Value="10,0"/>
+      <Setter Property="CornerRadius" Value="12"/><Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    </Style>
+    <Style Selector="Button.provider-action:pointerover, Button.provider-glyph:pointerover">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    </Style>
+    <Style Selector="Button.provider-action.danger">
+      <Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ErrBrush}"/>
+    </Style>
+    <Style Selector="Button.provider-action.primary">
+      <Setter Property="Foreground" Value="{DynamicResource PageBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="Button.provider-action:disabled">
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
       <Setter Property="Background" Value="Transparent"/>
       <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="6"/>
-    </Style>
-    <Style Selector="Button.provider-primary">
-      <Setter Property="Height" Value="28"/>
-      <Setter Property="Padding" Value="12,0"/>
-      <Setter Property="FontSize" Value="10"/>
-      <Setter Property="Background" Value="{DynamicResource TextBrush}"/>
-      <Setter Property="Foreground" Value="{DynamicResource SurfaceBrush}"/>
-      <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Cursor" Value="Arrow"/>
     </Style>
     <Style Selector="Button.provider-kind">
-      <Setter Property="Height" Value="24"/>
-      <Setter Property="Padding" Value="8,0"/>
-      <Setter Property="FontSize" Value="10"/>
-      <Setter Property="Background" Value="Transparent"/>
-      <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="Height" Value="26"/><Setter Property="Padding" Value="10,0"/>
+      <Setter Property="CornerRadius" Value="5"/><Setter Property="BorderThickness" Value="0"/>
       <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
     </Style>
     <Style Selector="Button.provider-kind.active">
-      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+
+    </Style>
+    <Style Selector="Button.provider-kind:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+    <Style Selector="Button.provider-glyph">
+      <Setter Property="Width" Value="28"/><Setter Property="Height" Value="28"/><Setter Property="Padding" Value="0"/>
+      <Setter Property="CornerRadius" Value="7"/><Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    </Style>
+    <Style Selector="TextBox.provider-field, TextBox.provider-search">
+      <Setter Property="MinHeight" Value="0"/><Setter Property="Height" Value="32"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/><Setter Property="Padding" Value="10,0"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="7"/>
+      <Setter Property="PlaceholderForeground" Value="{DynamicResource FaintBrush}"/>
     </Style>
     <Style Selector="TextBox.provider-field">
-      <Setter Property="MinHeight" Value="28"/>
-      <Setter Property="Height" Value="28"/>
-      <Setter Property="FontSize" Value="11"/>
-      <Setter Property="Padding" Value="8,0"/>
-      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="FontFamily" Value="{DynamicResource WorkbenchMonoFamily}"/>
+    </Style>
+    <Style Selector="TextBlock.provider-label, TextBlock.provider-caption">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="TextBlock.provider-label">
+      <Setter Property="LineHeight" Value="16.8"/>
+    </Style>
+    <Style Selector="Button#Add">
+      <Setter Property="Height" Value="32"/><Setter Property="Padding" Value="0"/>
+      <Setter Property="Cursor" Value="Hand"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Panel>
+          <Rectangle Name="AddOutline" RadiusX="10" RadiusY="10" Stroke="{TemplateBinding BorderBrush}"
+                     StrokeThickness="1" StrokeDashArray="3,2" Fill="{TemplateBinding Background}"/>
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+        </Panel>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button#Add.active">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    </Style>
+    <Style Selector="Button#Add.active /template/ Rectangle#AddOutline">
+      <Setter Property="StrokeDashArray" Value="{x:Null}"/>
     </Style>
   </UserControl.Styles>
-  <Grid ColumnDefinitions="235,*" ColumnSpacing="14">
-    <StackPanel>
-      <TextBlock Name="RailTitle" Margin="0,0,0,6" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource FaintBrush}"/>
-      <ScrollViewer MaxHeight="540" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-        <StackPanel Name="ProviderList"/>
+  <StackPanel>
+    <TextBlock Name="Errors" Classes="provider-caption" Foreground="{DynamicResource ErrInkBrush}"
+               IsVisible="False" Margin="0,0,0,6" AutomationProperties.LiveSetting="Polite"/>
+    <Grid Name="Split" ColumnDefinitions="224,*" RowDefinitions="Auto,Auto" ColumnSpacing="20">
+    <StackPanel Name="ProviderRail" Spacing="8" VerticalAlignment="Top">
+      <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+      <TextBox Name="Search" Classes="provider-search" IsVisible="False"/>
+      <ScrollViewer Name="ProviderViewport" MaxHeight="520" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Name="ProviderList" Spacing="2"/>
       </ScrollViewer>
-      <Button Name="Add" Classes="provider-action" Margin="0,8,0,0" HorizontalAlignment="Left"/>
+      <Button Name="Add" HorizontalAlignment="Stretch" AutomationProperties.AutomationId="action:provider.add-start">
+        <StackPanel Orientation="Horizontal" Spacing="5">
+          <Viewbox Width="13" Height="13"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}"
+                   Stroke="{DynamicResource TextBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox>
+          <TextBlock Name="AddLabel" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
     </StackPanel>
-    <Border Grid.Column="1" Classes="provider-detail">
-      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Name="Detail"/>
-      </ScrollViewer>
-    </Border>
-  </Grid>
+    <ContentControl Name="ProviderDetail" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalAlignment="Top"/>
+    </Grid>
+  </StackPanel>
 </UserControl>

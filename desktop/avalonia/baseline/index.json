@@ -92,12 +92,6 @@
       "styles": 119
     },
     {
-      "name": "settings-advanced/light",
-      "file": "settings-advanced.light.json",
-      "nodes": 60,
-      "styles": 30
-    },
-    {
       "name": "settings-session-persona/light",
       "file": "settings-session-persona.light.json",
       "nodes": 275,
@@ -198,12 +192,6 @@
       "file": "settings-account.dark.json",
       "nodes": 190,
       "styles": 119
-    },
-    {
-      "name": "settings-advanced/dark",
-      "file": "settings-advanced.dark.json",
-      "nodes": 60,
-      "styles": 30
     },
     {
       "name": "settings-session-persona/dark",

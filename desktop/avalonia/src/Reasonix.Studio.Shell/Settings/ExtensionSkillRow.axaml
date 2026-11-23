@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.ExtensionSkillRow" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="Button.skill-quiet">
+      <Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/><Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Padding" Value="0"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" VerticalContentAlignment="Center" HorizontalContentAlignment="Left"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button.skill-quiet:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+    <Style Selector="TextBlock.skill-label">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles>
+  <Border Padding="12,8" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}">
+    <StackPanel>
+      <Grid ColumnDefinitions="*,Auto,Auto,34" ColumnSpacing="10" MinHeight="30">
+        <StackPanel Spacing="2">
+          <WrapPanel ItemSpacing="6" LineSpacing="2">
+            <TextBlock Name="Title" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
+            <Button Name="Copy" Classes="skill-quiet" Width="18" Height="18" VerticalAlignment="Center"
+                    AutomationProperties.AutomationId="action:skills.copy">
+              <Viewbox Width="14" Height="14">
+                <Canvas Width="24" Height="24"><Path Data="M9 9h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2V9Z M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+              </Viewbox>
+            </Button>
+            <Border Name="Subagent" Padding="5,1" Background="{DynamicResource OverlayBrush}" CornerRadius="6">
+              <TextBlock Name="AgentLabel" Classes="skill-label"/>
+            </Border>
+            <Border Name="ReadOnly" Padding="5,1" Background="{DynamicResource OverlayBrush}" CornerRadius="6">
+              <TextBlock Name="ReadLabel" Classes="skill-label"/>
+            </Border>
+          </WrapPanel>
+          <TextBlock Name="Description" Classes="skill-label" TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+        <Button Name="More" Grid.Column="1" Classes="skill-quiet" Content="···" Padding="3,0" VerticalAlignment="Center"
+                AutomationProperties.AutomationId="action:skills.more"/>
+        <Border Grid.Column="2" Padding="7,2" Background="{DynamicResource OverlayBrush}" CornerRadius="9" VerticalAlignment="Center">
+          <TextBlock Name="Scope" Classes="skill-label"/>
+        </Border>
+        <ToggleSwitch Name="Toggle" Grid.Column="3" OnContent="" OffContent="" Width="34" Height="20" MinWidth="0" VerticalAlignment="Center"
+                      AutomationProperties.AutomationId="action:skill.enabled"/>
+      </Grid>
+      <Button Name="Inspect" Classes="skill-quiet" Height="24" HorizontalAlignment="Left" IsVisible="False"
+              AutomationProperties.AutomationId="action:skills.details"/>
+      <StackPanel Name="Details" IsVisible="False" Spacing="4" Margin="0,2,0,4"/>
+      <StackPanel Name="RemovePanel" IsVisible="False" Margin="0,6,0,0" Spacing="5">
+        <TextBlock Name="RemoveHint" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap"/>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Button Name="Cancel" Classes="extension-action"/>
+          <Button Name="Remove" Classes="extension-action danger" AutomationProperties.AutomationId="action:skills.remove"/>
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</UserControl>

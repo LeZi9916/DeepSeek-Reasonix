@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Pages.Rail;
@@ -177,6 +178,13 @@ public sealed partial class MainWindow
         UpdateAttachmentWarning();
         PlanModeLabel.Text = status.Plan ? "Plan" : "Agent";
         ApprovalModeLabel.Text = MessageCatalog.Get(ApprovalKey(status.ToolApprovalMode), Language);
+        var risk = status.ToolApprovalMode == "yolo";
+        ApprovalMode.Classes.Set("risk", risk);
+        ApprovalShield.IsVisible = !risk;
+        ApprovalWarningIcon.IsVisible = risk;
+        var approvalName = MessageCatalog.Get("safety.execution_permissions", Language) + "：" + ApprovalModeLabel.Text;
+        Avalonia.Automation.AutomationProperties.SetName(ApprovalMode, approvalName);
+        ToolTip.SetTip(ApprovalMode, approvalName);
         if (string.IsNullOrEmpty(status.ModelRef))
         {
             ModelLabel.Text = MessageCatalog.Get(MessageKey.Composer.ChooseModel, Language);
@@ -215,7 +223,14 @@ public sealed partial class MainWindow
             popup.Anchor = PlanMode;
         }
 
-        popup.Show();
+        if (approval && ComposerArea.Classes.Contains("narrow-policy"))
+        {
+            popup.Show(ComposeFooter, ComposeFooter.Bounds.Width - 40);
+        }
+        else
+        {
+            popup.Show();
+        }
     }
 
     /// <summary>Applies a work mode and keeps a refusal inside the open panel.</summary>
@@ -262,17 +277,13 @@ public sealed partial class MainWindow
             return;
         }
 
-        var draft = _draftKey;
         PolicyPanel.SetPending(true);
         try
         {
-            await engine.Pages.SetApprovalModeAsync(mode, _closing.Token).ConfigureAwait(true);
-            var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-            if (status is not null && engine == _engine && draft == _draftKey)
+            var status = await ApplyApprovalAsync(engine, mode).ConfigureAwait(true);
+            if (status is not null)
             {
-                ShowComposeStatus(status);
                 PolicyPanel.Show(status.ToolApprovalMode, Language);
-                PolicyPopup.Close();
             }
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
@@ -288,12 +299,39 @@ public sealed partial class MainWindow
         }
     }
 
+    /// <summary>Changes the approval preference and projects its readback on the same task.</summary>
+    /// <param name="engine">The session receiving the edit.</param>
+    /// <param name="mode">The selected approval mode.</param>
+    /// <returns>The current task state, if still mounted.</returns>
+    private async Task<SessionStatus?> ApplyApprovalAsync(Reasonix.Studio.Kernel.Session.SessionEngine engine, string mode)
+    {
+        var draft = _draftKey;
+        await engine.Pages.SetApprovalModeAsync(mode, _closing.Token).ConfigureAwait(true);
+        var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
+        if (engine != _engine || draft != _draftKey)
+        {
+            return null;
+        }
+
+        status ??= _composerStatus with
+        {
+            ToolApprovalMode = mode,
+        };
+        ShowComposeStatus(status);
+        return status;
+    }
+
     /// <summary>Opens the sandbox settings destination from the permission panel.</summary>
     private async void OnPolicyBoundary()
     {
         PolicyPopup.Close();
-        OpenSettings.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        OpenPreferences();
+        SelectSettingsNav("tools");
         await ShowSectionAsync("tools").ConfigureAwait(true);
+        if (SettingsContent.GetVisualDescendants().OfType<Control>().FirstOrDefault(control => Equals(control.Tag, "settings.sandbox")) is { } sandbox)
+        {
+            FocusSetting(sandbox);
+        }
     }
 
     /// <summary>Refreshes the branch catalog when the chooser opens.</summary>
@@ -447,9 +485,61 @@ public sealed partial class MainWindow
         ComposerArea.Classes.Set("compact", width <= 720);
         ComposerArea.Classes.Set("tight", width <= 590);
         ComposerArea.Classes.Set("tiny", width <= 420);
+        ArrangeComposeFooter(width);
         ModelLabel.MaxWidth = width <= 720 ? Math.Clamp(width * 0.4, 84, 220) - 45 : 200;
         ComposeReviewScroll.MaxHeight = Math.Clamp(Bounds.Height * 0.35, 150, 320);
         Composer.MaxHeight = Math.Max(42, Math.Min(168, Bounds.Height * (ComposeReviewScroll.IsVisible ? 0.18 : 0.3)));
+    }
+
+    /// <summary>Fits the send and stop actions beside wrapping tools in a docked conversation.</summary>
+    /// <param name="width">The conversation's composer width.</param>
+    private void ArrangeComposeFooter(double width)
+    {
+        var narrow = width is > 0 and <= 264;
+        var narrowRun = narrow && Conversation.State.Running;
+        var wasNarrow = ComposerArea.Classes.Contains("narrow-policy");
+        var wasNarrowRun = NarrowRunningModel.IsVisible;
+        if (narrow != wasNarrow || narrowRun != wasNarrowRun)
+        {
+            var approvalHost = narrow && !narrowRun ? (Panel)NarrowComposeControls : ComposeTools;
+            var modelHost = narrowRun ? NarrowRunningModel : narrow ? NarrowComposeControls : ComposeFooter;
+            Move(ApprovalMode, approvalHost);
+            Move(ComposeModel, modelHost);
+            Grid.SetColumn(ComposeModel, narrowRun ? 0 : 1);
+            ComposeModel.HorizontalAlignment = narrowRun ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+            NarrowComposeControls.IsVisible = narrow && !narrowRun;
+            NarrowRunningModel.IsVisible = narrowRun;
+            ComposerArea.Classes.Set("narrow-policy", narrow);
+            ComposeFooter.RowDefinitions[0].Height = narrow ? GridLength.Auto : new GridLength(1, GridUnitType.Star);
+            ComposeFooter.RowDefinitions[1].Height = narrow && !narrowRun ? GridLength.Auto : new GridLength(0);
+            ComposeFooter.RowDefinitions[2].Height = narrowRun ? GridLength.Auto : new GridLength(0);
+            ComposeRows.RowDefinitions[Grid.GetRow(ComposeFooter)].Height = narrow ? GridLength.Auto : new GridLength(46);
+            DrawQueue(Conversation.State);
+        }
+
+        Send.Width = narrowRun
+            ? QueueDuringRun ? 97 : 71
+            : Conversation.State.Running ? double.NaN : 32;
+        var reserved = narrowRun
+            ? ComposeFooter.Margin.Left + ComposeFooter.Margin.Right + Stop.Width + Send.Width + Stop.Margin.Left + Send.Margin.Left + (3 * ComposeFooter.ColumnSpacing)
+            : 54;
+        ComposeTools.MaxWidth = narrow ? Math.Max(22, width - reserved) : double.PositiveInfinity;
+        ComposeModel.MaxWidth = narrow && !narrowRun ? Math.Max(35, width - 90) : double.PositiveInfinity;
+
+        static void Move(Control control, Panel destination)
+        {
+            if (ReferenceEquals(control.Parent, destination))
+            {
+                return;
+            }
+
+            if (control.Parent is Panel previous)
+            {
+                previous.Children.Remove(control);
+            }
+
+            destination.Children.Add(control);
+        }
     }
 
     /// <summary>Shares the viewport budget between proposals and side questions.</summary>

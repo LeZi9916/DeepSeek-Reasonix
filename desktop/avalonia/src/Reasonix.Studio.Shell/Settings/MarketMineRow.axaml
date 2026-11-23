@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.MarketMineRow" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="Border#StateMark"><Setter Property="Background" Value="{DynamicResource GhostBrush}"/></Style>
+    <Style Selector="Border#StateMark.active"><Setter Property="Background" Value="{DynamicResource OkBrush}"/></Style>
+    <Style Selector="Border#StateMark.pending"><Setter Property="Background" Value="{DynamicResource WarnBrush}"/></Style>
+    <Style Selector="Border#StateMark.rejected"><Setter Property="Background" Value="{DynamicResource ErrBrush}"/></Style>
+    <Style Selector="TextBlock#StateText"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+    <Style Selector="TextBlock#StateText.rejected"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
+    <Style Selector="Button.market-action.mine-action">
+      <Setter Property="Height" Value="24"/><Setter Property="Padding" Value="10,0"/>
+    </Style>
+  </UserControl.Styles>
+  <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="2,12">
+    <StackPanel Spacing="4">
+      <WrapPanel ItemSpacing="8" LineSpacing="4">
+        <TextBlock Name="PackageName" FontSize="{DynamicResource StudioType13}" FontWeight="Bold"
+                   Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+        <Border CornerRadius="10" Height="20" Padding="7,0" Background="{DynamicResource OverlayBrush}" VerticalAlignment="Center">
+          <TextBlock Name="Kind" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+        </Border>
+        <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+          <Border Name="StateMark" Width="7" Height="7" CornerRadius="3.5" VerticalAlignment="Center"/>
+          <TextBlock Name="StateText" FontSize="{DynamicResource StudioType12}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        </StackPanel>
+        <TextBlock Name="Installed" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource OkInkBrush}" VerticalAlignment="Center" IsVisible="False"/>
+      </WrapPanel>
+      <TextBlock Name="Summary" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+      <WrapPanel ItemSpacing="6" LineSpacing="3">
+        <TextBlock Name="Identity" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}" FontFamily="{DynamicResource WorkbenchMonoFamily}"/>
+        <TextBlock Name="Metadata" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap" IsVisible="False"/>
+      </WrapPanel>
+      <WrapPanel ItemSpacing="8" LineSpacing="4">
+        <Button Name="NextVersion" Classes="market-action mine-action" AutomationProperties.AutomationId="action:market.prepare-version"/>
+        <TextBlock Name="RemoveFirst" IsVisible="False" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap"/>
+        <Button Name="SendToReview" Classes="market-action mine-action" IsVisible="False" AutomationProperties.AutomationId="action:market.submit"/>
+        <Button Name="Inspect" Classes="market-action mine-action" IsVisible="False" AutomationProperties.AutomationId="action:market.own-inspect"/>
+      </WrapPanel>
+      <TextBlock Name="Failure" IsVisible="False" Foreground="{DynamicResource ErrInkBrush}" FontSize="{DynamicResource StudioType12}" TextWrapping="Wrap"
+                 AutomationProperties.LiveSetting="Polite"/>
+    </StackPanel>
+  </Border>
+</UserControl>

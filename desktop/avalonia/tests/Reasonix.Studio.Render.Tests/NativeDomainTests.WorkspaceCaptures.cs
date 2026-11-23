@@ -45,8 +45,9 @@ public sealed partial class NativeDomainTests
         w.FindControl<TextBox>("RailSearch")!.Text = string.Empty;
         Dispatcher.UIThread.RunJobs();
         w.FindControl<TextBox>("Composer")!.Focus();
-        w.KeyPress(Key.K, RawInputModifiers.Control, PhysicalKey.K, "k");
-        w.KeyRelease(Key.K, RawInputModifiers.Control, PhysicalKey.K, "k");
+        var primary = System.OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control;
+        w.KeyPress(Key.K, primary, PhysicalKey.K, "k");
+        w.KeyRelease(Key.K, primary, PhysicalKey.K, "k");
         Dispatcher.UIThread.RunJobs();
         var search = w.GetVisualDescendants().OfType<WorkspaceSearchPanel>().Single();
         Assert.True(search.IsVisible);

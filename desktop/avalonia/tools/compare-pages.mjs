@@ -47,7 +47,7 @@ const pageNames = {
   "settings-session-persona": "系统人格", "settings-tools": "工具与权限", "settings-ext": "扩展",
   "settings-ext-market": "扩展市场", "settings-display": "会话显示", "settings-controls": "操作与性能",
   "settings-appearance": "外观", "settings-storage": "数据存储", "settings-network": "连接",
-  "settings-account": "账户与关于", "settings-advanced": "高级",
+  "settings-account": "账户与关于",
   workbench: "工作台", analysis: "运行分析", onboarding: "首次引导", conversation: "会话",
 };
 const overview = `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

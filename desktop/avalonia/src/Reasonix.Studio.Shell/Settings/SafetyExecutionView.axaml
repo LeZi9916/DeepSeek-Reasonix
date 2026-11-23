@@ -1,0 +1,85 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.SafetyExecutionView">
+  <StackPanel>
+    <Border Classes="safety-section" Tag="common.which_program_runs_commands">
+      <StackPanel>
+        <TextBlock Tag="common.which_program_runs_commands" Classes="safety-title"/>
+        <TextBlock Tag="safety.which_program_runs_a_command" Classes="safety-hint" Margin="0,2,0,10"/>
+        <TextBlock Name="ShellError" Classes="safety-note" Foreground="{DynamicResource ErrInkBrush}" IsVisible="False"/>
+        <StackPanel Name="Shell" Spacing="8" IsVisible="False">
+          <Border Classes="safety-line" Padding="0,8">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+              <TextBlock Tag="common.in_effect" Classes="safety-hint"/>
+              <TextBlock Name="Effective" Grid.Column="1" HorizontalAlignment="Right" TextWrapping="Wrap"
+                         FontFamily="{DynamicResource WorkbenchMonoFamily}"/>
+            </Grid>
+          </Border>
+          <Grid Name="LauncherRow" ColumnDefinitions="Auto,*" ColumnSpacing="12" IsVisible="False">
+            <TextBlock Tag="app.launch_command" Classes="safety-hint"/>
+            <TextBlock Name="CurrentLauncher" Grid.Column="1" HorizontalAlignment="Right" TextWrapping="Wrap" FontFamily="{DynamicResource WorkbenchMonoFamily}"/>
+          </Grid>
+          <TextBlock Name="LauncherWarning" Tag="app.the_saved_launcher_arguments_no" Classes="safety-note" IsVisible="False"/>
+          <Border Background="{DynamicResource OverlayBrush}" Padding="2" CornerRadius="7" HorizontalAlignment="Left">
+            <WrapPanel Name="Executors" LineSpacing="4"/>
+          </Border>
+          <TextBlock Name="ShellNote" Classes="safety-note" MaxWidth="504" HorizontalAlignment="Left"/>
+          <TextBlock Name="NoBash" Tag="app.there_is_no_bash_on" Classes="safety-note" MaxWidth="504" HorizontalAlignment="Left" IsVisible="False"/>
+          <Button Name="Custom" Tag="app.point_at_an_executable" Classes="preset-flat preset-muted safety-ghost" AutomationProperties.AutomationId="action:shell.custom"/>
+          <Border Name="CustomForm" Tag="app.point_at_an_executable" IsVisible="False" BorderThickness="1" BorderBrush="{DynamicResource HairBrush}"
+                  CornerRadius="7" Padding="10,8">
+            <StackPanel Spacing="8">
+              <TextBlock Tag="app.a_bash_you_built_yourself" Classes="safety-note" MaxWidth="504" HorizontalAlignment="Left"/>
+              <StackPanel Spacing="4">
+                <TextBlock Name="PathTitle" Tag="app.path_to_the_executable" Classes="safety-hint"/>
+                <TextBox Name="Executable" Classes="settings-input" AutomationProperties.AutomationId="field:shell.custom-path"
+                         AutomationProperties.LabeledBy="{Binding #PathTitle}"/>
+              </StackPanel>
+              <StackPanel Name="ArgumentsField" IsVisible="False" Spacing="4">
+                <TextBlock Name="ArgumentsTitle" Tag="app.launcher_arguments_optional_one_per" Classes="safety-hint"/>
+                <TextBox Name="Arguments" Height="88" Background="{DynamicResource OverlayBrush}" BorderThickness="0" AcceptsReturn="True" TextWrapping="Wrap"
+                         FontFamily="{DynamicResource WorkbenchMonoFamily}" AutomationProperties.AutomationId="field:shell.custom-args"
+                         AutomationProperties.LabeledBy="{Binding #ArgumentsTitle}"/>
+                <TextBlock Tag="app.for_example_wsl_exe_needs" Classes="safety-note" MaxWidth="504" HorizontalAlignment="Left"/>
+              </StackPanel>
+              <WrapPanel ItemSpacing="8" HorizontalAlignment="Right">
+                <Button Name="ClearPath" Tag="app.clear_it" Classes="preset-act safety-action" AutomationProperties.AutomationId="action:shell.custom-path"/>
+                <Button Name="SavePath" Tag="app.save_this_path" Classes="preset-major safety-action" AutomationProperties.AutomationId="action:shell.custom-path"/>
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+    <Border Classes="safety-section" Tag="session.several_sessions_writing_one_project">
+      <StackPanel>
+        <WrapPanel ItemSpacing="8" LineSpacing="4">
+          <TextBlock Tag="session.several_sessions_writing_one_project" Classes="safety-title"/>
+          <Border Classes="setting-apply" Margin="0"><TextBlock Tag="settings.applies_to_new_sessions" VerticalAlignment="Center"/></Border>
+        </WrapPanel>
+        <TextBlock Tag="safety.when_two_sessions_edit_one" Classes="safety-hint" Margin="0,2,0,10"/>
+        <TextBlock Name="LeaseError" Classes="safety-note" Foreground="{DynamicResource ErrInkBrush}" IsVisible="False"/>
+        <StackPanel Name="Lease" IsVisible="False">
+          <Border Classes="safety-line" Padding="12,6">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+              <StackPanel Spacing="2" VerticalAlignment="Center">
+                <TextBlock Name="OptimisticLabel" Tag="safety.optimistic_mode_sessions_in_parallel" Classes="safety-title"/>
+                <TextBlock Tag="safety.an_operation_that_declares_no" Classes="safety-hint"/>
+              </StackPanel>
+              <ToggleSwitch Name="Optimistic" Grid.Column="1" AutomationProperties.AutomationId="action:write-lease.optimistic"
+                            AutomationProperties.LabeledBy="{Binding #OptimisticLabel}"/>
+            </Grid>
+          </Border>
+          <Border Classes="safety-line" Padding="12,6">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+              <StackPanel Spacing="2" VerticalAlignment="Center">
+                <TextBlock Tag="safety.longest_wait_for_another_session" Classes="safety-title"/>
+                <TextBlock Tag="safety.while_another_session_holds_a" Classes="safety-hint"/>
+              </StackPanel>
+              <local:SettingsUnitField Name="MaxWait" Grid.Column="1" Width="108" VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</local:SettingsFormView>

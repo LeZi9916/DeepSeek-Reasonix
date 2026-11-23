@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Reasonix.Studio.Shell.Composer"
+             x:Class="Reasonix.Studio.Shell.Composer.PlanStrip" UseLayoutRounding="False"
+             AutomationProperties.AutomationId="class:studio-todo">
+  <UserControl.Styles>
+    <Style Selector="Border.plan-surface">
+      <Setter Property="CornerRadius" Value="10,10,0,0"/><Setter Property="BorderThickness" Value="1,1,1,0"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/><Setter Property="Background" Value="{DynamicResource PageBrush}"/>
+    </Style>
+    <Style Selector="Border.plan-surface.expanded">
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+      <Setter Property="BoxShadow" Value="0 -3 12 0 #12191E19"/>
+    </Style>
+    <Style Selector="Button.plan-summary">
+      <Setter Property="MinHeight" Value="0"/><Setter Property="Height" Value="34"/>
+      <Setter Property="Padding" Value="12,0,8,0"/><Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Background" Value="Transparent"/><Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" CornerRadius="9,9,0,0" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+      <Style Selector="^:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    </Style>
+    <Style Selector="Button.plan-close">
+      <Setter Property="Width" Value="28"/><Setter Property="Height" Value="28"/><Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="7"/><Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+      <Style Selector="^:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    </Style>
+    <Style Selector="TextBlock.plan-title">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="LineHeight" Value="18"/>
+      <Setter Property="FontWeight" Value="Medium"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles>
+  <Border Name="Surface" Classes="plan-surface">
+    <Grid ClipToBounds="True">
+      <Button Name="Summary" Classes="plan-summary" AutomationProperties.AutomationId="action:plan.fold">
+        <Grid ColumnDefinitions="Auto,*,*,Auto" ColumnSpacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <local:PlanRunMark Name="CompactMark" IsVisible="False"/>
+            <TextBlock Name="SummaryTitle" Classes="plan-title"/>
+          </StackPanel>
+          <TextBlock Name="CurrentLabel" Grid.Column="1" FontSize="{DynamicResource StudioType12}" LineHeight="18"
+                     Foreground="{DynamicResource MutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+          <StackPanel Name="Segments" Grid.Column="2" Orientation="Horizontal" Spacing="3" ClipToBounds="True"
+                      HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+          <Viewbox Grid.Column="3" Width="16" Height="16" Margin="6,0" VerticalAlignment="Center">
+            <Canvas Width="24" Height="24">
+              <Path Data="M6 9 12 15 18 9" Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/>
+            </Canvas>
+          </Viewbox>
+        </Grid>
+      </Button>
+      <ProgressBar Name="ProgressValue" Width="1" Height="1" Opacity="0" IsHitTestVisible="False"
+                   HorizontalAlignment="Left" VerticalAlignment="Top" AutomationProperties.AutomationId="action:plan.progress"/>
+      <Border Name="Body" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource HairBrush}" IsVisible="False" ClipToBounds="True">
+        <Grid RowDefinitions="34,*">
+          <Border BorderThickness="0,0,0,1" BorderBrush="{DynamicResource HairBrush}" Padding="12,0,8,0">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <local:PlanRunMark Name="ExpandedMark" IsVisible="False"/>
+                <TextBlock Name="BodyTitle" Classes="plan-title"/>
+              </StackPanel>
+              <Button Name="Close" Grid.Column="1" Classes="plan-close" VerticalAlignment="Center" AutomationProperties.AutomationId="action:plan.collapse">
+                <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
+                  <Path Data="M6 9 12 15 18 9" Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/>
+                </Canvas></Viewbox>
+              </Button>
+            </Grid>
+          </Border>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Name="Steps" Margin="6,4,6,6"/>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</UserControl>

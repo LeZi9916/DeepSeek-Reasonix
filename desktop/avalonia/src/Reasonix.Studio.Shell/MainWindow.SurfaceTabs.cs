@@ -1,8 +1,8 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
-using Avalonia.Layout;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Browser;
+using Reasonix.Studio.Shell.Workbench;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +15,10 @@ public sealed partial class MainWindow
     private readonly List<ManualWebPreview> _browserPages = [];
 
     /// <summary>Appends retained browser tabs and their explicit close commands.</summary>
-    private void AppendSurfaceTabs()
+    /// <returns>The selected browser tab, when the browser owns the workbench.</returns>
+    private WorkbenchHeaderTab? AppendSurfaceTabs()
     {
+        WorkbenchHeaderTab? active = null;
         foreach (var page in _browserPages.ToArray())
         {
             var title = MessageCatalog.Get("workbench.browser", Language);
@@ -25,11 +27,14 @@ public sealed partial class MainWindow
                 ManualBrowserHost.Content = page;
                 OpenManualBrowser();
             });
-            var selected = ManualBrowserHost.IsVisible && ReferenceEquals(page, ManualBrowserHost.Content);
-            var group = new StackPanel { Orientation = Orientation.Horizontal, Tag = target, Classes = { "wb-tab-frame" } };
-            group.Classes.Set("active", selected);
-            var tab = new Button { Content = title, Classes = { "wb-tab" } };
-            tab.Classes.Set("active", selected);
+            var selected = !WorkbenchStart.IsVisible && ManualBrowserHost.IsVisible && ReferenceEquals(page, ManualBrowserHost.Content);
+            var group = new WorkbenchHeaderTab(title, "Browser", selected, Language) { Tag = target };
+            if (selected)
+            {
+                active = group;
+            }
+
+            var tab = group.PickButton;
             AutomationProperties.SetAutomationId(tab, "action:workbench.browser-tab");
             tab.Click += (_, _) => target.Open();
             var menu = new MenuFlyout();
@@ -43,12 +48,9 @@ public sealed partial class MainWindow
             Add("workbench.close_browser_tabs_to_the", "workbench.close-right-browsers", () => CloseBrowsers(_browserPages.SkipWhile(other => !ReferenceEquals(other, page)).Skip(1).ToArray()));
             Add("workbench.close_all_browser_tabs", "workbench.close-all-browsers", () => CloseBrowsers(_browserPages.ToArray()));
             tab.ContextFlyout = menu;
-            var close = new Button { Content = "×", Width = 22, Padding = default, Classes = { "wb-tab-close" } };
+            var close = group.CloseButton;
             AutomationProperties.SetAutomationId(close, "action:workbench.close-browser");
-            AutomationProperties.SetName(close, MessageCatalog.Get("workbench.close_tab", Language));
             close.Click += (_, _) => CloseBrowsers([page]);
-            group.Children.Add(tab);
-            group.Children.Add(close);
             FileTabs.Children.Add(group);
 
             void Add(string key, string action, Action run)
@@ -59,6 +61,8 @@ public sealed partial class MainWindow
                 menu.Items.Add(item);
             }
         }
+
+        return active;
     }
 
     /// <summary>Closes selected browser pages and restores the surviving surface.</summary>
@@ -75,18 +79,13 @@ public sealed partial class MainWindow
 
         if (selected)
         {
-            ManualBrowserHost.Content = _browserPages.LastOrDefault();
-            if (_browserPages.Count > 0)
+            var next = _browserPages.LastOrDefault();
+            ManualBrowserHost.Content = next;
+            next?.Wake();
+            if (_browserPages.Count == 0)
             {
-                OpenManualBrowser();
-            }
-            else if (_openFile is not null)
-            {
-                ShowSource();
-            }
-            else
-            {
-                ShowWorkbenchLauncher();
+                HideBrowser();
+                RefreshWorkbenchLauncher();
             }
         }
 

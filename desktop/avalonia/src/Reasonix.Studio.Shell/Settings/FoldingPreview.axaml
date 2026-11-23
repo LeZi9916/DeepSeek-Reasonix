@@ -1,0 +1,76 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.FoldingPreview">
+  <UserControl.Resources>
+    <SolidColorBrush x:Key="ExampleHotBackground" Color="{DynamicResource Accent}" Opacity="0.07"/>
+  </UserControl.Resources>
+  <UserControl.Styles>
+    <Style Selector=":is(Border).fold-example-part.example-hot">
+      <Setter Property="Background" Value="{StaticResource ExampleHotBackground}"/>
+    </Style>
+    <Style Selector="local|FoldingPreviewFrame.example-hot">
+      <Setter Property="Outline" Value="{DynamicResource Accent}"/>
+    </Style>
+    <Style Selector="TextBlock.folding-example-label">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="LineHeight" Value="17"/>
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    </Style>
+    <Style Selector="RadioButton.preview-choice">
+      <Setter Property="Padding" Value="9,0"/>
+    </Style>
+  </UserControl.Styles>
+  <Border BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" CornerRadius="7" ClipToBounds="True"
+          AutomationProperties.AutomationId="class:fold-prev">
+    <StackPanel>
+      <Border BorderThickness="0,0,0,1" BorderBrush="{DynamicResource HairBrush}" Padding="12,6,8,6">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+          <TextBlock Tag="common.preview" Classes="folding-example-label" VerticalAlignment="Center"/>
+          <Border Grid.Column="1" Padding="2" CornerRadius="7" Background="{DynamicResource OverlayBrush}">
+            <StackPanel Orientation="Horizontal">
+              <RadioButton Name="Live" Classes="segmented preview-choice" Tag="common.running" AutomationProperties.AutomationId="action:transcript.fold-preview.live"/>
+              <RadioButton Name="Done" Classes="segmented preview-choice" Tag="common.done_2" AutomationProperties.AutomationId="action:transcript.fold-preview.done"/>
+            </StackPanel>
+          </Border>
+        </Grid>
+      </Border>
+      <StackPanel Spacing="8" Margin="14,12,14,14">
+        <TextBlock Text="reasonix" FontWeight="Medium" Classes="folding-example-label" Foreground="{DynamicResource MutedBrush}" LineHeight="15"/>
+        <local:FoldingPreviewFrame Name="ThoughtFrame" Classes="fold-example-part" CornerRadius="5">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,2">
+              <TextBlock Name="ThoughtCaret" Width="9" Classes="folding-example-label"/>
+              <TextBlock Name="ThoughtLabel" Classes="folding-example-label"/>
+            </StackPanel>
+            <local:FoldingPreviewLines Name="ThoughtLines" Margin="19,4,4,2" Fill="{DynamicResource TextBrush}" Opacity="0.09" />
+            <TextBlock Name="ThoughtPreview" Tag="chat.check_the_configuration_first_then" Margin="19,0,0,2"
+                       Classes="folding-example-label" TextTrimming="CharacterEllipsis"/>
+          </StackPanel>
+        </local:FoldingPreviewFrame>
+        <local:FoldingPreviewLines Name="AnswerLines" Margin="19,4,4,2" Fill="{DynamicResource TextBrush}" Opacity="0.16"/>
+        <local:FoldingPreviewFrame Name="WorkFrame" Classes="fold-example-part" CornerRadius="5" BorderBrush="{DynamicResource HairBrush}" BorderThickness="1" Padding="4">
+          <StackPanel>
+            <Grid ColumnDefinitions="9,*,Auto" ColumnSpacing="6" Margin="4,2">
+              <TextBlock Name="WorkCaret" Classes="folding-example-label"/>
+              <TextBlock Grid.Column="1" Tag="chat.activity" Classes="folding-example-label"/>
+              <TextBlock Name="WorkStatus" Grid.Column="2" Classes="folding-example-label" Foreground="{DynamicResource GhostBrush}"/>
+            </Grid>
+            <StackPanel Name="Steps" Margin="14,4,0,0" Spacing="4" IsVisible="False">
+              <local:FoldingPreviewStep Name="ReadStep"/>
+              <local:FoldingPreviewStep Name="EditStep"/>
+              <local:FoldingPreviewStep Name="ShellStep"/>
+            </StackPanel>
+          </StackPanel>
+        </local:FoldingPreviewFrame>
+        <local:FoldingPreviewFrame Name="CompactionFrame" Classes="fold-example-part" CornerRadius="5">
+          <StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,2">
+              <TextBlock Name="CompactionCaret" Width="9" Classes="folding-example-label"/>
+              <TextBlock Tag="chat.see_the_digest_it_carries" Classes="folding-example-label"/>
+            </StackPanel>
+            <local:FoldingPreviewLines Name="CompactionLines" Margin="19,4,4,2" Fill="{DynamicResource TextBrush}" Opacity="0.09"/>
+          </StackPanel>
+        </local:FoldingPreviewFrame>
+      </StackPanel>
+    </StackPanel>
+  </Border>
+</local:SettingsFormView>

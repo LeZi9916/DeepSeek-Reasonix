@@ -21,6 +21,9 @@ public sealed partial class MainWindow
         var reading = Settings.TypographyForm.ReadingSize((double?)look["readSize"] ?? 0, language);
         Resources["StudioReadingSize"] = reading;
         Resources["StudioReadingHeight"] = reading * 1.72;
+        Resources["WorkbenchReadingHeight"] = reading * 1.75;
+        Resources["WorkbenchDiffLineHeight"] = 19.2 * scale;
+        Resources["WorkbenchDiffNoticeHeight"] = 16.8 * scale;
         Resources["StudioUserHeight"] = reading * 1.6;
         Resources["ComposeModelLineHeight"] = 19.5 * scale;
         if ((string?)look["fontMono"] is { Length: > 0 } codeFamily)

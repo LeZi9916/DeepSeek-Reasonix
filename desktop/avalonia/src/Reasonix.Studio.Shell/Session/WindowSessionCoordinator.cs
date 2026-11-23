@@ -125,7 +125,7 @@ internal sealed class WindowSessionCoordinator(SessionEngine owner) : IAsyncDisp
                     return await Rebind(blank).ConfigureAwait(true);
                 }
 
-                var idle = _panes.Where(p => p != Focused && !p.Engine.State.Running && !p.Status.Running && !_rebinding.Contains(p)).ToArray();
+                var idle = _panes.Where(p => p != Focused && !p.Engine.State.Running && !p.Status.Running && !_rebinding.Contains(p)).OrderBy(p => p.WatchedAt).ToArray();
                 var atCapacity = Limit > 0 && _panes.Count >= Limit;
                 var reusable = atCapacity && target.Host.Length == 0 && target.SessionPath.Length > 0 ? idle.FirstOrDefault(p => p.Host.Length == 0 && p.Status.WorkspaceRoot == target.WorkspaceRoot) : null;
                 if (reusable is not null)

@@ -1,4 +1,6 @@
 using Avalonia.Controls;
+using Avalonia.VisualTree;
+using System.Linq;
 using System.Net;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -28,6 +30,11 @@ public sealed partial class NativeDomainTests
                     return JsonReply(new JsonObject { ["pinned"] = true, ["installed"] = new JsonObject { ["version"] = "0.1" }, ["package"] = package.DeepClone() });
                 }
 
+                if (path == "/market/packages/" + slug + "/vote")
+                {
+                    return JsonReply(new JsonObject { ["signedIn"] = false, ["value"] = 0 });
+                }
+
                 if (path is "/market/plan" or "/market/install")
                 {
                     var body = JsonNode.Parse(await req.Content!.ReadAsStringAsync())!;
@@ -38,7 +45,7 @@ public sealed partial class NativeDomainTests
                         Assert.Equal("review-token", (string?)body["planId"]);
                         Assert.Equal("1.0.0", (string?)body["version"]);
                         installs++;
-                        return JsonReply(new JsonObject { ["ok"] = true, ["applied"] = true });
+                        return JsonReply(JsonNode.Parse("""{"ok":true,"applied":true,"actions":[{"kind":"plugin","status":"done","name":"review-kit"}]}""")!);
                     }
 
                     plans++;
@@ -58,5 +65,7 @@ public sealed partial class NativeDomainTests
             ClickAt(w, "action:market.install");
             Assert.Equal(2, plans);
             Assert.Equal(1, installs);
+            ClickAt(w, "action:market.view-installed");
+            Assert.Contains(w.GetVisualDescendants().OfType<TextBlock>(), label => label.IsEffectivelyVisible && label.Text == "/review-kit:review");
         });
 }

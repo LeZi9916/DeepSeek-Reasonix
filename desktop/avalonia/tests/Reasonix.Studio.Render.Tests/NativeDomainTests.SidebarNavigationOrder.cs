@@ -155,7 +155,17 @@ public sealed partial class NativeDomainTests
                     return new SessionEngine(new KernelClient(paneHttp), new SidebarIdleTransport(), descriptor => MakeEngine(descriptor), runtime);
                 }
 
-                var window = new MainWindow(false, MakeEngine(), InterfaceLanguage.En, _ => Task.FromResult(false), new NavigationDrafts()) { Width = 1440, Height = 900 };
+                var window = new MainWindow(
+                    false,
+                    MakeEngine(),
+                    InterfaceLanguage.En,
+                    _ => Task.FromResult(false),
+                    new NavigationDrafts(),
+                    new Reasonix.Studio.Shell.Host.WorkspacePreferences { ShowSessionTabs = true })
+                {
+                    Width = 1440,
+                    Height = 900,
+                };
                 window.Show();
                 try
                 {

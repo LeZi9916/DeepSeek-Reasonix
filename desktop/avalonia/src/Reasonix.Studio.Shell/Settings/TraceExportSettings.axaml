@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.TraceExportSettings">
+  <UserControl.Styles>
+    <Style Selector="StackPanel.trace-field">
+      <Setter Property="Spacing" Value="4"/>
+      <Setter Property="Margin" Value="12,6,12,10"/>
+    </Style>
+    <Style Selector="TextBlock.trace-note">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="LineHeight" Value="17"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="Padding" Value="12,6"/>
+    </Style>
+    <Style Selector="TextBox.trace-input">
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="Padding" Value="10,0"/>
+    </Style>
+  </UserControl.Styles>
+  <StackPanel>
+    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" MinHeight="51.6">
+      <StackPanel VerticalAlignment="Center">
+        <TextBlock Name="ExportLabel" Classes="setting-row-name" FontSize="{DynamicResource StudioType13}"/>
+        <TextBlock Name="ExportState" FontSize="{DynamicResource StudioType12}" LineHeight="18" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+      </StackPanel>
+      <ToggleSwitch Name="Enabled" Grid.Column="1" VerticalAlignment="Center" OnContent="" OffContent="" MinWidth="0"
+                    AutomationProperties.AutomationId="action:trace-export.enabled"/>
+    </Grid>
+    <StackPanel Name="Fields">
+      <StackPanel Classes="trace-field">
+        <TextBlock Name="EndpointLabel" Classes="trace-note"/>
+        <TextBox Name="Endpoint" Classes="settings-input trace-input" PlaceholderText="http://localhost:4318"
+                 AutomationProperties.AutomationId="action:trace-export.endpoint"/>
+      </StackPanel>
+      <StackPanel Classes="trace-field">
+        <TextBlock Name="HeaderNameLabel" Classes="trace-note"/>
+        <TextBox Name="HeaderName" Classes="settings-input trace-input" PlaceholderText="Authorization"
+                 AutomationProperties.AutomationId="action:trace-export.header-name"/>
+      </StackPanel>
+      <StackPanel Classes="trace-field">
+        <TextBlock Name="HeaderEnvLabel" Classes="trace-note"/>
+        <TextBox Name="HeaderEnv" Classes="settings-input trace-input" PlaceholderText="OTEL_EXPORTER_AUTH"
+                 AutomationProperties.AutomationId="action:trace-export.header-env"/>
+      </StackPanel>
+      <TextBlock Name="EnvNote" Classes="trace-note"/>
+      <StackPanel Classes="trace-field">
+        <TextBlock Name="ServiceNameLabel" Classes="trace-note"/>
+        <TextBox Name="ServiceName" Classes="settings-input trace-input" PlaceholderText="reasonix"
+                 AutomationProperties.AutomationId="action:trace-export.service-name"/>
+      </StackPanel>
+    </StackPanel>
+    <TextBlock Classes="trace-note">
+      <Run Name="SaveNote"/><Run Name="ConfigPath" FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource TextBrush}"/>
+    </TextBlock>
+    <TextBlock Name="ReadOnlyNote" Classes="trace-note" IsVisible="False"/>
+    <TextBlock Name="Error" Classes="trace-note" Foreground="{DynamicResource ErrInkBrush}"
+               AutomationProperties.LiveSetting="Polite" IsVisible="False"/>
+  </StackPanel>
+</UserControl>

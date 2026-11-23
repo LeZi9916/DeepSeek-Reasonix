@@ -3,7 +3,6 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.VisualTree;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Host;
@@ -178,7 +177,6 @@ public sealed partial class MainWindow
     {
         SettingsIndex.IsVisible = true;
         SettingsLinks.Children.Clear();
-        SettingsLinks.Margin = new Thickness(0, 0, 0, -6);
         var label = DataText(DataLabel("settings.on_this_page"), 12, 17);
         label.Margin = new Thickness(0, 0, 8, 6);
         label.VerticalAlignment = VerticalAlignment.Center;
@@ -194,8 +192,7 @@ public sealed partial class MainWindow
             {
                 if (target is not null)
                 {
-                    target.BringIntoView();
-                    target.GetVisualDescendants().OfType<Control>().FirstOrDefault(c => c.Focusable && c.IsEnabled)?.Focus();
+                    FocusSetting(target);
                 }
                 else if (key == "data.cloud_backup")
                 {

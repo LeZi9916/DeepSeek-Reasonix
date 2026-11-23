@@ -30,7 +30,7 @@ public sealed partial class NativeDomainTests
     [InlineData(1440, true)]
     [InlineData(760, false)]
     [InlineData(760, true)]
-    public Task ComposerKeepsReferenceFocusAndTools(int width, bool dark) => WithSettings("conversation", (w, reads) =>
+    public Task ComposerKeepsReferenceFocusAndTools(int width, bool dark) => WithComposerPicker((w, reads) =>
     {
         w.Width = width;
         w.Height = width == 760 ? 480 : 900;
@@ -63,7 +63,7 @@ public sealed partial class NativeDomainTests
     /// <summary>Mode changes use kernel readback while a refusal preserves the draft and previous mode.</summary>
     /// <returns>The mode interaction.</returns>
     [Fact]
-    public Task ComposerModesReadBackWithoutReplacingDraft() => WithSettings("conversation", (w, reads) =>
+    public Task ComposerModesReadBackWithoutReplacingDraft() => WithComposerPicker((w, reads) =>
     {
         var status = reads.Read<JsonObject>("/status");
         var refuse = false;

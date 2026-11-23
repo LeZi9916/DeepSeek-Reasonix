@@ -1,0 +1,62 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.SafetyWebView">
+  <StackPanel>
+    <Border Name="WebSection" Tag="models.web_search_and_fetch" Classes="safety-section" IsVisible="False">
+      <StackPanel>
+        <WrapPanel ItemSpacing="8" LineSpacing="4">
+          <TextBlock Tag="models.web_search_and_fetch" Classes="safety-title"/>
+          <Border Classes="setting-apply" Margin="0"><TextBlock Tag="settings.applies_to_new_sessions" VerticalAlignment="Center"/></Border>
+        </WrapPanel>
+        <TextBlock Tag="models.which_backends_the_agent_uses" Classes="safety-hint" Margin="0,2,0,10"/>
+        <StackPanel>
+          <StackPanel Name="SearchBackends" Tag="common.web_search"/>
+          <StackPanel Name="Searxng" IsVisible="False" Margin="12,6,12,10" Spacing="6">
+            <TextBlock Name="UrlLabel" Tag="models.searxng_address" Classes="safety-hint"/>
+            <TextBox Name="Url" Classes="settings-input" PlaceholderText="http://127.0.0.1:8080"
+                     AutomationProperties.AutomationId="field:web-access.searxng-url" AutomationProperties.LabeledBy="{Binding #UrlLabel}"/>
+            <WrapPanel ItemSpacing="6" LineSpacing="4">
+              <Button Name="Probe" Tag="common.test_it" Classes="preset-act safety-action" AutomationProperties.AutomationId="action:web-access.probe"/>
+              <TextBlock Name="ProbeStatus" Classes="safety-hint" VerticalAlignment="Center" IsVisible="False"/>
+            </WrapPanel>
+          </StackPanel>
+          <StackPanel Name="FetchBackends" Tag="models.web_fetch"/>
+          <Border Classes="safety-line" Padding="12,8" Tag="models.video_addresses">
+            <StackPanel Spacing="4">
+              <WrapPanel ItemSpacing="6" LineSpacing="2">
+                <TextBlock Tag="models.video_addresses" FontWeight="SemiBold" Classes="safety-hint"/>
+                <TextBlock Tag="models.the_model_can_hand_a" Classes="safety-hint"/>
+              </WrapPanel>
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <StackPanel Spacing="2">
+                  <TextBlock Name="VideoLabel" Tag="models.hand_video_addresses_to_the" Classes="safety-title"/>
+                  <TextBlock Tag="models.when_on_the_address_is" Classes="safety-hint"/>
+                </StackPanel>
+                <ToggleSwitch Name="Video" Grid.Column="1" AutomationProperties.LabeledBy="{Binding #VideoLabel}"
+                              AutomationProperties.AutomationId="action:web-access.video-url"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+          <TextBlock Name="WebPath" Classes="safety-hint" Margin="12,6"/>
+        </StackPanel>
+        <TextBlock Name="ReadOnly" Tag="common.these_settings_are_read_only" Classes="safety-hint" Margin="12,4" IsVisible="False"/>
+        <TextBlock Name="WebError" Foreground="{DynamicResource ErrInkBrush}" Classes="safety-note" Margin="12,6" IsVisible="False"/>
+      </StackPanel>
+    </Border>
+    <StackPanel Tag="common.built_in_browser">
+      <Border Classes="setting-row">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+          <StackPanel Spacing="2" VerticalAlignment="Center">
+            <WrapPanel ItemSpacing="8" LineSpacing="4">
+              <TextBlock Name="BrowserLabel" Tag="common.built_in_browser" Classes="setting-row-name"/>
+              <Border Classes="setting-apply" Margin="0"><TextBlock Tag="settings.rebuilds_the_runtime" VerticalAlignment="Center"/></Border>
+            </WrapPanel>
+            <TextBlock Tag="workbench.let_it_open_pages_in_the_browser" Classes="safety-hint"/>
+          </StackPanel>
+          <ToggleSwitch Name="Browser" Grid.Column="1" AutomationProperties.LabeledBy="{Binding #BrowserLabel}" AutomationProperties.AutomationId="action:browser-tools.enabled"/>
+        </Grid>
+      </Border>
+      <TextBlock Name="BrowserStatus" Classes="safety-note" IsVisible="False"/>
+      <TextBlock Name="BrowserError" Classes="safety-note" Foreground="{DynamicResource ErrInkBrush}" IsVisible="False"/>
+    </StackPanel>
+  </StackPanel>
+</local:SettingsFormView>

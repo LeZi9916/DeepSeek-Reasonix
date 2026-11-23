@@ -303,6 +303,7 @@
   <!-- token ok -->
   <Color x:Key="Ok">#2B7A4B</Color>
   <SolidColorBrush x:Key="OkBrush" Color="{StaticResource Ok}" />
+  <SolidColorBrush x:Key="OkWashBrush" Color="{StaticResource Ok}" Opacity="0.10" />
   <x:String x:Key="token:--ok">rgb(43, 122, 75)</x:String>
   <!-- token ok-ink -->
   <Color x:Key="OkInk">#286F44</Color>
@@ -495,6 +496,7 @@
   <!-- token warn -->
   <Color x:Key="Warn">#B16039</Color>
   <SolidColorBrush x:Key="WarnBrush" Color="{StaticResource Warn}" />
+  <SolidColorBrush x:Key="WarnWashBrush" Color="{StaticResource Warn}" Opacity="0.10" />
   <x:String x:Key="token:--warn">rgb(177, 96, 57)</x:String>
   <!-- token warn-ink -->
   <Color x:Key="WarnInk">#9C4C23</Color>
@@ -815,6 +817,7 @@
   <!-- token ok -->
   <Color x:Key="Ok">#5BB67F</Color>
   <SolidColorBrush x:Key="OkBrush" Color="{StaticResource Ok}" />
+  <SolidColorBrush x:Key="OkWashBrush" Color="{StaticResource Ok}" Opacity="0.10" />
   <x:String x:Key="token:--ok">rgb(91, 182, 127)</x:String>
   <!-- token ok-ink -->
   <Color x:Key="OkInk">#5BB67F</Color>
@@ -1000,6 +1003,7 @@
   <!-- token warn -->
   <Color x:Key="Warn">#F2925E</Color>
   <SolidColorBrush x:Key="WarnBrush" Color="{StaticResource Warn}" />
+  <SolidColorBrush x:Key="WarnWashBrush" Color="{StaticResource Warn}" Opacity="0.10" />
   <x:String x:Key="token:--warn">rgb(242, 146, 94)</x:String>
   <!-- token warn-ink -->
   <Color x:Key="WarnInk">#F2925E</Color>

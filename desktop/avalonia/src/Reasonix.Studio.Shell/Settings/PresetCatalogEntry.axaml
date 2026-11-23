@@ -1,0 +1,99 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.PresetCatalogEntry">
+  <UserControl.Styles>
+    <Style Selector="Border.preset-card">
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    </Style>
+    <Style Selector="Border.preset-card.selected">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource FaintBrush}"/>
+    </Style>
+    <Style Selector="Border.preset-card:focus-within"><Setter Property="BorderBrush" Value="{DynamicResource FocusBrush}"/></Style>
+    <Style Selector="Border.preset-card.selected Border#BuiltinBadge">
+      <Setter Property="Background" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource TextBrush}"/>
+    </Style>
+
+    <Style Selector="Button#Pick:pointerover">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    </Style>
+    <Style Selector="Border#UserRow:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    <Style Selector="TextBlock.entry-detail">
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="Border.preset-card.selected TextBlock#BadgeText"><Setter Property="Foreground" Value="{DynamicResource PageBrush}"/></Style>
+    <Style Selector="Border#BuiltinBadge"><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/></Style>
+  </UserControl.Styles>
+  <Panel>
+    <Border Name="BuiltinCard" Classes="preset-card" CornerRadius="15" BorderThickness="1" ClipToBounds="True">
+      <Grid RowDefinitions="*,Auto,Auto">
+        <Button Name="Pick" Classes="preset-flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                Padding="24,15" MinHeight="139" AutomationProperties.AutomationId="action:agent-preset.new-task-default">
+          <StackPanel Spacing="20">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+              <WrapPanel ItemSpacing="8" LineSpacing="4" VerticalAlignment="Center">
+                <TextBlock Name="BuiltinName" VerticalAlignment="Center" FontWeight="Bold"/>
+                <Border Name="BuiltinBadge" VerticalAlignment="Center" BorderThickness="1" Padding="9,1"
+                        CornerRadius="999">
+                  <TextBlock Name="BadgeText" Classes="entry-detail" FontSize="{DynamicResource StudioType12}" LineHeight="18"/>
+                </Border>
+              </WrapPanel>
+              <TextBlock Name="Slug" Grid.Column="1" FontFamily="{DynamicResource WorkbenchMonoFamily}"
+                         Foreground="{DynamicResource GhostBrush}" FontSize="{DynamicResource StudioType12}" VerticalAlignment="Center"/>
+            </Grid>
+            <TextBlock Name="BuiltinDescription" Classes="entry-detail" LineHeight="23.4"/>
+          </StackPanel>
+        </Button>
+        <Border Grid.Row="1" Padding="24,16" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0">
+          <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="20">
+            <Button Name="ViewBuiltin" Classes="preset-flat preset-muted" MinHeight="28" AutomationProperties.AutomationId="action:agent-preset.view"/>
+            <Button Name="Usage" Grid.Column="1" Classes="preset-flat preset-muted" MinHeight="28" AutomationProperties.AutomationId="action:agent-preset.usage"/>
+            <Button Name="CopyBuiltin" Grid.Column="3" Classes="preset-flat preset-muted" Width="28" Height="28"
+                    AutomationProperties.AutomationId="action:agent-preset.copy">
+              <Viewbox Width="18" Height="18">
+                <Canvas Width="24" Height="24">
+                  <Path Data="M8 7H6A2 2 0 0 1 4 5V4A2 2 0 0 1 6 2H15A2 2 0 0 1 17 4V6 M11 8H20A2 2 0 0 1 22 10V20A2 2 0 0 1 20 22H11A2 2 0 0 1 9 20V10A2 2 0 0 1 11 8Z M4 5V15A2 2 0 0 0 6 17H7"
+                        Stroke="{Binding #CopyBuiltin.Foreground}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/>
+                </Canvas>
+              </Viewbox>
+            </Button>
+          </Grid>
+        </Border>
+        <Border Grid.Row="2" Name="UsagePanel" IsVisible="False" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="24,16">
+          <TextBlock Name="UsageCopy" Classes="entry-detail" FontSize="{DynamicResource StudioType12}" LineHeight="20.4"/>
+        </Border>
+      </Grid>
+    </Border>
+    <Border Name="UserRow" IsVisible="False" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource HairBrush}" Padding="0,0,12,0">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+        <Button Name="ViewUser" Classes="preset-flat" Padding="12,20" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                AutomationProperties.AutomationId="action:agent-preset.view">
+          <Grid ColumnDefinitions="40,*,16" ColumnSpacing="16">
+            <Border Background="{DynamicResource OverlayBrush}" CornerRadius="10" Width="40" Height="40">
+              <Viewbox Width="20" Height="20"><Canvas Width="24" Height="24">
+                <Path Data="M12 2 2 7l10 5 10-5-10-5Z M2 12l10 5 10-5 M2 17l10 5 10-5"
+                      Stroke="{DynamicResource TextBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/>
+              </Canvas></Viewbox>
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="6">
+              <WrapPanel ItemSpacing="8" LineSpacing="4">
+                <TextBlock Name="UserName" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                <Border Name="UserBadge" Background="{DynamicResource OverlayBrush}" Padding="7,1" CornerRadius="7">
+                  <TextBlock Name="UserBadgeText" Classes="entry-detail" FontSize="{DynamicResource StudioType12}"/>
+                </Border>
+              </WrapPanel>
+              <TextBlock Name="UserDescription" Classes="entry-detail" FontSize="{DynamicResource StudioType12}" LineHeight="20.4"/>
+            </StackPanel>
+            <Viewbox Grid.Column="2" Width="16" Height="16"><Canvas Width="24" Height="24">
+              <Path Data="M9 6l6 6-6 6" Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/>
+            </Canvas></Viewbox>
+          </Grid>
+        </Button>
+        <Button Name="PickUser" Grid.Column="1" Classes="preset-act" VerticalAlignment="Center" AutomationProperties.AutomationId="action:agent-preset.new-task-default"/>
+        <Button Name="CopyUser" Grid.Column="2" Classes="preset-act" VerticalAlignment="Center" AutomationProperties.AutomationId="action:agent-preset.copy"/>
+      </Grid>
+    </Border>
+  </Panel>
+</UserControl>

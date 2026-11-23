@@ -80,7 +80,14 @@ public sealed partial class MainWindow : Window
     /// <param name="engine">Session already connected to a host, if any.</param><param name="language">Window language on first paint.</param>
     /// <param name="systemAllowsMotion">Optional platform preference provider.</param>
     /// <param name="drafts">Optional scoped draft persistence.</param>
-    internal MainWindow(bool connectOnOpen, SessionEngine? engine, InterfaceLanguage language, Func<CancellationToken, Task<bool>>? systemAllowsMotion = null, IDraftStorage? drafts = null)
+    /// <param name="workspacePreferences">Optional device preferences for a preconfigured window.</param>
+    internal MainWindow(
+        bool connectOnOpen,
+        SessionEngine? engine,
+        InterfaceLanguage language,
+        Func<CancellationToken, Task<bool>>? systemAllowsMotion = null,
+        IDraftStorage? drafts = null,
+        Host.WorkspacePreferences? workspacePreferences = null)
     {
         _drafts = drafts ?? (connectOnOpen ? Host.FileDrafts.Default() : new Host.MemoryDrafts());
         _systemAllowsMotion = systemAllowsMotion ?? SystemAllowsMotionAsync;
@@ -88,15 +95,19 @@ public sealed partial class MainWindow : Window
         _engine = engine;
 
         _connectOnOpen = connectOnOpen;
-        _workspacePreferences = connectOnOpen ? Host.WorkspacePreferences.Load() : new();
+        _workspacePreferences = workspacePreferences ?? (connectOnOpen ? Host.WorkspacePreferences.Load() : new());
         Projects.QuickActions = _workspacePreferences.SessionQuickActions;
+        ApplyLiveGrace();
 
         Conversation.Language = language;
+        Conversation.SetTranscriptFolding(_workspacePreferences.Folding ?? new());
+        Conversation.SetShowsNewAnswers(_workspacePreferences.ShowNewAnswerMarker);
         Projects.Language = Language;
         CrumbTitle.Text = MessageCatalog.Get(MessageKey.Common.NewSession, Language);
         InitializeChrome();
         InitializeIntake();
         InitializePreferences();
+        InitializePlanStrip();
         InitializeNavigation();
         InitializeWorkspaceSearch();
         WorkspaceStatus.DeviceAccessRequested += OpenDeviceAccess;
@@ -122,10 +133,6 @@ public sealed partial class MainWindow : Window
         Projects.MarkedViewed += OnProjectViewed;
         NewSession.Click += (_, _) => OnNewRequested();
         Closed += OnClosed;
-
-        // The status line says what the next press does before anything is
-        // typed, so it is filled in from the shortcut rather than left blank.
-        ComposerHint.Text = SendKey.Hint(_shortcut, running: false, Language);
 
         if (connectOnOpen)
         {
@@ -187,6 +194,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        DisarmStop();
         Stop.IsEnabled = false;
         Label(Stop, MessageKey.Common.Stopping);
         try

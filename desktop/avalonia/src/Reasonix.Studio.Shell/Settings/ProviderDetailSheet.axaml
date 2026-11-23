@@ -1,0 +1,131 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.ProviderDetailSheet" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="Border#CheckNotice"><Setter Property="BorderBrush" Value="{DynamicResource WarnBrush}"/></Style>
+    <Style Selector="Border#CheckNotice.check-ok"><Setter Property="BorderBrush" Value="{DynamicResource OkBrush}"/></Style>
+    <Style Selector="Ellipse#SaveDot"><Setter Property="Fill" Value="{DynamicResource FaintBrush}"/></Style>
+    <Style Selector="Ellipse#SaveDot.dirty"><Setter Property="Fill" Value="{DynamicResource WarnBrush}"/></Style>
+  </UserControl.Styles>
+  <StackPanel>
+    <Border BorderThickness="0,0,0,1" BorderBrush="{DynamicResource HairBrush}" Padding="0,0,0,12" Margin="0,0,0,14">
+      <Grid Name="Header" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8">
+        <StackPanel Spacing="2">
+          <DockPanel HorizontalAlignment="Left">
+            <Button Name="RenameAction" DockPanel.Dock="Right" Margin="4,0,0,0" Classes="provider-glyph"
+                    AutomationProperties.AutomationId="action:provider.rename-start">
+              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.edit}"
+                       Stroke="{Binding #RenameAction.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+            </Button>
+            <TextBlock Name="ProviderTitle" FontSize="{DynamicResource StudioType14}" FontWeight="Bold" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+          </DockPanel>
+          <TextBlock Name="ProviderSubtitle" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}"
+                     FontFamily="{DynamicResource WorkbenchMonoFamily}" TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+        <StackPanel Name="HeaderActions" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Border Name="UseBadge" Background="{DynamicResource AccentWashBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+            <TextBlock Name="UseLabel" Foreground="{DynamicResource AccentBrush}" FontSize="{DynamicResource StudioType11}"/>
+          </Border>
+          <Button Name="Probe" Classes="provider-action" AutomationProperties.AutomationId="action:provider.probe"/>
+          <Button Name="Remove" Classes="provider-action danger" AutomationProperties.AutomationId="action:provider.remove"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+    <Border Name="CheckNotice" IsVisible="False" BorderThickness="2,0,0,0" Padding="10,7,0,7">
+      <StackPanel Spacing="3">
+        <TextBlock Name="CheckTitle" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" AutomationProperties.LiveSetting="Polite"/>
+        <TextBlock Name="CheckBody" Classes="provider-caption"/>
+      </StackPanel>
+    </Border>
+    <Border Name="Options" IsVisible="False" BorderBrush="{DynamicResource HairBrush}" BorderThickness="1"
+            CornerRadius="7" Padding="12,10" Background="{DynamicResource SurfaceBrush}" Margin="0,0,0,14">
+      <StackPanel Spacing="6">
+        <WrapPanel ItemSpacing="9" LineSpacing="4">
+          <TextBlock Name="ProtocolLabel" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}"
+                     VerticalAlignment="Center" Height="24" Margin="0,6,0,0"/>
+          <Border CornerRadius="7" Background="{DynamicResource OverlayBrush}" Padding="2">
+            <WrapPanel Name="Protocols" ItemSpacing="2"/>
+          </Border>
+        </WrapPanel>
+        <TextBlock Name="ProtocolHint" Classes="provider-caption" LineHeight="19.8"/>
+      </StackPanel>
+    </Border>
+    <StackPanel Name="Fields" Margin="0,4,0,0" Spacing="10">
+      <StackPanel Name="ProtocolField" Spacing="3" IsVisible="False">
+        <TextBlock Name="ProtocolFieldLabel" Classes="provider-label"/>
+        <ComboBox Name="ProtocolDraft" Height="32" MinHeight="0" HorizontalAlignment="Stretch"
+                  AutomationProperties.AutomationId="action:provider.draft.protocol"/>
+        <TextBlock Name="ProtocolFieldHint" Classes="provider-caption"/>
+      </StackPanel>
+      <StackPanel Spacing="3">
+        <TextBlock Name="EndpointLabel" Classes="provider-label"/>
+        <TextBox Name="Endpoint" Classes="provider-field" AutomationProperties.AutomationId="action:provider.endpoint"/>
+      </StackPanel>
+      <StackPanel Spacing="3">
+        <TextBlock Name="KeyLabel" Classes="provider-label"/>
+        <TextBox Name="ApiKey" Classes="provider-field" PasswordChar="●" PlaceholderText="········" AutomationProperties.AutomationId="action:provider.api-key"/>
+      </StackPanel>
+    </StackPanel>
+    <Border Margin="0,12,0,0" Padding="0,14,0,0" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}">
+      <StackPanel Spacing="6">
+        <WrapPanel ItemSpacing="10" LineSpacing="3">
+          <TextBlock Name="LimitsTitle" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"/>
+          <TextBlock Name="LimitsHint" Classes="provider-caption" VerticalAlignment="Center"/>
+        </WrapPanel>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+          <StackPanel Spacing="4">
+            <TextBlock Name="ContextLabel" Classes="provider-label"/>
+            <Panel>
+              <TextBox Name="ContextLimit" Classes="provider-field" TextAlignment="Right" Padding="10,0,56,0"/>
+              <TextBlock Text="tokens" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}"
+                         HorizontalAlignment="Right" Margin="0,0,11,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+            </Panel>
+            <TextBlock Name="ContextHint" Classes="provider-caption"/>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Spacing="4">
+            <TextBlock Name="OutputLabel" Classes="provider-label"/>
+            <Panel>
+              <TextBox Name="OutputLimit" Classes="provider-field" TextAlignment="Right" Padding="10,0,56,0"/>
+              <TextBlock Text="tokens" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}"
+                         HorizontalAlignment="Right" Margin="0,0,11,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+            </Panel>
+            <TextBlock Name="OutputHint" Classes="provider-caption"/>
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+    </Border>
+    <StackPanel Name="PerModel" Margin="0,14,0,0" Spacing="7"/>
+    <Border Margin="0,14,0,0" Padding="0,9,0,0" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}">
+      <StackPanel Spacing="7">
+        <TextBlock Name="ModelsLabel" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"/>
+        <TextBlock Name="ModelNames" Classes="provider-caption"/>
+      </StackPanel>
+    </Border>
+    <Border Name="WebSearchPanel" IsVisible="False" Margin="0,12,0,0" Padding="12,10"
+            BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" CornerRadius="7" Background="{DynamicResource SurfaceBrush}">
+      <StackPanel Spacing="6">
+        <WrapPanel ItemSpacing="9" LineSpacing="4">
+          <TextBlock Name="WebSearchLabel" Classes="provider-caption" VerticalAlignment="Center"/>
+          <Border CornerRadius="7" Background="{DynamicResource OverlayBrush}" Padding="2">
+            <StackPanel Orientation="Horizontal" Spacing="2">
+              <Button Name="EnableSearch" Classes="provider-kind"/>
+              <Button Name="DisableSearch" Classes="provider-kind"/>
+            </StackPanel>
+          </Border>
+        </WrapPanel>
+        <TextBlock Name="WebSearchHint" Classes="provider-caption" LineHeight="19.8"/>
+      </StackPanel>
+    </Border>
+    <settings:SettingsStickyFooter Anchor="{Binding #Fields}" ZIndex="1" Margin="0,12,0,0" Padding="12,10" BorderThickness="0,1,0,0"
+            BorderBrush="{DynamicResource BorderBrush}" Background="{DynamicResource RaisedBrush}">
+      <WrapPanel ItemSpacing="8" LineSpacing="4">
+        <Button Name="Save" Classes="provider-action primary" AutomationProperties.AutomationId="action:provider.save"/>
+        <Button Name="Revert" Classes="provider-action" AutomationProperties.AutomationId="action:provider.revert"/>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,0,0,0" VerticalAlignment="Center">
+          <Ellipse Name="SaveDot" Width="8" Height="8" VerticalAlignment="Center"/>
+          <TextBlock Name="SaveStatus" Classes="provider-caption" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
+      </WrapPanel>
+    </settings:SettingsStickyFooter>
+  </StackPanel>
+</UserControl>

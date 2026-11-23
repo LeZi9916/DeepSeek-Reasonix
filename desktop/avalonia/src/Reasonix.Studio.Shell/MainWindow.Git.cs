@@ -219,7 +219,7 @@ public sealed partial class MainWindow
     /// <param name="view">Git patch or changes board.</param>
     private void ShowGitCanvas(string title, Control view)
     {
-        WorkbenchStart.IsVisible = false;
+        SetWorkbenchLauncher(false);
         _fileRead++;
         HideBrowser();
         _openFile = null;

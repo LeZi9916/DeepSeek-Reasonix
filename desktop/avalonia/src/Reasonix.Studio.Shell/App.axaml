@@ -20,6 +20,9 @@
       <x:Double x:Key="ComposeModelLineHeight">19.5</x:Double>
       <x:Double x:Key="StudioReadingSize">14</x:Double>
       <x:Double x:Key="StudioReadingHeight">24.08</x:Double>
+      <x:Double x:Key="WorkbenchReadingHeight">24.5</x:Double>
+      <x:Double x:Key="WorkbenchDiffLineHeight">19.2</x:Double>
+      <x:Double x:Key="WorkbenchDiffNoticeHeight">16.8</x:Double>
       <x:Double x:Key="StudioType8">8</x:Double>
       <x:Double x:Key="StudioType9">9</x:Double>
       <x:Double x:Key="StudioType10">10</x:Double>
@@ -38,6 +41,7 @@
       <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="avares://Reasonix.Studio.Controls/Themes/Tokens.axaml" />
         <ResourceInclude Source="avares://Reasonix.Studio.Controls/Themes/StudioIcons.axaml" />
+        <ResourceInclude Source="avares://Reasonix.Studio.Shell/Settings/ProviderVendorMarks.axaml" />
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Application.Resources>

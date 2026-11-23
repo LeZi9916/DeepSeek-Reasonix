@@ -276,7 +276,7 @@ public sealed partial class NativeDomainTests
                     Assert.True(hits.IsEffectivelyVisible);
                     query.RaiseEvent(new Avalonia.Input.KeyEventArgs { RoutedEvent = Avalonia.Input.InputElement.KeyDownEvent, Key = Avalonia.Input.Key.Enter });
                     Dispatcher.UIThread.RunJobs();
-                    var editor = window.FindControl<StackPanel>("SettingsBody")!.GetVisualDescendants().OfType<TextBox>().Last();
+                    var editor = ControlAt<TextBox>(window, "field:persona.suffix");
                     editor.Text = "unsaved edit";
                     window.FindControl<Button>("CloseSettings")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                     Dispatcher.UIThread.RunJobs();
@@ -309,6 +309,13 @@ public sealed partial class NativeDomainTests
             return window;
         }
 
+        if (target == "onboarding")
+        {
+            window.ShowSetup(new ProviderSetup(true, true));
+            Dispatcher.UIThread.RunJobs();
+            return window.FindControl<Grid>("SetupPanel")!;
+        }
+
         if (target is "analysis" or "workbench")
         {
             var name = target == "analysis" ? "AnalysisView" : "WorkbenchView";
@@ -316,6 +323,11 @@ public sealed partial class NativeDomainTests
             Dispatcher.UIThread.RunJobs();
             if (target == "workbench")
             {
+                if (window.FindControl<Control>("WorkbenchStart")!.IsEffectivelyVisible)
+                {
+                    ClickAt(window, "action:workbench.launch-files");
+                }
+
                 var files = window.FindControl<ListBox>("WorkspaceFiles")!;
                 files.SelectedItem = files.Items.Cast<object>().Single(f => f.ToString() == "README.md");
                 Dispatcher.UIThread.RunJobs();
@@ -350,10 +362,9 @@ public sealed partial class NativeDomainTests
             ["storage"] = "settings.data",
             ["network"] = "usage.connections",
             ["account"] = "settings.account_and_about",
-            ["advanced"] = "settings.advanced",
         };
         var parts = target.Split('-');
-        var section = target == "onboarding" ? "model" : parts[1];
+        var section = parts[1];
         var title = MessageCatalog.Get(labels[section], InterfaceLanguage.Zh);
         nav.SelectedItem = nav.Items.Cast<object>().Single(item => item.ToString() == title);
         Dispatcher.UIThread.RunJobs();
@@ -372,24 +383,26 @@ public sealed partial class NativeDomainTests
 
         var action = target switch
         {
-            "onboarding" => "models.add_model_service",
             "settings-ext-market" => MessageKey.Ext.Discover,
-            "settings-session-persona" => MessageKey.Persona.SystemPersona,
             _ => null,
         };
+        if (target == "settings-session-persona")
+        {
+            ControlAt<Button>(window, "action:settings.edit-persona").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Dispatcher.UIThread.RunJobs();
+            Assert.Contains(body.GetVisualDescendants().OfType<TextBox>(), box => box.IsEffectivelyVisible);
+        }
+
         if (action is not null)
         {
             var word = MessageCatalog.Get(action, InterfaceLanguage.Zh);
             body.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, word) && !button.Classes.Contains("page-link")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Dispatcher.UIThread.RunJobs();
-            if (target != "onboarding")
-            {
-                Assert.Equal(title, window.FindControl<TextBlock>("SettingsHeading")!.Text);
-                Assert.Contains(body.GetVisualDescendants().OfType<TextBox>(), box => box.IsEffectivelyVisible);
-            }
+            Assert.Equal(title, window.FindControl<TextBlock>("SettingsHeading")!.Text);
+            Assert.Contains(body.GetVisualDescendants().OfType<TextBox>(), box => box.IsEffectivelyVisible);
         }
 
-        return window.FindControl<Grid>(target == "onboarding" ? "SetupPanel" : "SettingsPanel")!;
+        return window.FindControl<Grid>("SettingsPanel")!;
     }
 
     /// <summary>Builds the same app with Skia drawing into a headless framebuffer.</summary>

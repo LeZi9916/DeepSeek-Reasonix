@@ -1,0 +1,95 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.ContextMaintenanceView" Margin="0,12,0,0" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.context-caption">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="LineHeight" Value="18.6"/>
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="TextBlock.context-figure">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="FontFamily" Value="{DynamicResource WorkbenchMonoFamily}"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="TextBlock.context-title">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="Thumb.context-thumb">
+      <Setter Property="Template"><ControlTemplate>
+        <Border Width="13" Height="13" CornerRadius="6.5" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1.5"
+                Background="{DynamicResource RaisedBrush}" BoxShadow="0 1 3 0 #42000000"/>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Thumb.context-thumb:pointerover"><Setter Property="RenderTransform" Value="scale(1.12)"/></Style>
+    <Style Selector="Thumb.context-thumb:pressed /template/ Border"><Setter Property="Background" Value="{DynamicResource AccentBrush}"/></Style>
+    <Style Selector="Slider#RatioSlider:disabled"><Setter Property="Opacity" Value="0.4"/></Style>
+  </UserControl.Styles>
+  <StackPanel>
+    <TextBlock Name="Unavailable" Classes="context-caption" Margin="12,12,12,0" IsVisible="False"/>
+    <StackPanel Name="Maintenance">
+      <StackPanel Name="ContextGauge" Margin="12,10,12,12" Spacing="8">
+        <WrapPanel ItemSpacing="20" LineSpacing="4">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <TextBlock Name="UsedLabel" Classes="context-caption" VerticalAlignment="Center"/>
+            <TextBlock Name="UsedValue" Classes="context-figure" VerticalAlignment="Center"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <TextBlock Name="TriggerLabel" Classes="context-caption" VerticalAlignment="Center"/>
+            <TextBlock Name="TriggerValue" Classes="context-figure" VerticalAlignment="Center"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <TextBlock Name="WindowLabel" Classes="context-caption" VerticalAlignment="Center"/>
+            <TextBlock Name="WindowValue" Classes="context-figure" VerticalAlignment="Center"/>
+          </StackPanel>
+        </WrapPanel>
+        <Border Name="ContextTrack" Height="5" CornerRadius="2.5" Background="{DynamicResource OverlayBrush}">
+          <Border Name="ContextFill" HorizontalAlignment="Left" CornerRadius="2.5" Width="0" Background="{DynamicResource AccentInkBrush}"/>
+        </Border>
+        <TextBlock Name="ContextNote" Classes="context-caption"/>
+      </StackPanel>
+      <TextBlock Name="UnknownWindow" Classes="context-caption" Margin="12,18,12,12" IsVisible="False"/>
+      <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="12,0">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+          <StackPanel Spacing="2">
+            <TextBlock Name="CapacityLabel" Classes="context-title"/>
+            <TextBlock Name="CapacityHint" Classes="context-caption"/>
+          </StackPanel>
+          <TextBlock Name="CapacityValue" Grid.Column="1" Classes="context-caption"
+                     FontFamily="{DynamicResource WorkbenchMonoFamily}" VerticalAlignment="Center"/>
+        </Grid>
+      </Border>
+      <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,1" Padding="12,0">
+        <Grid Name="RatioLayout" ColumnDefinitions="*,*,38.4" ColumnSpacing="9">
+          <StackPanel Spacing="2">
+            <TextBlock Name="RatioLabel" Classes="context-title"/>
+            <TextBlock Name="RatioHint" Classes="context-caption"/>
+            <TextBlock Name="RatioFailure" Classes="context-caption" Foreground="{DynamicResource ErrInkBrush}" IsVisible="False"
+                       AutomationProperties.LiveSetting="Polite"/>
+          </StackPanel>
+          <Grid Grid.Column="1" Margin="0" Height="18" VerticalAlignment="Center">
+            <Border Height="3" Background="{DynamicResource BorderBrush}" CornerRadius="1.5" VerticalAlignment="Center"/>
+            <Border Name="RatioFill" Height="3" Width="0" Background="{DynamicResource AccentBrush}"
+                    CornerRadius="1.5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <Slider Name="RatioSlider" Minimum="0.1" Maximum="0.99" TickFrequency="0.01" SmallChange="0.01" LargeChange="0.10"
+                    IsSnapToTickEnabled="True" Height="18" MinHeight="0" Cursor="Hand"
+                    AutomationProperties.AutomationId="action:compaction.ratio">
+              <Slider.Template><ControlTemplate>
+                <Border Background="Transparent">
+                  <Track Name="PART_Track" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                         Value="{TemplateBinding Value, Mode=TwoWay}" Orientation="Horizontal">
+                    <Track.Thumb><Thumb Classes="context-thumb" Width="13" Height="13"/></Track.Thumb>
+                  </Track>
+                </Border>
+              </ControlTemplate></Slider.Template>
+            </Slider>
+          </Grid>
+          <TextBlock Name="RatioValue" Grid.Column="2" Classes="context-figure" FontSize="{DynamicResource StudioType12}"
+                     TextAlignment="Right" VerticalAlignment="Center"/>
+        </Grid>
+      </Border>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

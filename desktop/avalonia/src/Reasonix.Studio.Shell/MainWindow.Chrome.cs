@@ -3,6 +3,7 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Chrome;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Styling;
 using Reasonix.Studio.Controls;
@@ -44,7 +45,7 @@ public sealed partial class MainWindow
             WindowDecorationProperties.SetElementRole(bar, WindowDecorationsElementRole.TitleBar);
         }
 
-        foreach (var action in new Control[] { OpenProject, ExpandRail, FindButton, ThemeSwitch, ViewSwitch, CloseSettings })
+        foreach (var action in new Control[] { OpenProject, ExpandRail, FindButton, ThemeSwitch, ChromeAnalysis, ViewSwitch, ChromeMore, CloseSettings })
         {
             WindowDecorationProperties.SetElementRole(action, WindowDecorationsElementRole.User);
         }
@@ -108,6 +109,7 @@ public sealed partial class MainWindow
         InitializeFind();
         InitializeWorkbench();
         InitializeWorkbenchActions();
+        InitializeChromeViews();
         LayoutRoot.SizeChanged += (_, _) => LayoutPanels();
         ThemeSwitch.Click += (_, _) =>
         {
@@ -116,6 +118,7 @@ public sealed partial class MainWindow
         ActualThemeVariantChanged += (_, _) => LabelTheme();
         ConversationView.Click += (_, _) => ShowAnalysis(false);
         AnalysisView.Click += (_, _) => ShowAnalysis(true);
+        InitializeEscapeStop();
         KeyDown += OnWindowKey;
         LabelChrome();
     }
@@ -129,7 +132,7 @@ public sealed partial class MainWindow
         Label(CollapseRail, MessageKey.Common.CollapseTheWorkspaceRail);
         Label(RailGrip, MessageKey.App.ResizeTheWorkspaceRail);
         Label(ContextToggle, MessageKey.Common.ContextDetails);
-        Label(ViewSwitch, MessageKey.Common.RunAnalysis);
+        DrawChromeViews();
         ContextTitle.Text = MessageCatalog.Get(MessageKey.Common.ContextWindow, Language);
         ConversationView.Header = MessageCatalog.Get(MessageKey.Feedback.Conversation, Language);
         AnalysisView.Header = MessageCatalog.Get(MessageKey.Common.RunAnalysis, Language);
@@ -203,13 +206,24 @@ public sealed partial class MainWindow
         }
 
         var open = _railOpen ?? !compact;
+        var railMode = _workspacePreferences.NavigationRail;
+        var icons = !drawer && (railMode == "on" || (railMode == "collapsed" && !open));
+        NavigationRail.IsVisible = icons;
+        var iconWidth = icons ? NavigationRail.Width : 0;
         Rail.IsVisible = open;
         Rail.Width = _railWidth;
+        Rail.Margin = new Thickness(iconWidth, 0, 0, 0);
         Rail.HorizontalAlignment = HorizontalAlignment.Left;
         Grid.SetColumnSpan(Rail, drawer ? 2 : 1);
         RailGrip.IsVisible = open && !drawer;
         ExpandRail.IsVisible = !open;
-        LayoutRoot.ColumnDefinitions[0].Width = new GridLength(open && !drawer ? _railWidth : 0);
+        LayoutRoot.ColumnDefinitions[0].Width = new GridLength(iconWidth + (open && !drawer ? _railWidth : 0));
+        QuickLinksFrame.Width = Math.Min(260, _railWidth - 20);
+        if (!open)
+        {
+            QuickLinksPopup.IsOpen = false;
+        }
+
         AnalysisPanel.Margin = room.Width <= 1120 ? new Thickness(20, 0) : new Thickness(0, 0, 10, 0);
         var stacked = room.Width <= 840;
         Grid.SetColumn(ContextPanel, stacked ? 0 : 2);
@@ -257,11 +271,10 @@ public sealed partial class MainWindow
             }
             else if (e.Key == Key.Escape && SearchResultsPanel.IsVisible)
             {
-                SearchResultsPanel.IsVisible = false;
-                SettingsSearch.Focus();
+                DismissSettingsSearch();
                 e.Handled = true;
             }
-            else if (e.Key == Key.Escape && ConnectProvider.IsEnabled)
+            else if (e.Key == Key.Escape && (SettingsPanel.IsVisible || ConnectProvider.IsEnabled))
             {
                 ReturnToConversation();
                 e.Handled = true;
@@ -277,6 +290,10 @@ public sealed partial class MainWindow
         else if (e.Key == Key.Escape && FindBar.IsVisible)
         {
             CloseFindBar();
+        }
+        else if (e.Key == Key.Escape && ComposerPlan.IsExpanded)
+        {
+            ComposerPlan.Collapse(restoreFocus: true);
         }
         else if (e.Key == Key.OemComma && e.KeyModifiers == primary)
         {
@@ -294,6 +311,45 @@ public sealed partial class MainWindow
         {
             ToggleRail();
         }
+        else if (e.Key == Key.D1 && e.KeyModifiers == primary)
+        {
+            ShowAnalysis(false);
+            if (WorkbenchPanel.IsVisible)
+            {
+                _ = ToggleChromeWorkbenchAsync();
+            }
+        }
+        else if (e.Key == Key.Oem3 && e.KeyModifiers == primary)
+        {
+            TerminalAction.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        }
+        else if (e.Key is Key.Up or Key.Down && e.KeyModifiers == primary)
+        {
+            JumpToQuestion(e.Key == Key.Down);
+        }
+        else if (e.Key == Key.F && e.KeyModifiers == (primary | KeyModifiers.Shift) && WorkbenchPanel.IsVisible)
+        {
+            FullWorkbench.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        }
+        else if ((e.Key is Key.OemMinus or Key.Subtract or Key.OemPlus or Key.Add or Key.D0 or Key.NumPad0) &&
+                 (e.KeyModifiers == primary || e.KeyModifiers == (primary | KeyModifiers.Shift)))
+        {
+            var step = e.Key switch
+            {
+                Key.OemMinus or Key.Subtract => -1,
+                Key.OemPlus or Key.Add => 1,
+                _ => 0,
+            };
+            _ = StepZoomAsync(step);
+        }
+        else if (e.Key == Key.D2 && e.KeyModifiers == primary && ChromeAnalysis.IsVisible)
+        {
+            ShowAnalysis(!AnalysisPanel.IsVisible);
+        }
+        else if (e.Key == Key.D3 && e.KeyModifiers == primary && ViewSwitch.IsVisible)
+        {
+            _ = ToggleChromeWorkbenchAsync();
+        }
         else if (e.Key == Key.Escape && AnalysisPanel.IsVisible)
         {
             ShowAnalysis(false);
@@ -301,6 +357,14 @@ public sealed partial class MainWindow
         else if (e.Key == Key.Escape && Rail.IsVisible && LayoutRoot.Bounds.Width <= 640)
         {
             ToggleRail();
+        }
+        else if (e.Key == Key.Escape && ManualBrowserHost.IsEffectivelyVisible)
+        {
+            HideBrowser();
+        }
+        else if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None && Conversation.State.Running && Stop.IsEnabled)
+        {
+            EscapeStop();
         }
         else
         {

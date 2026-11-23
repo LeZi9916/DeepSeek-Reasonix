@@ -26,7 +26,7 @@ public sealed partial class MainWindow
         ("common", "settings.common"), ("model", "common.models"), ("session", "settings.agent_behaviour"),
         ("tools", "settings.permissions_and_safety"), ("ext", "ext.extension"), ("display", "settings.conversation_display"),
         ("controls", "settings.controls_and_performance"), ("appearance", "settings.appearance"), ("storage", "settings.data"),
-        ("network", "usage.connections"), ("account", "settings.account_and_about"), ("advanced", "settings.advanced"),
+        ("network", "usage.connections"), ("account", "settings.account_and_about"),
     };
 
     /// <summary>The appearance the host returned or acknowledged.</summary>
@@ -164,6 +164,8 @@ public sealed partial class MainWindow
     /// <summary>Opens the settings sheet and focuses its search box.</summary>
     private void OpenPreferences()
     {
+        QuickLinksPopup.IsOpen = false;
+        DisarmStop();
         SetupPanel.IsVisible = false;
         LayoutRoot.IsVisible = false;
         SettingsPanel.IsVisible = true;
@@ -186,6 +188,8 @@ public sealed partial class MainWindow
         }
 
         _unsavedSettings = null;
+        _unsavedSettingsSummary = null;
+        StopAccountSettings();
         SearchResultsPanel.IsVisible = false;
         _settingsRead++;
         SetupPanel.IsVisible = false;
@@ -230,27 +234,19 @@ public sealed partial class MainWindow
         }
 
         _unsavedSettings = null;
+        _unsavedSettingsSummary = null;
+        StopAccountSettings();
         _shownSettings = section;
         var ticket = ++_settingsRead;
         var parent = section.Split(':')[0];
-        SettingsBody.UseLayoutRounding = parent != "storage";
-        SettingsIndex.Padding = new Thickness(0, parent == "storage" ? 12 : 10);
-        SettingsPanel.Classes.Set("data-page", parent == "storage");
         SettingsHeadingBlock.IsVisible = true;
         SettingsHeading.Text = MessageCatalog.Get(parent == "usage" ? "app.usage" : s_sections.First(s => s.Id == parent).Title, Language);
-        var compactHeading = parent == "storage";
-        SettingsHeading[!TextBlock.FontSizeProperty] = StudioTypography.Size(compactHeading ? 22 : 26);
-        SettingsHeading.LineHeight = compactHeading ? 28.6 : 33.8;
         SettingsDescription.Text = SectionDescription(parent);
-        if (parent == "model" && SettingsNav.SelectedItem is SectionEntry { CountText: { Length: > 0 } countText })
-        {
-            SettingsDescription.Text += " · " + MessageCatalog.Get("settings.n_items", Language, ("n", countText));
-        }
-
         SettingsDescription.IsVisible = SettingsDescription.Text.Length > 0;
         SettingsUsual.Text = MessageCatalog.Get("settings.page_usual", Language);
         SettingsError.Text = string.Empty;
         SettingsIndex.IsVisible = false;
+        SettingsBody.Classes.Remove("settings-card-footer");
         SettingsLinks.Children.Clear();
         var column = new StackPanel { Spacing = 16 };
         SettingsContent.Content = column;
@@ -276,6 +272,13 @@ public sealed partial class MainWindow
                     }
 
                     ThemeChoice(input);
+                    if (api is not null && await api.ChangedSettingsAsync(_closing.Token).ConfigureAwait(true) is { } changed)
+                    {
+                        var view = new Settings.ChangedSettings();
+                        view.Show(changed.Select(key => key!.GetValue<string>()).ToArray(), Language);
+                        Card(column, "settings.changed_settings").Children.Add(view);
+                    }
+
                     break;
                 case "appearance":
                     var theme = Card(column, "settings.theme_card");
@@ -297,22 +300,7 @@ public sealed partial class MainWindow
 
                     break;
                 case "controls":
-                    SessionLimitControl(column);
-                    SessionQuickActionsControl(column);
-                    var keys = Card(column, "settings.keyboard_shortcuts");
-                    ShortcutChoice(keys);
-                    ShortcutReference(keys);
-                    var intents = new[]
-                    {
-                        new SectionEntry("steer", MessageCatalog.Get("settings.steer_at_the_next_tool", Language)),
-                        new SectionEntry("queue", MessageCatalog.Get(MessageKey.Composer.Queue, Language)),
-                    };
-                    Choice(Card(column, "settings.while_running_card"), MessageKey.Settings.MessagesSentWhileRunning, intents, QueueDuringRun ? "queue" : "steer", id =>
-                    {
-                        QueueDuringRun = id == "queue";
-                        ShowComposerState(Conversation.State);
-                        return Task.CompletedTask;
-                    });
+                    ShowOpsSettings(column);
                     break;
                 case "model" when api is not null:
                     var services = Card(column, "models.services");
@@ -321,40 +309,19 @@ public sealed partial class MainWindow
                         servicesCard.Tag = "common.model_services";
                     }
 
-                    var models = await api.ModelsAsync(_closing.Token).ConfigureAwait(true);
                     var providers = await api.ProvidersAsync(_closing.Token).ConfigureAwait(true);
-                    var serviceView = new Settings.ModelServices { Tag = "models.services.view" };
-                    serviceView.AddRequested += () => ShowSetup(new ProviderSetup(true, true));
-                    serviceView.ProviderMoved += async (name, direction) =>
+                    var serviceView = new Settings.ModelServices { Tag = "models.services.view", Margin = new Thickness(0, 8, 0, 0) };
+                    serviceView.OrderChanged += order =>
                     {
-                        var names = providers.OfType<JsonObject>().Select(provider => (string?)provider["name"] ?? string.Empty).Where(value => value.Length > 0).ToArray();
-                        var order = _workspacePreferences.ProviderOrder.ToList();
-                        foreach (var value in names.Where(value => !order.Contains(value, StringComparer.Ordinal)))
-                        {
-                            order.Add(value);
-                        }
-
-                        var shown = order.Where(names.Contains).ToArray();
-                        var at = Array.IndexOf(shown, name);
-                        var neighbor = at < 0 ? null : shown.ElementAtOrDefault(at + direction);
-                        if (neighbor is null)
-                        {
-                            return;
-                        }
-
-                        var from = order.IndexOf(name);
-                        var to = order.IndexOf(neighbor);
-                        (order[from], order[to]) = (order[to], order[from]);
+                        var unresolved = _workspacePreferences.ProviderOrder.Where(name => !order.Contains(name, StringComparer.Ordinal));
                         _workspacePreferences = _workspacePreferences with
                         {
-                            ProviderOrder = order.ToArray(),
+                            ProviderOrder = order.Concat(unresolved).ToArray(),
                         };
                         if (_connectOnOpen)
                         {
                             _workspacePreferences.Save();
                         }
-
-                        await ShowSectionAsync("model").ConfigureAwait(true);
                     };
                     serviceView.DeleteRequested += async name =>
                     {
@@ -367,97 +334,126 @@ public sealed partial class MainWindow
                         await api.RemoveProviderAsync(name, _closing.Token).ConfigureAwait(true);
                         await ShowSectionAsync("model").ConfigureAwait(true);
                     };
-                    serviceView.Show(providers, Language, api, _closing.Token, _workspacePreferences.ProviderOrder);
-                    services.Children.Add(serviceView);
+                    serviceView.Show(providers, Language, api, _closing.Token, _workspacePreferences.ProviderOrder, MayLeaveSettingsAsync, DescribeError);
+                    services.Children.Add(new Settings.SettingsGroup("common.model_services", null, serviceView, Language, scope: "settings.rebuilds_the_runtime"));
+                    _unsavedSettings = () => serviceView.HasChanges;
                     await FlagControlAsync(services, StudioSetting.ProviderHealth, "models.automatically_check_connections_and_balances").ConfigureAwait(true);
-                    var choices = models.Where(m => !m.NotAdded).Select(m => new SectionEntry(m.Ref, m.ModelAlias ?? m.Model)).ToArray();
-                    var selected = models.FirstOrDefault(m => m.Default)?.Ref ?? string.Empty;
-                    Choice(Card(column, "models.uses_and_context"), MessageKey.Common.DefaultModel, choices, selected, id => api.SetDefaultModelAsync(id, _closing.Token));
+                    var uses = Card(column, "models.uses_and_context");
+                    var usage = new Settings.ModelUsageView();
+                    var maintenance = new Settings.ContextMaintenanceView();
+                    uses.Children.Add(new Settings.SettingsGroup(
+                        "settings.models_by_use",
+                        "models.which_model_for_each_use",
+                        usage,
+                        Language,
+                        scope: "settings.rebuilds_the_runtime"));
+                    uses.Children.Add(new Settings.SettingsGroup(
+                        "settings.context_maintenance",
+                        null,
+                        maintenance,
+                        Language,
+                        scope: "settings.rebuilds_the_runtime"));
+                    await Task.WhenAll(
+                        usage.OpenAsync(
+                            api,
+                            serviceView,
+                            () => _engine?.StatusAsync(_closing.Token) ?? Task.FromResult<SessionStatus?>(null),
+                            async reference =>
+                            {
+                                await api.SetModelAsync(reference, _closing.Token).ConfigureAwait(true);
+                                var preferenceOwner = _launchOwner?.Pages ?? api;
+                                await preferenceOwner.SetDefaultModelAsync(reference, _closing.Token).ConfigureAwait(true);
+                            },
+                            Language,
+                            DescribeError,
+                            _closing.Token),
+                        maintenance.OpenAsync(api, Language, DescribeError, _closing.Token)).ConfigureAwait(true);
                     break;
                 case "session" when api is not null:
                     var modes = Card(column, "settings.persona_and_presets");
-                    AddAction(modes, MessageKey.Persona.SystemPersona, () => ShowSectionAsync("session:persona"));
+                    AddPersonaEntry(modes);
                     var presets = new Settings.PresetWorkspace { Tag = "persona.agent_presets" };
                     modes.Children.Add(presets);
                     var definitions = await api.AgentPresetsAsync(_closing.Token).ConfigureAwait(true);
                     var activePreset = await api.CurrentCompositionAsync(_closing.Token).ConfigureAwait(true);
-                    presets.Open(api, Language, definitions, activePreset, () => NewTaskPreset, SetNewTaskPreset, MayLeaveSettingsAsync, DescribeError, _closing.Token);
-                    if (TopLevel.GetTopLevel(presets) == this)
-                    {
-                        _unsavedSettings = () => presets.HasChanges;
-                    }
-
-                    var modePicker = new ToggleSwitch
-                    {
-                        IsChecked = _workspacePreferences.ShowModePicker,
-                        OffContent = string.Empty,
-                        OnContent = string.Empty,
-                        MinWidth = 0,
-                    };
-                    AutomationProperties.SetAutomationId(modePicker, "action:settings.show-mode-picker");
-                    AddRow(modes, "persona.show_mode_picker", modePicker, MessageCatalog.Get("persona.off_by_default_enable_to", Language));
-                    modePicker.Click += (_, _) =>
+                    presets.Open(
+                        api,
+                        Language,
+                        definitions,
+                        activePreset,
+                        () => NewTaskPreset,
+                        SetNewTaskPreset,
+                        MayLeaveSettingsAsync,
+                        () => ShowSectionAsync("session:persona"),
+                        DescribeError,
+                        _closing.Token);
+                    presets.ConnectModePicker(_workspacePreferences.ShowModePicker, show =>
                     {
                         _workspacePreferences = _workspacePreferences with
                         {
-                            ShowModePicker = modePicker.IsChecked == true,
+                            ShowModePicker = show,
                         };
                         if (_connectOnOpen)
                         {
                             _workspacePreferences.Save();
                         }
 
-                        PlanMode.IsVisible = _workspacePreferences.ShowModePicker;
-                    };
-
-                    var questions = Card(column, "settings.plans_and_questions");
-                    var timeout = await api.AskTimeoutAsync(_closing.Token).ConfigureAwait(true);
-                    var seconds = new NumericUpDown
+                        PlanMode.IsVisible = show;
+                    });
+                    if (ticket == _settingsRead)
                     {
-                        Minimum = (int?)timeout["minSeconds"] ?? 0,
-                        Maximum = (int?)timeout["maxSeconds"] ?? 0,
-                        Value = (int?)timeout["seconds"],
-                        Increment = 1,
-                    };
-                    AddRow(questions, "safety.question_wait_time", seconds);
-                    AddAction(questions, MessageKey.Common.Save, () => api.SetAskTimeoutAsync((int)(seconds.Value ?? 0), _closing.Token));
+                        _unsavedSettings = () => presets.HasChanges;
+                        _unsavedSettingsSummary = presets.Changes;
+                    }
+
+                    await Task.WhenAll(
+                        AgentPlanSettingsAsync(column, api),
+                        AgentCollaborationAsync(column, api),
+                        AgentAutomationAsync(column, api)).ConfigureAwait(true);
                     break;
                 case "session:persona" when api is not null:
                     var persona = Card(column, "settings.persona_and_presets");
-                    AddAction(persona, MessageKey.Common.Back, () => ShowSectionAsync("session"));
-                    await PersonaSettingsAsync(persona, api).ConfigureAwait(true);
+                    AddPersonaEntry(persona);
+                    var personaView = new Settings.SystemPersonaView { Tag = "persona.agent_presets" };
+                    persona.Children.Add(personaView);
+                    var activePersona = await api.PersonaAsync(_closing.Token).ConfigureAwait(true);
+                    personaView.Open(api, activePersona, Language, () => ShowSectionAsync("session"), DescribeError, _closing.Token);
+                    if (ticket == _settingsRead)
+                    {
+                        _unsavedSettings = () => personaView.HasChanges;
+                    }
+
+                    await Task.WhenAll(
+                        AgentPlanSettingsAsync(column, api),
+                        AgentCollaborationAsync(column, api),
+                        AgentAutomationAsync(column, api)).ConfigureAwait(true);
                     break;
                 case "tools" when api is not null:
-                    var approvals = Card(column, "settings.approval");
-                    var approvalChoices = new[]
-                    {
-                        new SectionEntry("dontAsk", MessageCatalog.Get("safety.do_not_ask", Language)),
-                        new SectionEntry("ask", MessageCatalog.Get("safety.ask", Language)),
-                        new SectionEntry("auto", MessageCatalog.Get("safety.auto_approve", Language)),
-                        new SectionEntry("yolo", MessageCatalog.Get("safety.allow_all", Language)),
-                    };
-                    SegmentChoice(
-                        approvals,
-                        "settings.tool_approvals",
-                        "settings.tool-approval",
-                        approvalChoices,
-                        _composerStatus.ToolApprovalMode,
-                        async mode =>
-                        {
-                            await api.SetApprovalModeAsync(mode, _closing.Token).ConfigureAwait(true);
-                            _composerStatus = _composerStatus with
-                            {
-                                ToolApprovalMode = mode,
-                            };
-                        });
-                    await ToolSettingsAsync(Card(column, "settings.sandbox_and_execution"), api).ConfigureAwait(true);
-                    await FlagControlAsync(Card(column, "safety.web"), StudioSetting.BrowserTools, "common.built_in_browser").ConfigureAwait(true);
+                    await SafetySettingsAsync(column, api).ConfigureAwait(true);
                     break;
                 case "display":
-                    await FlagControlAsync(Card(column, "settings.process_card"), StudioSetting.FoldWork, "settings.fold_the_work_in_between").ConfigureAwait(true);
+                    var process = Card(column, "settings.process_card");
+                    await FlagControlAsync(process, StudioSetting.FoldWork, "settings.fold_the_work_in_between").ConfigureAwait(true);
+                    var folding = new Settings.FoldingSettings { Tag = "chat.transcript_folding" };
+                    process.Children.Add(folding);
+                    folding.Open(Language, _workspacePreferences.Folding ?? new(), next =>
+                    {
+                        _workspacePreferences = _workspacePreferences with
+                        {
+                            Folding = next,
+                        };
+                        if (_connectOnOpen)
+                        {
+                            _workspacePreferences.Save();
+                        }
+
+                        Conversation.SetTranscriptFolding(next);
+                    });
+                    AddPlanProgressSetting(process);
                     var previews = Card(column, "settings.files_and_previews_card");
                     await FlagControlAsync(previews, StudioSetting.ChangedFiles, "settings.file_changes").ConfigureAwait(true);
                     await FlagControlAsync(previews, StudioSetting.PresentFiles, "settings.ai_file_delivery_cards").ConfigureAwait(true);
+                    AddNewAnswerMarkerSetting(Card(column, "settings.notices_card"));
                     break;
                 case "usage" when api is not null:
                     await AddUsageAsync(Card(column, "app.usage"), api).ConfigureAwait(true);
@@ -473,15 +469,31 @@ public sealed partial class MainWindow
                     await PackageSettingsAsync(column, api, section == "ext:market").ConfigureAwait(true);
                     break;
                 case "network" when api is not null:
-                    await NetworkSettingsAsync(Card(column, "common.network"), api).ConfigureAwait(true);
+                    var proxy = new Settings.NetworkSettings();
+                    Card(column, "common.network").Children.Add(proxy);
+                    await proxy.OpenAsync(api, Language, DescribeError, _closing.Token).ConfigureAwait(true);
+                    if (TopLevel.GetTopLevel(proxy) == this)
+                    {
+                        _unsavedSettings = () => proxy.HasChanges;
+                    }
+
                     var remotes = await api.RemoteHostsAsync(_closing.Token).ConfigureAwait(true);
                     if (remotes is not null)
                     {
                         var aliases = await api.RemoteCandidatesAsync(_closing.Token).ConfigureAwait(true);
                         var distros = await api.RemoteDistrosAsync(_closing.Token).ConfigureAwait(true);
-                        var book = new Settings.RemoteBook { Tag = "remote.add_a_machine" };
-                        Card(column, "remote.machine").Children.Add(book);
-                        book.Open(api, remotes, aliases, distros, Language, DescribeError, _closing.Token);
+                        var book = new Settings.RemoteBook { Tag = "settings.remote" };
+                        Card(column, "settings.other_machines").Children.Add(book);
+                        book.Open(
+                            api,
+                            remotes,
+                            aliases,
+                            distros,
+                            Language,
+                            DescribeError,
+                            (IsRemoteHidden, ToggleRemoteRailAsync),
+                            (host, start) => PickRemoteFolderAsync(api, host, start),
+                            _closing.Token);
                         if (TopLevel.GetTopLevel(book) == this)
                         {
                             var proxyDirty = _unsavedSettings;
@@ -491,27 +503,13 @@ public sealed partial class MainWindow
 
                     break;
                 case "account" when api is not null:
-                    var account = await api.AccountAsync(_closing.Token).ConfigureAwait(true);
-                    var accountState = new TextBlock
-                    {
-                        Text = MessageCatalog.Get((bool?)account["signedIn"] == true ? MessageKey.Settings.SignedIn : MessageKey.Common.NotSignedIn, Language),
-                    };
-                    AddRow(Card(column, "settings.account"), MessageKey.Settings.Account, accountState, (string?)account["user"]?["label"]);
-                    var diagnostics = Card(column, "settings.version_and_diagnostics");
-                    await VersionSettingsAsync(diagnostics, api).ConfigureAwait(true);
-                    await FlagControlAsync(diagnostics, StudioSetting.TraceExport, "data.trace_export").ConfigureAwait(true);
-                    LogsAction(diagnostics);
-                    CommunityControl(column);
-                    break;
-                case "advanced":
-                    var advanced = Card(column, "settings.not_in_this_version_yet");
-                    advanced.Children.Add(Detail(MessageCatalog.Get("settings.the_items_below_have_no", Language)));
-                    LogsAction(advanced);
+                    await ShowAccountSettingsAsync(column, api).ConfigureAwait(true);
                     break;
             }
 
             if (ticket == _settingsRead)
             {
+                SettingsBody.Classes.Set("settings-card-footer", column.Children.LastOrDefault() is Border last && last.Classes.Contains("settings-card"));
                 IndexSettings(column);
             }
         }
@@ -527,61 +525,19 @@ public sealed partial class MainWindow
         }
     }
 
-    /// <summary>Shows the kernel's editable persona fields.</summary>
-    /// <param name="content">The settings column.</param>
-    /// <param name="api">The current page endpoints.</param>
-    /// <returns>The persona read.</returns>
-    private async Task PersonaSettingsAsync(StackPanel content, StudioPageClient api)
+    /// <summary>Shows the system persona entry above the presets and the persona editor.</summary>
+    /// <param name="content">The settings card.</param>
+    private void AddPersonaEntry(StackPanel content)
     {
-        var persona = await api.PersonaAsync(_closing.Token).ConfigureAwait(true);
-        var prefix = new TextBox { Text = (string?)persona["prefix"], AcceptsReturn = true, TextWrapping = TextWrapping.Wrap };
-        var suffix = new TextBox { Text = (string?)persona["suffix"], AcceptsReturn = true, TextWrapping = TextWrapping.Wrap };
-        var omit = new ToggleSwitch { IsChecked = (bool?)persona["include_runtime_context"] == false, OnContent = string.Empty, OffContent = string.Empty };
-        var presets = new WrapPanel();
-        foreach (var preset in persona["presets"]?.AsArray().OfType<JsonObject>() ?? Enumerable.Empty<JsonObject>())
+        var edit = new Button
         {
-            var id = (string?)preset["id"];
-            var name = id switch
-            {
-                "engineer" => MessageCatalog.Get("persona.rigorous_engineer", Language),
-                "concise" => MessageCatalog.Get("persona.concise", Language),
-                "mentor" => MessageCatalog.Get("persona.mentor", Language),
-                "critic" => MessageCatalog.Get("persona.critic", Language),
-                _ => id,
-            };
-            var choice = new Button { Content = name, Margin = new Thickness(0, 0, 6, 6) };
-            AutomationProperties.SetAutomationId(choice, "action:persona.preset");
-            choice.Click += (_, _) =>
-            {
-                prefix.Text = (string?)preset["prefix"];
-                suffix.Text = (string?)preset["suffix"];
-                omit.IsChecked = (bool?)preset["include_runtime_context"] == false;
-            };
-            presets.Children.Add(choice);
-        }
-
-        if (presets.Children.Count > 0)
-        {
-            content.Children.Add(presets);
-        }
-
-        prefix.MinHeight = 94;
-        suffix.MinHeight = 94;
-        AddRow(content, "persona.start_of_the_system_prompt", prefix, MessageCatalog.Get("persona.leads_the_system_prompt_ahead", Language));
-        AddRow(content, "persona.additional_instructions", suffix, MessageCatalog.Get("persona.placed_after_the_built_in", Language));
-        AddRow(content, "persona.do_not_inject_optional_runtime", omit, MessageCatalog.Get("persona.when_on_the_probed_environment", Language));
-        var saved = ((string?)persona["prefix"] ?? string.Empty, (string?)persona["suffix"] ?? string.Empty, (bool?)persona["include_runtime_context"] == true);
-        if (TopLevel.GetTopLevel(content) == this)
-        {
-            _unsavedSettings = () => saved != (prefix.Text ?? string.Empty, suffix.Text ?? string.Empty, omit.IsChecked != true);
-        }
-
-        AddAction(content, MessageKey.Common.Save, async () =>
-        {
-            var chosen = (prefix.Text ?? string.Empty, suffix.Text ?? string.Empty, omit.IsChecked != true);
-            await api.SetPersonaAsync(chosen.Item1, chosen.Item2, chosen.Item3, _closing.Token).ConfigureAwait(true);
-            saved = chosen;
-        });
+            Content = MessageCatalog.Get("settings.edit_persona", Language),
+            Classes = { "preset-act" },
+        };
+        AddRow(content, MessageKey.Persona.SystemPersona, edit, MessageCatalog.Get("settings.persona_hint", Language));
+        AutomationProperties.SetAutomationId(edit, "action:settings.edit-persona");
+        AutomationProperties.SetName(edit, (string)edit.Content);
+        edit.Click += async (_, _) => await ShowSectionAsync("session:persona").ConfigureAwait(true);
     }
 
     /// <summary>Adds the window-local effects preference.</summary>
@@ -714,7 +670,7 @@ public sealed partial class MainWindow
                 toggle.IsEnabled = true;
             }
         };
-        AddRow(content, key, toggle);
+        AddRow(content, key, toggle, applyKey: setting == StudioSetting.PresentFiles ? "settings.applies_to_new_sessions" : null);
     }
 
     /// <summary>Adds an action that remains retryable after a refusal.</summary>
@@ -758,7 +714,6 @@ public sealed partial class MainWindow
             "settings.messages_sent_while_running" => "composer.running-message-intent",
             "look.visual_effects" => "appearance.effects",
             "about.update_mode" => "update.mode",
-            "safety.how_new_conversations_start" => "default-mode.plan",
             _ => null,
         };
         if (action is not null)

@@ -1,50 +1,161 @@
 <local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.PresetWorkspace">
-  <StackPanel Spacing="10" Margin="0,12">
-    <StackPanel Name="Catalog" Spacing="9">
-      <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Tag="persona.agent_presets" FontWeight="SemiBold" FontSize="{DynamicResource StudioType22}" VerticalAlignment="Center"/>
-        <Button Name="Create" Grid.Column="1" Tag="persona.new_preset" Height="32" Padding="14,0" AutomationProperties.AutomationId="action:agent-preset.create"/>
-      </Grid>
-      <TextBlock Tag="persona.presets_define_which_capabilities_are" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
-      <StackPanel Name="Groups" Spacing="8"/>
-      <WrapPanel><local:PresetImport Name="Import"/><Button Name="Refresh" Tag="common.reload" AutomationProperties.AutomationId="action:agent-preset.reload" Margin="6,0"/></WrapPanel>
-      <TextBlock Name="ActivePreset" TextWrapping="Wrap" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}"/>
-    </StackPanel>
-    <StackPanel Name="Editor" IsVisible="False" Spacing="9">
-      <StackPanel Margin="32,20,32,12" Spacing="6">
-        <Button Name="Back" Tag="persona.back_to_presets" AutomationProperties.AutomationId="action:agent-preset.back"/>
-        <TextBlock Name="Heading" FontWeight="SemiBold" FontSize="{DynamicResource StudioType18}"/>
-        <TextBlock Name="SourceLabel" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
-        <TextBlock Name="Revision" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}"/>
-      </StackPanel>
-      <StackPanel Name="Fields" Spacing="16" Margin="32,4,32,16">
-        <StackPanel Spacing="8"><TextBlock Tag="persona.preset_name"/><TextBox Name="PresetName" AutomationProperties.AutomationId="field:agent-preset.name" MaxLength="200"/></StackPanel>
-        <StackPanel Spacing="8"><TextBlock Tag="persona.purpose"/><TextBox Name="Purpose" AutomationProperties.AutomationId="field:agent-preset.description" /></StackPanel>
-        <StackPanel Spacing="8"><TextBlock Tag="persona.persona_and_instructions"/><TextBlock Tag="persona.describe_the_role_approach_and" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap"/><TextBox Name="Prefix" AutomationProperties.AutomationId="field:persona.prefix" MaxLength="32768" AcceptsReturn="True" MinHeight="118" TextWrapping="Wrap"/></StackPanel>
-        <StackPanel Spacing="8"><TextBlock Tag="persona.additional_instructions"/><TextBlock Tag="persona.placed_after_the_built_in" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap"/><TextBox Name="Suffix" AutomationProperties.AutomationId="field:persona.suffix" MaxLength="32768" AcceptsReturn="True" MinHeight="118" TextWrapping="Wrap"/></StackPanel>
-        <CheckBox Name="OmitRuntime" Tag="persona.do_not_inject_optional_runtime" AutomationProperties.AutomationId="action:persona.runtime-context"/>
-        <local:PresetModules Name="Modules"/>
-        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-          <StackPanel Spacing="8"><TextBlock Tag="persona.storage_scope"/><ComboBox Name="Scope" HorizontalAlignment="Stretch"/></StackPanel>
-          <StackPanel Grid.Column="1" Spacing="3"><TextBlock Tag="persona.preset_id"/><TextBox Name="Identity" MaxLength="64" AutomationProperties.AutomationId="field:agent-preset.id"/></StackPanel>
-        </Grid>
-      </StackPanel>
-      <Expander Name="Extra" Header="{Binding #MoreLabel.Text}" Margin="32,0" HorizontalAlignment="Stretch" AutomationProperties.AutomationId="action:agent-preset.more">
-        <StackPanel Spacing="6"><TextBlock Name="MoreLabel" Tag="common.more_actions" IsVisible="False"/>
-          <WrapPanel><Button Name="Export" Tag="persona.export_file" AutomationProperties.AutomationId="action:agent-preset.export"/><Button Name="Download" Tag="persona.download_preset_json" IsVisible="False" Margin="6,0" AutomationProperties.AutomationId="action:agent-preset.download"/></WrapPanel>
-          <WrapPanel><Button Name="Remove" Tag="persona.delete_preset" AutomationProperties.AutomationId="action:agent-preset.delete-preview"/><Button Name="ConfirmRemove" Tag="common.delete" IsVisible="False" Margin="6,0" AutomationProperties.AutomationId="action:agent-preset.delete"/><Button Name="Keep" Tag="persona.cancel_deletion" IsVisible="False"/></WrapPanel>
-          <TextBlock Tag="persona.explicit_default_configuration" FontWeight="Medium"/><TextBlock Tag="persona.used_only_when_explicitly_selecting" TextWrapping="Wrap"/>
-          <WrapPanel><Button Name="Personal" Tag="persona.set_personal_preference"/><Button Name="Workspace" Tag="persona.set_workspace_preference" Margin="6,0"/></WrapPanel>
+  <local:SettingsFormView.Styles>
+    <Style Selector="StackPanel#Fields TextBox">
+      <Setter Property="MinHeight" Value="32"/><Setter Property="CornerRadius" Value="7"/>
+    </Style>
+    <Style Selector="StackPanel#Fields TextBox:read-only">
+      <Setter Property="Opacity" Value="0.65"/>
+      <Setter Property="Focusable" Value="False"/>
+    </Style>
+    <Style Selector="StackPanel#Fields TextBlock.field-label"><Setter Property="FontWeight" Value="Medium"/></Style>
+    <Style Selector="TextBlock.preset-caption">
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/><Setter Property="LineHeight" Value="19.2"/>
+    </Style>
+    <Style Selector="Expander.preset-extra">
+      <Setter Property="Padding" Value="0"/><Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="Template"><ControlTemplate>
+        <StackPanel Spacing="10">
+          <ToggleButton Name="PART_ToggleButton" Content="{TemplateBinding Header}" HorizontalAlignment="Left"
+                        IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+          <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                            IsVisible="{TemplateBinding IsExpanded}"/>
         </StackPanel>
-      </Expander>
-      <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="32,16">
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Expander.preset-extra /template/ ToggleButton#PART_ToggleButton">
+      <Setter Property="MinHeight" Value="22"/><Setter Property="Padding" Value="0"/><Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="Template"><ControlTemplate>
+        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                          VerticalContentAlignment="Center"/>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Expander.preset-extra /template/ ToggleButton#PART_ToggleButton:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="Button.preset-footer">
+      <Setter Property="MinWidth" Value="84"/><Setter Property="Height" Value="32"/>
+      <Setter Property="CornerRadius" Value="7"/><Setter Property="Padding" Value="12,0"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    </Style>
+  </local:SettingsFormView.Styles>
+  <StackPanel>
+    <StackPanel Name="Catalog" Margin="0,0,0,16">
+      <Grid Name="CatalogHeading" ColumnDefinitions="*,Auto" ColumnSpacing="24" RowDefinitions="38.5,Auto" RowSpacing="8" Margin="0,0,0,24">
+        <TextBlock Tag="persona.agent_presets" Foreground="{DynamicResource TextBrush}" FontWeight="Bold" FontSize="{DynamicResource StudioType22}" VerticalAlignment="Center"/>
+        <Button Name="Create" Grid.Column="1" Classes="preset-major" AutomationProperties.AutomationId="action:agent-preset.create">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
+              <Path Data="{StaticResource Glyph.plus}" Stroke="{Binding #Create.Foreground}" StrokeThickness="2" StrokeLineCap="Round"/>
+            </Canvas></Viewbox>
+            <TextBlock Tag="persona.new_preset" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Tag="persona.presets_define_which_capabilities_are" LineHeight="22.1"
+                   TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+      </Grid>
+      <Border CornerRadius="15" BorderBrush="{DynamicResource HairBrush}" BorderThickness="1" Background="{DynamicResource SurfaceBrush}"
+              Padding="15,17,15,16" Margin="0,0,0,16">
+        <Grid ColumnDefinitions="*,Auto" RowDefinitions="20,Auto" RowSpacing="6" ColumnSpacing="16">
+          <TextBlock Name="ModePickerLabel" Tag="persona.show_mode_picker" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Tag="persona.off_by_default_enable_to" Foreground="{DynamicResource MutedBrush}"
+                     TextWrapping="Wrap" LineHeight="21.44"/>
+          <ToggleSwitch Name="ModePicker" Grid.Column="1" OffContent="" OnContent="" VerticalAlignment="Center"
+                        AutomationProperties.AutomationId="action:settings.show-mode-picker" AutomationProperties.LabeledBy="{Binding #ModePickerLabel}"/>
+        </Grid>
+      </Border>
+      <TextBlock Tag="persona.click_a_card_to_set" Margin="0,0,0,28" LineHeight="22.1" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
+      <StackPanel Name="Groups" Spacing="28"/>
+      <StackPanel Spacing="8" Margin="0,20,0,16">
+        <Button Name="How" Tag="persona.how_to_use" Classes="preset-flat preset-muted" MinHeight="24"/>
+        <TextBlock Name="HowCopy" Tag="persona.choose_an_agent_mode_above" Classes="preset-caption" IsVisible="False"/>
+      </StackPanel>
+      <WrapPanel ItemSpacing="8" LineSpacing="8"><local:PresetImport Name="Import"/><Button Name="Refresh" Tag="common.reload"
+          Classes="preset-act" AutomationProperties.AutomationId="action:agent-preset.reload"/></WrapPanel>
+      <TextBlock Name="ActivePreset" Classes="preset-caption" Margin="0,12,0,0"/>
+    </StackPanel>
+    <StackPanel Name="Editor" IsVisible="False">
+      <StackPanel Name="EditorHeading" Margin="32,24,32,20">
+        <Button Name="Back" Classes="preset-flat preset-muted" MinHeight="31" AutomationProperties.AutomationId="action:agent-preset.back">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
+              <Path Data="M15 6l-6 6 6 6" Stroke="{Binding #Back.Foreground}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/>
+            </Canvas></Viewbox>
+            <TextBlock Tag="persona.back_to_presets" VerticalAlignment="Center"/>
+          </StackPanel>
+        </Button>
+        <TextBlock Name="Heading" Foreground="{DynamicResource TextBrush}" FontWeight="Bold" FontSize="{DynamicResource StudioType22}" LineHeight="28.6" Margin="0,18,0,6"/>
+        <TextBlock Name="SourceLabel" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap" LineHeight="20.8"/>
+        <TextBlock Name="Revision" Classes="preset-caption" Margin="0,6,0,0"/>
+      </StackPanel>
+      <TextBlock Name="ReadOnlyHint" Tag="persona.built_in_presets_are_read" Margin="32,10,32,16" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}" />
+      <Border Margin="32,0" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="0,24,0,28">
+      <StackPanel Name="Fields" Spacing="24">
+        <StackPanel Spacing="8"><TextBlock Tag="persona.preset_name" Classes="field-label"/><TextBox Name="PresetName" AutomationProperties.AutomationId="field:agent-preset.name" MaxLength="200"/></StackPanel>
+        <StackPanel Spacing="8"><TextBlock Tag="persona.purpose" Classes="field-label"/><TextBox Name="Purpose" AutomationProperties.AutomationId="field:agent-preset.description" /></StackPanel>
+        <StackPanel Spacing="8"><TextBlock Tag="persona.persona_and_instructions" Classes="field-label"/><TextBlock Tag="persona.describe_the_role_approach_and" Classes="preset-caption"/><TextBox Name="Prefix" AutomationProperties.AutomationId="field:persona.prefix" MaxLength="32768" AcceptsReturn="True" Height="119" TextWrapping="Wrap" VerticalContentAlignment="Top"/></StackPanel>
+        <StackPanel Spacing="8"><TextBlock Tag="persona.additional_instructions" Classes="field-label"/><TextBlock Tag="persona.placed_after_the_built_in" Classes="preset-caption"/><TextBox Name="Suffix" AutomationProperties.AutomationId="field:persona.suffix" MaxLength="32768" AcceptsReturn="True" Height="119" TextWrapping="Wrap" VerticalContentAlignment="Top"/></StackPanel>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+          <StackPanel Spacing="6">
+            <TextBlock Name="RuntimeLabel" Tag="persona.do_not_inject_optional_runtime" Classes="field-label"/>
+            <TextBlock Tag="persona.when_on_the_probed_environment" Classes="preset-caption"/>
+          </StackPanel>
+          <ToggleSwitch Name="OmitRuntime" Grid.Column="1" OffContent="" OnContent="" AutomationProperties.AutomationId="action:persona.runtime-context"
+                        AutomationProperties.LabeledBy="{Binding #RuntimeLabel}"/>
+        </Grid>
+        <local:PresetModules Name="Modules"/>
+        <StackPanel Spacing="8">
+          <TextBlock Tag="persona.storage_scope" Classes="field-label"/>
+          <ComboBox Name="Scope" AutomationProperties.AutomationId="field:agent-preset.scope" Width="280" HorizontalAlignment="Left"/>
+          <TextBlock Tag="persona.personal_saved_on_this_machine" Classes="preset-caption"/>
+        </StackPanel>
+        <StackPanel Spacing="8">
+          <TextBlock Tag="persona.preset_id" Classes="field-label"/>
+          <TextBox Name="Identity" MaxLength="64" AutomationProperties.AutomationId="field:agent-preset.id"/>
+          <TextBlock Tag="persona.generated_automatically_to_save_and" Classes="preset-caption"/>
+        </StackPanel>
+      </StackPanel>
+      </Border>
+      <Border Name="ActionsBorder" Margin="32,0,32,28" Padding="0,16,0,0" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}">
+        <Expander Name="Extra" Classes="preset-extra" AutomationProperties.AutomationId="action:agent-preset.more">
+          <StackPanel Spacing="12">
+            <Button Name="EditPersona" Tag="persona.edit_everyday_partner_persona" Classes="preset-act" AutomationProperties.AutomationId="action:agent-preset.persona"/>
+            <WrapPanel ItemSpacing="8" LineSpacing="8">
+              <Button Name="Export" Tag="persona.export_file" Classes="preset-act" AutomationProperties.AutomationId="action:agent-preset.export"/>
+              <Button Name="Remove" Tag="persona.delete_preset" Classes="preset-act" AutomationProperties.AutomationId="action:agent-preset.delete-preview"/>
+            </WrapPanel>
+            <Button Name="Download" Tag="persona.download_preset_json" Classes="preset-act" IsVisible="False" AutomationProperties.AutomationId="action:agent-preset.download"/>
+            <Border Name="DeleteWarning" IsVisible="False" BorderThickness="2,0,0,0" BorderBrush="{DynamicResource FaintBrush}" Padding="10,12,0,4">
+              <StackPanel Spacing="12">
+                <TextBlock Tag="persona.deleting_removes_it_from_new" TextWrapping="Wrap" Foreground="{DynamicResource TextBrush}"/>
+                <WrapPanel ItemSpacing="6">
+                  <Button Name="ConfirmRemove" Tag="common.confirm_delete" Classes="preset-act" AutomationProperties.AutomationId="action:agent-preset.delete"/>
+                  <Button Name="Keep" Tag="persona.cancel_deletion" Classes="preset-act" AutomationProperties.AutomationId="action:agent-preset.delete-cancel"/>
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+            <Expander Name="ExplicitDefault" Classes="preset-extra">
+              <StackPanel Spacing="8">
+                <TextBlock Tag="persona.used_only_when_explicitly_selecting" Classes="preset-caption"/>
+                <WrapPanel ItemSpacing="8" LineSpacing="8">
+                  <Button Name="Personal" Tag="persona.set_personal_preference" Classes="preset-act" AutomationProperties.AutomationId="action:agent-preset.default"/>
+                  <Button Name="Workspace" Tag="persona.set_workspace_preference" Classes="preset-act" AutomationProperties.AutomationId="action:agent-preset.workspace-default"/>
+                </WrapPanel>
+              </StackPanel>
+            </Expander>
+          </StackPanel>
+        </Expander>
+      </Border>
+      <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="32,16" Background="{DynamicResource SurfaceBrush}">
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-      <TextBlock Tag="persona.available_to_new_conversations_after" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
-      <WrapPanel Grid.Column="1">
-        <Button Name="Cancel" Tag="common.cancel" Margin="0,0,6,0" AutomationProperties.AutomationId="action:agent-preset.leave"/>
-        <Button Name="Save" Tag="persona.save_preset" AutomationProperties.AutomationId="action:agent-preset.save"/>
-        <Button Name="Duplicate" Tag="persona.duplicate_as_custom_preset" AutomationProperties.AutomationId="action:agent-preset.copy"/>
+      <TextBlock Name="FooterHint" VerticalAlignment="Center" Classes="preset-caption"/>
+      <WrapPanel Grid.Column="1" ItemSpacing="10">
+        <Button Name="Cancel" Classes="preset-act preset-footer" AutomationProperties.AutomationId="action:agent-preset.leave"/>
+        <Button Name="Save" Classes="preset-major preset-footer" Tag="persona.save_preset" AutomationProperties.AutomationId="action:agent-preset.save"/>
+        <Button Name="Duplicate" Classes="preset-major preset-footer" Tag="persona.duplicate_as_custom_preset" AutomationProperties.AutomationId="action:agent-preset.copy"/>
       </WrapPanel>
       </Grid>
       </Border>

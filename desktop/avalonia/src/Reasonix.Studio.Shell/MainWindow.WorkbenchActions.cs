@@ -1,5 +1,6 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Workbench;
@@ -14,35 +15,41 @@ public sealed partial class MainWindow
     /// <summary>Whether this pane includes host-listed hidden files.</summary>
     private bool _showHiddenFiles;
 
+    /// <summary>Whether the new-tab launcher is covering the retained surface.</summary>
+    private bool _workbenchLauncherSelected;
+
     /// <summary>Connects the missing workspace entry points to their canonical commands.</summary>
     private void InitializeWorkbenchActions()
     {
         InitializeFileActions();
-        NewSurface.Flyout = null;
-        NewSurface.Click += (_, _) => ShowWorkbenchLauncher();
-        WorkbenchStart.FilesRequested += async () =>
+        NewSurface.Click += (_, _) => ToggleWorkbenchLauncher();
+        WorkbenchPanel.KeyDown += (_, e) =>
         {
-            WorkbenchStart.IsVisible = false;
-            ShowSource();
-            ExplorerPane.IsVisible = true;
-            await ListFilesAsync().ConfigureAwait(true);
-            WorkbenchSearch.Focus();
+            if (e.Key == Key.Escape && _workbenchLauncherSelected)
+            {
+                ToggleWorkbenchLauncher();
+                NewSurface.Focus(NavigationMethod.Tab);
+                e.Handled = true;
+            }
         };
-        WorkbenchStart.BrowserRequested += () =>
+        WorkbenchStart.FilesRequested += async () => await RevealWorkbenchExplorerAsync().ConfigureAwait(true);
+        WorkbenchStart.BrowserRequested += () => OpenManualBrowser(newPage: true);
+        WorkbenchStart.TerminalRequested += () => OnTerminals(null, new RoutedEventArgs());
+        WorkbenchStart.FileRequested += async path => await OpenEntryAsync(new WorkspaceFileEntry(path, false)).ConfigureAwait(true);
+        foreach (var surface in new Control[] { RenderedFile, ManualBrowserHost, TerminalSurface, FileErrorPanel, ExplorerPane })
         {
-            WorkbenchStart.IsVisible = false;
-            OpenManualBrowser(newPage: true);
-        };
-        WorkbenchStart.TerminalRequested += () =>
-        {
-            WorkbenchStart.IsVisible = false;
-            OnTerminals(null, new RoutedEventArgs());
-        };
-        WorkbenchStart.FileRequested += async path =>
-        {
-            WorkbenchStart.IsVisible = false;
-            await OpenEntryAsync(new WorkspaceFileEntry(path, false)).ConfigureAwait(true);
-        };
+            surface.PropertyChanged += (_, e) =>
+            {
+                if (e.Property == IsVisibleProperty)
+                {
+                    RefreshWorkbenchLauncher();
+                }
+            };
+        }
+
+        WorkbenchEmptyTitle.Text = MessageCatalog.Get("workbench.pick_a_file", Language);
+        WorkbenchEmptyHint.Text = MessageCatalog.Get("workbench.pick_a_file_detail", Language);
+        RefreshWorkbenchLauncher();
         Label(HiddenFiles, "workbench.show_hidden_files");
         _showHiddenFiles = _workspacePreferences.ShowHiddenFiles;
         HiddenFiles.Classes.Set("active", _showHiddenFiles);
@@ -96,17 +103,56 @@ public sealed partial class MainWindow
         };
     }
 
-    /// <summary>Shows the same start surface from the plus button and an empty workbench.</summary>
-    private void ShowWorkbenchLauncher()
+    /// <summary>Switches between the new tab and the surface that remains mounted underneath it.</summary>
+    private void ToggleWorkbenchLauncher()
     {
-        HideBrowser();
-        DetachTerminal();
-        FileEditor.IsVisible = false;
-        RenderedFile.IsVisible = false;
-        FileModes.IsVisible = false;
-        FileMore.IsVisible = false;
-        SaveFile.IsVisible = false;
-        WorkbenchStart.IsVisible = true;
-        WorkbenchStart.Show(GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.ChangeCount), _fileBuffers.Keys.Where(key => key.Root == WorkspaceBufferScope).Select(key => key.Path).Reverse().Take(5), Language);
+        _fileRead++;
+        SetWorkbenchLauncher(!_workbenchLauncherSelected);
+        if (_workbenchLauncherSelected)
+        {
+            WorkbenchStart.FocusFiles();
+        }
+    }
+
+    /// <summary>Updates whether the launcher owns the selected tab.</summary>
+    /// <param name="selected">Whether the reader deliberately opened the new tab.</param>
+    private void SetWorkbenchLauncher(bool selected)
+    {
+        var changed = _workbenchLauncherSelected != selected;
+        _workbenchLauncherSelected = selected;
+        RefreshWorkbenchLauncher(refreshContents: selected);
+        if (changed)
+        {
+            RebuildTabs();
+        }
+    }
+
+    /// <summary>Shows the launcher on an empty canvas without selecting a new tab.</summary>
+    /// <param name="refreshContents">Whether the workspace listing changed while the launcher was already shown.</param>
+    private void RefreshWorkbenchLauncher(bool refreshContents = false)
+    {
+        var empty = _openFile is null && !ManualBrowserHost.IsVisible && !RenderedFile.IsVisible
+            && !TerminalSurface.IsVisible && !FileErrorPanel.IsVisible;
+        var visible = _workbenchLauncherSelected || (empty && !ExplorerPane.IsVisible);
+        WorkbenchEmpty.IsVisible = empty && ExplorerPane.IsVisible;
+        if (visible && (refreshContents || !WorkbenchStart.IsVisible))
+        {
+            WorkbenchStart.Show(GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.ChangeCount), _fileBuffers.Keys.Where(key => key.Root == WorkspaceBufferScope).Select(key => key.Path).Reverse().Take(5), Language);
+        }
+
+        WorkbenchStart.IsVisible = visible;
+    }
+
+    /// <summary>Opens the file tree beside the already selected surface.</summary>
+    /// <returns>The workspace listing.</returns>
+    private async Task RevealWorkbenchExplorerAsync()
+    {
+        ExplorerPane.IsVisible = true;
+        SetWorkbenchLauncher(false);
+        await ListFilesAsync().ConfigureAwait(true);
+        if (WorkbenchSearch.IsEffectivelyVisible)
+        {
+            WorkbenchSearch.Focus();
+        }
     }
 }

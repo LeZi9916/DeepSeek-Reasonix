@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.SponsorView">
+  <StackPanel Spacing="12" Margin="0,6,0,0">
+    <TextBlock Name="Note" FontSize="{DynamicResource StudioType13}" LineHeight="20.8"
+               Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+    <WrapPanel ItemSpacing="14" LineSpacing="8">
+      <Button Name="PayPalLink" Classes="account-link" VerticalAlignment="Center" AutomationProperties.AutomationId="action:sponsor.paypal">
+        <TextBlock Text="PayPal" FontWeight="SemiBold"/>
+      </Button>
+      <Button Name="ToggleQr" Classes="page-link" Height="24" VerticalAlignment="Center" AutomationProperties.AutomationId="action:sponsor.qr"/>
+    </WrapPanel>
+    <WrapPanel Name="Codes" IsVisible="False" ItemSpacing="16" LineSpacing="16">
+      <StackPanel Width="180" Spacing="6">
+        <Border CornerRadius="7" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" ClipToBounds="True">
+          <Image Name="WeChatQr" Source="avares://Reasonix.Studio.Shell/Assets/Community/wechat-pay.jpg"/>
+        </Border>
+        <TextBlock Name="WeChatLabel" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}" HorizontalAlignment="Center"/>
+      </StackPanel>
+      <StackPanel Width="180" Spacing="6">
+        <Border CornerRadius="7" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" ClipToBounds="True">
+          <Image Name="AlipayQr" Source="avares://Reasonix.Studio.Shell/Assets/Community/alipay.jpg"/>
+        </Border>
+        <TextBlock Name="AlipayLabel" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}" HorizontalAlignment="Center"/>
+      </StackPanel>
+    </WrapPanel>
+    <TextBlock Name="Failure" IsVisible="False" FontSize="{DynamicResource StudioType12}"
+               Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap"/>
+  </StackPanel>
+</UserControl>

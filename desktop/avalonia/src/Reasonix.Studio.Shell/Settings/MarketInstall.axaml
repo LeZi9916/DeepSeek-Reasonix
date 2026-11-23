@@ -1,18 +1,219 @@
 <local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.MarketInstall">
-  <Border Classes="settings-card"><StackPanel Spacing="10">
-    <Button Name="Back" Tag="ext.back_to_list" AutomationProperties.AutomationId="action:market.back"/>
-    <TextBlock Name="Heading" FontSize="{DynamicResource StudioType18}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-    <SelectableTextBlock Name="Description" TextWrapping="Wrap"/>
-    <TextBlock Name="Notice" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
-    <StackPanel Name="Actions" Spacing="6"/>
-    <CheckBox Name="Acknowledge" IsVisible="False" AutomationProperties.AutomationId="action:market.confirm-many"/>
-    <SelectableTextBlock Name="Feedback" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}"/>
-    <WrapPanel>
-      <Button Name="Inspect" IsVisible="False" AutomationProperties.AutomationId="action:market.inspect"/>
-      <Button Name="Cancel" Tag="common.back" IsVisible="False" Margin="0,0,6,0" AutomationProperties.AutomationId="action:market.cancel"/>
-      <Button Name="Install" Tag="ext.install" IsVisible="False" AutomationProperties.AutomationId="action:market.install"/>
-      <Button Name="Retry" Tag="common.retry" IsVisible="False" AutomationProperties.AutomationId="action:market.retry"/>
-    </WrapPanel>
-  </StackPanel></Border>
+  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.MarketInstall" UseLayoutRounding="False">
+  <local:SettingsFormView.Styles>
+    <Style Selector="Button.market-detail-action">
+      <Setter Property="Height" Value="24"/><Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/>
+      <Setter Property="HorizontalAlignment" Value="Left"/><Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="Padding" Value="10,0"/><Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="Background" Value="Transparent"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button.market-detail-action:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    <Style Selector="Button.market-detail-action.primary, Button.market-detail-action.primary:pointerover">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentFgBrush}"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.market-detail-action.top">
+      <Setter Property="Height" Value="32"/><Setter Property="CornerRadius" Value="7"/><Setter Property="Padding" Value="14,0"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    </Style>
+    <Style Selector="Button.market-detail-action.vote.chosen">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter Property="Background" Value="{DynamicResource AccentWashBrush}"/>
+    </Style>
+    <Style Selector="Button.market-detail-action:disabled">
+      <Setter Property="Opacity" Value=".55"/><Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    </Style>
+    <Style Selector="Button.market-detail-action.top:disabled">
+      <Setter Property="Opacity" Value="1"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="CheckBox.market-ack">
+      <Setter Property="MinHeight" Value="18"/><Setter Property="Padding" Value="0"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="Transparent">
+          <Grid ColumnDefinitions="13,*" ColumnSpacing="10" Margin="4,0,0,0">
+            <Border Name="CheckOutline" Height="13" Width="13" VerticalAlignment="Center" CornerRadius="2"
+                    BorderBrush="{DynamicResource FaintBrush}" Background="{DynamicResource RaisedBrush}" BorderThickness="1">
+              <Viewbox Name="Tick" Width="9" Height="9" IsVisible="False">
+                <Canvas Width="24" Height="24"><Path Data="m5 12 4 4L19 6" Stroke="#FFFFFF"
+                       StrokeThickness="3.6" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+              </Viewbox>
+            </Border>
+            <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" VerticalAlignment="Center"/>
+          </Grid>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="CheckBox.market-ack:checked /template/ Border#CheckOutline">
+      <Setter Property="Background" Value="#0075FF"/><Setter Property="BorderBrush" Value="#0075FF"/>
+    </Style>
+    <Style Selector="CheckBox.market-ack:checked /template/ Viewbox#Tick"><Setter Property="IsVisible" Value="True"/></Style>
+    <Style Selector="Button.market-detail-action.text, Button.market-detail-action.close">
+      <Setter Property="BorderThickness" Value="0"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    </Style>
+    <Style Selector="Button.market-detail-action.close">
+      <Setter Property="Width" Value="28"/><Setter Property="Height" Value="28"/><Setter Property="CornerRadius" Value="7"/><Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector="TextBlock.market-detail-hint, SelectableTextBlock.market-detail-hint">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="TextBlock.market-detail-copy, SelectableTextBlock.market-detail-copy">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="TextBlock.market-detail-pill">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    </Style>
+    <Style Selector="TextBlock.market-notice-heading">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="TextBlock.market-risk-heading">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="Border#DigestBanner"><Setter Property="Background" Value="{DynamicResource OkWashBrush}"/></Style>
+    <Style Selector="Border#DigestBanner.unreviewed">
+      <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="Border#DigestBanner.unreviewed SelectableTextBlock#Digest">
+      <Setter Property="FontFamily" Value="{DynamicResource WorkbenchUiFamily}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="LineHeight" Value="20.2"/>
+    </Style>
+    <Style Selector="TextBlock.market-risk-heading.high"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
+    <Style Selector="Grid.execution TextBlock.market-detail-hint"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
+  </local:SettingsFormView.Styles>
+  <Panel>
+    <StackPanel Name="StatusSurface" Spacing="9" IsVisible="False">
+      <Border Name="StatusBanner" Padding="12,8" BorderBrush="{DynamicResource ErrBrush}">
+        <StackPanel Spacing="3">
+          <TextBlock Name="StatusHeading" Classes="market-notice-heading" AutomationProperties.LiveSetting="Polite"/>
+          <TextBlock Name="StatusCopy" Classes="market-detail-copy"/>
+        </StackPanel>
+      </Border>
+      <StackPanel Name="OutcomeItems" Spacing="5"/>
+      <WrapPanel Name="StatusActions" ItemSpacing="8" LineSpacing="5">
+        <Button Name="StatusBack" Tag="ext.back_to_list" Classes="market-detail-action" AutomationProperties.AutomationId="action:market.back"/>
+        <Button Name="StatusRetry" Tag="common.retry" Classes="market-detail-action" IsVisible="False" AutomationProperties.AutomationId="action:market.detail-retry"/>
+        <Button Name="ViewInstalled" Tag="ext.view_installed_capabilities" Classes="market-detail-action" IsVisible="False"
+                AutomationProperties.AutomationId="action:market.view-installed"/>
+      </WrapPanel>
+    </StackPanel>
+    <Border Name="ListingFrame" IsVisible="False" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10"
+            Background="{DynamicResource FloatBrush}" BoxShadow="0 10 24 0 #19000000" Padding="0,14,0,0">
+      <StackPanel>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="16,0">
+          <WrapPanel ItemSpacing="8" LineSpacing="4" VerticalAlignment="Center">
+            <TextBlock Name="ListingName" FontSize="{DynamicResource StudioType17}" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+            <Border Padding="7,0" Height="20" CornerRadius="10" Background="{DynamicResource OverlayBrush}" VerticalAlignment="Center">
+              <TextBlock Name="KindLabel" Classes="market-detail-pill" VerticalAlignment="Center"/>
+            </Border>
+            <Border Name="VerifiedBadge" Padding="7,0" Height="20" CornerRadius="10" Background="{DynamicResource OkWashBrush}"
+                    BorderBrush="{DynamicResource OkBrush}" BorderThickness=".5" VerticalAlignment="Center" IsVisible="False">
+              <TextBlock Name="VerifiedLabel" Tag="ext.admin_marked_trusted" Classes="market-detail-pill" Foreground="{DynamicResource OkInkBrush}"
+                         FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </Border>
+          </WrapPanel>
+          <Button Name="Inspect" Grid.Column="1" Classes="market-detail-action top primary" AutomationProperties.AutomationId="action:market.inspect"/>
+        </Grid>
+        <Border Name="CacheAlert" IsVisible="False" CornerRadius="10" Padding="12,8" Background="{DynamicResource PageBrush}">
+          <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10" RowSpacing="3">
+            <TextBlock Tag="ext.showing_cached_data" Classes="market-notice-heading" Grid.ColumnSpan="2"/>
+            <TextBlock Name="CacheCopy" Grid.Row="1" Classes="market-detail-copy"/>
+            <Button Name="CacheRetry" Grid.Column="1" Grid.Row="1" Tag="common.retry" Classes="market-detail-action"
+                    AutomationProperties.AutomationId="action:market.detail-retry"/>
+          </Grid>
+        </Border>
+        <TextBlock Name="ListingSummary" Margin="16,4,16,0" LineHeight="19.5" Classes="market-detail-copy"/>
+        <SelectableTextBlock Name="ListingDescription" Margin="16,8,16,0" LineHeight="20.8" Classes="market-detail-copy"/>
+        <Border Name="UnpinnedAlert" IsVisible="False" Padding="12,8" Background="{DynamicResource WarnWashBrush}" CornerRadius="10">
+          <StackPanel Spacing="3">
+            <TextBlock Tag="ext.content_not_pinned_by_review" Classes="market-notice-heading"/>
+            <TextBlock Name="UnpinnedCopy" Classes="market-detail-copy" LineHeight="20.2"/>
+          </StackPanel>
+        </Border>
+        <WrapPanel Margin="16,8,16,10" ItemSpacing="12" LineSpacing="4">
+          <TextBlock Name="Publisher" Classes="market-detail-hint"/>
+          <TextBlock Name="VersionLabel" Classes="market-detail-hint"/>
+          <TextBlock Name="Downloads" Classes="market-detail-hint"/>
+          <SelectableTextBlock Name="ListingSource" Classes="market-detail-hint" FontFamily="{DynamicResource WorkbenchMonoFamily}"/>
+        </WrapPanel>
+        <ContentControl Name="VoteHost" HorizontalContentAlignment="Stretch"/>
+        <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="16,10">
+          <Grid Name="FooterLayout" ColumnDefinitions="*,Auto,*" ColumnSpacing="8">
+            <TextBlock Name="ListingNote" Classes="market-detail-hint" VerticalAlignment="Center"/>
+            <Button Name="Back" Grid.Column="1" Tag="ext.back_to_list" Classes="market-detail-action" AutomationProperties.AutomationId="action:market.back"/>
+          </Grid>
+        </Border>
+        <TextBlock Name="DetailFailure" IsVisible="False" Classes="market-detail-hint" Margin="16,0,16,9"
+                   Foreground="{DynamicResource ErrInkBrush}" AutomationProperties.LiveSetting="Polite"/>
+      </StackPanel>
+    </Border>
+    <Border Name="ReviewFrame" IsVisible="False" MaxWidth="560" HorizontalAlignment="Left"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10"
+            Background="{DynamicResource FloatBrush}" BoxShadow="0 10 24 0 #19000000">
+      <StackPanel>
+        <Grid ColumnDefinitions="*,28" ColumnSpacing="8" Margin="16,14,16,10">
+          <TextBlock Name="ReviewTitle" FontSize="{DynamicResource StudioType14}" FontWeight="Bold"
+                     TextWrapping="Wrap" VerticalAlignment="Center"/>
+          <Button Name="CloseReview" Grid.Column="1" Classes="market-detail-action close" AutomationProperties.AutomationId="action:market.close-review">
+            <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
+              <Path Data="m18 6-12 12 M6 6l12 12" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/>
+            </Canvas></Viewbox>
+          </Button>
+        </Grid>
+        <StackPanel Margin="16,10,16,0" Spacing="10">
+          <Border Name="TrustAlert" IsVisible="False" Padding="12,8" CornerRadius="10" Background="{DynamicResource WarnWashBrush}">
+            <StackPanel Spacing="3">
+              <TextBlock Name="TrustHeading" Classes="market-notice-heading"/>
+              <TextBlock Name="TrustCopy" Classes="market-detail-copy" LineHeight="20.2"/>
+            </StackPanel>
+          </Border>
+          <Border Name="DigestBanner" Padding="12,8">
+            <StackPanel>
+              <Grid Name="VerifiedDigest" ColumnDefinitions="14,*" ColumnSpacing="6">
+                <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
+                  <Path Data="m5 12 4 4L19 6" Stroke="{DynamicResource OkInkBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+                </Canvas></Viewbox>
+                <TextBlock Grid.Column="1" Tag="ext.checked_by_content_digest_identical" Classes="market-notice-heading"
+                           Foreground="{DynamicResource OkInkBrush}"/>
+              </Grid>
+              <TextBlock Name="UnreviewedDigestLabel" Classes="market-detail-copy" IsVisible="False"/>
+              <SelectableTextBlock Name="Digest" Classes="market-detail-hint" FontSize="{DynamicResource StudioType11}"
+                                   FontFamily="{DynamicResource WorkbenchMonoFamily}" Margin="0,4,0,0"/>
+              <TextBlock Name="McpNote" Tag="ext.for_an_mcp_server_only" Classes="market-detail-hint" IsVisible="False"/>
+            </StackPanel>
+          </Border>
+          <Border Name="ManyAlert" IsVisible="False" Padding="12,8" CornerRadius="10" Background="{DynamicResource WarnWashBrush}">
+            <StackPanel Spacing="6">
+              <TextBlock Name="ManyTitle" Classes="market-notice-heading"/>
+              <StackPanel Name="SkillNames" Spacing="4" Margin="4,0,0,0"/>
+              <CheckBox Name="Acknowledge" Classes="market-ack" FontSize="{DynamicResource StudioType13}"
+                        AutomationProperties.AutomationId="action:market.confirm-many"/>
+            </StackPanel>
+          </Border>
+          <StackPanel Name="ReviewActions" Margin="0,10,0,0" Spacing="10"/>
+          <TextBlock Name="ReviewFailure" IsVisible="False" Classes="market-detail-hint"
+                     Foreground="{DynamicResource ErrInkBrush}" AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
+        <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0" Padding="16,10" Margin="0,22,0,0">
+          <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <TextBlock Tag="ext.install_to_mine_available_in" Classes="market-detail-hint" VerticalAlignment="Center"/>
+            <Button Name="Cancel" Grid.Column="1" Tag="common.back" Classes="market-detail-action" AutomationProperties.AutomationId="action:market.cancel"/>
+            <Button Name="Install" Grid.Column="2" Tag="ext.install" Classes="market-detail-action primary" AutomationProperties.AutomationId="action:market.install"/>
+          </Grid>
+        </Border>
+      </StackPanel>
+    </Border>
+  </Panel>
 </local:SettingsFormView>

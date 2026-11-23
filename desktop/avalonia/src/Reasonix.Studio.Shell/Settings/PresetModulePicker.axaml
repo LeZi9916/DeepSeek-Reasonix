@@ -1,0 +1,90 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.PresetModulePicker">
+  <local:SettingsFormView.Styles>
+    <Style Selector="CheckBox.module-choice">
+      <Setter Property="MinHeight" Value="40"/><Setter Property="Padding" Value="14,0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="CheckBox.module-choice:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    <Style Selector="CheckBox.module-choice, CheckBox.module-select-all">
+      <Setter Property="Template"><ControlTemplate>
+        <Grid Background="{TemplateBinding Background}" ColumnDefinitions="16,*" ColumnSpacing="10" Margin="{TemplateBinding Padding}">
+          <Border Name="Mark" Width="16" Height="16" CornerRadius="3" VerticalAlignment="Center"
+                  BorderThickness="1" BorderBrush="{DynamicResource GhostBrush}">
+            <PathIcon Name="Sign" Width="10" Height="10" IsVisible="False" Foreground="{DynamicResource PageBrush}"/>
+          </Border>
+          <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                            HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/>
+        </Grid>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="CheckBox.module-choice:checked /template/ Border#Mark, CheckBox.module-select-all:checked /template/ Border#Mark, CheckBox.module-select-all:indeterminate /template/ Border#Mark">
+      <Setter Property="Background" Value="{DynamicResource AccentInkBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentInkBrush}"/>
+    </Style>
+    <Style Selector="CheckBox.module-choice:checked /template/ PathIcon#Sign, CheckBox.module-select-all:checked /template/ PathIcon#Sign">
+      <Setter Property="IsVisible" Value="True"/><Setter Property="Data" Value="M1 5 4 8 10 2 9 1 4 6 2 4Z"/>
+    </Style>
+    <Style Selector="CheckBox.module-select-all:indeterminate /template/ PathIcon#Sign">
+      <Setter Property="IsVisible" Value="True"/><Setter Property="Data" Value="M1 4H9V6H1Z"/>
+    </Style>
+    <Style Selector="TextBox#Search:focus /template/ Border#PART_BorderElement">
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style Selector="Button.module-action">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="Padding" Value="4"/>
+      <Setter Property="MinHeight" Value="26"/>
+    </Style>
+    <Style Selector="Button.module-action:disabled"><Setter Property="Opacity" Value="0.55"/></Style>
+  </local:SettingsFormView.Styles>
+  <Panel>
+    <Button Name="Trigger" Classes="preset-flat" Height="40" Padding="12,0" BorderThickness="1" CornerRadius="7"
+            Background="{DynamicResource RaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch" AutomationProperties.AutomationId="action:agent-preset.module-choose">
+      <Grid ColumnDefinitions="*,16" ColumnSpacing="12">
+        <TextBlock Name="TriggerText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+        <Viewbox Grid.Column="1" Width="16" Height="16"><Canvas Width="24" Height="24">
+          <Path Data="M6 9l6 6 6-6" Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/>
+        </Canvas></Viewbox>
+      </Grid>
+    </Button>
+    <Popup Name="Picker" PlacementTarget="{Binding #Trigger}" Placement="BottomEdgeAlignedLeft" VerticalOffset="6" PlacementConstraintAdjustment="None"
+           IsLightDismissEnabled="True" ShouldUseOverlayLayer="True" WindowManagerAddShadowHint="False">
+      <Border Name="PickerSurface" KeyboardNavigation.TabNavigation="Cycle" Width="480" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="10"
+              Background="{DynamicResource SurfaceBrush}" BoxShadow="0 8 22 0 #2b000000">
+        <Grid RowDefinitions="47,56,Auto,53,40">
+          <Border BorderThickness="0,0,0,1" BorderBrush="{DynamicResource HairBrush}" Padding="14,0">
+            <Grid ColumnDefinitions="*,Auto">
+              <CheckBox Name="All" Classes="module-select-all" VerticalAlignment="Center" AutomationProperties.AutomationId="action:agent-preset.module-select-all"/>
+              <Button Name="Clear" Grid.Column="1" Classes="preset-flat preset-muted module-action"
+                      VerticalAlignment="Center" AutomationProperties.AutomationId="action:agent-preset.module-clear"/>
+            </Grid>
+          </Border>
+          <Grid Grid.Row="1" Margin="12,10">
+            <TextBox Name="Search" Padding="33,0,10,0" VerticalContentAlignment="Center"
+                     AutomationProperties.AutomationId="field:agent-preset.module-search"/>
+            <Viewbox Width="16" Height="16" HorizontalAlignment="Left" Margin="10,0,0,0" IsHitTestVisible="False">
+              <Canvas Width="24" Height="24"><Path Data="M20 20l-4-4 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0"
+                      Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round"/></Canvas>
+            </Viewbox>
+          </Grid>
+          <ScrollViewer Name="ResultsViewport" Grid.Row="2" MaxHeight="360" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Name="Results" Margin="0,0,0,8"/>
+          </ScrollViewer>
+          <Border Grid.Row="3" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="14,0">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Name="Total" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
+              <Button Name="Done" Grid.Column="1" Classes="preset-major" Height="32" CornerRadius="7" MinWidth="76"
+                      VerticalAlignment="Center" AutomationProperties.AutomationId="action:agent-preset.module-done"/>
+            </Grid>
+          </Border>
+          <Border Grid.Row="4" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="14,0">
+            <TextBlock Tag="persona.select_all_includes_current_results" VerticalAlignment="Center" TextWrapping="Wrap"
+                       FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}"/>
+          </Border>
+        </Grid>
+      </Border>
+    </Popup>
+  </Panel>
+</local:SettingsFormView>

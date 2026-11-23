@@ -44,7 +44,7 @@ public sealed partial class MainWindow
             }
 
             ChromeMore.IsVisible = gathered;
-            ChromeGroup.Width = gathered ? 28 : 132;
+            ChromeGroup.Width = gathered ? 28 : double.NaN;
         };
     }
 }

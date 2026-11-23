@@ -1,0 +1,21 @@
+<settings:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:settings="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.PluginSourceView"
+             UseLayoutRounding="False">
+  <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,12"
+          Background="{DynamicResource FloatBrush}">
+    <StackPanel Spacing="10">
+      <TextBox Name="Source" Classes="settings-input" Height="86.3" AcceptsReturn="True" Padding="9,6" VerticalContentAlignment="Top"
+               PlaceholderText="https://github.com/acme/review-kit&#10;&#10;~/projects/my-plugin"
+               AutomationProperties.AutomationId="action:extensions.source"/>
+      <StackPanel Name="PlanItems" IsVisible="False" Spacing="6"/>
+      <TextBlock Name="Status" Classes="extension-caption failure" IsVisible="False" AutomationProperties.LiveSetting="Polite"/>
+      <WrapPanel ItemSpacing="8" LineSpacing="5">
+        <TextBlock Name="Hint" Tag="ext.a_repository_address_or_drop" Classes="extension-caption" VerticalAlignment="Center"/>
+        <Button Name="Folder" Tag="common.choose_a_folder" Classes="extension-action" AutomationProperties.AutomationId="action:extensions.pick-folder"/>
+        <Button Name="Cancel" Tag="common.cancel" Classes="extension-action" AutomationProperties.AutomationId="action:extensions.add.cancel"/>
+        <Button Name="Inspect" Tag="ext.see_what_it_is" Classes="extension-action primary" AutomationProperties.AutomationId="action:extensions.inspect"/>
+        <Button Name="Install" Classes="extension-action primary" IsVisible="False" AutomationProperties.AutomationId="action:extensions.install"/>
+      </WrapPanel>
+    </StackPanel>
+  </Border>
+</settings:SettingsFormView>

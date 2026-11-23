@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.ChangedSettings">
+  <StackPanel>
+    <Border Classes="setting-row" AutomationProperties.AutomationId="class:srow">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+        <TextBlock Name="Summary" Classes="setting-row-name" FontSize="{DynamicResource StudioType13}"
+                   Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" VerticalAlignment="Center"
+                   AutomationProperties.AutomationId="class:srow-name"/>
+        <Button Name="ToggleKeys" Grid.Column="1" Classes="page-link" Height="24" Margin="0" VerticalAlignment="Center"
+                AutomationProperties.AutomationId="action:settings.changed-toggle"/>
+      </Grid>
+    </Border>
+    <Border Name="Details" IsVisible="False" Margin="0,4,0,0" Padding="0,8,0,2"
+            BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}">
+      <ItemsControl Name="Keys">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Spacing="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate><DataTemplate>
+          <TextBlock Text="{ReflectionBinding}" TextWrapping="Wrap" FontSize="{DynamicResource StudioType12}"
+                     FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource MutedBrush}"/>
+        </DataTemplate></ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Border>
+  </StackPanel>
+</UserControl>

@@ -141,7 +141,7 @@ public sealed partial class StudioPageClient
     /// <summary>Reads the current question timeout and its allowed range.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The response from the kernel.</returns>
-    public Task<JsonObject> AskTimeoutAsync(CancellationToken token) => ReadAsync<JsonObject>("/ask-timeout", token);
+    public Task<JsonObject?> AskTimeoutAsync(CancellationToken token) => OptionalPreferenceAsync("/ask-timeout", token);
 
     /// <summary>Saves the question timeout to the session configuration.</summary>
     /// <param name="seconds">Timeout in seconds.</param>
@@ -296,7 +296,6 @@ public sealed partial class StudioPageClient
         StudioSetting.ProviderHealth => ("/providers/health/settings", "enabled"),
         StudioSetting.BrowserTools => ("/browser-tools", "enabled"),
         StudioSetting.AutoArchive => ("/auto-archive", "enabled"),
-        StudioSetting.TraceExport => ("/observability", "enabled"),
         _ => throw new ArgumentOutOfRangeException(nameof(setting)),
     };
 

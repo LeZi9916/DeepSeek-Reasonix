@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="using:System" xmlns:workbench="using:Reasonix.Studio.Shell.Workbench" x:Class="Reasonix.Studio.Shell.Workbench.WorkbenchHeaderTab"
+             UseLayoutRounding="False" MinWidth="72" MaxWidth="168" VerticalAlignment="Top">
+  <UserControl.Resources>
+    <StreamGeometry x:Key="BrowserGlyph">M22 12a10 10 0 1 0-20 0 10 10 0 1 0 20 0z M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20 M2 12h20</StreamGeometry>
+    <StreamGeometry x:Key="NewGlyph">M5 12h14 M12 5v14</StreamGeometry>
+  </UserControl.Resources>
+  <Border Name="Frame" Classes="wb-tab-frame">
+    <Grid ColumnDefinitions="*,22">
+      <Button Name="Picker" Classes="wb-tab" Padding="31,0,0,0" HorizontalContentAlignment="Left"
+              AutomationProperties.AutomationId="action:workbench.tab">
+        <Button.ContentTemplate>
+          <DataTemplate x:DataType="sys:String">
+            <DockPanel>
+              <TextBlock Name="TabCount" DockPanel.Dock="Right" Margin="9,0,0,0" VerticalAlignment="Center"
+                         Text="{Binding $parent[workbench:WorkbenchHeaderTab].Count}"
+                         IsVisible="{Binding $parent[workbench:WorkbenchHeaderTab].Count, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                         FontSize="{DynamicResource StudioType11}" FontWeight="Bold" Foreground="{DynamicResource FaintBrush}"/>
+              <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+            </DockPanel>
+          </DataTemplate>
+        </Button.ContentTemplate>
+      </Button>
+      <Viewbox Name="TabIcon" Width="14" Height="14" Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" IsHitTestVisible="False">
+        <Canvas Width="24" Height="24">
+          <Path Name="TabGlyph" Data="{StaticResource Glyph.file-text}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+        </Canvas>
+      </Viewbox>
+      <Button Name="Dismiss" Grid.Column="1" Classes="wb-tab-close" AutomationProperties.AutomationId="action:workbench.close">
+        <Grid Width="13" Height="13">
+          <Viewbox Name="CloseGlyph" Width="13" Height="13">
+            <Canvas Width="24" Height="24">
+              <Path Stroke="{Binding #Dismiss.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" Data="m18 6-12 12 M6 6l12 12"/>
+            </Canvas>
+          </Viewbox>
+          <Border Name="DirtyMark" Width="7" Height="7" CornerRadius="3.5" HorizontalAlignment="Center" VerticalAlignment="Center"
+                  Background="{DynamicResource TextBrush}" IsHitTestVisible="False"/>
+        </Grid>
+      </Button>
+    </Grid>
+  </Border>
+</UserControl>

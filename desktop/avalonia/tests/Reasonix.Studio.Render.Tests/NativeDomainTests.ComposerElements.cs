@@ -29,7 +29,7 @@ public sealed partial class NativeDomainTests
     [InlineData(1440, true)]
     [InlineData(760, false)]
     [InlineData(760, true)]
-    public Task ComposerElementsMatchReference(int width, bool dark) => WithSettings("conversation", (w, reads) =>
+    public Task ComposerElementsMatchReference(int width, bool dark) => WithComposerPicker((w, reads) =>
     {
         w.Width = width;
         w.Height = width == 760 ? 480 : 900;

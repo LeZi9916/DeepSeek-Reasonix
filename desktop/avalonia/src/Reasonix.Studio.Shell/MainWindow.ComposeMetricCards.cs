@@ -53,7 +53,7 @@ public sealed partial class MainWindow
         ContextDetails.ManageRequested += () =>
         {
             CloseComposeCards();
-            ShowSidebarSection("ext");
+            _ = GoToDestinationAsync("ext");
         };
         ContextDetails.CompactRequested += async () => await CompactContextAsync().ConfigureAwait(true);
         _composePulse.Tick += (_, _) =>

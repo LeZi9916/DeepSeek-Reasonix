@@ -1,0 +1,106 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.ScheduleSettingsView">
+  <local:SettingsFormView.Styles>
+    <Style Selector="TextBlock.schedule-note">
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/><Setter Property="LineHeight" Value="18"/>
+    </Style>
+    <Style Selector="Border.schedule-line">
+      <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/><Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="Padding" Value="12,8"/>
+    </Style>
+    <Style Selector="Button.schedule-action">
+      <Setter Property="HorizontalAlignment" Value="Right"/><Setter Property="Height" Value="24"/><Setter Property="CornerRadius" Value="999"/>
+    </Style>
+    <Style Selector="Button.schedule-ghost">
+      <Setter Property="Height" Value="24"/><Setter Property="Padding" Value="11,0"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    </Style>
+    <Style Selector="Button.preset-major.schedule-action:disabled">
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    </Style>
+    <Style Selector="TextBox.schedule-field, ComboBox.schedule-field">
+      <Setter Property="MinHeight" Value="30"/><Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="CornerRadius" Value="7"/>
+    </Style>
+  </local:SettingsFormView.Styles>
+  <Border Classes="schedule-line" Padding="0,12,0,6">
+    <StackPanel>
+      <TextBlock Tag="panels.scheduled_runs" Margin="0,0,0,10" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" LineHeight="18.2"/>
+      <StackPanel Name="LoadIssue" Spacing="6" Margin="12,8" IsVisible="False">
+        <TextBlock Name="LoadError" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap"/>
+        <Button Name="Retry" Tag="common.retry" Classes="preset-act schedule-action" AutomationProperties.AutomationId="action:schedule.retry"/>
+      </StackPanel>
+      <StackPanel Name="Board" IsVisible="False">
+        <Border Classes="schedule-line" Padding="12,9">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <StackPanel Spacing="2" VerticalAlignment="Center">
+              <TextBlock Name="PauseLabel" TextWrapping="Wrap"/>
+              <TextBlock Name="Policy" Classes="schedule-note"/>
+            </StackPanel>
+            <Button Name="PauseAll" Grid.Column="1" Classes="preset-act" VerticalAlignment="Center"/>
+          </Grid>
+        </Border>
+        <TextBlock Name="Empty" Tag="panels.no_scheduled_runs_yet" Classes="schedule-note" Margin="12,6" IsVisible="False"/>
+        <StackPanel Name="Schedules"/>
+        <StackPanel Name="Recent" Tag="panels.recent_runs">
+          <TextBlock Tag="panels.recent_runs" Classes="schedule-note" FontWeight="SemiBold" Margin="12,6"/>
+          <StackPanel Name="Runs"/>
+        </StackPanel>
+        <StackPanel Name="ResultPanel" Tag="panels.result" Spacing="6" IsVisible="False">
+          <TextBlock Name="ResultHeading" FontWeight="SemiBold" Classes="schedule-note" Margin="12,6,12,0"/>
+          <TextBlock Tag="panels.the_text_below_was_written" Classes="schedule-note" Margin="12,0"/>
+          <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="1" CornerRadius="7" Padding="8,6" Background="{DynamicResource RaisedBrush}">
+            <ScrollViewer MaxHeight="112" HorizontalScrollBarVisibility="Disabled">
+              <TextBlock Name="Report" TextWrapping="Wrap"/>
+            </ScrollViewer>
+          </Border>
+          <TextBlock Name="Truncated" Tag="panels.the_report_was_too_long" Classes="schedule-note" Margin="12,0" IsVisible="False"/>
+          <StackPanel Name="PendingPanel" Spacing="6" IsVisible="False">
+            <TextBlock Tag="panels.waiting_for_your_decision" FontWeight="SemiBold" Classes="schedule-note" Margin="12,0"/>
+            <TextBlock Tag="panels.the_text_below_was_written" Classes="schedule-note" Margin="12,0"/>
+            <StackPanel Name="Pending"/>
+            <TextBlock Tag="panels.none_of_these_was_run" Classes="schedule-note" Margin="12,0"/>
+          </StackPanel>
+          <Button Name="CloseResult" Tag="common.close" Classes="preset-act schedule-action" AutomationProperties.AutomationId="action:schedule.result-close"/>
+        </StackPanel>
+        <Button Name="NewSchedule" Tag="panels.new_scheduled_run" Classes="preset-act schedule-action" Margin="0,6,0,0"
+                AutomationProperties.AutomationId="action:schedule.new"/>
+        <StackPanel Name="Form" Tag="panels.new_scheduled_run" Spacing="6" Margin="0,6,0,0" IsVisible="False">
+          <TextBlock Name="FolderLabel" Tag="panels.folder_it_can_only_read" Classes="schedule-note" Margin="12,6"/>
+          <WrapPanel Name="Trust" ItemSpacing="8" LineSpacing="4" IsVisible="False">
+            <TextBlock Name="TrustMessage" Classes="schedule-note" Margin="12,4,0,4"/>
+            <Button Name="TrustFolder" Tag="common.trust_this_folder" Classes="preset-act" AutomationProperties.AutomationId="action:workspace.trust"/>
+          </WrapPanel>
+          <TextBlock Name="NoFolder" Tag="panels.there_is_no_trusted_project" Classes="schedule-note" Margin="12,6" IsVisible="False"/>
+          <ComboBox Name="Folder" Classes="agent-select settings-input schedule-field" AutomationProperties.AutomationId="field:schedule.folder"
+                    AutomationProperties.LabeledBy="{Binding #FolderLabel}"/>
+          <TextBlock Name="PromptLabel" Tag="panels.what_to_do" Classes="schedule-note" Margin="12,6"/>
+          <TextBox Name="Prompt" Classes="schedule-field" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64"
+                   AutomationProperties.AutomationId="field:schedule.prompt" AutomationProperties.LabeledBy="{Binding #PromptLabel}"/>
+          <TextBlock Name="LabelTitle" Tag="panels.name_optional" Classes="schedule-note" Margin="12,6"/>
+          <TextBox Name="ScheduleLabel" Classes="settings-input schedule-field" AutomationProperties.AutomationId="field:schedule.label"
+                   AutomationProperties.LabeledBy="{Binding #LabelTitle}"/>
+          <TextBlock Name="EveryLabel" Tag="panels.how_often" Classes="schedule-note" Margin="12,6"/>
+          <ComboBox Name="Frequency" Classes="agent-select settings-input schedule-field" AutomationProperties.AutomationId="field:schedule.every"
+                    AutomationProperties.LabeledBy="{Binding #EveryLabel}"/>
+          <WrapPanel HorizontalAlignment="Right" ItemSpacing="6">
+            <Button Name="Cancel" Tag="common.cancel" Classes="preset-flat preset-muted schedule-ghost" AutomationProperties.AutomationId="action:schedule.cancel"/>
+            <Button Name="Preview" Tag="common.preview" Classes="preset-major schedule-action" AutomationProperties.AutomationId="action:schedule.preview"/>
+          </WrapPanel>
+        </StackPanel>
+        <StackPanel Name="Review" Tag="panels.confirm_and_create" Spacing="6" Margin="0,6,0,0" IsVisible="False">
+          <TextBlock Tag="panels.please_confirm" Classes="schedule-note" Margin="12,6" FontWeight="SemiBold"/>
+          <StackPanel Name="ReviewRows"/>
+          <TextBlock Tag="panels.anything_that_needs_your_approval" Classes="schedule-note" Margin="12,6"/>
+          <WrapPanel HorizontalAlignment="Right" ItemSpacing="6">
+            <Button Name="Back" Tag="panels.back" Classes="preset-flat preset-muted schedule-ghost" AutomationProperties.AutomationId="action:schedule.back"/>
+            <Button Name="Create" Tag="panels.confirm_and_create" Classes="preset-major schedule-action" AutomationProperties.AutomationId="action:schedule.create"/>
+          </WrapPanel>
+        </StackPanel>
+      </StackPanel>
+      <TextBlock Name="ReadOnly" Tag="common.these_settings_are_read_only" Classes="schedule-note" Margin="12,6" IsVisible="False"/>
+      <TextBlock Name="Error" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap" Margin="12,6" IsVisible="False"/>
+    </StackPanel>
+  </Border>
+</local:SettingsFormView>

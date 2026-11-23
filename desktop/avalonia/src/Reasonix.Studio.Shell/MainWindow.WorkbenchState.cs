@@ -64,9 +64,9 @@ public sealed partial class MainWindow
             Expanded = _fullWorkbench,
             Hidden = _showHiddenFiles,
             File = _openFile?.Original.Path,
-            Source = FileEditor.IsVisible && !WorkbenchStart.IsVisible,
+            Source = FileEditor.IsVisible,
             Diff = DiffFile.Classes.Contains("active"),
-            Launcher = WorkbenchStart.IsVisible,
+            Launcher = _workbenchLauncherSelected,
             Browser = ManualBrowserHost.Content as Control,
             Browsers = _browserPages.ToArray(),
             BrowserVisible = ManualBrowserHost.IsVisible,
@@ -133,7 +133,6 @@ public sealed partial class MainWindow
 
         WorkbenchPanel.IsVisible = true;
         LayoutWorkbench();
-        ExplorerPane.IsVisible = state.Explorer;
         if (state.BrowserVisible)
         {
             OpenManualBrowser();
@@ -142,13 +141,14 @@ public sealed partial class MainWindow
         {
             AttachTerminal(terminal, pane.Engine.Pages);
         }
-        else if (state.Git is { } git)
-        {
-            ShowGitCanvas(git.Title, git.View);
-        }
         else if (state.File is { } path)
         {
             await OpenEntryAsync(new WorkspaceFileEntry(path, false)).ConfigureAwait(true);
+            if (!ReferenceEquals(_engine, pane.Engine))
+            {
+                return;
+            }
+
             if (state.Diff)
             {
                 await ShowFileDiffAsync().ConfigureAwait(true);
@@ -160,12 +160,17 @@ public sealed partial class MainWindow
 
             FileEditor.CaretIndex = Math.Min(state.Caret, FileEditor.Text?.Length ?? 0);
         }
-        else if (state.Launcher)
+        else if (state.Git is { } git)
         {
-            ShowWorkbenchLauncher();
+            ShowGitCanvas(git.Title, git.View);
         }
 
-        ExplorerScroller.Offset = state.ExplorerOffset;
+        if (ReferenceEquals(_engine, pane.Engine))
+        {
+            ExplorerPane.IsVisible = state.Explorer;
+            SetWorkbenchLauncher(state.Launcher);
+            ExplorerScroller.Offset = state.ExplorerOffset;
+        }
     }
 
     /// <summary>Releases cached widget lifetimes when the owning window closes.</summary>

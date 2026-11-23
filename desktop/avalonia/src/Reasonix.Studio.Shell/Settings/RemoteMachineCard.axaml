@@ -1,0 +1,157 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:local="using:Reasonix.Studio.Shell.Settings"
+                        x:Class="Reasonix.Studio.Shell.Settings.RemoteMachineCard">
+  <UserControl.Resources>
+    <SolidColorBrush x:Key="RemoteConnectedBackground" Color="{DynamicResource Ok}" Opacity="0.12"/>
+    <SolidColorBrush x:Key="RemoteConnectingBackground" Color="{DynamicResource Accent}" Opacity="0.12"/>
+    <SolidColorBrush x:Key="RemoteIdleBackground" Color="{DynamicResource Warn}" Opacity="0.12"/>
+    <SolidColorBrush x:Key="RemoteStoppedBackground" Color="{DynamicResource Err}" Opacity="0.1"/>
+    <SolidColorBrush x:Key="RemoteConfirmBackground" Color="{DynamicResource Warn}" Opacity="0.08"/>
+    <ControlTheme x:Key="RemoteMenu" TargetType="MenuFlyoutPresenter" BasedOn="{StaticResource {x:Type MenuFlyoutPresenter}}">
+      <Setter Property="MinWidth" Value="180"/>
+      <Setter Property="Padding" Value="4"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Background" Value="{DynamicResource FloatBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </ControlTheme>
+    <ControlTheme x:Key="RemoteCommand" TargetType="MenuItem">
+      <Setter Property="MinHeight" Value="30"/>
+      <Setter Property="Padding" Value="10,4"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Header}" VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+      <Style Selector="^:pointerover, ^:focus-visible">
+        <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      </Style>
+      <Style Selector="^:disabled"><Setter Property="Opacity" Value="0.5"/></Style>
+      <Style Selector="^.danger"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
+    </ControlTheme>
+  </UserControl.Resources>
+  <UserControl.Styles>
+    <Style Selector="Border.remote-status">
+      <Setter Property="Height" Value="20"/>
+      <Setter Property="Padding" Value="8,0"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="TextBlock.Foreground" Value="{DynamicResource MutedBrush}"/>
+    </Style>
+    <Style Selector="Border.remote-status.connected">
+      <Setter Property="Background" Value="{StaticResource RemoteConnectedBackground}"/>
+      <Setter Property="TextBlock.Foreground" Value="{DynamicResource OkInkBrush}"/>
+    </Style>
+    <Style Selector="Border.remote-status.connecting">
+      <Setter Property="Background" Value="{StaticResource RemoteConnectingBackground}"/>
+      <Setter Property="TextBlock.Foreground" Value="{DynamicResource AccentInkBrush}"/>
+    </Style>
+    <Style Selector="Border.remote-status.idle">
+      <Setter Property="Background" Value="{StaticResource RemoteIdleBackground}"/>
+      <Setter Property="TextBlock.Foreground" Value="{DynamicResource WarnInkBrush}"/>
+    </Style>
+    <Style Selector="Border.remote-status.stopped">
+      <Setter Property="Background" Value="{StaticResource RemoteStoppedBackground}"/>
+      <Setter Property="TextBlock.Foreground" Value="{DynamicResource ErrInkBrush}"/>
+    </Style>
+    <Style Selector="Button.remote-card-action">
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="Padding" Value="11,0"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="CornerRadius" Value="7"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button.remote-card-action.more"><Setter Property="Background" Value="Transparent"/></Style>
+    <Style Selector="Button.remote-card-action:pointerover, Button.remote-card-action.menu-open">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    </Style>
+    <Style Selector="Button.remote-card-action:disabled"><Setter Property="Opacity" Value="0.5"/></Style>
+    <Style Selector="Button.confirm-action">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    </Style>
+  </UserControl.Styles>
+  <Border BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" CornerRadius="10" Padding="16,14"
+          Background="{DynamicResource RaisedBrush}" AutomationProperties.AutomationId="class:rmtrow">
+    <StackPanel>
+      <Grid ColumnDefinitions="32,*,Auto" ColumnSpacing="10">
+        <Border Height="32" CornerRadius="7" Background="{DynamicResource OverlayBrush}" VerticalAlignment="Center">
+          <Viewbox Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Canvas Width="24" Height="24">
+              <Path Data="M4 2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z M4 14h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2z M6 6h.01 M6 18h.01"
+                    Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round"/>
+            </Canvas>
+          </Viewbox>
+        </Border>
+        <StackPanel Name="Identity" Grid.Column="1" Spacing="2">
+          <WrapPanel ItemSpacing="8" LineSpacing="6">
+            <TextBlock Name="Machine" FontSize="{DynamicResource StudioType14}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <TextBlock Name="Target" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}"
+                       Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+            <Border Name="Status" Classes="remote-status">
+              <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                <Ellipse Width="5" Height="5" Fill="{Binding #StatusLabel.Foreground}" VerticalAlignment="Center"/>
+                <TextBlock Name="StatusLabel" FontSize="{DynamicResource StudioType11}" FontWeight="Medium" VerticalAlignment="Center"/>
+              </StackPanel>
+            </Border>
+          </WrapPanel>
+          <WrapPanel Name="Roots" ItemSpacing="8" LineSpacing="8">
+            <TextBlock Name="Workspace" FontSize="{DynamicResource StudioType12}" LineHeight="15"
+                       Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+          </WrapPanel>
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <Button Name="Probe" Classes="remote-card-action" Tag="common.test_it" AutomationProperties.AutomationId="action:remote.probe"/>
+          <Button Name="More" Classes="remote-card-action more" Width="28" Padding="0" BorderThickness="0"
+                  AutomationProperties.AutomationId="action:remote.menu">
+            <Button.Flyout>
+              <MenuFlyout Placement="BottomEdgeAlignedRight" VerticalOffset="4" FlyoutPresenterTheme="{StaticResource RemoteMenu}">
+                <MenuItem Name="EnableCommand" Theme="{StaticResource RemoteCommand}" AutomationProperties.AutomationId="action:remote.enable"/>
+                <MenuItem Name="EditCommand" Theme="{StaticResource RemoteCommand}" AutomationProperties.AutomationId="action:remote.edit"/>
+                <MenuItem Name="ProbeCommand" Theme="{StaticResource RemoteCommand}" AutomationProperties.AutomationId="action:remote.probe"/>
+                <MenuItem Name="RailCommand" Theme="{StaticResource RemoteCommand}" AutomationProperties.AutomationId="action:remote.hide"/>
+                <MenuItem Name="RemoveCommand" Theme="{StaticResource RemoteCommand}" Classes="danger" AutomationProperties.AutomationId="action:remote.remove"/>
+              </MenuFlyout>
+            </Button.Flyout>
+            <Viewbox Width="14" Height="14">
+              <Canvas Width="24" Height="24">
+                <Path Data="M5 12h.01 M12 12h.01 M19 12h.01" Stroke="{DynamicResource MutedBrush}" StrokeThickness="3" StrokeLineCap="Round"/>
+              </Canvas>
+            </Viewbox>
+          </Button>
+        </StackPanel>
+      </Grid>
+      <Border Name="Confirm" IsVisible="False" Margin="0,12,0,2" Padding="10,8" CornerRadius="7"
+              BorderThickness="1" BorderBrush="{DynamicResource WarnBrush}" Background="{StaticResource RemoteConfirmBackground}">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+          <TextBlock Name="ConfirmQuestion" FontSize="{DynamicResource StudioType13}" TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
+          <Button Name="Keep" Grid.Column="1" Classes="remote-card-action confirm-action" Tag="common.cancel" AutomationProperties.AutomationId="action:remote.cancel-remove"/>
+          <Button Name="Remove" Grid.Column="2" Classes="remote-card-action confirm-action" Tag="common.remove"
+                  BorderBrush="{DynamicResource ErrBrush}" Foreground="{DynamicResource ErrInkBrush}" AutomationProperties.AutomationId="action:remote.confirm-remove"/>
+        </Grid>
+      </Border>
+      <Border Name="ProbeResult" IsVisible="False" Margin="15,12,0,2" Padding="11,7,0,7"
+              BorderBrush="{DynamicResource WarnBrush}" BorderThickness="2,0,0,0">
+        <TextBlock Name="ProbeOutput" TextWrapping="Wrap" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType13}"
+                   Foreground="{DynamicResource MutedBrush}" AutomationProperties.LiveSetting="Polite"/>
+      </Border>
+    </StackPanel>
+  </Border>
+</local:SettingsFormView>

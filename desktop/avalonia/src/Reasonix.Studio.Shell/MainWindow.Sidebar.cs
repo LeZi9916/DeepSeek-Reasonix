@@ -99,37 +99,13 @@ public sealed partial class MainWindow
                 }
             }
         };
-        SidebarFiles.Click += async (_, _) => await OpenWorkbenchAsync().ConfigureAwait(true);
-        SidebarAccount.Click += (_, _) => ShowSidebarSection("account");
-        SidebarModels.Click += (_, _) => ShowSidebarSection("model");
-        SidebarTools.Click += (_, _) => ShowSidebarSection("ext");
-        SidebarConnections.Click += (_, _) => ShowSidebarSection("network");
+        InitializeNavigationEntries();
     }
 
     /// <summary>Updates the anchored footer menu without replacing the controls.</summary>
     private void LabelSidebar()
     {
-        SidebarFiles.Header = MessageCatalog.Get("workbench.explorer", Language);
-        SidebarAccount.Header = MessageCatalog.Get(MessageKey.Settings.Account, Language);
-        SidebarModels.Header = MessageCatalog.Get(MessageKey.Common.Models, Language);
-        SidebarTools.Header = MessageCatalog.Get("ext.extension", Language);
-        SidebarConnections.Header = MessageCatalog.Get("usage.connections", Language);
-        AutomationProperties.SetName(OpenAccount, MessageCatalog.Get("session.sidebar_shortcuts", Language));
+        DrawNavigationEntries();
         Projects.RefreshLabels();
-    }
-
-    /// <summary>Opens the existing settings route from the sidebar's shortcut menu.</summary>
-    /// <param name="id">Canonical settings section.</param>
-    private void ShowSidebarSection(string id)
-    {
-        OpenPreferences();
-        foreach (var entry in SettingsNav.Items)
-        {
-            if (entry is SectionEntry section && section.Id == id)
-            {
-                SettingsNav.SelectedItem = entry;
-                break;
-            }
-        }
     }
 }

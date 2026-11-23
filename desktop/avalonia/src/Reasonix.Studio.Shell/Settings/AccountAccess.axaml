@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.AccountAccess">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.account-note">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="LineHeight" Value="19.8"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="Button.account-button">
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="Padding" Value="14,0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+    <Style Selector="Button.account-link">
+      <Setter Property="Padding" Value="4,0"/>
+      <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="MinHeight" Value="20"/>
+    </Style>
+  </UserControl.Styles>
+  <StackPanel Spacing="11">
+    <TextBlock Name="Checking" Classes="account-note" />
+    <Border Name="Unread" IsVisible="False" Padding="10,6,0,6" BorderThickness="2,0,0,0"
+            BorderBrush="{DynamicResource WarnBrush}"
+            AutomationProperties.LiveSetting="Polite">
+      <StackPanel>
+        <TextBlock Name="UnreadTitle" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"/>
+        <WrapPanel ItemSpacing="4">
+          <TextBlock Name="UnreadReason" Classes="account-note" VerticalAlignment="Center"/>
+          <Button Name="Retry" Classes="account-link" AutomationProperties.AutomationId="action:account.reload"/>
+        </WrapPanel>
+      </StackPanel>
+    </Border>
+    <StackPanel Name="SignedOut" Spacing="11" IsVisible="False">
+      <TextBlock Name="SignedOutNote" Classes="account-note"/>
+      <TextBlock Name="ExpiredNote" Classes="account-note" IsVisible="False"/>
+      <Button Name="SignIn" Classes="account-button" HorizontalAlignment="Left" AutomationProperties.AutomationId="action:account.sign-in"/>
+      <StackPanel Name="Device" Spacing="9" IsVisible="False">
+        <Border HorizontalAlignment="Left" Padding="14,11" CornerRadius="10" BorderThickness="1"
+                Background="{DynamicResource OverlayBrush}" BorderBrush="{DynamicResource HairBrush}">
+          <SelectableTextBlock Name="UserCode" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="22"
+                               Foreground="{DynamicResource TextBrush}" FontWeight="Bold" LetterSpacing="3.52" LineHeight="22"
+                               AutomationProperties.LiveSetting="Polite"/>
+        </Border>
+        <TextBlock Name="DeviceHint" Classes="account-note"/>
+        <Button Name="Cancel" Classes="account-button" HorizontalAlignment="Left" AutomationProperties.AutomationId="action:account.cancel-sign-in"/>
+      </StackPanel>
+    </StackPanel>
+    <StackPanel Name="SignedIn" Spacing="11" IsVisible="False">
+      <WrapPanel ItemSpacing="9">
+        <TextBlock Name="DisplayName" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" LineHeight="17"/>
+        <TextBlock Name="Email" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType13}" LineHeight="17"
+                   Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+      </WrapPanel>
+      <WrapPanel Name="Offline" ItemSpacing="4" IsVisible="False">
+        <TextBlock Name="OfflineReason" Classes="account-note" VerticalAlignment="Center"/>
+        <Button Name="RetryOffline" Classes="account-link" AutomationProperties.AutomationId="action:account.reload"/>
+      </WrapPanel>
+      <WrapPanel ItemSpacing="11">
+        <Button Name="SignOut" Classes="account-button" AutomationProperties.AutomationId="action:account.sign-out"/>
+        <TextBlock Name="SignedInNote" Classes="account-note" VerticalAlignment="Center"/>
+      </WrapPanel>
+    </StackPanel>
+    <TextBlock Name="Failure" Classes="account-note" Foreground="{DynamicResource ErrInkBrush}" IsVisible="False"
+               AutomationProperties.LiveSetting="Polite"/>
+  </StackPanel>
+</UserControl>

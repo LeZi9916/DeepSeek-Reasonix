@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.SettingsGroup">
+  <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="0,6"
+          AutomationProperties.AutomationId="class:grp">
+    <StackPanel>
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <TextBlock Name="Heading" FontSize="{DynamicResource StudioType13}" LineHeight="18.2" FontWeight="SemiBold"
+                   VerticalAlignment="Center" TextWrapping="Wrap"/>
+        <Border Name="ScopeBadge" Height="18" Padding="7,0" CornerRadius="9" Background="{DynamicResource OverlayBrush}" IsVisible="False">
+          <TextBlock Name="ScopeLabel" FontSize="{DynamicResource StudioType11}" LineHeight="11" FontWeight="Medium"
+                     VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
+        </Border>
+      </StackPanel>
+      <TextBlock Name="Hint" FontSize="{DynamicResource StudioType12}" LineHeight="16.8" FontWeight="Normal"
+                 Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap"/>
+      <ContentControl Name="Items" Margin="0,10,0,0" HorizontalContentAlignment="Stretch"/>
+    </StackPanel>
+  </Border>
+</UserControl>

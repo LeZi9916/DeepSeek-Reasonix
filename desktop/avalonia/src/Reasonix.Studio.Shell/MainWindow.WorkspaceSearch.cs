@@ -83,14 +83,15 @@ public sealed partial class MainWindow
         _workspaceSearchOpener = TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Control;
         var entries = new List<WorkspaceSearchHit>();
         void Action(string key, string detail, Action run, string keywords = "") => entries.Add(new WorkspaceSearchHit("actions", MessageCatalog.Get(key, Language), detail, run, keywords, "c:" + key));
+        var chord = System.OperatingSystem.IsMacOS() ? "⌘" : "Ctrl ";
         Action("common.start_a_new_session", MessageCatalog.Get("app.action", Language), OnNewRequested, "new session chat 新建");
-        Action("common.find_in_this_conversation", "Ctrl F", OpenFind, "find search conversation 查找 搜索 对话");
-        Action("session.show_conversation", "Ctrl 1", () => ConversationView.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)), "conversation chat flow 对话 会话");
-        Action("session.show_run_analysis", "Ctrl 2", () => AnalysisView.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)), "run analysis trace 运行 分析");
-        Action("session.show_workbench", "Ctrl 3", () => WorkbenchView.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)), "workbench browser files 工作台 浏览器");
+        Action("common.find_in_this_conversation", chord + "F", OpenFind, "find search conversation 查找 搜索 对话");
+        Action("session.show_conversation", chord + "1", () => ConversationView.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)), "conversation chat flow 对话 会话");
+        Action("session.show_run_analysis", chord + "2", () => AnalysisView.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)), "run analysis trace 运行 分析");
+        Action("session.show_workbench", chord + "3", () => WorkbenchView.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)), "workbench browser files 工作台 浏览器");
         Action("common.files", MessageCatalog.Get("app.action", Language), () => WorkbenchView.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)), "files explorer 文件");
         Action("workbench.terminal", MessageCatalog.Get("app.action", Language), () => TerminalAction.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent)), "terminal shell 终端");
-        Action("common.settings", "Ctrl ,", OpenPreferences, "settings preferences 设置 偏好");
+        Action("common.settings", chord + ",", OpenPreferences, "settings preferences 设置 偏好");
         Action("remote.device_access", MessageCatalog.Get("app.action", Language), OpenDeviceAccess, "phone qr 手机 设备");
         Action(
             "session.wallet_and_usage",

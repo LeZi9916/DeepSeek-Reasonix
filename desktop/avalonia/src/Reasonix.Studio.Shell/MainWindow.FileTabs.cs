@@ -1,7 +1,6 @@
 using Avalonia.Controls;
-using Avalonia.Layout;
-using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
+using Reasonix.Studio.Shell.Workbench;
 using System;
 using System.IO;
 using System.Linq;
@@ -16,30 +15,24 @@ public sealed partial class MainWindow
     {
         FileTabs.Children.Clear();
         Control? selected = null;
+        var current = WorkbenchStart.IsVisible || (ManualBrowserHost.IsVisible && !BackToEditor.IsVisible)
+            ? null
+            : _openFile?.Original.Path;
         foreach (var (key, buffer) in _fileBuffers.Where(pair => pair.Key.Root == WorkspaceBufferScope))
         {
-            var group = new StackPanel { Orientation = Orientation.Horizontal, Tag = key.Path };
-            group.Classes.Add("wb-tab-frame");
-            group.Classes.Set("active", ReferenceEquals(buffer, _openFile));
-            if (ReferenceEquals(buffer, _openFile))
+            var group = new WorkbenchHeaderTab(Path.GetFileName(key.Path), "File", current == key.Path, Language) { Tag = key.Path };
+            group.ColorFile(key.Path);
+            group.ShowDirty(buffer.Dirty);
+            if (current == key.Path)
             {
                 selected = group;
             }
 
-            var tab = new Button
-            {
-                Content = Path.GetFileName(key.Path),
-                IsEnabled = true,
-                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
-            };
-            tab.Classes.Add("wb-tab");
-            tab.Classes.Set("active", ReferenceEquals(buffer, _openFile));
+            var tab = group.PickButton;
             ToolTip.SetTip(tab, key.Path);
             tab.Click += async (_, _) => await OpenEntryAsync(new FileEntry(key.Path, false)).ConfigureAwait(true);
             tab.ContextFlyout = BuildWorkspaceFileMenu(new FileEntry(key.Path, false));
-            var close = new Button { Content = "×", Padding = new Avalonia.Thickness(4, 0), [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };
-            close.Classes.Add("wb-tab-close");
-            Label(close, MessageKey.Workbench.CloseTab);
+            var close = group.CloseButton;
             close.Click += (_, _) =>
             {
                 if (!buffer.Dirty && !buffer.Saving)
@@ -64,23 +57,21 @@ public sealed partial class MainWindow
                 prompt.Items.Add(new MenuItem { Header = MessageCatalog.Get(MessageKey.Common.Cancel, Language) });
                 prompt.ShowAt(close);
             };
-            group.Children.Add(tab);
-            group.Children.Add(close);
             FileTabs.Children.Add(group);
         }
 
         if (_gitSurface is { } git)
         {
-            var group = new StackPanel { Orientation = Orientation.Horizontal, Tag = git };
-            group.Classes.Add("wb-tab-frame");
-            group.Classes.Set("active", ReferenceEquals(git.View, RenderedFile.Content));
-            var tab = new Button { Content = git.Title };
-            tab.Classes.Add("wb-tab");
-            tab.Classes.Set("active", ReferenceEquals(git.View, RenderedFile.Content));
-            tab.Click += (_, _) => ShowGitCanvas(git.Title, git.View);
-            var close = new Button { Content = "×" };
-            close.Classes.Add("wb-tab-close");
-            Label(close, MessageKey.Workbench.CloseTab);
+            var isActive = !WorkbenchStart.IsVisible && !ManualBrowserHost.IsVisible && RenderedFile.IsVisible
+                && ReferenceEquals(git.View, RenderedFile.Content);
+            var group = new WorkbenchHeaderTab(git.Title, "Changes", isActive, Language) { Tag = git };
+            if (git.View is GitChangesView changes)
+            {
+                group.ShowCount(changes);
+            }
+
+            group.PickButton.Click += (_, _) => ShowGitCanvas(git.Title, git.View);
+            var close = group.CloseButton;
             Avalonia.Automation.AutomationProperties.SetAutomationId(close, "action:workbench.close-git");
             close.Click += async (_, _) =>
             {
@@ -108,16 +99,20 @@ public sealed partial class MainWindow
 
                 RebuildTabs();
             };
-            group.Children.Add(tab);
-            group.Children.Add(close);
             FileTabs.Children.Insert(0, group);
-            if (ReferenceEquals(git.View, RenderedFile.Content))
+            if (isActive)
             {
                 selected = group;
             }
         }
 
-        AppendSurfaceTabs();
+        selected = AppendSurfaceTabs() ?? selected;
+        if (_workbenchLauncherSelected)
+        {
+            selected = new WorkbenchHeaderTab(MessageCatalog.Get("workbench.new_tab_label", Language), "New", true, Language) { Classes = { "launcher" } };
+            FileTabs.Children.Add(selected);
+        }
+
         Avalonia.Threading.Dispatcher.UIThread.Post(
             () =>
             {
@@ -139,7 +134,7 @@ public sealed partial class MainWindow
         }
 
         var offset = TabViewport.Offset.X;
-        var clipped = FileTabs.Children.Where(c => c.Bounds.X < offset - 0.5 || c.Bounds.Right > offset + width + 0.5).Select(c => c.Tag).ToArray();
+        var clipped = FileTabs.Children.Where(c => c.Tag is not null && (c.Bounds.X < offset - 0.5 || c.Bounds.Right > offset + width + 0.5)).Select(c => c.Tag).ToArray();
         if (clipped.SequenceEqual(menu.Items.OfType<MenuItem>().Select(item => item.Tag)))
         {
             return;
@@ -176,7 +171,7 @@ public sealed partial class MainWindow
             menu.Items.Add(item);
         }
 
-        TabOverflow.Content = "+" + clipped.Length.ToString(System.Globalization.CultureInfo.CurrentCulture) + " ▾";
+        TabOverflowCount.Text = "+" + clipped.Length.ToString(System.Globalization.CultureInfo.CurrentCulture);
         Avalonia.Automation.AutomationProperties.SetName(TabOverflow, string.Join(", ", menu.Items.OfType<MenuItem>().Select(i => i.Header)));
     }
 
@@ -190,7 +185,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        if (ReferenceEquals(_openFile, file))
+        if (_openFile?.Original.Path == key.Path)
         {
             _fileRead++;
             _openFile = null;
@@ -200,6 +195,7 @@ public sealed partial class MainWindow
             SaveFile.IsEnabled = false;
             ReleasePreview();
             FileEditor.IsVisible = true;
+            SaveFile.IsVisible = true;
             PreviewFile.IsVisible = false;
             SetFileBarTitle(MessageCatalog.Get(MessageKey.Common.Workbench, Language), path: false);
             WorkspaceFiles.SelectedItem = null;

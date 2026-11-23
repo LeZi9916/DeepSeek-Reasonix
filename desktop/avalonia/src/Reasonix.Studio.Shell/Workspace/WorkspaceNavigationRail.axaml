@@ -1,0 +1,32 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Workspace.WorkspaceNavigationRail" Width="44" HorizontalAlignment="Left">
+  <local:SettingsFormView.Styles>
+    <Style Selector="Button.workspace-nav-icon">
+      <Setter Property="Width" Value="34"/><Setter Property="Height" Value="34"/>
+      <Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.workspace-nav-icon:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  </local:SettingsFormView.Styles>
+  <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,1,0" Padding="4,10">
+    <Grid RowDefinitions="Auto,*,Auto">
+      <StackPanel Spacing="6">
+        <Button Name="New" Classes="preset-flat workspace-nav-icon" AutomationProperties.AutomationId="action:session.new">
+          <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox>
+        </Button>
+        <Button Name="Home" Classes="preset-flat workspace-nav-icon" AutomationProperties.AutomationId="action:chrome.rail">
+          <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.session}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        </Button>
+        <StackPanel Name="Entries" Spacing="6"/>
+      </StackPanel>
+      <StackPanel Grid.Row="2" Spacing="6">
+        <Button Name="Account" Classes="preset-flat workspace-nav-icon" AutomationProperties.AutomationId="action:chrome.account">
+          <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.account}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox>
+        </Button>
+        <Button Name="Settings" Classes="preset-flat workspace-nav-icon" AutomationProperties.AutomationId="action:navigation.settings">
+          <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.common}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        </Button>
+      </StackPanel>
+    </Grid>
+  </Border>
+</local:SettingsFormView>

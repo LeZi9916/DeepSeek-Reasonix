@@ -231,6 +231,7 @@ public sealed partial class GitRepositoryView
     {
         CloseReview();
         _board ??= new GitChangesView();
+        _board.UpdateTabCount(_changes.Length > 0 ? _changes.Length.ToString(CultureInfo.CurrentCulture) : null);
         _boardReview = _board.Review;
         _board.Classes.Add("git-board");
         DrawBoard(_board);
@@ -242,134 +243,87 @@ public sealed partial class GitRepositoryView
     private void DrawBoard(GitChangesView board)
     {
         board.Files.Children.Clear();
-        var toolbar = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), MinHeight = 40, Margin = new Thickness(12, 0, 8, 0) };
-        var info = new TextBlock { Text = string.Join("  ", Branch.Content, Count.Text, "+" + _changes.Sum(c => (int?)c["insertions"] ?? 0).ToString(CultureInfo.CurrentCulture), "−" + _changes.Sum(c => (int?)c["deletions"] ?? 0).ToString(CultureInfo.CurrentCulture)), FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
-        toolbar.Children.Add(info);
-        var actions = new WrapPanel { ItemSpacing = 6, LineSpacing = 4, VerticalAlignment = VerticalAlignment.Center };
+        var many = _changes.Length > 8;
+        var untracked = _changes.Count(change => (string?)change["status"] == "??");
+        var counts = Text(
+            "workbench.modified_untracked",
+            ("m", (_changes.Length - untracked).ToString(CultureInfo.CurrentCulture)),
+            ("u", untracked.ToString(CultureInfo.CurrentCulture)));
+        var summary = many ? $"{Count.Text} {counts}" : Count.Text ?? string.Empty;
+        board.Summarize(
+            Branch.Content as string,
+            summary,
+            "+" + _changes.Sum(change => (int?)change["insertions"] ?? 0).ToString(CultureInfo.CurrentCulture),
+            "−" + _changes.Sum(change => (int?)change["deletions"] ?? 0).ToString(CultureInfo.CurrentCulture),
+            _changes.Length == 0 ? Text("workbench.no_changes") : null);
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
         var all = Action(Text(FullyStaged(_changes) ? "workbench.unstage_all" : "workbench.stage_all"), "workbench.stage-all", () => StageAsync(null));
         all.IsEnabled = _changes.Length > 0;
         actions.Children.Add(all);
         actions.Children.Add(Action(Text("workbench.commit"), "commit.draft", () => LoadReviewAsync(true, _boardReview)));
         if (!_remote)
         {
-            actions.Children.Add(Action(Text("workbench.push") + "…", "push.preview", () => LoadReviewAsync(false, _boardReview)));
+            actions.Children.Add(Action(Text("workbench.push_2"), "push.preview", () => LoadReviewAsync(false, _boardReview)));
         }
 
-        Grid.SetColumn(actions, 1);
-        toolbar.Children.Add(actions);
         foreach (var button in actions.Children.OfType<Button>())
         {
             button.Classes.Add("git-board-command");
         }
 
-        board.Commands.Content = toolbar;
+        board.Commands.Content = actions;
         _boardNotice = board.Notice;
         _boardNotice.Text = Failure.IsVisible ? Failure.Text : Outcome.Text;
         _boardNotice.IsVisible = Failure.IsVisible || Outcome.IsVisible;
-        if (_changes.Length == 0)
-        {
-            board.Files.Children.Add(Caption(Text("workbench.no_changes")));
-        }
-
         foreach (var change in _changes)
         {
             var path = (string)change["path"]!;
-            var section = new StackPanel();
-            var head = new Grid { ColumnDefinitions = new ColumnDefinitions("18,14,*,Auto,Auto"), ColumnSpacing = 8, Height = 36, Margin = new Thickness(10, 0, 8, 0) };
-            head.Classes.Add("git-change-item");
-            var patch = new ContentControl { IsVisible = _expanded.TryGetValue(path, out var open) ? open : (string?)change["status"] is not ("A" or "??") };
-            var fold = FlatAction(patch.IsVisible ? "⌄" : "›", "workbench.change-fold", async () =>
+            var oldPath = (string?)change["oldPath"];
+            var status = (string?)change["status"];
+            var startsFolded = status is "A" or "??";
+            var row = new GitChangeRow();
+            row.ShowFile(
+                path,
+                oldPath is null ? path : oldPath + " → " + path,
+                string.IsNullOrEmpty(status) ? "M" : status,
+                StageBox([change], path, "workbench.stage"),
+                (int?)change["insertions"] is int added ? "+" + added.ToString(CultureInfo.CurrentCulture) : null,
+                (int?)change["deletions"] is int removed ? "−" + removed.ToString(CultureInfo.CurrentCulture) : null,
+                startsFolded && many ? Text(status == "??" ? "workbench.tag_untracked" : "workbench.tag_new") : null,
+                startsFolded && !many ? Text(status == "??" ? "workbench.untracked_open_to_see" : "workbench.new_file_open_to_see") : null);
+            row.Expanded = _expanded.TryGetValue(path, out var open) ? open : !startsFolded;
+            row.OnOpen(Text("workbench.open_file"), () => _open(path));
+            row.OnDiscard(
+                Text("workbench.discard"),
+                Text("workbench.confirm_discard"),
+                Text("workbench.discard_the_change_to_path", ("path", path)),
+                Discardable(change) ? () => WriteAsync(() => _api.GitDiscardAsync(_repo, path, _token), path) : null);
+            var patch = row.Patch;
+            var loading = false;
+            row.OnToggle(async expand =>
             {
-                patch.IsVisible = !patch.IsVisible;
-                _expanded[path] = patch.IsVisible;
-                if (patch.IsVisible)
+                row.Expanded = expand;
+                _expanded[path] = expand;
+                if (expand)
                 {
                     await ReadPatch().ConfigureAwait(true);
                 }
             });
-            AutomationProperties.SetName(fold, path);
-            patch.PropertyChanged += (_, e) =>
-            {
-                if (e.Property == IsVisibleProperty)
-                {
-                    fold.Content = patch.IsVisible ? "⌄" : "›";
-                }
-            };
-            head.Children.Add(fold);
-            var stage = StageBox([change], path, "workbench.stage");
-            stage.Width = stage.Height = 14;
-            stage.BorderThickness = new Thickness(1.5);
-            Grid.SetColumn(stage, 1);
-            head.Children.Add(stage);
-            var name = FlatAction(string.Empty, "workbench.change-open", () => _open(path));
-            name.HorizontalContentAlignment = HorizontalAlignment.Left;
-            name.Content = new TextBlock { Text = (string?)change["status"] + "  " + path, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis };
-            ToolTip.SetTip(name, (string?)change["oldPath"] is { } old ? old + " → " + path : path);
-            Grid.SetColumn(name, 2);
-            head.Children.Add(name);
-            var figures = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
-            foreach (var (key, prefix, ink) in new[] { ("insertions", "+", "AddBrush"), ("deletions", "−", "DelBrush") })
-            {
-                if ((int?)change[key] is int n)
-                {
-                    var count = Caption(prefix + n.ToString(CultureInfo.CurrentCulture));
-                    count.Bind(TextBlock.ForegroundProperty, count.GetResourceObservable(ink));
-                    figures.Children.Add(count);
-                }
-            }
 
-            Grid.SetColumn(figures, 3);
-            head.Children.Add(figures);
-            if (Discardable(change))
-            {
-                var undo = FlatAction("↶", "workbench.discard", () =>
-                {
-                    AskDiscard(section, path);
-                    return Task.CompletedTask;
-                });
-                Grid.SetColumn(undo, 4);
-                undo.Classes.Add("git-discard");
-                head.Children.Add(undo);
-            }
-
-            section.Children.Add(head);
-            if ((string?)change["status"] is "A" or "??" && _changes.Length <= 8)
-            {
-                var peek = FlatAction(Text((string?)change["status"] == "??" ? "workbench.untracked_open_to_see" : "workbench.new_file_open_to_see"), "workbench.change-peek", async () =>
-                {
-                    patch.IsVisible = true;
-                    _expanded[path] = true;
-                    await ReadPatch().ConfigureAwait(true);
-                });
-                peek.HorizontalAlignment = HorizontalAlignment.Stretch;
-                peek.HorizontalContentAlignment = HorizontalAlignment.Left;
-                peek.Padding = new Thickness(54, 8, 12, 8);
-                peek.IsVisible = !patch.IsVisible;
-                peek.Bind(Button.ForegroundProperty, peek.GetResourceObservable("FaintBrush"));
-                patch.PropertyChanged += (_, e) =>
-                {
-                    if (e.Property == IsVisibleProperty)
-                    {
-                        peek.IsVisible = !patch.IsVisible;
-                    }
-                };
-                section.Children.Add(peek);
-            }
-
-            section.Children.Add(patch);
-            board.Files.Children.Add(section);
-            if (patch.IsVisible)
+            board.Files.Children.Add(row);
+            if (row.Expanded)
             {
                 _ = ReadPatch();
             }
 
             async Task ReadPatch()
             {
-                if (patch.Content is not null)
+                if (loading || patch.Content is not null)
                 {
                     return;
                 }
 
+                loading = true;
                 try
                 {
                     var reply = await _api.GitDiffAsync(_repo, path, _token).ConfigureAwait(true);
@@ -393,6 +347,7 @@ public sealed partial class GitRepositoryView
             var hint = Caption(Text("workbench.changes_page_hint"));
             hint.FontSize = 11;
             hint.Margin = new Thickness(12, 10);
+            hint.FontWeight = FontWeight.Medium;
             hint.Bind(TextBlock.ForegroundProperty, hint.GetResourceObservable("FaintBrush"));
             board.Files.Children.Add(hint);
         }

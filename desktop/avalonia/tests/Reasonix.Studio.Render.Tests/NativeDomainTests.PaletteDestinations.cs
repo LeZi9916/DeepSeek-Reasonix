@@ -26,8 +26,9 @@ public sealed partial class NativeDomainTests
     public Task WorkspacePaletteReferenceCommandsOpenActualDestinations(string query, string heading) => WithSettings("conversation", (w, _) =>
     {
         w.FindControl<TextBox>("Composer")!.Focus();
-        w.KeyPress(Key.K, RawInputModifiers.Control, PhysicalKey.K, "k");
-        w.KeyRelease(Key.K, RawInputModifiers.Control, PhysicalKey.K, "k");
+        var primary = System.OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control;
+        w.KeyPress(Key.K, primary, PhysicalKey.K, "k");
+        w.KeyRelease(Key.K, primary, PhysicalKey.K, "k");
         Dispatcher.UIThread.RunJobs();
         var palette = Assert.Single(w.GetVisualDescendants().OfType<WorkspaceSearchPanel>());
         palette.FindControl<TextBox>("Query")!.Text = ">" + query;

@@ -1,0 +1,23 @@
+<local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.MarketMineView" UseLayoutRounding="False">
+  <Panel>
+    <ContentControl Name="PreviewHost" HorizontalContentAlignment="Stretch" IsVisible="False"/>
+    <StackPanel Name="Inventory">
+      <Border Name="MineError" BorderThickness="2,0,0,0" BorderBrush="{DynamicResource ErrBrush}"
+              Padding="10,7" IsVisible="False">
+        <StackPanel Spacing="4">
+          <TextBlock Tag="ext.could_not_read_your_packages" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"/>
+          <TextBlock Name="MineFailure" FontSize="{DynamicResource StudioType13}" Foreground="{DynamicResource MutedBrush}"
+                     TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite"/>
+          <Button Name="Retry" Tag="common.retry" Classes="market-action" HorizontalAlignment="Left"
+                  AutomationProperties.AutomationId="action:market.mine-retry"/>
+        </StackPanel>
+      </Border>
+      <Border Name="MineNoteFrame" BorderThickness="0,1,0,1" BorderBrush="{DynamicResource HairBrush}" Padding="12,14">
+        <TextBlock Name="MineNotice" FontSize="{DynamicResource StudioType13}" Foreground="{DynamicResource FaintBrush}"
+                   AutomationProperties.LiveSetting="Polite"/>
+      </Border>
+      <StackPanel Name="MineRows"/>
+    </StackPanel>
+  </Panel>
+</local:SettingsFormView>

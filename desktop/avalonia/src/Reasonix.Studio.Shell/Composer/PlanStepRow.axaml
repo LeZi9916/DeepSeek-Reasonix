@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Reasonix.Studio.Shell.Composer"
+             x:Class="Reasonix.Studio.Shell.Composer.PlanStepRow" AutomationProperties.AutomationId="class:plan-step">
+  <Grid ColumnDefinitions="18,*" ColumnSpacing="10" Margin="8,7">
+    <Grid Width="18" Height="18" VerticalAlignment="Top">
+      <Border Name="Mark" CornerRadius="9" BorderThickness="1.5" BorderBrush="{DynamicResource BorderBrush}">
+        <TextBlock Name="Ordinal" FontSize="{DynamicResource StudioType11}" LineHeight="11" Foreground="{DynamicResource FaintBrush}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Border>
+      <Viewbox Name="Done" Width="11" Height="11" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="False">
+        <Canvas Width="24" Height="24">
+          <Path Data="{StaticResource Glyph.check}" Stroke="{DynamicResource AccentFgBrush}" StrokeThickness="2.4" StrokeLineCap="Round" StrokeJoin="Round"/>
+        </Canvas>
+      </Viewbox>
+      <local:PlanRunMark Name="Moving" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="False"/>
+    </Grid>
+    <TextBlock Name="Label" Grid.Column="1" TextWrapping="Wrap" FontSize="{DynamicResource StudioType13}" LineHeight="18.2"/>
+  </Grid>
+</UserControl>

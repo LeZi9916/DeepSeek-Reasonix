@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.MarketPlanCandidate" UseLayoutRounding="False">
+  <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,0,1" Padding="0,10">
+    <StackPanel>
+      <WrapPanel ItemSpacing="9" LineSpacing="4">
+        <TextBlock Name="CandidateName" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
+        <TextBlock Name="CandidateMetadata" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}"/>
+      </WrapPanel>
+      <StackPanel Name="RiskRows" Spacing="4"/>
+      <Button Name="ToggleReasons" Classes="market-detail-action text" Height="24" Padding="0" IsVisible="False"
+              HorizontalAlignment="Left" AutomationProperties.AutomationId="action:market.plan.reasons"/>
+      <StackPanel Name="Reasons" IsVisible="False" Spacing="3"/>
+    </StackPanel>
+  </Border>
+</UserControl>

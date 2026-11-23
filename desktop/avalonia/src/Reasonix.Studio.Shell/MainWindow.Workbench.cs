@@ -1,5 +1,5 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -42,32 +42,52 @@ public sealed partial class MainWindow
     /// <summary>Wires the native workspace explorer, editor and save command.</summary>
     private void InitializeWorkbench()
     {
-        BrowserTabTitle.Text = MessageCatalog.Get(MessageKey.Workbench.Browser, Language);
-        BrowserAction.Header = BrowserTabTitle.Text;
+        InitializeBrowserSleep();
+        BrowserAction.Header = MessageCatalog.Get(MessageKey.Workbench.Browser, Language);
         BrowserAction.Click += (_, _) => OpenManualBrowser();
         BackToEditor.Content = MessageCatalog.Get(MessageKey.Common.Edit, Language);
         BackToEditor.Click += (_, _) => ShowSource();
         ExplorerHeading.Text = MessageCatalog.Get(MessageKey.Workbench.Explorer, Language);
-        Label(ToggleExplorer, MessageKey.Workbench.Explorer);
+        AutomationProperties.SetName(ToggleExplorer, MessageCatalog.Get(MessageKey.Common.Files, Language));
         SetUpWorkspaceMenus();
         FullWorkbench.Click += (_, _) =>
         {
             _fullWorkbench = !_fullWorkbench;
-            Label(FullWorkbench, _fullWorkbench ? "workbench.exit_expanded_workbench" : "workbench.expand_workbench");
             LayoutWorkbench();
         };
-        ToggleExplorer.Click += (_, _) =>
+        ToggleExplorer.Click += async (_, _) =>
         {
-            if (ManualBrowserHost.IsVisible)
+            if (_workbenchLauncherSelected)
             {
-                HideBrowser();
-                ExplorerPane.IsVisible = true;
+                await RevealWorkbenchExplorerAsync().ConfigureAwait(true);
             }
             else
             {
                 ExplorerPane.IsVisible = !ExplorerPane.IsVisible;
             }
         };
+        ExplorerPane.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == IsVisibleProperty)
+            {
+                UpdateWorkbenchHeader();
+            }
+        };
+        ManualBrowserHost.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == IsVisibleProperty)
+            {
+                UpdateWorkbenchHeader();
+            }
+        };
+        WorkbenchStart.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == IsVisibleProperty)
+            {
+                UpdateWorkbenchHeader();
+            }
+        };
+        UpdateWorkbenchHeader();
         TerminalAction.Header = MessageCatalog.Get(MessageKey.Workbench.Terminal, Language);
         TerminalAction.Click += OnTerminals;
         EndTerminal.Content = MessageCatalog.Get(MessageKey.Workbench.CloseTab, Language);
@@ -158,7 +178,7 @@ public sealed partial class MainWindow
         };
         WorkbenchView.Header = MessageCatalog.Get(MessageKey.Common.Workbench, Language);
         SaveFileLabel.Text = MessageCatalog.Get(MessageKey.Common.Save, Language);
-        Label(CloseWorkbench, MessageKey.Common.Close);
+        Label(CloseWorkbench, "app.close_workbench");
         SetFileBarTitle(MessageCatalog.Get(MessageKey.Common.Workbench, Language), path: false);
         WorkbenchView.Click += async (_, _) => await OpenWorkbenchAsync().ConfigureAwait(true);
         CloseWorkbench.Click += (_, _) =>
@@ -178,6 +198,15 @@ public sealed partial class MainWindow
             }
         };
         SaveFile.Click += OnSaveFile;
+        FileEditor.KeyDown += async (_, e) =>
+        {
+            var primary = OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
+            if (e.Key == Key.S && e.KeyModifiers == primary)
+            {
+                e.Handled = true;
+                await SaveOpenFileAsync().ConfigureAwait(true);
+            }
+        };
         FileEditor.ContextMenu = BuildFileEditorContextMenu();
         FileErrorRetry.Content = MessageCatalog.Get("common.read_again", Language);
         FileErrorClose.Content = MessageCatalog.Get(MessageKey.Workbench.CloseTab, Language);
@@ -193,10 +222,9 @@ public sealed partial class MainWindow
         FileErrorClose.Click += (_, _) =>
         {
             HideFileError();
-            var pair = _fileBuffers.FirstOrDefault(entry => ReferenceEquals(entry.Value, _openFile));
-            if (pair.Value is { } file)
+            if (_openFile?.Original.Path is { } path && _fileBuffers.TryGetValue((WorkspaceBufferScope, path), out var file))
             {
-                CloseFile(pair.Key, file);
+                CloseFile((WorkspaceBufferScope, path), file);
             }
         };
     }
@@ -286,6 +314,7 @@ public sealed partial class MainWindow
         }
 
         CaptureWorkbenchPresentation();
+        SetWorkbenchLauncher(false);
         DetachTerminal();
         ReleasePreview();
         _fileRead++;
@@ -297,6 +326,7 @@ public sealed partial class MainWindow
         _workspaceBufferScope = scope;
         ResetFileTree();
         _openFile = null;
+        ExplorerPane.IsVisible = false;
         SetReadOnlyBadge(null);
         RenderedFile.IsVisible = false;
         FileEditor.IsVisible = true;
@@ -308,23 +338,20 @@ public sealed partial class MainWindow
         WorkspaceFiles.ItemsSource = null;
         WorkbenchPanel.IsVisible = false;
         RestoreWorkbenchPresentation();
+        RefreshWorkbenchLauncher();
     }
 
     /// <summary>Opens the file explorer next to the active conversation.</summary>
     /// <returns>The initial directory read.</returns>
     private async Task OpenWorkbenchAsync()
     {
-        HideBrowser();
         ShowAnalysis(false);
         WorkbenchPanel.IsVisible = true;
         RevealWorkspace.IsVisible = _engine?.IsRemote != true;
         LayoutWorkbench();
         EnterView(WorkbenchPanel);
         await Task.WhenAll(ListFilesAsync(), LoadGitAsync()).ConfigureAwait(true);
-        if (_openFile is null && _gitSurface is null && !TerminalSurface.IsVisible)
-        {
-            ShowWorkbenchLauncher();
-        }
+        RefreshWorkbenchLauncher(refreshContents: true);
     }
 
     /// <summary>Gives a narrow workbench the pane; wide windows retain the conversation beside it.</summary>
@@ -332,14 +359,26 @@ public sealed partial class MainWindow
     {
         var room = LayoutRoot.Bounds.Width - LayoutRoot.ColumnDefinitions[0].Width.Value;
         var overlay = _fullWorkbench || room <= 640;
+        UpdateWorkbenchHeader();
         Grid.SetColumn(WorkbenchPanel, overlay ? 0 : 1);
         WorkbenchPanel.Width = overlay ? double.NaN : Math.Min(510, room - 246);
+        WorkbenchPanel.Margin = new Avalonia.Thickness(overlay ? 2 : 0, 8, 8, 8);
         ConversationArea.IsVisible = !(overlay && WorkbenchPanel.IsVisible);
         var stacked = LayoutRoot.Bounds.Width <= 840;
         var docked = WorkbenchPanel.IsVisible && !overlay;
-        ComposerArea.Margin = new Avalonia.Thickness(docked ? 39 : stacked ? 10 : 24, 0);
+        ComposerArea.Margin = new Avalonia.Thickness(stacked ? 10 : docked ? 39 : 24, 0);
         ConversationArea.Margin = new Avalonia.Thickness(0, 0, docked ? 2 : 0, 0);
         Conversation.SetReadingInset(docked ? 45 : stacked ? 10 : 24);
+    }
+
+    /// <summary>Reflects the explorer and expanded workbench state in the header controls.</summary>
+    private void UpdateWorkbenchHeader()
+    {
+        var explorer = ExplorerPane.IsVisible && !WorkbenchStart.IsVisible;
+        ToggleExplorer.Classes.Set("active", explorer);
+        ToolTip.SetTip(ToggleExplorer, MessageCatalog.Get(explorer ? "workbench.hide_file_tree" : "workbench.show_file_tree", Language));
+        FullWorkbench.Classes.Set("active", _fullWorkbench);
+        Label(FullWorkbench, _fullWorkbench ? "workbench.exit_expanded_workbench" : "workbench.expand_workbench");
     }
 
     /// <summary>Opens a listed workspace file or a diff, ignoring superseded reads.</summary>
@@ -347,8 +386,8 @@ public sealed partial class MainWindow
     /// <returns>The opened entry.</returns>
     private async Task OpenEntryAsync(FileEntry entry)
     {
-        WorkbenchStart.IsVisible = false;
-        if (_engine is null)
+        SetWorkbenchLauncher(false);
+        if (_engine is not { } engine)
         {
             return;
         }
@@ -362,7 +401,7 @@ public sealed partial class MainWindow
         {
             if (!_fileBuffers.TryGetValue(key, out var buffer) || !buffer.Dirty)
             {
-                var info = await _engine.Pages.PreviewInfoAsync(entry.Path, _closing.Token).ConfigureAwait(true);
+                var info = await engine.Pages.PreviewInfoAsync(entry.Path, _closing.Token).ConfigureAwait(true);
                 if (ticket != _fileRead || _closing.IsCancellationRequested)
                 {
                     return;
@@ -370,7 +409,7 @@ public sealed partial class MainWindow
 
                 if ((string?)info["kind"] == "image")
                 {
-                    var bytes = await _engine.Pages.PreviewImageAsync(entry.Path, (string?)info["version"] ?? string.Empty, _closing.Token).ConfigureAwait(true);
+                    var bytes = await engine.Pages.PreviewContentAsync(entry.Path, (string?)info["version"] ?? string.Empty, _closing.Token).ConfigureAwait(true);
                     if (ticket == _fileRead && bytes is not null)
                     {
                         _openFile = null;
@@ -383,7 +422,7 @@ public sealed partial class MainWindow
                     return;
                 }
 
-                var file = await _engine.Pages.FileAsync(entry.Path, _closing.Token).ConfigureAwait(true);
+                var file = await engine.Pages.FileAsync(entry.Path, _closing.Token).ConfigureAwait(true);
                 if (ticket != _fileRead || _closing.IsCancellationRequested)
                 {
                     return;
@@ -394,18 +433,17 @@ public sealed partial class MainWindow
             }
 
             _openFile = buffer;
+            RefreshWorkbenchLauncher();
             SetReadOnlyBadge(buffer);
             SelectWorkspaceFile(entry.Path);
             ReleasePreview();
             FileModes.IsVisible = true;
             FileEditor.IsVisible = true;
-            PreviewFile.IsVisible = buffer.Kind is "markdown" or "html";
-            PreviewFile.Content = MessageCatalog.Get(MessageKey.Common.Preview, Language);
+            DrawFileToolbar(buffer);
             RebuildTabs();
             FileEditor.Text = buffer.Draft;
             FileEditor.IsReadOnly = buffer.Original.ReadOnly;
-            SetFileBarTitle(entry.Path, path: true);
-            SaveFile.IsEnabled = buffer.CanSave;
+            SetFileBarTitle(buffer.Original, entry.Path);
             if (buffer.Kind == "markdown")
             {
                 ShowMarkdown(buffer);
@@ -432,7 +470,7 @@ public sealed partial class MainWindow
     /// <param name="newPage">Whether an explicit launcher action creates another browser tab.</param>
     private void OpenManualBrowser(string? html = null, bool newPage = false)
     {
-        WorkbenchStart.IsVisible = false;
+        SetWorkbenchLauncher(false);
         DetachTerminal();
         ShowAnalysis(false);
         WorkbenchPanel.IsVisible = true;
@@ -450,9 +488,14 @@ public sealed partial class MainWindow
         }
 
         BackToEditor.IsVisible = html is not null;
-        WorkspaceBody.IsVisible = false;
+        if (html is null)
+        {
+            ExplorerPane.IsVisible = false;
+        }
+
         SaveFile.IsVisible = html is not null;
         ManualBrowserHost.IsVisible = true;
+        preview.Wake();
         RebuildTabs();
         if (html is null)
         {
@@ -477,59 +520,33 @@ public sealed partial class MainWindow
         BackToEditor.IsVisible = false;
         ManualBrowserHost.IsVisible = false;
         SaveFile.IsVisible = true;
-        WorkspaceBody.IsVisible = true;
         if (_openFile is { } file)
         {
-            SetFileBarTitle(file.Original.Path, path: true);
-            PreviewFile.IsVisible = file.Kind is "markdown" or "html";
-            PreviewFile.Content = MessageCatalog.Get(file.Kind == "markdown" ? MessageKey.Workbench.Read : MessageKey.Common.Preview, Language);
-            SaveFile.IsEnabled = file.CanSave;
+            SetFileBarTitle(file.Original, file.Original.Path);
+            DrawFileToolbar(file);
         }
     }
 
-    /// <summary>Draws a file or change-list diff through the same native component.</summary>
-    /// <param name="patch">Unified diff from the active workspace.</param>
-    private void ShowDiff(string? patch)
+    /// <summary>Shows the file's numbered patch with a return to its source editor.</summary>
+    /// <param name="path">The open file's path.</param><param name="patch">Unified diff from the active workspace.</param>
+    private void ShowDiff(string path, string? patch)
     {
-        var preview = new Workbench.DiffPreview();
-        preview.Show(string.IsNullOrEmpty(patch) ? MessageCatalog.Get(MessageKey.Workbench.NoChanges, Language) : patch);
-        ShowPreview(preview);
-    }
-
-    /// <summary>Marks the active presentation of the file in the toolbar.</summary>
-    /// <param name="active">Selected mode.</param>
-    private void SelectFileMode(Button active)
-    {
-        foreach (var mode in new[] { PreviewFile, EditFile, DiffFile })
-        {
-            mode.Classes.Set("active", mode == active);
-        }
-    }
-
-    /// <summary>Draws a path as muted directories and a bold filename.</summary>
-    /// <param name="text">Path or plain title.</param>
-    /// <param name="path">Whether the text is a workspace-relative file path.</param>
-    private void SetFileBarTitle(string text, bool path)
-    {
-        WorkbenchTitle.Text = text;
-        WorkbenchTitle.IsVisible = !path;
-        Breadcrumb.IsVisible = path;
-        if (!path)
-        {
-            return;
-        }
-
-        Breadcrumb.Inlines?.Clear();
-        var parts = text.Split('/');
-        for (var i = 0; i < parts.Length; i++)
-        {
-            var final = i == parts.Length - 1;
-            Breadcrumb.Inlines?.Add(new Run
+        var preview = new Workbench.GitPatchView();
+        AutomationProperties.SetAutomationId(preview, "class:workbench-diff");
+        preview.Show(
+            patch ?? string.Empty,
+            path,
+            MessageCatalog.Get(MessageKey.Workbench.NoChanges, Language),
+            truncated: null,
+            open: () =>
             {
-                Text = final ? parts[i] : parts[i] + "/",
-                Foreground = ResourceBrush(final ? "TextBrush" : "MutedBrush"),
-                FontWeight = final ? FontWeight.SemiBold : FontWeight.Normal,
+                ShowSource();
+                return Task.CompletedTask;
             });
+        ShowPreview(preview);
+        if (!preview.HasHunks)
+        {
+            RenderedFile.Padding = new Avalonia.Thickness(8);
         }
     }
 
@@ -539,30 +556,18 @@ public sealed partial class MainWindow
     private IBrush ResourceBrush(string key) =>
         this.TryFindResource(key, out var value) && value is IBrush brush ? brush : Brushes.Gray;
 
-    /// <summary>Shows why a granted file cannot be saved.</summary>
-    /// <param name="file">Current buffer, or null when no file is open.</param>
-    private void SetReadOnlyBadge(FileBuffer? file)
-    {
-        var readOnly = file?.Original.ReadOnly == true;
-        ReadOnlyBadge.IsVisible = readOnly;
-        ReadOnlyBadgeText.Text = readOnly ? MessageCatalog.Get("workbench.read_only_from_a_folder", Language) : string.Empty;
-        ToolTip.SetTip(ReadOnlyBadge, readOnly ? file?.Original.Root ?? string.Empty : string.Empty);
-    }
-
     /// <summary>Restores editing against the original file revision.</summary>
     private void ShowSource()
     {
         HideFileError();
-        WorkbenchStart.IsVisible = false;
+        SetWorkbenchLauncher(false);
         _fileRead++;
         HideBrowser();
         ReleasePreview();
         FileEditor.IsVisible = true;
         if (_openFile is { } file)
         {
-            PreviewFile.IsVisible = file.Kind is "markdown" or "html";
-            PreviewFile.Content = MessageCatalog.Get(file.Kind == "markdown" ? MessageKey.Workbench.Read : MessageKey.Common.Preview, Language);
-            SaveFile.IsEnabled = file.CanSave;
+            DrawFileToolbar(file);
             FileEditor.Focus();
         }
 
@@ -574,14 +579,19 @@ public sealed partial class MainWindow
     private void ShowMarkdown(FileBuffer file)
     {
         _fileRead++;
-        var text = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap };
+        var text = new SelectableTextBlock
+        {
+            TextWrapping = TextWrapping.Wrap,
+            FontWeight = FontWeight.Normal,
+            [!TextBlock.FontSizeProperty] = StudioTypography.Resource("StudioReadingSize"),
+            [!TextBlock.LineHeightProperty] = StudioTypography.Resource("WorkbenchReadingHeight"),
+        };
         MarkdownAnswer.Show(text, file.Draft);
         ShowPreview(text);
+        RenderedFile.Padding = new Avalonia.Thickness(32, 24, 32, 48);
         FileModes.IsVisible = true;
-        PreviewFile.IsVisible = true;
-        PreviewFile.Content = MessageCatalog.Get(MessageKey.Workbench.Read, Language);
+        DrawFileToolbar(file);
         SelectFileMode(PreviewFile);
-        SaveFile.IsEnabled = file.CanSave;
     }
 
     /// <summary>Reads the selected file's diff without losing its current draft.</summary>
@@ -603,9 +613,9 @@ public sealed partial class MainWindow
                 return;
             }
 
-            ShowDiff((string?)diff["diff"]);
+            ShowDiff(file.Original.Path, (string?)diff["diff"]);
             FileModes.IsVisible = true;
-            PreviewFile.IsVisible = file.Kind is "markdown" or "html";
+            DrawFileToolbar(file);
             SelectFileMode(DiffFile);
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
@@ -625,6 +635,7 @@ public sealed partial class MainWindow
     {
         DetachTerminal();
         FileModes.IsVisible = _openFile is not null;
+        EditFile.IsVisible = DiffFile.IsVisible = true;
         if (RenderedFile.Content is Image { Source: Bitmap bitmap })
         {
             bitmap.Dispose();
@@ -639,11 +650,12 @@ public sealed partial class MainWindow
     private void ShowPreview(Control view)
     {
         HideFileError();
-        WorkbenchStart.IsVisible = false;
+        SetWorkbenchLauncher(false);
         ReleasePreview();
         FileEditor.IsVisible = false;
-        RenderedFile.Padding = view.Classes.Contains("git-board") ? default : new Avalonia.Thickness(10);
-        RenderedFile.VerticalScrollBarVisibility = view.Classes.Contains("git-board") ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto;
+        var fillsCanvas = view.Classes.Contains("git-board") || view is Workbench.GitPatchView { HasHunks: true };
+        RenderedFile.Padding = fillsCanvas ? default : new Avalonia.Thickness(10);
+        RenderedFile.VerticalScrollBarVisibility = fillsCanvas ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto;
         RenderedFile.Content = view;
         RenderedFile.IsVisible = true;
         SaveFile.IsEnabled = false;
@@ -653,7 +665,11 @@ public sealed partial class MainWindow
     /// <summary>Saves the selected revision while preserving edits made during the write.</summary>
     /// <param name="sender">The save button.</param>
     /// <param name="e">The click.</param>
-    private async void OnSaveFile(object? sender, RoutedEventArgs e)
+    private async void OnSaveFile(object? sender, RoutedEventArgs e) => await SaveOpenFileAsync().ConfigureAwait(true);
+
+    /// <summary>Uses the same save operation for the editor shortcut and the toolbar.</summary>
+    /// <returns>The save request, if the open buffer can be saved.</returns>
+    private async Task SaveOpenFileAsync()
     {
         if (_openFile is { } file)
         {
