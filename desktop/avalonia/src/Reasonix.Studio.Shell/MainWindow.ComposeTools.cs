@@ -34,6 +34,7 @@ public sealed partial class MainWindow
     private void InitializeComposeTools()
     {
         _hideAmounts = _workspacePreferences.HideAmounts;
+        PlanMode.IsVisible = _workspacePreferences.ShowModePicker;
         InitializeComposeMetrics();
         PlanMode.Click += (_, _) => ShowComposeModes(false);
         ApprovalMode.Click += (_, _) => ShowComposeModes(true);

@@ -387,6 +387,29 @@ public sealed partial class MainWindow
                         _unsavedSettings = () => presets.HasChanges;
                     }
 
+                    var modePicker = new ToggleSwitch
+                    {
+                        IsChecked = _workspacePreferences.ShowModePicker,
+                        OffContent = string.Empty,
+                        OnContent = string.Empty,
+                        MinWidth = 0,
+                    };
+                    AutomationProperties.SetAutomationId(modePicker, "action:settings.show-mode-picker");
+                    AddRow(modes, "persona.show_mode_picker", modePicker, MessageCatalog.Get("persona.off_by_default_enable_to", Language));
+                    modePicker.Click += (_, _) =>
+                    {
+                        _workspacePreferences = _workspacePreferences with
+                        {
+                            ShowModePicker = modePicker.IsChecked == true,
+                        };
+                        if (_connectOnOpen)
+                        {
+                            _workspacePreferences.Save();
+                        }
+
+                        PlanMode.IsVisible = _workspacePreferences.ShowModePicker;
+                    };
+
                     var questions = Card(column, "settings.plans_and_questions");
                     var timeout = await api.AskTimeoutAsync(_closing.Token).ConfigureAwait(true);
                     var seconds = new NumericUpDown

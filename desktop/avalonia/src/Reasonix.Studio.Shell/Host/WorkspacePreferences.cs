@@ -20,6 +20,9 @@ internal sealed record WorkspacePreferences
         get; init;
     }
 
+    /// <summary>Gets or initializes a value indicating whether the composer's mode picker is shown.</summary>
+    public bool ShowModePicker { get; init; } = true;
+
     /// <summary>Gets or initializes the idle tab limit, with zero preserving every pane.</summary>
     public int OpenSessionLimit
     {
