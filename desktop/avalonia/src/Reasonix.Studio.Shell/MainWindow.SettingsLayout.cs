@@ -137,7 +137,7 @@ public sealed partial class MainWindow
 
         SettingsLinks.Margin = default;
         SettingsLinks.Children.Clear();
-        SettingsIndex.IsVisible = targets.Length >= 3;
+        SettingsIndex.IsVisible = targets.Length >= 2;
         if (!SettingsIndex.IsVisible)
         {
             return;

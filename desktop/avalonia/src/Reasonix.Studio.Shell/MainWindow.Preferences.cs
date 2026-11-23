@@ -238,6 +238,11 @@ public sealed partial class MainWindow
         SettingsHeadingBlock.IsVisible = true;
         SettingsHeading.Text = MessageCatalog.Get(parent == "usage" ? "app.usage" : s_sections.First(s => s.Id == parent).Title, Language);
         SettingsDescription.Text = SectionDescription(parent);
+        if (SettingsNav.SelectedItem is SectionEntry { CountText: { Length: > 0 } countText })
+        {
+            SettingsDescription.Text += " · " + MessageCatalog.Get("settings.n_items", Language, ("n", countText));
+        }
+
         SettingsDescription.IsVisible = SettingsDescription.Text.Length > 0;
         SettingsUsual.Text = MessageCatalog.Get("settings.page_usual", Language);
         SettingsError.Text = string.Empty;
@@ -307,6 +312,11 @@ public sealed partial class MainWindow
                     break;
                 case "model" when api is not null:
                     var services = Card(column, "models.services");
+                    if (column.Children.LastOrDefault() is Border servicesCard)
+                    {
+                        servicesCard.Tag = "common.model_services";
+                    }
+
                     var models = await api.ModelsAsync(_closing.Token).ConfigureAwait(true);
                     var providers = await api.ProvidersAsync(_closing.Token).ConfigureAwait(true);
                     var serviceView = new Settings.ModelServices { Tag = "models.services.view" };

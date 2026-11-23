@@ -102,6 +102,7 @@
   </UserControl.Styles>
   <Grid ColumnDefinitions="235,*" ColumnSpacing="14">
     <StackPanel>
+      <TextBlock Name="RailTitle" Margin="0,0,0,6" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource FaintBrush}"/>
       <ScrollViewer MaxHeight="540" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel Name="ProviderList"/>
       </ScrollViewer>

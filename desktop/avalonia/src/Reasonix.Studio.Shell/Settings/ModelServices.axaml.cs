@@ -39,6 +39,7 @@ public sealed partial class ModelServices : UserControl
     public ModelServices()
     {
         InitializeComponent();
+        RailTitle.Text = MessageCatalog.Get("common.model_services", InterfaceLanguage.Zh);
         Add.Content = MessageCatalog.Get("models.add_model_service", InterfaceLanguage.Zh);
         Add.Click += (_, _) => AddRequested?.Invoke();
     }
@@ -75,6 +76,7 @@ public sealed partial class ModelServices : UserControl
         _language = language;
         _api = api;
         _token = token;
+        RailTitle.Text = MessageCatalog.Get("common.model_services", language);
         Add.Content = MessageCatalog.Get("models.add_model_service", language);
         _selected = _providers.FirstOrDefault(provider => (bool?)provider["inUse"] == true) is { } current
             ? ProviderName(current)
