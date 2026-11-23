@@ -17,7 +17,7 @@ public sealed partial class MainWindow
         Control? selected = null;
         var current = WorkbenchStart.IsVisible || (ManualBrowserHost.IsVisible && !BackToEditor.IsVisible)
             ? null
-            : _openFile?.Original.Path;
+            : SelectedWorkbenchDocument;
         foreach (var (key, buffer) in _fileBuffers.Where(pair => pair.Key.Root == WorkspaceBufferScope))
         {
             var group = new WorkbenchHeaderTab(Path.GetFileName(key.Path), "File", current == key.Path, Language) { Tag = key.Path };
@@ -185,7 +185,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        if (_openFile?.Original.Path == key.Path)
+        if (SelectedWorkbenchDocument == key.Path)
         {
             _fileRead++;
             _openFile = null;

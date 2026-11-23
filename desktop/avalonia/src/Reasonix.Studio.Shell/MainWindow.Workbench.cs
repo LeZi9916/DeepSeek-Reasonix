@@ -222,7 +222,7 @@ public sealed partial class MainWindow
         FileErrorClose.Click += (_, _) =>
         {
             HideFileError();
-            if (_openFile?.Original.Path is { } path && _fileBuffers.TryGetValue((WorkspaceBufferScope, path), out var file))
+            if (SelectedWorkbenchDocument is { } path && _fileBuffers.TryGetValue((WorkspaceBufferScope, path), out var file))
             {
                 CloseFile((WorkspaceBufferScope, path), file);
             }
@@ -404,6 +404,12 @@ public sealed partial class MainWindow
                 var info = await engine.Pages.PreviewInfoAsync(entry.Path, _closing.Token).ConfigureAwait(true);
                 if (ticket != _fileRead || _closing.IsCancellationRequested)
                 {
+                    return;
+                }
+
+                if ((string?)info["kind"] == "office")
+                {
+                    await ShowOfficePreviewAsync(engine, entry, info, ticket).ConfigureAwait(true);
                     return;
                 }
 
@@ -653,7 +659,7 @@ public sealed partial class MainWindow
         SetWorkbenchLauncher(false);
         ReleasePreview();
         FileEditor.IsVisible = false;
-        var fillsCanvas = view.Classes.Contains("git-board") || view is Workbench.GitPatchView { HasHunks: true };
+        var fillsCanvas = view.Classes.Contains("git-board") || view is Workbench.OfficeDocumentPreview or Workbench.GitPatchView { HasHunks: true };
         RenderedFile.Padding = fillsCanvas ? default : new Avalonia.Thickness(10);
         RenderedFile.VerticalScrollBarVisibility = fillsCanvas ? Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled : Avalonia.Controls.Primitives.ScrollBarVisibility.Auto;
         RenderedFile.Content = view;

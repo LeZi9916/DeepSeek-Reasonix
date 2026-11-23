@@ -31,6 +31,8 @@
     <InternalsVisibleTo Include="Reasonix.Studio.Render.Tests" />
     <InternalsVisibleTo Include="Reasonix.Studio.WebView.Smoke" />
     <AvaloniaResource Include="Assets/wordmark.png" />
+    <AvaloniaResource Include="Assets/office-preview.html.gz" />
+    <None Update="Assets/office-preview-licenses.txt" Link="licenses/office-preview.txt" CopyToOutputDirectory="PreserveNewest" />
     <AvaloniaResource Include="Assets/Community/qq-group-qr.png" />
     <AvaloniaResource Include="../../../frontend-next/src/assets/douyin-qr.jpg" Link="Assets/Community/douyin-qr.jpg" />
     <AvaloniaResource Include="../../../frontend-next/src/assets/wechat-pay.jpg;../../../frontend-next/src/assets/alipay.jpg" Link="Assets/Community/%(Filename)%(Extension)" />

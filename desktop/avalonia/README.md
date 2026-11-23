@@ -63,11 +63,13 @@ The CI matrix builds the same solution in Release and runs both test projects wi
 Warnings are errors, and `GenerateDocumentationFile` is on: a member without
 XML documentation fails the build rather than reaching review.
 
-The workbench's **Browser** menu opens a manual system WebView. A workspace HTML file also offers a preview.
+The workbench's **Browser** menu opens a manual system WebView. Workspace HTML, DOCX and XLSX files also offer previews. The Office renderer uses the same read-only view as the Electron frontend.
+
+After changing that view, run `node desktop/frontend-next/tools/build-native-office.mjs` with the frontend dependencies installed. The generated renderer is embedded in the Avalonia assembly so a .NET build can run independently of Node.
 
 To check the actual adapter on a desktop, run `dotnet run --project desktop/avalonia/tests/Reasonix.Studio.WebView.Smoke` from the repository root.
 
-The smoke test serves two local pages, opens them through the workbench, and verifies navigation, history, reload and isolated HTML preview. The Studio workflow exposes the same check through its `system_webview` manual input.
+The smoke test serves two local pages, opens them through the workbench, and verifies navigation, history, reload and isolated HTML preview. It also opens a Word document in the Office renderer. The Studio workflow exposes the same check through its `system_webview` manual input.
 
 ## Running the kernel-side gates
 

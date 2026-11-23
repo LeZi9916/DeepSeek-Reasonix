@@ -76,7 +76,7 @@ export default function DocumentPreview({ port, path, shown, refresh, onOpenExte
       case "table": body = <DelimitedPreview path={path} text={text()} view={view} />; break;
       case "html": body = <StaticHtmlPreview text={text()} />; break;
       case "image": body = <Picture data={data} path={path} view={view} />; break;
-      case "office": body = <OfficePreview data={data} path={path} view={view} />; break;
+      case "office": body = <OfficePreview data={data} path={path} view={view} translate={t} />; break;
       default: body = fallback;
     }
   }

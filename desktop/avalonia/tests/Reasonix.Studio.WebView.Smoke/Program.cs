@@ -42,6 +42,7 @@ internal static class Program
             try
             {
                 await CheckAsync(window, baseUrl).ConfigureAwait(true);
+                await OfficePreviewSmoke.RunAsync().ConfigureAwait(true);
                 exit = 0;
             }
             catch (Exception error)

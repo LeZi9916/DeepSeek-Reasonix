@@ -453,6 +453,7 @@ public sealed partial class MainWindow
                     var previews = Card(column, "settings.files_and_previews_card");
                     await FlagControlAsync(previews, StudioSetting.ChangedFiles, "settings.file_changes").ConfigureAwait(true);
                     await FlagControlAsync(previews, StudioSetting.PresentFiles, "settings.ai_file_delivery_cards").ConfigureAwait(true);
+                    AddOfficePreviewSetting(previews);
                     AddNewAnswerMarkerSetting(Card(column, "settings.notices_card"));
                     break;
                 case "usage" when api is not null:

@@ -87,6 +87,12 @@ internal sealed record WorkspacePreferences
         get; init;
     } = true;
 
+    /// <summary>Gets or initializes a value indicating whether the workbench previews Office documents.</summary>
+    public bool PreviewOfficeDocuments
+    {
+        get; init;
+    } = true;
+
     /// <summary>Gets or initializes a value indicating whether multiple sessions are shown as tabs.</summary>
     public bool ShowSessionTabs
     {

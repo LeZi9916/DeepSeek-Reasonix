@@ -63,7 +63,7 @@ public sealed partial class MainWindow
             Open = WorkbenchPanel.IsVisible,
             Expanded = _fullWorkbench,
             Hidden = _showHiddenFiles,
-            File = _openFile?.Original.Path,
+            File = SelectedWorkbenchDocument,
             Source = FileEditor.IsVisible,
             Diff = DiffFile.Classes.Contains("active"),
             Launcher = _workbenchLauncherSelected,

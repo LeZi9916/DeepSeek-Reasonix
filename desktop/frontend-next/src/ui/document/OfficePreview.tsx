@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { t } from "../../i18n";
-import { StudioIcon } from "../StudioIcon";
+import { Maximize2, Minus, Plus } from "lucide-react";
 import { staticDocument } from "./staticDocument";
 import { readWorkbook, SHEET_COLUMN_LIMIT, SHEET_ROW_LIMIT, type SheetView } from "./officeSheet";
 import { fitZoom, readWordDocument, type WordView } from "./officeWord";
@@ -21,7 +20,10 @@ function useWidth() {
   return [ref, width] as const;
 }
 
-export default function OfficePreview({ data, path, view }: { data: ArrayBuffer; path: string; view: DocumentViewState }) {
+export default function OfficePreview({ data, path, view, translate: t }: {
+  data: ArrayBuffer; path: string; view: DocumentViewState;
+  translate: (key: string, vars?: Record<string, string | number>) => string;
+}) {
   const [parsed, setParsed] = useState<Parsed>();
   const [sheet, updateSheet] = useState(view.sheet ?? 0);
   const setSheet = (i: number) => { view.sheet = i; updateSheet(i); };
@@ -56,12 +58,12 @@ export default function OfficePreview({ data, path, view }: { data: ArrayBuffer;
         <span className="office-ro">{t("common.read_only")}</span>
         <span className="office-note">{t("chat.read_only_preview_macros_scripts")}</span>
         <span className="office-fill" />
-        <button type="button" className="pdf-icon" data-action="document.zoom" data-target={path} aria-label={t("chat.zoom_out")} title={t("chat.zoom_out")} onClick={() => step(-1)}><StudioIcon name="minus" /></button>
+        <button type="button" className="pdf-icon" data-action="document.zoom" data-target={path} aria-label={t("chat.zoom_out")} title={t("chat.zoom_out")} onClick={() => step(-1)}><Minus className="studio-icon" size={16} strokeWidth={1.8} aria-hidden="true" focusable="false" /></button>
         <span className="pdf-zoom">{Math.round(zoom * 100)}%</span>
-        <button type="button" className="pdf-icon" data-action="document.zoom" data-target={path} aria-label={t("chat.zoom_in")} title={t("chat.zoom_in")} onClick={() => step(1)}><StudioIcon name="plus" /></button>
+        <button type="button" className="pdf-icon" data-action="document.zoom" data-target={path} aria-label={t("chat.zoom_in")} title={t("chat.zoom_in")} onClick={() => step(1)}><Plus className="studio-icon" size={16} strokeWidth={1.8} aria-hidden="true" focusable="false" /></button>
         {parsed.kind === "word" && (
           <button type="button" className="pdf-fit" data-action="document.zoom" data-target={path} aria-pressed={chosen === undefined} onClick={() => setZoom(undefined)}>
-            <StudioIcon name="expand" />{t("chat.fit_width")}
+            <Maximize2 className="studio-icon" size={16} strokeWidth={1.8} aria-hidden="true" focusable="false" />{t("chat.fit_width")}
           </button>
         )}
       </div>

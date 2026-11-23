@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Workbench.OfficeDocumentPreview"
+             AutomationProperties.AutomationId="class:office-document-preview">
+  <UserControl.Styles>
+    <Style Selector="Button.document-command">
+      <Setter Property="Padding" Value="8,4"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+  </UserControl.Styles>
+  <Grid RowDefinitions="Auto,*" TextBlock.FontSize="{DynamicResource StudioType13}">
+    <WrapPanel Margin="12,8" ItemSpacing="8" LineSpacing="4">
+      <TextBlock Name="SizeCaption" VerticalAlignment="Center"/>
+      <Button Name="Refresh" Classes="document-command" AutomationProperties.AutomationId="action:document.refresh"/>
+      <Button Name="OpenInApp" Classes="document-command" AutomationProperties.AutomationId="action:workbench.open-office"/>
+    </WrapPanel>
+    <ContentControl Name="Document" Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+    <TextBlock Name="Notice" Grid.Row="1" Margin="12,8" TextWrapping="Wrap"/>
+    <Border Name="DisabledCard" Grid.Row="1" Margin="12" Padding="14" CornerRadius="10"
+            VerticalAlignment="Top" Background="{DynamicResource PageBrush}"
+            AutomationProperties.AutomationId="class:office-off" IsVisible="False">
+      <StackPanel Spacing="8">
+        <TextBlock TextWrapping="Wrap" LineHeight="22.1" Foreground="{DynamicResource MutedBrush}">
+          <Run Name="FileName" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><Run Name="DisabledText"/>
+        </TextBlock>
+        <WrapPanel ItemSpacing="8" LineSpacing="8">
+          <Button Name="OpenDisabled" Classes="document-command" Height="32" Padding="14,0" CornerRadius="8"
+                  AutomationProperties.AutomationId="action:workbench.open-office-external"/>
+          <Button Name="GoToSetting" Height="24" Padding="10,0" CornerRadius="12" Background="Transparent" BorderThickness="0"
+                  FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"
+                  AutomationProperties.AutomationId="action:workbench.enable-office-preview"/>
+        </WrapPanel>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

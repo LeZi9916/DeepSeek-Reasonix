@@ -194,7 +194,7 @@ public sealed partial class MainWindow
         Walk(string.Empty);
         WorkspaceFiles.SelectionChanged -= OnFileSelected;
         WorkspaceFiles.ItemsSource = rows;
-        WorkspaceFiles.SelectedItem = rows.FirstOrDefault(row => !row.Directory && row.Path == _openFile?.Original.Path);
+        WorkspaceFiles.SelectedItem = rows.FirstOrDefault(row => !row.Directory && row.Path == SelectedWorkbenchDocument);
         WorkspaceFiles.SelectionChanged += OnFileSelected;
         NoWorkspaceFiles.IsVisible = WorkspaceFiles.IsVisible && rows.Count == 0;
         ExplorerCount.Text = rows.Count.ToString(System.Globalization.CultureInfo.CurrentCulture);

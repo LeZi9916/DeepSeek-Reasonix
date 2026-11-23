@@ -203,7 +203,7 @@ public sealed partial class MainWindow
         {
             previous.ScrollOffset = Conversation.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault()?.Offset.Y ?? 0;
             previous.WorkbenchOpen = WorkbenchPanel.IsVisible;
-            previous.FilePath = _openFile?.Original.Path;
+            previous.FilePath = SelectedWorkbenchDocument;
         }
 
         _launchOwner ??= _engine;

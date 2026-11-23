@@ -25,7 +25,7 @@ public sealed partial class MainWindow
         ["tools"] = ["settings.tool_approvals", "settings.outside_text", "ext.tools_the_model_can_use", "settings.rules_you_spell_out", "settings.sandbox", "common.which_program_runs_commands", "session.several_sessions_writing_one_project", "models.web_search_and_fetch", "common.built_in_browser"],
         ["ext"] = ["settings.plugin_packages", "ext.external_services", "settings.skills", "ext.installed"],
         ["ext:market"] = ["ext.community_market"],
-        ["display"] = ["settings.file_changes", "settings.fold_the_work_in_between", "settings.ai_file_delivery_cards", "settings.new_answer_divider", "chat.transcript_folding", "plan.show_collapsed_plan_progress"],
+        ["display"] = ["settings.file_changes", "settings.fold_the_work_in_between", "settings.ai_file_delivery_cards", "settings.new_answer_divider", "chat.transcript_folding", "plan.show_collapsed_plan_progress", "common.office_document_preview"],
         ["controls"] =
         [
             "settings.icon_rail", "settings.navigation_entries", "session.session_row_buttons",
