@@ -25,8 +25,8 @@ public sealed partial class ModelPicker
     /// <returns>The heading.</returns>
     private Control GroupHead(Account account, bool divided)
     {
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("20,*,Auto"), ColumnSpacing = 8 };
-        grid.Children.Add(MarkControl(account.Mark, account.Label, 20));
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("16,*,Auto"), ColumnSpacing = 8 };
+        grid.Children.Add(MarkControl(account.Mark, account.Label, 16));
         var name = new TextBlock { Text = account.Label, VerticalAlignment = VerticalAlignment.Center };
         name.Classes.Add("model-group-name");
         Grid.SetColumn(name, 1);
@@ -51,8 +51,13 @@ public sealed partial class ModelPicker
     /// <returns>The row.</returns>
     private Button ModelRow(ModelChoice model, bool current)
     {
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("18,*,Auto"), ColumnSpacing = 8 };
-        grid.Children.Add(MarkControl(MarkOf(model), Label(model), 18));
+        var grid = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("16,*,Auto"),
+            ColumnSpacing = 8,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        grid.Children.Add(MarkControl(MarkOf(model), Label(model), 16));
         var text = new StackPanel
         {
             Orientation = Orientation.Vertical,
@@ -77,6 +82,7 @@ public sealed partial class ModelPicker
             Orientation = Orientation.Horizontal,
             Spacing = 6,
             VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Right,
         };
         if (HealthBadge(model.Provider) is { } health)
         {
@@ -95,7 +101,13 @@ public sealed partial class ModelPicker
 
         Grid.SetColumn(tail, 2);
         grid.Children.Add(tail);
-        var button = new Button { Content = grid, Tag = model.Ref, IsEnabled = !model.NotAdded };
+        var button = new Button
+        {
+            Content = grid,
+            Tag = model.Ref,
+            IsEnabled = !model.NotAdded,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+        };
         button.Classes.Add("model-row");
         button.Classes.Set("current", current);
         AutomationProperties.SetName(button, Label(model));
@@ -112,7 +124,7 @@ public sealed partial class ModelPicker
     /// <returns>The row.</returns>
     private Button EffortRow(string level, string current, bool forced, string cheapest)
     {
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,30,14"), ColumnSpacing = 7 };
+        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,14"), ColumnSpacing = 7 };
         var text = new StackPanel { Orientation = Orientation.Vertical, VerticalAlignment = VerticalAlignment.Center };
         var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
         var name = new TextBlock { Text = EffortLabel(level) };
@@ -132,12 +144,9 @@ public sealed partial class ModelPicker
         note.Classes.Add("effort-desc");
         text.Children.Add(note);
         grid.Children.Add(text);
-        var strength = Strength(level);
-        Grid.SetColumn(strength, 1);
-        grid.Children.Add(strength);
         if (level.Equals(current, StringComparison.OrdinalIgnoreCase))
         {
-            grid.Children.Add(CheckAt(2));
+            grid.Children.Add(CheckAt(1));
         }
 
         var button = new Button { Content = grid, Tag = level };
@@ -188,11 +197,7 @@ public sealed partial class ModelPicker
         button.Classes.Add("effort-row");
         button.Classes.Set("divided", divided);
         AutomationProperties.SetName(button, ModeLabel(mode));
-        button.Click += (_, _) =>
-        {
-            Close();
-            ModePicked?.Invoke(mode.Active ? string.Empty : mode.Id);
-        };
+        button.Click += (_, _) => ModePicked?.Invoke(mode.Active ? string.Empty : mode.Id);
         return button;
     }
 
@@ -215,54 +220,6 @@ public sealed partial class ModelPicker
             ManageRequested?.Invoke();
         };
         return button;
-    }
-
-    /// <summary>Draws the strength bars, or the recommendation mark for Auto.</summary>
-    /// <param name="level">Kernel effort value.</param>
-    /// <returns>The indicator.</returns>
-    private Control Strength(string level)
-    {
-        var id = level.ToLowerInvariant();
-        if (id == "auto")
-        {
-            return new PathIcon
-            {
-                Data = Geometry("Glyph.fresh"),
-                Width = 13,
-                Height = 13,
-                Foreground = Brush("FaintBrush"),
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-            };
-        }
-
-        var value = id switch
-        {
-            "disabled" or "none" => 0,
-            "low" => 1,
-            "medium" => 2,
-            "high" => 3,
-            "xhigh" or "max" => 4,
-            _ => 1,
-        };
-        var grid = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("4,4,4,4"),
-            Width = 18,
-            Height = 14,
-            VerticalAlignment = VerticalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-        };
-        for (var i = 1; i <= 4; i++)
-        {
-            var bar = new Border { Height = i switch { 1 => 4, 2 => 7, 3 => 10, _ => 13 } };
-            bar.Classes.Add("effort-bar");
-            bar.Classes.Set("on", i <= value);
-            Grid.SetColumn(bar, i - 1);
-            grid.Children.Add(bar);
-        }
-
-        return grid;
     }
 
     /// <summary>Builds the check mark that names the chosen row.</summary>

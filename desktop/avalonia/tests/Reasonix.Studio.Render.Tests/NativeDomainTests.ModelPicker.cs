@@ -135,8 +135,7 @@ public sealed partial class NativeDomainTests
         Dispatcher.UIThread.RunJobs();
         Assert.Contains("/effort", calls);
         Assert.Equal("深入", w.FindControl<TextBlock>("EffortLabel")!.Text);
-        w.FindControl<Button>("ModelButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-        Dispatcher.UIThread.RunJobs();
+        Assert.True(picker.IsOpen);
         picker.FindControl<TextBox>("Search")!.Text = "kimi";
         Dispatcher.UIThread.RunJobs();
         row = picker.FindControl<StackPanel>("ModelList")!.Children.OfType<Button>().Single();

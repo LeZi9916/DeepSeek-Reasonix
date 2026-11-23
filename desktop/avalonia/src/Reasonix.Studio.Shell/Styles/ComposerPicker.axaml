@@ -74,7 +74,7 @@
     <Setter Property="Margin" Value="8,0,8,4"/>
   </Style>
   <Style Selector="Border.model-group">
-    <Setter Property="Padding" Value="8,6,8,4"/>
+    <Setter Property="Padding" Value="8,4,8,3"/>
     <Setter Property="Margin" Value="0,2,0,1"/>
   </Style>
   <Style Selector="Border.model-group.divided">
@@ -116,20 +116,20 @@
     <Setter Property="BorderThickness" Value="0"/>
     <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
     <Setter Property="Template">
-      <ControlTemplate><Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/></Border></ControlTemplate>
+      <ControlTemplate><Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/></Border></ControlTemplate>
     </Setter>
   </Style>
   <Style Selector="Button.model-row:pointerover">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
   </Style>
   <Style Selector="Button.model-row.current">
-    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="Background" Value="Transparent"/>
   </Style>
   <Style Selector="Button.model-row:disabled">
     <Setter Property="Opacity" Value="0.45"/>
   </Style>
   <Style Selector="TextBlock.model-name">
-    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
     <Setter Property="FontWeight" Value="Medium"/>
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
@@ -180,7 +180,7 @@
     <Setter Property="Padding" Value="8"/>
   </Style>
   <Style Selector="TextBlock.model-aside-title">
-    <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
   </Style>

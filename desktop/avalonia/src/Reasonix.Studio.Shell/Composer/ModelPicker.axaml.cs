@@ -220,18 +220,18 @@ public sealed partial class ModelPicker : UserControl
         var top = TopLevel.GetTopLevel(this);
         var viewport = top?.ClientSize ?? new Size(900, 700);
         var available = Math.Max(320, viewport.Width - 24);
-        var width = Math.Min(700, available);
-        var narrow = width < 640;
+        var width = Math.Min(600, available);
+        var narrow = width < 560;
         Frame.Width = width;
         Frame.Classes.Set("narrow", narrow);
-        Layout.ColumnDefinitions[1].Width = narrow ? new GridLength(0) : new GridLength(340);
+        Layout.ColumnDefinitions[1].Width = narrow ? new GridLength(0) : new GridLength(216);
         Layout.RowDefinitions[5].Height = narrow ? new GridLength(0, GridUnitType.Auto) : new GridLength(0);
         Grid.SetRow(Aside, narrow ? 5 : 0);
         Grid.SetRowSpan(Aside, narrow ? 1 : 5);
         Grid.SetColumn(Aside, narrow ? 0 : 1);
         Aside.BorderThickness = narrow ? new Thickness(0, 1, 0, 0) : new Thickness(1, 0, 0, 0);
-        ModelScroll.MaxHeight = Math.Clamp(viewport.Height - 250, 160, narrow ? 280 : 440);
-        EffortScroll.MaxHeight = Math.Clamp(viewport.Height - 160, 180, 520);
+        ModelScroll.MaxHeight = Math.Clamp(viewport.Height - 420, 160, narrow ? 280 : 300);
+        EffortScroll.MaxHeight = Math.Clamp(viewport.Height - 420, 180, narrow ? 300 : 330);
         Frame.BoxShadow = BoxShadows.Parse(ActualThemeVariant == ThemeVariant.Dark
             ? "0 0 0 1 #59000000, 0 22 60 -22 #D9000000"
             : "inset 0 1 0 #E6FFFFFF, 0 18 44 -18 #33171E2D");
@@ -425,11 +425,7 @@ public sealed partial class ModelPicker : UserControl
 
     /// <summary>Closes and reports an effort choice.</summary>
     /// <param name="level">Kernel effort value.</param>
-    private void ChooseEffort(string level)
-    {
-        Close();
-        EffortPicked?.Invoke(level);
-    }
+    private void ChooseEffort(string level) => EffortPicked?.Invoke(level);
 
     /// <summary>Handles search keys without leaking them to the composer.</summary>
     /// <param name="sender">The search field.</param>

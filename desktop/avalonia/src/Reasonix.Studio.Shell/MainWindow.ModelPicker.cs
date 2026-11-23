@@ -242,6 +242,7 @@ public sealed partial class MainWindow
             {
                 ShowComposeStatus(status);
                 await RefreshModelCatalogAsync().ConfigureAwait(true);
+                ModelPicker.Refresh(_modelCatalog, status, Language);
             }
         }).ConfigureAwait(true);
     }
@@ -263,6 +264,7 @@ public sealed partial class MainWindow
             if (status is not null && engine == _engine && draft == _draftKey)
             {
                 ShowComposeStatus(status);
+                ModelPicker.Refresh(_modelCatalog, status, Language);
             }
         }).ConfigureAwait(true);
     }
