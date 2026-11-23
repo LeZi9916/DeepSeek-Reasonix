@@ -17,6 +17,8 @@
       </StackPanel>
     </Button>
     <SelectableTextBlock Name="Reasoning" Margin="14,5,0,0" FontSize="{DynamicResource StudioType13}" LineHeight="21.84" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}" IsVisible="False"/>
+    <TextBlock Name="ReasoningPreview" Margin="14,1,0,3" FontSize="{DynamicResource StudioType12}" LineHeight="18"
+               Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis" IsVisible="False"/>
     <StackPanel Name="AnswerBlocks" AutomationProperties.AutomationId="class:txt">
       <SelectableTextBlock Name="Answer" FontSize="{DynamicResource StudioReadingSize}" LineHeight="{DynamicResource StudioReadingHeight}" FontWeight="Medium" TextWrapping="Wrap"/>
     </StackPanel>

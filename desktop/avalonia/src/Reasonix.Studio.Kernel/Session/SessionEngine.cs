@@ -100,6 +100,9 @@ public sealed partial class SessionEngine : IAsyncDisposable
     /// </remarks>
     private readonly SseEventTransport? _tree;
 
+    /// <summary>The tree stream retained independently of the conversation budget.</summary>
+    private Task? _treeWatching;
+
     /// <summary>
     /// The state as it stands.
     /// </summary>
@@ -345,22 +348,37 @@ public sealed partial class SessionEngine : IAsyncDisposable
     /// </remarks>
     public async Task StartAsync()
     {
-        var tree = _tree is null ? Task.CompletedTask : WatchTreeAsync(_tree);
+        var tree = EnsureTreeWatching();
+        await WatchConversationAsync().ConfigureAwait(false);
+        await tree.ConfigureAwait(false);
+    }
 
+    /// <summary>Starts the tree stream once and retains it while session streams are reassigned.</summary>
+    /// <returns>The tree lifetime.</returns>
+    public Task EnsureTreeWatching()
+    {
+        lock (_sync)
+        {
+            return _treeWatching ??= _tree is null ? Task.CompletedTask : WatchTreeAsync(_tree);
+        }
+    }
+
+    /// <summary>Reads live conversation events until the pane gives up its stream.</summary>
+    /// <param name="token">The pane's current subscription lifetime.</param>
+    /// <returns>The live event read.</returns>
+    public async Task WatchConversationAsync(CancellationToken token = default)
+    {
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(_closing.Token, token);
         try
         {
-            await foreach (var frame in _transport.StreamAsync(() => _subscription.Position, _closing.Token)
-                .ConfigureAwait(false))
+            await foreach (var frame in _transport.StreamAsync(() => _subscription.Position, lifetime.Token).ConfigureAwait(false))
             {
-                await _subscription.AcceptAsync(frame, _closing.Token).ConfigureAwait(false);
+                await _subscription.AcceptAsync(frame, lifetime.Token).ConfigureAwait(false);
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
         {
-            // Closing is the outcome asked for.
         }
-
-        await tree.ConfigureAwait(false);
     }
 
     /// <summary>
@@ -712,6 +730,11 @@ public sealed partial class SessionEngine : IAsyncDisposable
         if (frame.Kind == "inbox_changed")
         {
             QueueChanged?.Invoke();
+        }
+
+        if (frame.Kind == "todo_progress")
+        {
+            _ = RefreshPlanAsync();
         }
     }
 

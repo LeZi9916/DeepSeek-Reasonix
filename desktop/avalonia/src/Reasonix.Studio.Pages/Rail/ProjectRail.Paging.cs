@@ -100,7 +100,7 @@ public sealed partial class ProjectRail
         _ when session.Archived => _scope == "all" && _query.Length > 0,
         "unread" => session.Unread,
         "pinned" => session.Pinned,
-        "live" => _runs.GetValueOrDefault(RemoteKey(host, session.Path))?.Live == true,
+        "live" => ListedAsRunning(host, session.Path),
         "waiting" => RunFor(host, session.Path) == "halt",
         _ => true,
     };
@@ -123,7 +123,7 @@ public sealed partial class ProjectRail
 
             var count = rows.Count(row => scope switch
             {
-                "live" => !row.Session.Archived && _runs.GetValueOrDefault(RemoteKey(row.Target.Host, row.Session.Path))?.Live == true,
+                "live" => !row.Session.Archived && ListedAsRunning(row.Target.Host, row.Session.Path),
                 "waiting" => !row.Session.Archived && RunFor(row.Target.Host, row.Session.Path) == "halt",
                 "unread" => !row.Session.Archived && row.Session.Unread,
                 "pinned" => !row.Session.Archived && row.Session.Pinned,

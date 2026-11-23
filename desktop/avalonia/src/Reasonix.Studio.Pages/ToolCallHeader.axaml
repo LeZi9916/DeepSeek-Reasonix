@@ -14,5 +14,6 @@
     <ScrollViewer Name="Output" IsVisible="False" MaxHeight="180" Margin="10,5,0,5" HorizontalScrollBarVisibility="Disabled">
       <SelectableTextBlock Name="Result" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
     </ScrollViewer>
+    <Button Name="ExpandOutput" Classes="conversation-disclosure" HorizontalAlignment="Left" Margin="10,0,0,2" IsVisible="False"/>
   </StackPanel>
 </UserControl>

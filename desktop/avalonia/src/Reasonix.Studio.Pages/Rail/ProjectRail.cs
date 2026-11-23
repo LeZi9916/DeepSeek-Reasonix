@@ -57,6 +57,8 @@ public sealed partial class ProjectRail : UserControl
     public ProjectRail()
     {
         InitializeComponent();
+        AttachedToVisualTree += (_, _) => ScheduleGrace();
+        DetachedFromVisualTree += (_, _) => _graceTimer.Stop();
         _rows = Rows;
         InitializeBatch();
         InitializeGestures();

@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Pages.NewAnswerLine" AutomationProperties.AutomationId="class:new-answer-line">
+  <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="12" Margin="0,32,0,20">
+    <Border Height="1" Background="{DynamicResource AccentInkBrush}" Opacity="0.35" VerticalAlignment="Center" RenderOptions.EdgeMode="Aliased"/>
+    <TextBlock Name="Label" Grid.Column="1" FontSize="{DynamicResource StudioType13}" FontWeight="Medium" LineHeight="18.2"
+               TextWrapping="Wrap" Foreground="{DynamicResource AccentInkBrush}"/>
+    <Border Grid.Column="2" Height="1" Background="{DynamicResource AccentInkBrush}" Opacity="0.35" VerticalAlignment="Center" RenderOptions.EdgeMode="Aliased"/>
+  </Grid>
+</UserControl>

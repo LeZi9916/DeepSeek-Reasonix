@@ -13,44 +13,14 @@ using System.Linq;
 
 namespace Reasonix.Studio.Pages;
 
-// The parts of the conversation that are not rows: the group around a stretch of
-// work, the group around parallel delegates, and the line marking answers the
-// reader has not seen. Each one is a rule about rows the state layer already
-// decided; the page only draws the answer.
-//
-// None of them declares an automation id. The geometry baseline has no node for
-// a group head or a separator, and a control carrying an identity the capture
-// never recorded reads to the gate as an addition rather than as decoration.
 public sealed partial class SessionPage
 {
-    /// <summary>
-    /// Reads how many transcript rows a lane stands for.
-    /// </summary>
-    /// <param name="lane">The lane.</param>
-    /// <returns>The number of rows it was made from.</returns>
-    private static int LaneLength(TranscriptLane lane)
-    {
-        return lane.IsDelegateGroup ? lane.Delegates.Count : lane.Rows.Count;
-    }
-
-    /// <summary>
-    /// Draws a run of rows, folding consecutive work into one activity group and
-    /// two or more delegates into a group of their own.
-    /// </summary>
-    /// <param name="items">The rows to draw, in transcript order.</param>
+    /// <summary>Draws transcript lanes in their original order.</summary>
+    /// <param name="items">The rows to draw.</param>
     private void DrawRows(IReadOnlyList<TranscriptItem> items)
     {
-        var marker = NewAnswerMarker.PlaceOf(items, SeenThrough);
-        var lanes = TranscriptLanes.Split(items);
-
-        var at = 0;
-        foreach (var lane in lanes)
+        foreach (var lane in TranscriptLanes.Split(items))
         {
-            if (marker >= 0 && marker >= at && marker < at + LaneLength(lane))
-            {
-                AddRaw(NewAnswerLine());
-            }
-
             if (lane.IsDelegateGroup)
             {
                 AddRaw(DelegateGroup(lane.Delegates));
@@ -59,8 +29,6 @@ public sealed partial class SessionPage
             {
                 DrawOrdinary(lane.Rows);
             }
-
-            at += LaneLength(lane);
         }
     }
 
@@ -92,7 +60,7 @@ public sealed partial class SessionPage
         {
             if (segment.Lead is { } lead)
             {
-                AddRow(RowOf(lead));
+                AddProseRow(lead);
             }
 
             if (segment.HasWork)
@@ -117,12 +85,7 @@ public sealed partial class SessionPage
             if (row is SayItem or UserItem)
             {
                 Flush(work);
-                if (row is UserItem && _drawn.Count > 0)
-                {
-                    AddRaw(new Border { Height = 1, Background = Brush("BorderBrush"), Margin = new Thickness(0, 32, 0, 12) });
-                }
-
-                AddRow(RowOf(row));
+                AddProseRow(row);
                 continue;
             }
 
@@ -130,6 +93,27 @@ public sealed partial class SessionPage
         }
 
         Flush(work);
+    }
+
+    /// <summary>Draws a user or answer row following its transcript separator.</summary>
+    /// <param name="row">The transcript row.</param>
+    private void AddProseRow(TranscriptItem row)
+    {
+        var control = RowOf(row);
+        if (row.Id == _newAnswerAt)
+        {
+            AddRaw(new NewAnswerLine(Language));
+            if (row is UserItem)
+            {
+                control.Margin = default;
+            }
+        }
+        else if (row is UserItem && _drawn.Count > 0)
+        {
+            AddRaw(new Border { Height = 1, Background = Brush("BorderBrush"), Margin = new Thickness(0, 32, 0, 12) });
+        }
+
+        AddRow(control);
     }
 
     /// <summary>
@@ -204,7 +188,7 @@ public sealed partial class SessionPage
 
         var toggle = new Button
         {
-            Content = MessageCatalog.Get(_workOpen ? "common.collapse" : "common.expand", Language),
+            Content = MessageCatalog.Get(DisclosureChoices.WorkOpen ? "common.collapse" : "common.expand", Language),
             [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
             Padding = new Thickness(8, 2, 8, 2),
             Background = Brushes.Transparent,
@@ -214,7 +198,7 @@ public sealed partial class SessionPage
         Grid.SetColumn(toggle, 2);
         toggle.Click += (_, _) =>
         {
-            _workOpen = !_workOpen;
+            DisclosureChoices.WorkOpen = !DisclosureChoices.WorkOpen;
             Rebuild(_state.Items);
         };
         head.Children.Add(toggle);
@@ -222,10 +206,15 @@ public sealed partial class SessionPage
         var body = new StackPanel
         {
             Spacing = 8,
-            IsVisible = _workOpen,
+            IsVisible = DisclosureChoices.WorkOpen,
         };
         foreach (var row in work)
         {
+            if (row.Id == _newAnswerAt)
+            {
+                body.Children.Add(new NewAnswerLine(Language));
+            }
+
             var control = RowOf(row);
             _drawn.Add(control);
             body.Children.Add(control);
@@ -249,16 +238,41 @@ public sealed partial class SessionPage
     private Control ActivityGroup(IReadOnlyList<TranscriptItem> work)
     {
         var tally = ActivityTally.Of(work);
-        var open = _opened ?? !tally.Settled;
+        var id = work[0].Id;
+        var open = FoldChoice(TranscriptPart.Activity, id) ?? _folding.StartsOpen(
+            TranscriptPart.Activity,
+            live: !tally.Settled || work.Any(row => _liveWork.Contains(row.Id)),
+            changed: work.OfType<ToolItem>().Any(tool => TranscriptFolding.ChangedFile(tool.Call)));
         var body = new StackPanel { Name = "ActivityBody", Spacing = 2, IsVisible = open, Margin = new Thickness(17, 2, 0, 2) };
         foreach (var row in work)
         {
-            var control = RowOf(row);
+            var control = RowOf(row, inActivity: true);
             _drawn.Add(control);
             body.Children.Add(control);
         }
 
-        return new ActivityDisclosure(body, HeadlineOf(tally), open, tally.Failed > 0 ? "ErrInkBrush" : tally.Running > 0 ? "NetBrush" : "OkBrush", value => _opened = value);
+        return new ActivityDisclosure(body, HeadlineOf(tally), open, tally.Failed > 0 ? "ErrInkBrush" : tally.Running > 0 ? "NetBrush" : "OkBrush", value => RememberFold(TranscriptPart.Activity, id, value))
+        {
+            Tag = work,
+        };
+    }
+
+    /// <summary>Lets grouped reads follow the same step default as individual calls.</summary>
+    /// <param name="reads">The grouped canonical reads.</param><returns>The retained reads disclosure.</returns>
+    private Control ReadsDisclosure(ReadsItem reads)
+    {
+        var failed = reads.Tools.Any(call => !string.IsNullOrEmpty(call.Err));
+        var open = FoldChoice(TranscriptPart.Steps, reads.Id) ?? _folding.StartsOpen(TranscriptPart.Steps, failed: failed);
+        var body = new StackPanel { Spacing = 2, Margin = new Thickness(17, 2, 0, 2) };
+        for (var index = 0; index < reads.Tools.Count; index++)
+        {
+            var call = reads.Tools[index];
+            var id = string.IsNullOrEmpty(call.ID) ? reads.Id + ":" + index.ToString(System.Globalization.CultureInfo.InvariantCulture) : call.ID;
+            body.Children.Add(ToolRow(new ToolItem { Id = id, Call = call }, inActivity: true));
+        }
+
+        var label = MessageCatalog.Get("chat.read_n_files", Language, ("n", Format.Count(reads.Tools.Count, Language)));
+        return new ActivityDisclosure(body, label, open, failed ? "ErrInkBrush" : "FaintBrush", value => RememberFold(TranscriptPart.Steps, reads.Id, value));
     }
 
     /// <summary>
@@ -338,37 +352,6 @@ public sealed partial class SessionPage
             Margin = new Thickness(0, _drawn.Count == 0 ? 0 : 8, 0, 0),
             Child = group,
         };
-    }
-
-    /// <summary>
-    /// Draws the line that marks where answers the reader has not seen begin.
-    /// </summary>
-    /// <returns>The separator.</returns>
-    private Control NewAnswerLine()
-    {
-        var line = new Grid
-        {
-            ColumnDefinitions = new ColumnDefinitions("*,Auto,*"),
-            Margin = new Thickness(0, 8, 0, 8),
-        };
-
-        var left = new Border { Height = 1, Background = Brush("BorderBrush"), VerticalAlignment = VerticalAlignment.Center };
-        var text = new SelectableTextBlock
-        {
-            Text = MessageCatalog.Get("chat.new_answers_start_here", Language),
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(11),
-            Opacity = 0.55,
-            Margin = new Thickness(8, 0, 8, 0),
-        };
-        var right = new Border { Height = 1, Background = Brush("BorderBrush"), VerticalAlignment = VerticalAlignment.Center };
-        Grid.SetColumn(text, 1);
-        Grid.SetColumn(right, 2);
-
-        line.Children.Add(left);
-        line.Children.Add(text);
-        line.Children.Add(right);
-
-        return line;
     }
 
     /// <summary>

@@ -84,13 +84,17 @@ public sealed class SessionPageDecorationTests
         var items = new TranscriptItem[]
         {
             new SayItem { Id = "s1", Text = "seen", Done = true },
+            new UserItem { Id = "u2", Text = "latest question", At = 10 },
             new SayItem { Id = "s2", Text = "unseen", Done = true },
         };
 
-        var with = await Draw(new SessionState { Items = items }, seenThrough: "s1");
-        var without = await Draw(new SessionState { Items = items }, seenThrough: null);
+        var with = await Draw(new SessionState { Items = items }, viewedAt: 20);
+        var without = await Draw(new SessionState { Items = items }, viewedAt: null);
 
-        Assert.Contains(with, text => text.Contains("从这里开始有新回答", System.StringComparison.Ordinal));
+        var rendered = with.ToList();
+        Assert.Contains("latest question", rendered);
+        Assert.True(rendered.IndexOf("latest question") < rendered.IndexOf("从这里开始有新回答"));
+        Assert.True(rendered.IndexOf("从这里开始有新回答") < rendered.IndexOf("unseen"));
         Assert.DoesNotContain(without, text => text.Contains("从这里开始有新回答", System.StringComparison.Ordinal));
     }
 
@@ -122,10 +126,10 @@ public sealed class SessionPageDecorationTests
     /// Renders one state in a real headless window and reads the text it drew.
     /// </summary>
     /// <param name="state">The state to draw.</param>
-    /// <param name="seenThrough">The last row the reader is known to have seen.</param>
+    /// <param name="viewedAt">The host cutoff captured when the session was unread.</param>
     /// <param name="foldsTurnWork">Whether a turn's work folds under one line.</param>
     /// <returns>The text of every text-block the page drew, in tree order.</returns>
-    private static async Task<IReadOnlyList<string>> Draw(SessionState state, string? seenThrough = null, bool foldsTurnWork = false)
+    private static async Task<IReadOnlyList<string>> Draw(SessionState state, long? viewedAt = null, bool foldsTurnWork = false)
     {
         var session = HeadlessUnitTestSession.StartNew(typeof(App));
 
@@ -136,10 +140,10 @@ public sealed class SessionPageDecorationTests
                 {
                     Width = 760,
                     Height = 600,
-                    SeenThrough = seenThrough,
                     FoldsTurnWork = foldsTurnWork,
                 };
 
+                page.AnswerBoundary.Remember(viewedAt);
                 var window = new Window { Width = 800, Height = 640, Content = page };
                 window.Show();
                 page.Show(state);

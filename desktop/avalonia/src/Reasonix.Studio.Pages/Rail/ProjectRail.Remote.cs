@@ -60,7 +60,9 @@ public sealed partial class ProjectRail
             return;
         }
 
-        _runs[RemoteKey(host, path)] = state;
+        var key = RemoteKey(host, path);
+        NoteCompletion(key, state.Live);
+        _runs[key] = state;
         Rebuild();
         ActivityChanged?.Invoke();
     }

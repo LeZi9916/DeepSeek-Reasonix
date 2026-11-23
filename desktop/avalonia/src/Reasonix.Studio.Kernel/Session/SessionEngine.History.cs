@@ -53,6 +53,7 @@ public sealed partial class SessionEngine
             _historyRead.Cursor = page?.NextCursor;
             RestoreHistory(false);
             SetHistory(new HistoryReadState { Initialized = true, HasMore = page?.HasMoreBefore ?? false, Earlier = page?.Start ?? 0 });
+            _ = RefreshPlanAsync(cancellationToken);
         }
         catch
         {

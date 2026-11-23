@@ -3,13 +3,12 @@ using System.Collections.Generic;
 namespace Reasonix.Studio.State.Transcript;
 
 /// <summary>
-/// Decides where the line marking answers the reader has not seen belongs.
+/// Finds the transcript row where a newly viewed unread span begins.
 /// </summary>
 /// <remarks>
-/// The kernel keeps the unread mark; it does not keep where the reader stopped
-/// reading. This window remembers the last row it was showing when the mark
-/// cleared, and this rule turns that into a position: the line goes before the
-/// first answer after it, and nowhere at all when nothing newer arrived.
+/// The tree reports the last viewed timestamp while a row is unread. User
+/// turns have timestamps; assistant rows without timestamps belong to the
+/// most recent authored turn.
 /// </remarks>
 public static class NewAnswerMarker
 {
@@ -17,39 +16,36 @@ public static class NewAnswerMarker
     /// Finds the row the line belongs before.
     /// </summary>
     /// <param name="items">The rows, in transcript order.</param>
-    /// <param name="seenThrough">
-    /// The last row identity the reader had seen, or null when nothing is known
-    /// and the line has no place to go.
-    /// </param>
-    /// <returns>
-    /// The index of the first answer after <paramref name="seenThrough"/>, or -1
-    /// when the marker is owed nowhere.
-    /// </returns>
+    /// <param name="viewedAt">The host's last-viewed timestamp in unix milliseconds.</param>
+    /// <returns>The first new turn or response, or -1 when no divider is owed.</returns>
     /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="items"/> is null.</exception>
-    /// <remarks>
-    /// Only an answer starts the span: a following tool call or notice is part of
-    /// the same reply, and a line drawn between them would claim the reader had
-    /// seen half of it.
-    /// </remarks>
-    public static int PlaceOf(IReadOnlyList<TranscriptItem> items, string? seenThrough)
+    public static int PlaceOf(IReadOnlyList<TranscriptItem> items, long? viewedAt)
     {
         System.ArgumentNullException.ThrowIfNull(items);
-        if (string.IsNullOrEmpty(seenThrough))
+        if (viewedAt is not > 0)
         {
             return -1;
         }
 
-        var seen = false;
+        var lastTurn = -1;
         for (var i = 0; i < items.Count; i++)
         {
-            if (seen && items[i] is SayItem)
+            if (items[i] is UserItem { Pending: false, Steer: false } user)
             {
-                return i;
-            }
+                if (user.At > viewedAt)
+                {
+                    return i == 0 ? -1 : i;
+                }
 
-            if (items[i].Id == seenThrough)
+                lastTurn = i;
+            }
+        }
+
+        for (var i = lastTurn + 1; i < items.Count; i++)
+        {
+            if (items[i] is SayItem say && (!string.IsNullOrWhiteSpace(say.Text) || !string.IsNullOrWhiteSpace(say.Reasoning)))
             {
-                seen = true;
+                return i == 0 ? -1 : i;
             }
         }
 

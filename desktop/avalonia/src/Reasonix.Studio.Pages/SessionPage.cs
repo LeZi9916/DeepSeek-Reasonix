@@ -49,28 +49,6 @@ public sealed partial class SessionPage : UserControl
     private readonly List<Control> _drawn = new List<Control>();
 
     /// <summary>
-    /// Holds the reader's own choice for the activity group, or null while the
-    /// fold policy still decides.
-    /// </summary>
-    /// <remarks>
-    /// One group per page: the reference frontend keeps one answer for the
-    /// activity fold, and a per-group answer would leave a long turn with some
-    /// groups open and others closed for no reason the reader could name.
-    /// </remarks>
-    private bool? _opened;
-
-    /// <summary>
-    /// Whether the reader has opened the turn's work line, when the setting folds
-    /// it.
-    /// </summary>
-    /// <remarks>
-    /// A closed fold is drawn hidden rather than left out: find, copy and a
-    /// jump-to-row all reach into the body, and building it again on every open
-    /// would throw away what was already drawn.
-    /// </remarks>
-    private bool _workOpen;
-
-    /// <summary>
     /// The state the page is showing.
     /// </summary>
     private SessionState _state = new SessionState();
@@ -160,20 +138,6 @@ public sealed partial class SessionPage : UserControl
     } = InterfaceLanguage.Zh;
 
     /// <summary>
-    /// Gets or sets the last row the reader is known to have seen.
-    /// </summary>
-    /// <remarks>
-    /// The kernel keeps the unread mark, not where the reader stopped reading, so
-    /// the window remembers that itself. Null means nothing is known and no
-    /// marker is drawn: a line at a guessed place would claim the reader had seen
-    /// something they had not.
-    /// </remarks>
-    public string? SeenThrough
-    {
-        get; set;
-    }
-
-    /// <summary>
     /// Gets or sets a value indicating whether a turn's intermediate work starts
     /// folded under one line.
     /// </summary>
@@ -218,10 +182,14 @@ public sealed partial class SessionPage : UserControl
 
         var previous = _state;
         _state = state;
-        if (_rows.Children.Count == 0
+        if (MoveNewAnswerLine() || _rows.Children.Count == 0
             || (!ReferenceEquals(previous.Items, state.Items) && !UpdateAnswers(previous.Items, state.Items)))
         {
             Rebuild(state.Items);
+        }
+        else if (previous.Running != state.Running)
+        {
+            RefreshLiveActivity(state.Items);
         }
     }
 
@@ -261,6 +229,7 @@ public sealed partial class SessionPage : UserControl
     /// Draws one row.
     /// </summary>
     /// <param name="item">The row to draw.</param>
+    /// <param name="inActivity">Whether the row is inside an activity group.</param>
     /// <returns>The control that stands for it.</returns>
     /// <remarks>
     /// Every row is one <c>class:call</c> box around its body, and the two kinds
@@ -273,9 +242,9 @@ public sealed partial class SessionPage : UserControl
     /// recorded between consecutive rows; the first row has nothing above it, so
     /// it carries none.
     /// </remarks>
-    private Control RowOf(TranscriptItem item)
+    private Control RowOf(TranscriptItem item, bool inActivity = false)
     {
-        var body = BodyOf(item);
+        var body = BodyOf(item, inActivity);
         var row = new Border
         {
             Child = body,
@@ -292,8 +261,9 @@ public sealed partial class SessionPage : UserControl
     /// Draws the body of one row.
     /// </summary>
     /// <param name="item">The row to draw.</param>
+    /// <param name="inActivity">Whether the row is inside an activity group.</param>
     /// <returns>The control holding what this row says.</returns>
-    private Control BodyOf(TranscriptItem item)
+    private Control BodyOf(TranscriptItem item, bool inActivity)
     {
         switch (item)
         {
@@ -301,7 +271,13 @@ public sealed partial class SessionPage : UserControl
                 return new UserMessage(user.Text, Language);
 
             case SayItem say:
-                return new AnswerCard(say, Language, text => QuoteRequested?.Invoke(text));
+                return new AnswerCard(
+                    say,
+                    Language,
+                    text => QuoteRequested?.Invoke(text),
+                    _folding,
+                    FoldChoice(TranscriptPart.Thinking, say.Id),
+                    open => RememberFold(TranscriptPart.Thinking, say.Id, open));
 
             case NoticeItem notice:
                 return new SelectableTextBlock
@@ -316,13 +292,10 @@ public sealed partial class SessionPage : UserControl
                 return ApprovalCardOf(approval);
 
             case ToolItem tool:
-                return ToolRow(tool);
+                return ToolRow(tool, inActivity);
 
             case ReadsItem reads:
-                return Meta(MessageCatalog.Get(
-                    "chat.read_n_files",
-                    Language,
-                    ("n", Format.Count(reads.Tools.Count, Language))));
+                return ReadsDisclosure(reads);
 
             case GuardianItem guardian:
                 return Meta(MessageCatalog.Get(
@@ -333,7 +306,7 @@ public sealed partial class SessionPage : UserControl
                 return Card(AskBody(ask), Brush("OverlayBrush"));
 
             case CompactionItem fold:
-                return Card(CompactionBody(fold), Brush("RaisedBrush"));
+                return CompactionDisclosure(fold);
 
             case RememberItem remember:
                 return Card(RememberBody(remember.Fact), Brush("RaisedBrush"));
@@ -476,13 +449,6 @@ public sealed partial class SessionPage : UserControl
     private Control CompactionBody(CompactionItem item)
     {
         var body = new StackPanel { Spacing = 6 };
-        body.Children.Add(new SelectableTextBlock
-        {
-            Text = MessageCatalog.Get("chat.compaction_brief", Language),
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
-            FontWeight = FontWeight.SemiBold,
-        });
-
         if (!item.Done)
         {
             body.Children.Add(new SelectableTextBlock
@@ -507,6 +473,15 @@ public sealed partial class SessionPage : UserControl
 
         return body;
     }
+
+    /// <summary>Leaves the digest mounted when the reader closes its disclosure.</summary>
+    /// <param name="item">The compaction row.</param><returns>The digest disclosure.</returns>
+    private Control CompactionDisclosure(CompactionItem item) => new ActivityDisclosure(
+        CompactionBody(item),
+        MessageCatalog.Get("chat.see_the_digest_it_carries", Language),
+        FoldChoice(TranscriptPart.Compaction, item.Id) ?? _folding.StartsOpen(TranscriptPart.Compaction),
+        "FaintBrush",
+        open => RememberFold(TranscriptPart.Compaction, item.Id, open));
 
     /// <summary>
     /// Draws a saved fact: what it is called and what it says.
@@ -704,6 +679,7 @@ public sealed partial class SessionPage : UserControl
         var held = _scroll.Offset;
         _rows.Children.Clear();
         _drawn.Clear();
+        GatherLiveWork(items);
 
         if (items.Count == 0)
         {

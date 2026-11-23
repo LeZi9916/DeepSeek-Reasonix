@@ -37,17 +37,25 @@ public sealed partial class SessionPage
         if (index < _drawn.Count)
         {
             var control = _drawn[index];
-            if (!control.IsEffectivelyVisible)
+            if (!control.IsEffectivelyVisible && FoldsTurnWork && !DisclosureChoices.WorkOpen)
             {
-                _workOpen = true;
-                _opened = true;
+                DisclosureChoices.WorkOpen = true;
                 Rebuild(_state.Items);
                 control = _drawn[index];
+            }
+
+            foreach (var group in control.GetVisualAncestors().OfType<ActivityDisclosure>())
+            {
+                group.Reveal();
             }
 
             if (control is Border { Child: AnswerCard card })
             {
                 card.RevealReasoning(query);
+            }
+            else if (control is Border { Child: ToolCallHeader tool } && _state.Items[index] is ToolItem item && Has(item.Call.Output))
+            {
+                tool.Reveal();
             }
 
             control.BringIntoView();

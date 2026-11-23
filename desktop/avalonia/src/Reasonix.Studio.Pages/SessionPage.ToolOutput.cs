@@ -52,17 +52,28 @@ public sealed partial class SessionPage
     /// Draws one tool row, folded to its name until the reader asks for more.
     /// </summary>
     /// <param name="tool">The call.</param>
+    /// <param name="inActivity">Whether the call is inside an activity group.</param>
     /// <returns>The row.</returns>
     /// <remarks>
     /// A call that kept its whole output draws as the one line it always did. The
     /// folded states exist only where something was dropped, so the ordinary row
     /// keeps the height the captured conversation recorded for it.
     /// </remarks>
-    private Control ToolRow(ToolItem tool)
+    private Control ToolRow(ToolItem tool, bool inActivity)
     {
+        var step = FoldChoice(TranscriptPart.Steps, tool.Id) ?? _folding.StartsOpen(
+            TranscriptPart.Steps,
+            failed: !inActivity && !string.IsNullOrEmpty(tool.Call.Err),
+            changed: TranscriptFolding.ChangedFile(tool.Call));
         if (tool.Hidden <= 0)
         {
-            return new ToolCallHeader(tool, Language);
+            return new ToolCallHeader(
+                tool,
+                Language,
+                step,
+                FoldChoice(TranscriptPart.Output, tool.Id) ?? _folding.StartsOpen(TranscriptPart.Output),
+                open => RememberFold(TranscriptPart.Steps, tool.Id, open),
+                open => RememberFold(TranscriptPart.Output, tool.Id, open));
         }
 
         var body = new StackPanel { Spacing = 4 };
@@ -111,15 +122,22 @@ public sealed partial class SessionPage
             IsVisible = false,
         };
 
-        var opened = false;
+        var opened = step;
+        ApplyStep();
         toggle.Click += (_, _) =>
         {
             opened = !opened;
+            RememberFold(TranscriptPart.Steps, tool.Id, opened);
+            ApplyStep();
+        };
+
+        void ApplyStep()
+        {
             output.IsVisible = opened;
             note.IsVisible = opened;
             load.IsVisible = opened && ReadFullOutput is not null;
             toggle.Content = MessageCatalog.Get(opened ? "common.collapse" : "common.expand", Language);
-        };
+        }
 
         load.Click += async (_, _) => await LoadFullAsync(tool, output, note, load).ConfigureAwait(true);
 

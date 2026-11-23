@@ -173,51 +173,69 @@ public sealed class TranscriptDecorationTests
         Assert.False(lanes[0].IsDelegateGroup);
     }
 
-    /// <summary>
-    /// Checks that the unread line goes before the first answer the reader has
-    /// not seen.
-    /// </summary>
+    /// <summary>Uses the first authored turn after the cutoff, before its response.</summary>
     [Fact]
-    public void TheUnreadLineGoesBeforeTheFirstUnseenAnswer()
+    public void TheUnreadLineGoesBeforeTheFirstUnseenTurn()
     {
         var items = new TranscriptItem[]
         {
-            Say("one", id: "s1"),
-            Tool("t1", running: false),
-            Say("two", id: "s2"),
+            new UserItem { Id = "u1", Text = "first question", At = 10 },
+            Say("seen", id: "s1"),
+            new UserItem { Id = "u2", Text = "follow-up", At = 30 },
+            Say("new", id: "s2"),
         };
 
-        Assert.Equal(2, NewAnswerMarker.PlaceOf(items, "s1"));
+        Assert.Equal(2, NewAnswerMarker.PlaceOf(items, 20));
     }
 
-    /// <summary>
-    /// Checks that the line is not drawn between an answer and the call that
-    /// belongs to it: only an answer starts the unseen span.
-    /// </summary>
+    /// <summary>When the prompt predates the cutoff, uses its first meaningful response.</summary>
     [Fact]
-    public void AToolAfterTheSeenAnswerDoesNotStartTheSpan()
+    public void TheUnreadLineSkipsWorkAndProvisionalMessages()
     {
         var items = new TranscriptItem[]
         {
-            Say("one", id: "s1"),
+            new UserItem { Id = "u1", Text = "first question", At = 10 },
+            Say("seen", id: "s1"),
+            new UserItem { Id = "u2", Text = "follow-up", At = 15 },
             Tool("t1", running: false),
+            Say(" ", id: "blank"),
+            new UserItem { Id = "steer", Text = "steering", At = 30, Steer = true },
+            new UserItem { Id = "pending", Text = "queued", At = 30, Pending = true },
+            new SayItem { Id = "thought", Reasoning = "next step" },
+            Say("answer", id: "s2"),
         };
 
-        Assert.Equal(-1, NewAnswerMarker.PlaceOf(items, "s1"));
+        Assert.Equal(7, NewAnswerMarker.PlaceOf(items, 20));
     }
 
-    /// <summary>
-    /// Checks that nothing is drawn when the reader has seen nothing or
-    /// everything.
-    /// </summary>
+    /// <summary>Omits the separator when there is no cutoff, no response, or nothing before it.</summary>
     [Fact]
-    public void NoLineIsDrawnWhenNothingIsKnownOrNothingIsNew()
+    public void TheUnreadLineRequiresAnInternalBoundary()
     {
-        var items = new TranscriptItem[] { Say("one", id: "s1") };
+        var reply = new TranscriptItem[] { Say("one", id: "s1") };
+        var work = new TranscriptItem[] { new UserItem { Id = "u1", Text = "first question", At = 10 }, Tool("t1", running: false) };
+        Assert.Equal(-1, NewAnswerMarker.PlaceOf(reply, null));
+        Assert.Equal(-1, NewAnswerMarker.PlaceOf(reply, 20));
+        Assert.Equal(-1, NewAnswerMarker.PlaceOf(work, 20));
+        Assert.Equal(-1, NewAnswerMarker.PlaceOf(work, 5));
+    }
 
-        Assert.Equal(-1, NewAnswerMarker.PlaceOf(items, null));
-        Assert.Equal(-1, NewAnswerMarker.PlaceOf(items, "s1"));
-        Assert.Equal(-1, NewAnswerMarker.PlaceOf(items, "not-a-row"));
+    /// <summary>Holds a divider in place through another turn and rearms it for a new unread span.</summary>
+    [Fact]
+    public void TheUnreadLineStaysAtTheOldAnswerWhenANewTurnStarts()
+    {
+        TranscriptItem[] initial = [new UserItem { Id = "u1", Text = "first question", At = 10 }, Say("answer", id: "s1")];
+        TranscriptItem[] next = [.. initial, new UserItem { Id = "u2", Text = "follow-up", At = 30 }, Say("follow-up", id: "s2")];
+        var boundary = new NewAnswerBoundary();
+        boundary.Remember(20);
+
+        Assert.Null(boundary.Resolve([], running: false));
+        Assert.Equal("s1", boundary.Resolve(initial, running: false));
+        Assert.Equal("s1", boundary.Resolve(next, running: true));
+        boundary.Remember(20);
+        Assert.Equal("s1", boundary.Resolve(next, running: false));
+        boundary.Remember(25);
+        Assert.Equal("u2", boundary.Resolve(next, running: false));
     }
 
     /// <summary>

@@ -8,6 +8,8 @@ using Reasonix.Studio.State.Transcript;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -25,6 +27,44 @@ namespace Reasonix.Studio.Baseline.Tests;
 /// </remarks>
 public sealed class SessionEngineTests
 {
+    /// <summary>Reopens the canonical plan and reads subsequent advances without reconstructing tool arguments.</summary>
+    /// <returns>The HTTP and stream integration.</returns>
+    [Fact]
+    public async Task PlanReadsTheKernelSnapshotOnLoadAndOnProgress()
+    {
+        using var handler = new PlanReadHandler();
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("http://localhost") };
+        await using var engine = new SessionEngine(new KernelClient(http), new FakeTransport("""{"kind":"todo_progress","seq":1}"""));
+        var restored = new TaskCompletionSource<PlanStep>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var advanced = new TaskCompletionSource<PlanStep>(TaskCreationOptions.RunContinuationsAsynchronously);
+        engine.Changed += state =>
+        {
+            if (state.Plan.Count != 1)
+            {
+                return;
+            }
+
+            var step = state.Plan[0];
+            if (step.Text == "Read from host")
+            {
+                restored.TrySetResult(step);
+            }
+            else if (step.Text == "Advanced without a tool write")
+            {
+                advanced.TrySetResult(step);
+            }
+        };
+        await engine.LoadHistoryAsync();
+        Assert.Equal(TodoStatus.Pending, (await restored.Task.WaitAsync(TimeSpan.FromSeconds(5))).Status);
+        handler.Snapshot = """[{"content":"Advanced without a tool write","status":"in_progress","activeForm":"Advancing","level":1}]""";
+        await engine.StartAsync();
+        var current = await advanced.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(TodoStatus.InProgress, current.Status);
+        Assert.Equal("Advancing", current.ActiveForm);
+        Assert.Equal(1, current.Level);
+        Assert.Equal(2, handler.Reads);
+    }
+
     /// <summary>
     /// Checks that a text frame reaching the subscription becomes a row with that
     /// text, which is the whole chain in one case.
@@ -573,6 +613,38 @@ public sealed class SessionEngineTests
         {
             // Nothing to close: the case that needs a hole wants it unclosable.
             return Task.FromResult(new ReplayResult(Array.Empty<WireFrame>(), false, after));
+        }
+    }
+
+    /// <summary>Returns the host's plan independently of the transcript and its event frames.</summary>
+    private sealed class PlanReadHandler : HttpMessageHandler
+    {
+        /// <summary>Gets or sets the next canonical todo snapshot.</summary>
+        internal string Snapshot { get; set; } = """[{"content":"Read from host","status":"pending"}]""";
+
+        /// <summary>Gets the number of actual task-list reads.</summary>
+        internal int Reads
+        {
+            get;
+            private set;
+        }
+
+        /// <inheritdoc/>
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri!.AbsolutePath;
+            if (path == "/todos")
+            {
+                Reads++;
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Snapshot) });
+            }
+
+            if (path == "/history")
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[]") });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
         }
     }
 }
