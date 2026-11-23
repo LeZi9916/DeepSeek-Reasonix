@@ -21,6 +21,10 @@ public sealed partial class App
         {
             register = (chord, press) => WindowsShortcut.Register(window, chord, press);
         }
+        else if (OperatingSystem.IsLinux() && window.TryGetPlatformHandle() is { HandleDescriptor: "XID" })
+        {
+            register = X11Shortcut.Register;
+        }
 
         if (register is null)
         {
