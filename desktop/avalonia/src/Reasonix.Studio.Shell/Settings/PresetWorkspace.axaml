@@ -3,8 +3,8 @@
   <StackPanel Spacing="10" Margin="0,12">
     <StackPanel Name="Catalog" Spacing="9">
       <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Tag="persona.agent_presets" FontWeight="SemiBold" FontSize="{DynamicResource StudioType16}" VerticalAlignment="Center"/>
-        <Button Name="Create" Grid.Column="1" Tag="persona.new_preset" AutomationProperties.AutomationId="action:agent-preset.create"/>
+        <TextBlock Tag="persona.agent_presets" FontWeight="SemiBold" FontSize="{DynamicResource StudioType22}" VerticalAlignment="Center"/>
+        <Button Name="Create" Grid.Column="1" Tag="persona.new_preset" Height="32" Padding="14,0" AutomationProperties.AutomationId="action:agent-preset.create"/>
       </Grid>
       <TextBlock Tag="persona.presets_define_which_capabilities_are" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
       <StackPanel Name="Groups" Spacing="8"/>

@@ -204,10 +204,33 @@ public sealed partial class PresetWorkspace : SettingsFormView
                 {
                     var d = v["definition"]!.AsObject();
                     var id = (string)d["id"]!;
-                    var copy = new StackPanel { Spacing = 5 };
-                    var card = new Border { Padding = new Thickness(16), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1), Margin = new Thickness(0, 0, 8, 8), Child = copy };
-                    card.Bind(Border.BorderBrushProperty, card.GetResourceObservable("HairBrush"));
-                    copy.Children.Add(new TextBlock { Text = Label(d, "name"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
+                    var selected = scope.Id != "project" && id == (preferred() ?? "builtin:general");
+                    var copy = new StackPanel { Spacing = 8 };
+                    var card = new Border { Padding = new Thickness(16), MinHeight = 148, CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(1), Margin = new Thickness(0, 0, 8, 8), Child = copy };
+                    card.Bind(Border.BorderBrushProperty, card.GetResourceObservable(selected ? "AccentBrush" : "HairBrush"));
+                    var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
+                    var title = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
+                    title.Children.Add(new TextBlock { Text = Label(d, "name"), FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap });
+                    if (selected)
+                    {
+                        var badge = new Border
+                        {
+                            CornerRadius = new CornerRadius(4),
+                            Padding = new Thickness(6, 1),
+                            VerticalAlignment = VerticalAlignment.Center,
+                            Child = new TextBlock { Text = Text("persona.new_task_default"), FontSize = 10 },
+                        };
+                        badge.Bind(Border.BackgroundProperty, badge.GetResourceObservable("OverlayBrush"));
+                        title.Children.Add(badge);
+                    }
+
+                    header.Children.Add(title);
+                    var scopeName = id[(id.IndexOf(':') + 1)..];
+                    var scopeLabel = new TextBlock { Text = scopeName, FontSize = 10, VerticalAlignment = VerticalAlignment.Center };
+                    scopeLabel.Bind(TextBlock.ForegroundProperty, scopeLabel.GetResourceObservable("FaintBrush"));
+                    Grid.SetColumn(scopeLabel, 1);
+                    header.Children.Add(scopeLabel);
+                    copy.Children.Add(header);
                     copy.Children.Add(Caption(Label(d, "description")));
                     var actions = new WrapPanel();
                     var view = new Button { Tag = id, Content = Text(scope.Id == "builtin" ? "persona.mode_details" : "common.edit"), Margin = new Thickness(0, 0, 4, 0) };
@@ -216,10 +239,9 @@ public sealed partial class PresetWorkspace : SettingsFormView
                     AutomationProperties.SetAutomationId(duplicate, "action:agent-preset.copy");
                     view.Click += (_, _) => Start(d, v, false, view);
                     duplicate.Click += (_, _) => Start(d, null, true, duplicate);
-                    if (scope.Id != "project")
+                    if (scope.Id != "project" && !selected)
                     {
-                        var selected = id == (preferred() ?? "builtin:general");
-                        var pick = new Button { Tag = id, Content = Text(selected ? "persona.new_task_default" : "common.make_default"), IsEnabled = !selected, Margin = new Thickness(0, 0, 4, 0) };
+                        var pick = new Button { Tag = id, Content = Text("common.make_default"), Margin = new Thickness(0, 0, 4, 0) };
                         AutomationProperties.SetAutomationId(pick, "action:agent-preset.new-task-default");
                         pick.Click += (_, _) =>
                         {
@@ -234,7 +256,6 @@ public sealed partial class PresetWorkspace : SettingsFormView
                             }
                         };
                         actions.Children.Add(pick);
-                        card.Bind(Border.BorderBrushProperty, card.GetResourceObservable(selected ? "AccentBrush" : "HairBrush"));
                     }
 
                     actions.Children.Add(view);
