@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Reasonix.Studio.Controls;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.Composer;
 using Reasonix.Studio.Pages.I18n;
@@ -237,8 +238,10 @@ public sealed partial class MainWindow
         SettingsPanel.Classes.Set("data-page", parent == "storage");
         SettingsHeadingBlock.IsVisible = true;
         SettingsHeading.Text = MessageCatalog.Get(parent == "usage" ? "app.usage" : s_sections.First(s => s.Id == parent).Title, Language);
+        SettingsHeading[!TextBlock.FontSizeProperty] = StudioTypography.Size(parent == "model" ? 26 : 22);
+        SettingsHeading.LineHeight = parent == "model" ? 33.8 : 28.6;
         SettingsDescription.Text = SectionDescription(parent);
-        if (SettingsNav.SelectedItem is SectionEntry { CountText: { Length: > 0 } countText })
+        if (parent == "model" && SettingsNav.SelectedItem is SectionEntry { CountText: { Length: > 0 } countText })
         {
             SettingsDescription.Text += " · " + MessageCatalog.Get("settings.n_items", Language, ("n", countText));
         }

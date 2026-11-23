@@ -514,7 +514,7 @@
       <ScrollViewer Grid.Column="1" Name="SettingsScroller" AutomationProperties.AutomationId="role:tabpanel" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Name="SettingsBody" Margin="24,24,24,48" HorizontalAlignment="Stretch">
           <StackPanel Name="SettingsHeadingBlock" Spacing="6" Margin="0,0,0,16" AutomationProperties.AutomationId="class:prefs-pagetitle">
-            <TextBlock Name="SettingsHeading" FontSize="26" LineHeight="33.8" FontWeight="SemiBold" />
+            <TextBlock Name="SettingsHeading" FontSize="{DynamicResource StudioType22}" LineHeight="28.6" FontWeight="SemiBold" />
             <TextBlock Name="SettingsDescription" FontSize="{DynamicResource StudioType13}" LineHeight="19.5" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}" />
             <TextBlock Name="SettingsUsual" FontSize="{DynamicResource StudioType12}" LineHeight="16.8" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}" />
           </StackPanel>
