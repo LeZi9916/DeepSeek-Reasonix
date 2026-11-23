@@ -62,6 +62,7 @@ The reference is the checked-in `frontend-next` application, including its final
 | Browser address/history/preview | Native WebView2 | HTTP validation, no kernel cookie bridge, explicit generated sandbox document, back/forward/reload | Actual Windows WebView smoke, including retained native history across tabs, at system scaling 150% |
 | Terminal | Native terminal surface | Owning engine guards late requests; focus detaches presentation, explicit close ends PTY | Existing terminal tests and workspace lifetime regression |
 | Settings destinations | Existing native settings sheet | Search, usage, MCP, controls, worktree and device entry points land at the applicable destination | Palette destination, wallet and settings regression tests |
+| Model service settings | `Settings.ModelServices` | Two-pane provider rail and selected-provider sheet: active badge, reorder arrows, protocol chips, base URL/key/token fields, save/revert, test and confirmed delete; add opens the existing provider setup | `ModelSettingsShowsProviderOrderControls`; `electron-settings-model-dark.png`, `settings-model.dark.png` |
 
 Visual evidence is linked from `index.html`. Main-page reports retain previously recorded unmatched-node and adjacent chrome/conversation findings. The new metric frame report enforces 0.5 DIP; existing glyph gates retain one pixel of raster tolerance.
 

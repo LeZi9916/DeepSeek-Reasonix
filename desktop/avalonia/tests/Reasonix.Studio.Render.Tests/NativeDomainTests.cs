@@ -372,7 +372,7 @@ public sealed partial class NativeDomainTests
 
         var action = target switch
         {
-            "onboarding" => MessageKey.Onboarding.ConnectAModelService,
+            "onboarding" => "models.add_model_service",
             "settings-ext-market" => MessageKey.Ext.Discover,
             "settings-session-persona" => MessageKey.Persona.SystemPersona,
             _ => null,

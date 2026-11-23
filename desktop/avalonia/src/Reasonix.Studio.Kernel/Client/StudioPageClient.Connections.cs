@@ -9,6 +9,27 @@ namespace Reasonix.Studio.Kernel.Client;
 
 public sealed partial class StudioPageClient
 {
+    /// <summary>Probes one configured provider's connection.</summary>
+    /// <param name="name">Configuration entry name.</param>
+    /// <param name="token">Cancels the probe.</param>
+    /// <returns>The probe acknowledgement.</returns>
+    public Task CheckProviderAsync(string name, CancellationToken token) =>
+        PostAsync("/providers/check", new JsonObject { ["name"] = name }, token);
+
+    /// <summary>Edits the fields owned by the model settings sheet without replacing the provider.</summary>
+    /// <param name="body">Provider fields owned by the sheet.</param>
+    /// <param name="token">Cancels the write.</param>
+    /// <returns>The acknowledgement.</returns>
+    public Task EditProviderAsync(JsonObject body, CancellationToken token) =>
+        PostAsync("/providers/edit", body, token);
+
+    /// <summary>Removes one configured provider after the caller has confirmed it.</summary>
+    /// <param name="name">Configuration entry name.</param>
+    /// <param name="token">Cancels the write.</param>
+    /// <returns>The acknowledgement.</returns>
+    public Task RemoveProviderAsync(string name, CancellationToken token) =>
+        PostAsync("/providers/remove", new JsonObject { ["name"] = name }, token);
+
     /// <summary>Reads the provider protocol catalog for custom service configuration.</summary>
     /// <param name="token">Cancels the read.</param>
     /// <returns>Provider protocols.</returns>
