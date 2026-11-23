@@ -10,7 +10,7 @@ import { App } from "../src/ui/App";
 import { Spark } from "../src/ui/Spark";
 import { parseScreen, type Screen } from "../src/ui/screen";
 import { MockHub } from "../src/port/mock_hub";
-import { MockPort } from "../src/port/mock";
+import { SettingsBenchPort } from "./settings-fixture";
 import { fromHistory } from "../src/state/session";
 import { HttpError } from "../src/port/port";
 import type { AgentPort, Appearance, ChipCall, HistoryMessage, McpEntry } from "../src/port/port";
@@ -61,8 +61,11 @@ function benchPack(): ThemePack | null {
   return null;
 }
 
-class BenchPort extends MockPort {
+class BenchPort extends SettingsBenchPort {
   private driverRunning: boolean | undefined;
+  async changeDiff(path: string) {
+    return query.has("patch") ? { path, diff: query.get("patch")!, truncated: query.has("patchtruncated") } : super.changeDiff(path);
+  }
 
   // ?screen=analysis needs a run to look at, and the replay is the only source
   // the analysis view draws from: a scripted turn with one model round, one
@@ -94,14 +97,9 @@ class BenchPort extends MockPort {
   }
   opensFiles() { return query.has("deliveries") || super.opensFiles(); }
   revealsFiles() { return query.has("deliveries") || super.revealsFiles(); }
-  async account() {
-    const state = await super.account();
-    const label = query.get("accountLabel");
-    return label && state.signedIn && state.user ? { ...state, user: { ...state.user, label } } : state;
-  }
   // ?mcpactions=1 adds a server whose tools are withheld and one that is followed.
   constructor() {
-    super();
+    super(query);
     // ?changes=N starts the workspace with N changed files spread over folders.
     const CHANGES = Number(query.get("changes") ?? 0);
     if (CHANGES > 0) {
@@ -297,6 +295,10 @@ class BenchPort extends MockPort {
     return query.get("git") === "none" ? { ...git, repo: false } : git;
   }
 
+  async changes(repo?: string) {
+    return query.get("git") === "none" ? { repo: false, changes: [] } : super.changes(repo);
+  }
+
   async appearance() {
     let look = await super.appearance();
     if (query.has("zoom")) look = { ...look, zoom: Number(query.get("zoom")) };
@@ -341,6 +343,22 @@ class BenchPort extends MockPort {
   // that read from a file already on disk, so the size of the answer — not the
   // stream — is what a switch costs.
   async history(): Promise<HistoryMessage[]> {
+    if (query.has("newanswer")) {
+      const at = 1_700_000_000_000;
+      const messages: HistoryMessage[] = [
+        { role: "user", content: "先确认现状。", createdAt: at + 100 },
+        { role: "assistant", content: "现有界面仍在运行，可以直接比对。" },
+        { role: "user", content: "请核对这两处差异。", createdAt: at + 150 },
+        { role: "assistant", content: "第一处是顶部间距，第二处是输入框边框。" },
+      ];
+      if (query.get("newanswer") !== "reply") {
+        messages.push(
+          { role: "user", content: "请把对比结果记录下来。", createdAt: at + 350 },
+          { role: "assistant", content: "已记录对应状态和局部截图。" },
+        );
+      }
+      return messages;
+    }
     return query.has("deliveries") ? deliveryHistory() : storedHistory();
   }
 
@@ -513,6 +531,7 @@ const PANES = query.has("panes") ? Number(query.get("panes")) : 1;
 
 class BenchHub extends MockHub {
   readonly feeds = new Map<string, BenchPort>();
+  private newAnswerViewed = false;
 
   constructor() {
     super(PANES);
@@ -538,7 +557,12 @@ class BenchHub extends MockHub {
 
   portFor(rt: RuntimeView): AgentPort {
     let port = this.feeds.get(rt.id);
-    if (!port) this.feeds.set(rt.id, (port = new BenchPort()));
+    if (!port) {
+      this.feeds.set(rt.id, (port = new BenchPort()));
+      if (query.has("newanswer") && rt.sessionPath === "/sessions/mock.jsonl") {
+        port.markSessionViewed = async () => { this.newAnswerViewed = true; };
+      }
+    }
     return port;
   }
 
@@ -563,6 +587,13 @@ class BenchHub extends MockHub {
     const wait = TREE_AT - performance.now();
     if (wait > 0) return new Promise((resolve) => setTimeout(() => resolve(this.tree(window)), wait));
     if (query.get("tree") === "none") return Promise.resolve([]);
+    if (query.has("newanswer")) {
+      return super.tree(window).then(tree => tree.map(ws => ({ ...ws, sessions: ws.sessions.map(session =>
+        session.path === "/sessions/mock.jsonl" && !this.newAnswerViewed
+          ? { ...session, unread: true, viewedAt: 1_700_000_000_200 }
+          : session,
+      ) })));
+    }
     if (!WORKSPACES) return super.tree(window);
     return super.runtimes().then((runtimes) =>
       this.recentTree(Array.from({ length: WORKSPACES }, (_, w) => ({
@@ -622,7 +653,7 @@ declare global {
     __panes: () => number;
     // Answer every completion request with this one, as the kernel would for a command typed in full.
     __complete: (answer: import("../src/port/port").Completion) => void;
-    __previewFiles: (files: Record<string, { kind: PreviewInfo["kind"]; text?: string; base64?: string }>) => void;
+    __previewFiles: (files: Record<string, { kind: PreviewInfo["kind"]; text?: string; base64?: string }>, opensFiles?: boolean) => void;
     // Sub-agent runs the kernel would list, each with the conversation it would return.
     __subagents: (runs: { run: SubagentRun; messages: HistoryMessage[] }[]) => void;
     // What folding a stored transcript into cards costs on its own, with no
@@ -674,7 +705,7 @@ window.__nativeReference = async () => {
   const port = hub.machinePort();
   const reads: Record<string, Promise<unknown>> = {
     "/tree": hub.tree(), "/tree?order=recent": hub.tree({ order: "recent", scope: "active", limit: 50, offset: 0 }), "/status": port.status(), "/appearance": port.appearance(),
-    "/context": port.context(), "/balance": port.balance(),
+    "/context": port.context(), "/balance": port.balance(), "/todos": port.todos(),
     "/share": hub.shareStatus(), "/mcp": port.mcp(),
     "/models": port.models("chat").then(models => ({ models })), "/provider-setup": port.providerSetup(),
     "/git/repos": port.gitRepos(), "/workspace/git": port.workspaceGit(), "/workspace/git/log": port.workspaceGitLog(100),
@@ -682,6 +713,7 @@ window.__nativeReference = async () => {
     "/workspace/files": port.workspaceFiles(), "/workspace/file": port.workspaceFile("README.md"),
     "/workspace/preview/info": port.workspacePreviewInfo({ path: "README.md" }), "/changes": port.changes(),
     "/notifications": port.notifyPrefs(), "/studio/update-mode": port.updateMode().then(mode => ({mode})),
+    "/settings-changed": port.changedSettings(),
     "/tools": port.toolSettings(), "/studio/versions": port.versions(), "/providers": port.providers(),
     "/default-mode": port.defaultMode(), "/fold-work-settings": port.foldWorkSettings(),
     "/present-files": port.presentFiles(), "/changed-files-settings": port.changedFilesSettings(),
@@ -694,7 +726,7 @@ window.__nativeReference = async () => {
     "/display-currency": port.displayCurrency(), "/backups/file": port.backupFileCatalog(),
     "/memory/proactive": port.memoryProactive().then(mode => ({ mode })), "/memory/suggestions": port.memorySuggestions().then(suggestions => ({ suggestions })),
     "/memory": port.memories(), "/agent-presets": port.agentPresets(), "/agent-composition": port.agentComposition(), "/themes": port.themes(),
-    "/account": port.account(), "/plugins": port.plugins(), "/market/packages": port.marketList({}),
+    "/account": port.account(), "/studio/logs": port.studioLogs(), "/plugins": port.plugins(), "/market/packages": port.marketList({}),
   };
   for (const change of (await port.changes()).changes) {
     reads["/changes/diff?path=" + encodeURIComponent(change.path)] = port.changeDiff(change.path);
@@ -709,7 +741,8 @@ window.__feed = (ev) => hub.feeds.forEach((p) => p.feed(ev));
 window.__panes = () => hub.feeds.size;
 const fixtureBytes = (f: { text?: string; base64?: string }) =>
   f.base64 !== undefined ? Uint8Array.from(atob(f.base64), (c) => c.charCodeAt(0)) : new TextEncoder().encode(f.text ?? "");
-window.__previewFiles = (files) => hub.feeds.forEach((port) => {
+window.__previewFiles = (files, opensFiles = false) => hub.feeds.forEach((port) => {
+  if (opensFiles) port.opensFiles = () => true;
   port.workspacePreviewInfo = async (ref) => ({
     ref, kind: files[ref.path].kind, size: fixtureBytes(files[ref.path]).length,
     version: "fixture", limit: 32 << 20, readOnly: false,
