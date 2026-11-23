@@ -22,6 +22,7 @@ namespace Reasonix.Studio.Kernel.Client;
 /// <param name="Efforts">Supported reasoning levels.</param>
 /// <param name="Effort">Effective level for this model.</param>
 /// <param name="ContextWindow">Context window the route declares.</param>
+/// <param name="WebSearch">Whether the protocol exposes server-side web search.</param>
 public sealed record ModelChoice(
     string Ref,
     string Model,
@@ -43,4 +44,5 @@ public sealed record ModelChoice(
     bool ForcesThinking = false,
     string[]? Efforts = null,
     string? Effort = null,
-    int ContextWindow = 0);
+    int ContextWindow = 0,
+    bool WebSearch = false);

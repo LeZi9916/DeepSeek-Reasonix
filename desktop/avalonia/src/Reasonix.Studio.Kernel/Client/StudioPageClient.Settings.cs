@@ -54,14 +54,51 @@ public sealed partial class StudioPageClient
     /// <param name="name">Installed plugin name.</param>
     /// <param name="enabled">New state.</param>
     /// <param name="token">Cancels the write.</param>
-    /// <returns>The acknowledgement.</returns>
-    public Task SetPluginEnabledAsync(string name, bool enabled, CancellationToken token) =>
-        PostAsync("/plugins/enabled", new JsonObject { ["name"] = name, ["enabled"] = enabled }, token);
+    /// <returns>The acknowledgement and any deferred runtime reload.</returns>
+    public async Task<JsonObject?> SetPluginEnabledAsync(string name, bool enabled, CancellationToken token)
+    {
+        var payload = new JsonObject { ["name"] = name, ["enabled"] = enabled };
+        using var response = await _http.PostAsJsonAsync("/plugins/enabled", payload, token).ConfigureAwait(false);
+        await KernelClient.EnsureAsync(response, token).ConfigureAwait(false);
+        return response.StatusCode == System.Net.HttpStatusCode.NoContent
+            ? null
+            : await BodyAsync<JsonObject>(response, token).ConfigureAwait(false);
+    }
 
     /// <summary>Reads the community package catalog.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The response from the kernel.</returns>
     public Task<JsonObject> MarketAsync(CancellationToken token) => ReadAsync<JsonObject>("/market/packages", token);
+
+    /// <summary>Searches the community catalog with the host's filter and pagination semantics.</summary>
+    /// <param name="kind">Selected capability, or all when empty.</param>
+    /// <param name="query">Search phrase.</param>
+    /// <param name="sort">Catalog ordering.</param>
+    /// <param name="pinned">Whether to show pinned content only.</param>
+    /// <param name="offset">Page offset.</param>
+    /// <param name="token">Request lifetime.</param>
+    /// <returns>The catalog page.</returns>
+    public Task<JsonObject> MarketSearchAsync(string kind, string query, string sort, bool pinned, int offset, CancellationToken token)
+    {
+        var route = "/market/packages?sort=" + Uri.EscapeDataString(sort)
+            + "&offset=" + offset.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (kind.Length > 0)
+        {
+            route += "&kind=" + Uri.EscapeDataString(kind);
+        }
+
+        if (query.Length > 0)
+        {
+            route += "&q=" + Uri.EscapeDataString(query);
+        }
+
+        if (pinned)
+        {
+            route += "&pinned=1";
+        }
+
+        return ReadAsync<JsonObject>(route, token);
+    }
 
     /// <summary>Reads a single marketplace package and its installation state.</summary>
     /// <param name="slug">Publisher and package separated by a slash.</param>
@@ -70,15 +107,24 @@ public sealed partial class StudioPageClient
     /// <returns>The package detail.</returns>
     public Task<JsonObject> MarketDetailAsync(string slug, bool refresh, CancellationToken token)
     {
-        var parts = slug.Split('/');
-        if (parts.Length != 2 || Array.Exists(parts, part => part.Length == 0 || part is "." or ".."))
-        {
-            throw new ArgumentException("Invalid marketplace package identity.", nameof(slug));
-        }
-
-        var route = "/market/packages/" + Uri.EscapeDataString(parts[0]) + "/" + Uri.EscapeDataString(parts[1]);
+        var route = MarketEntryRoute(slug);
         return ReadAsync<JsonObject>(refresh ? route + "?refresh=1" : route, token);
     }
+
+    /// <summary>Reads the signed-in user's vote and the current marketplace tally.</summary>
+    /// <param name="slug">Publisher and package separated by a slash.</param>
+    /// <param name="token">Request lifetime.</param>
+    /// <returns>The effective vote state.</returns>
+    public Task<JsonObject?> MarketVoteAsync(string slug, CancellationToken token) =>
+        OptionalPreferenceAsync(MarketEntryRoute(slug) + "/vote", token);
+
+    /// <summary>Applies the user's explicit upvote, downvote, or withdrawal.</summary>
+    /// <param name="slug">The marketplace package.</param>
+    /// <param name="value">The vote chosen by the user.</param>
+    /// <param name="token">Request lifetime.</param>
+    /// <returns>The new vote and tally.</returns>
+    public Task<JsonObject> SetMarketVoteAsync(string slug, int value, CancellationToken token) =>
+        DataPostAsync(MarketEntryRoute(slug) + "/vote", new JsonObject { ["value"] = value }, token);
 
     /// <summary>Reviews or installs one exact marketplace plan.</summary>
     /// <param name="apply">Whether the user has accepted the displayed plan.</param>
@@ -100,11 +146,54 @@ public sealed partial class StudioPageClient
     /// <summary>Saves the question timeout to the session configuration.</summary>
     /// <param name="seconds">Timeout in seconds.</param>
     /// <param name="token">Cancels the request.</param>
-    /// <returns>The acknowledgement.</returns>
-    public Task SetAskTimeoutAsync(int seconds, CancellationToken token)
+    /// <returns>The applied timeout configuration.</returns>
+    public Task<JsonObject> SetAskTimeoutAsync(int seconds, CancellationToken token) =>
+        DataPostAsync("/ask-timeout", new JsonObject { ["seconds"] = seconds }, token);
+
+    /// <summary>Reads whether a submitted plan starts automatically.</summary>
+    /// <param name="token">The read lifetime.</param>
+    /// <returns>The current plan approval policy.</returns>
+    public Task<JsonObject?> PlanApprovalAsync(CancellationToken token) => OptionalPreferenceAsync("/plan-approval", token);
+
+    /// <summary>Saves whether submitted plans wait for a separate approval.</summary>
+    /// <param name="automatic">Whether submitted plans start without waiting for approval.</param>
+    /// <param name="token">The request lifetime.</param>
+    /// <returns>The stored preference.</returns>
+    public Task<JsonObject> SetPlanApprovalAsync(bool automatic, CancellationToken token) =>
+        DataPostAsync("/plan-approval", new JsonObject { ["auto"] = automatic }, token);
+
+    /// <summary>Reads the narration setting for tool calls.</summary>
+    /// <param name="token">The read lifetime.</param>
+    /// <returns>The stored narration level.</returns>
+    public Task<JsonObject?> TurnNarrationAsync(CancellationToken token) => OptionalPreferenceAsync("/turn-narration-settings", token);
+
+    /// <summary>Saves how much the agent narrates between tool calls.</summary>
+    /// <param name="level">The selected verbosity.</param>
+    /// <param name="token">The request lifetime.</param>
+    /// <returns>The stored preference.</returns>
+    public Task<JsonObject> SetTurnNarrationAsync(string level, CancellationToken token) =>
+        DataPostAsync("/turn-narration-settings", new JsonObject { ["level"] = level }, token);
+
+    /// <summary>Reads the progress watch preference and its thresholds.</summary>
+    /// <param name="token">The read lifetime.</param>
+    /// <returns>The current progress evaluation settings.</returns>
+    public Task<JsonObject?> ProgressWatchAsync(CancellationToken token) => OptionalPreferenceAsync("/progress-watch", token);
+
+    /// <summary>Saves the pause behavior and thresholds as one progress-watch configuration.</summary>
+    /// <param name="pause">Whether to pause a stalled task.</param>
+    /// <param name="rounds">Maximum tool rounds without progress.</param>
+    /// <param name="multiple">Maximum input tokens as a context-window multiple.</param>
+    /// <param name="token">The request lifetime.</param>
+    /// <returns>The stored preference.</returns>
+    public Task<JsonObject> SetProgressWatchAsync(bool pause, int rounds, int multiple, CancellationToken token)
     {
-        var request = new JsonObject { ["seconds"] = seconds };
-        return PostAsync("/ask-timeout", request, token);
+        var request = new JsonObject
+        {
+            ["pause"] = pause,
+            ["rounds"] = rounds,
+            ["tokenMultiple"] = multiple,
+        };
+        return DataPostAsync("/progress-watch", request, token);
     }
 
     /// <summary>Saves the editable fields of a system persona.</summary>
@@ -210,4 +299,23 @@ public sealed partial class StudioPageClient
         StudioSetting.TraceExport => ("/observability", "enabled"),
         _ => throw new ArgumentOutOfRangeException(nameof(setting)),
     };
+
+    /// <summary>Forms the encoded endpoint for a publisher-qualified package.</summary>
+    /// <param name="slug">Publisher and package.</param>
+    /// <returns>The verified route.</returns>
+    private static string MarketEntryRoute(string slug) => "/market/packages/" + MarketPackageId(slug);
+
+    /// <summary>Encodes the two components of a publisher-qualified package.</summary>
+    /// <param name="slug">Publisher and package.</param>
+    /// <returns>The package identity for an endpoint.</returns>
+    private static string MarketPackageId(string slug)
+    {
+        var parts = slug.Split('/');
+        if (parts.Length != 2 || Array.Exists(parts, part => part.Length == 0 || part is "." or ".."))
+        {
+            throw new ArgumentException("Invalid marketplace package identity.", nameof(slug));
+        }
+
+        return Uri.EscapeDataString(parts[0]) + "/" + Uri.EscapeDataString(parts[1]);
+    }
 }

@@ -28,6 +28,16 @@ public sealed partial class StudioPageClient
     /// <returns>The preferences, or null for a host without notifications.</returns>
     public Task<JsonObject?> NotificationsAsync(CancellationToken token) => OptionalPreferenceAsync("/notifications", token);
 
+    /// <summary>Reads keys that differ from the kernel's shipped configuration.</summary>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The changed setting keys, or null if the host does not report them.</returns>
+    public async Task<JsonArray?> ChangedSettingsAsync(CancellationToken token) =>
+        (await OptionalPreferenceAsync("/settings-changed", token).ConfigureAwait(false))?["keys"]?.AsArray();
+
+    /// <summary>Reads the canonical task list for this runtime.</summary>
+    /// <param name="token">Cancels the read.</param><returns>The kernel's current plan rows.</returns>
+    public Task<JsonArray> TodosAsync(CancellationToken token) => ReadAsync<JsonArray>("/todos", token);
+
     /// <summary>Writes one notification switch, retaining the current desktop and phone preferences.</summary>
     /// <param name="key">Name of the edited field.</param>
     /// <param name="value">Value the user selected.</param>
