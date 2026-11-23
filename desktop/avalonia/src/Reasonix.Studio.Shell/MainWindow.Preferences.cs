@@ -238,8 +238,9 @@ public sealed partial class MainWindow
         SettingsPanel.Classes.Set("data-page", parent == "storage");
         SettingsHeadingBlock.IsVisible = true;
         SettingsHeading.Text = MessageCatalog.Get(parent == "usage" ? "app.usage" : s_sections.First(s => s.Id == parent).Title, Language);
-        SettingsHeading[!TextBlock.FontSizeProperty] = StudioTypography.Size(parent == "model" ? 26 : 22);
-        SettingsHeading.LineHeight = parent == "model" ? 33.8 : 28.6;
+        var compactHeading = parent == "storage";
+        SettingsHeading[!TextBlock.FontSizeProperty] = StudioTypography.Size(compactHeading ? 22 : 26);
+        SettingsHeading.LineHeight = compactHeading ? 28.6 : 33.8;
         SettingsDescription.Text = SectionDescription(parent);
         if (parent == "model" && SettingsNav.SelectedItem is SectionEntry { CountText: { Length: > 0 } countText })
         {

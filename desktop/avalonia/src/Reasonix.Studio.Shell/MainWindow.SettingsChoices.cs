@@ -123,6 +123,15 @@ public sealed partial class MainWindow
         var fields = new StackPanel();
         card.Children.Add(fields);
         var toggles = new Dictionary<string, ToggleSwitch>(StringComparer.Ordinal);
+        var descriptions = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["enabled"] = "settings.a_system_notification_when_a",
+            ["sound"] = "settings.off_by_default_plays_a",
+            ["turnDone"] = "settings.the_answer_is_written_or",
+            ["approval"] = "common.the_model_wants_to_touch",
+            ["ask"] = "common.the_model_stopped_to_ask",
+            ["diskLow"] = "settings.warns_when_the_drive_holding",
+        };
         foreach (var (field, key, name) in new[]
         {
             ("enabled", "common.notifications", "enabled"),
@@ -137,7 +146,12 @@ public sealed partial class MainWindow
             var toggle = new ToggleSwitch { OffContent = string.Empty, OnContent = string.Empty, MinWidth = 0 };
             AutomationProperties.SetAutomationId(toggle, "action:notify." + name);
             toggles[field] = toggle;
-            AddRow(fields, key, toggle);
+            AddRow(fields, key, toggle, descriptions.TryGetValue(field, out var description) ? MessageCatalog.Get(description, Language) : null);
+            if (field is not ("enabled" or "sound") && fields.Children[^1] is Border row)
+            {
+                row.Margin = new Avalonia.Thickness(18, 0, 0, 0);
+            }
+
             toggle.Click += async (_, _) =>
             {
                 fields.IsEnabled = false;

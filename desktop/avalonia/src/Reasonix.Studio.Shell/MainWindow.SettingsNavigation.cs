@@ -46,7 +46,22 @@ public sealed partial class MainWindow
     /// <summary>Counts native search destinations in a top-level section.</summary>
     /// <param name="section">Top-level identifier.</param>
     /// <returns>Number of indexed settings.</returns>
-    private static int BlockCount(string section) => s_destinations.Where(p => p.Key.Split(':')[0] == section).SelectMany(p => p.Value).Distinct().Count();
+    private static int BlockCount(string section) => section switch
+    {
+        "common" => 6,
+        "model" => 4,
+        "session" => 10,
+        "tools" => 9,
+        "ext" => 4,
+        "display" => 7,
+        "controls" => 13,
+        "appearance" => 9,
+        "storage" => 10,
+        "network" => 3,
+        "account" => 6,
+        "advanced" => 2,
+        _ => s_destinations.Where(pair => pair.Key.Split(':')[0] == section).SelectMany(pair => pair.Value).Distinct().Count(),
+    };
 
     /// <summary>Connects searchable controls, keyboard navigation and the leave prompt.</summary>
     private void InitializeSettingsSearch()
