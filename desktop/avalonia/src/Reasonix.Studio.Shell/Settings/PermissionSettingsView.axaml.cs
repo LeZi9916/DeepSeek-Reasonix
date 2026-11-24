@@ -470,6 +470,9 @@ public sealed partial class PermissionSettingsView : SettingsFormView
                 }
             };
             var remove = new Button { Content = Text("common.delete"), Tag = rule.Raw, Classes = { "preset-flat", "preset-muted", "permission-ghost" } };
+            remove.Opacity = 0;
+            remove.GotFocus += (_, _) => remove.Opacity = 1;
+            remove.LostFocus += (_, _) => remove.Opacity = 0;
             AutomationProperties.SetAutomationId(remove, "action:permissions.remove-rule");
             AutomationProperties.SetName(remove, Text("safety.delete_rule", ("rule", rule.Raw)));
             remove.Click += async (_, _) => await MoveAsync(rule.Raw, null).ConfigureAwait(true);
@@ -490,6 +493,8 @@ public sealed partial class PermissionSettingsView : SettingsFormView
                 Child = new Grid { ColumnDefinitions = new ColumnDefinitions("18,*"), Children = { dot, element } },
             };
             row.Bind(Border.BorderBrushProperty, row.GetResourceObservable("WarnBrush"));
+            row.PointerEntered += (_, _) => remove.Opacity = 1;
+            row.PointerExited += (_, _) => remove.Opacity = remove.IsKeyboardFocusWithin ? 1 : 0;
             Grid.SetColumn(element, 1);
             body.Children.Add(row);
         }

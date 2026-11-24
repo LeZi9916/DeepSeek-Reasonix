@@ -210,5 +210,8 @@ public sealed partial class NativeDomainTests
         var row = label.GetVisualAncestors().OfType<Border>().First(border => border.BorderThickness.Left == 2);
         Assert.NotNull(row.BorderBrush);
         Assert.Equal(0, row.BorderThickness.Top);
+        var remove = row.GetVisualDescendants().OfType<Button>().First(button =>
+            AutomationProperties.GetAutomationId(button) == "action:permissions.remove-rule");
+        Assert.Equal(0, remove.Opacity);
     });
 }
