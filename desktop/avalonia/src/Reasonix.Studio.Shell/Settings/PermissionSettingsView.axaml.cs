@@ -422,7 +422,7 @@ public sealed partial class PermissionSettingsView : SettingsFormView
                 Grid.SetColumn(count, 1);
                 var header = new Button { Content = heading, Tag = group.Key, Classes = { "preset-flat", "permission-group" } };
                 AutomationProperties.SetAutomationId(header, "action:permissions.rule-group");
-                var body = new StackPanel { IsVisible = expanded };
+                var body = new StackPanel { IsVisible = expanded, Spacing = 4 };
                 header.Click += (_, _) =>
                 {
                     if (!closed.Add(group.Key))
@@ -433,7 +433,7 @@ public sealed partial class PermissionSettingsView : SettingsFormView
                     body.IsVisible = !closed.Contains(group.Key);
                     caret.RenderTransform = new RotateTransform(body.IsVisible ? 90 : 0);
                 };
-                RuleTables.Children.Add(new Border { Child = header, Classes = { "permission-line" } });
+                RuleTables.Children.Add(new Border { Child = header, Classes = { "permission-line" }, Margin = new Thickness(0, 0, 0, 4) });
                 foreach (var row in rows)
                 {
                     AddRuleRow(row, dormant.Contains((row.Level, row.Raw)), body);

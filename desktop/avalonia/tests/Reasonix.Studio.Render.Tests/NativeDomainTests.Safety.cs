@@ -215,6 +215,21 @@ public sealed partial class NativeDomainTests
         Assert.Equal(0, remove.Opacity);
     });
 
+    /// <summary>Checks the rule rows against the reference vertical rhythm.</summary>
+    /// <returns>The rule-row layout check.</returns>
+    [Fact]
+    public Task RuleRowsUseTheReferencePitch() => WithSettings("settings-tools", (w, _) =>
+    {
+        var label = w.GetVisualDescendants().OfType<TextBlock>().First(block => block.Text == "git push:*");
+        var row = label.GetVisualAncestors().OfType<Border>().First(border => border.BorderThickness.Left == 2);
+        var body = Assert.IsType<StackPanel>(row.Parent);
+        var rows = body.Children.OfType<Border>().ToArray();
+        Assert.True(rows.Length >= 2);
+        var first = rows[0].TranslatePoint(default, w)!.Value.Y;
+        var second = rows[1].TranslatePoint(default, w)!.Value.Y;
+        Assert.InRange(second - first, 44.4, 45.6);
+    });
+
     /// <summary>Checks the approval segment's reference width.</summary>
     /// <returns>The segmented-control layout check.</returns>
     [Fact]
