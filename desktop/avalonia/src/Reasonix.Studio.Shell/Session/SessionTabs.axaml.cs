@@ -260,7 +260,7 @@ internal sealed partial class SessionTabs : UserControl
             return;
         }
 
-        if (_activeGroup.TranslatePoint(default, Tabs) is not { } at)
+        if (_activeGroup.TranslatePoint(default, TabMarkLayer) is not { } at)
         {
             return;
         }
