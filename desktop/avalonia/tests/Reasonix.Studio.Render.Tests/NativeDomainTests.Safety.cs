@@ -200,4 +200,15 @@ public sealed partial class NativeDomainTests
             Dispatcher.UIThread.RunJobs();
         }
     });
+
+    /// <summary>Checks the reference warn accent on a permission rule row.</summary>
+    /// <returns>The rule-row style check.</returns>
+    [Fact]
+    public Task PermissionRulesUseTheReferenceLevelAccent() => WithSettings("settings-tools", (w, _) =>
+    {
+        var label = w.GetVisualDescendants().OfType<TextBlock>().First(block => block.Text == "git push:*");
+        var row = label.GetVisualAncestors().OfType<Border>().First(border => border.BorderThickness.Left == 2);
+        Assert.NotNull(row.BorderBrush);
+        Assert.Equal(0, row.BorderThickness.Top);
+    });
 }

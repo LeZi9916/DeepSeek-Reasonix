@@ -473,10 +473,14 @@ public sealed partial class PermissionSettingsView : SettingsFormView
                 VerticalAlignment = VerticalAlignment.Center,
                 [!Avalonia.Controls.Shapes.Ellipse.FillProperty] = StudioTypography.Resource(s_levels.Single(item => item.Id == rule.Level).Brush),
             };
-            var row = new Grid { ColumnDefinitions = new ColumnDefinitions("18,*"), Margin = new Thickness(12, 0, 0, 0) };
-            row.Children.Add(dot);
+            var row = new Border
+            {
+                BorderThickness = new Thickness(2, 0, 0, 0),
+                Padding = new Thickness(10, 0, 0, 0),
+                Child = new Grid { ColumnDefinitions = new ColumnDefinitions("18,*"), Children = { dot, element } },
+            };
+            row.Bind(Border.BorderBrushProperty, row.GetResourceObservable("WarnBrush"));
             Grid.SetColumn(element, 1);
-            row.Children.Add(element);
             body.Children.Add(row);
         }
     }
