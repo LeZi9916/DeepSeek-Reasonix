@@ -52,6 +52,22 @@ internal sealed partial class SessionTabs : UserControl
             pip.Classes.Set("running", running);
             pip.Classes.Set("unread", !running && pane.Unread);
             pip.Bind(Border.BackgroundProperty, pip.GetResourceObservable(running ? "NetBrush" : pane.Unread ? "AccentInkBrush" : "GhostBrush"));
+            var glow = new Border
+            {
+                Width = 10,
+                Height = 10,
+                CornerRadius = new Avalonia.CornerRadius(5),
+                BorderThickness = new Avalonia.Thickness(2),
+                Opacity = 0.28,
+                IsVisible = !running && pane.Unread,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Avalonia.Thickness(-2),
+            };
+            glow.Bind(Border.BorderBrushProperty, glow.GetResourceObservable("AccentInkBrush"));
+            var pipHolder = new Grid { Width = 6, Height = 6 };
+            pipHolder.Children.Add(glow);
+            pipHolder.Children.Add(pip);
             var title = new TextBlock
             {
                 Text = pane.Status.Label.Length > 0 ? pane.Status.Label : MessageCatalog.Get("common.new_session", language),
@@ -60,7 +76,7 @@ internal sealed partial class SessionTabs : UserControl
                 VerticalAlignment = VerticalAlignment.Center,
             };
             var content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), ColumnSpacing = 7 };
-            content.Children.Add(pip);
+            content.Children.Add(pipHolder);
             content.Children.Add(title);
             Grid.SetColumn(title, 1);
             if (showRoot && !string.IsNullOrEmpty(pane.Status.WorkspaceRoot))

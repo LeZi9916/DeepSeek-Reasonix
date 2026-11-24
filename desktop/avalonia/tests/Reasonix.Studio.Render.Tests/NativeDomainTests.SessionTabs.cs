@@ -67,6 +67,12 @@ public sealed partial class NativeDomainTests
                     Assert.Contains("unread", secondPip.Classes);
                     Assert.Contains(buttons[0].GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "a" && text.Classes.Contains("pane-workspace"));
                     Assert.Contains(buttons[1].GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "b" && text.Classes.Contains("pane-workspace"));
+                    var firstGlow = buttons[0].GetVisualDescendants().OfType<Border>()
+                        .Single(border => border.BorderThickness.Left == 2 && border.Opacity == 0.28);
+                    var secondGlow = buttons[1].GetVisualDescendants().OfType<Border>()
+                        .Single(border => border.BorderThickness.Left == 2 && border.Opacity == 0.28);
+                    Assert.False(firstGlow.IsEffectivelyVisible);
+                    Assert.True(secondGlow.IsEffectivelyVisible);
                     var point = buttons[1].TranslatePoint(new Point(40, 12), window)!.Value;
                     window.MouseMove(point);
                     window.MouseDown(point, MouseButton.Left);
