@@ -44,7 +44,24 @@ internal sealed partial class SessionTabs : UserControl
         Tabs.Children.Clear();
         foreach (var pane in panes)
         {
-            var button = new Button { Classes = { "pane-tab" }, Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 7, Children = { new TextBlock { Text = pane.Engine.State.Running ? "●" : pane.Unread ? "•" : string.Empty, VerticalAlignment = VerticalAlignment.Center }, new TextBlock { Text = pane.Status.Label.Length > 0 ? pane.Status.Label : MessageCatalog.Get("common.new_session", language), MaxWidth = 180, TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center } } } };
+            var running = pane.Engine.State.Running;
+            var pip = new Border { Width = 6, Height = 6, CornerRadius = new Avalonia.CornerRadius(3), VerticalAlignment = VerticalAlignment.Center };
+            pip.Classes.Add("pane-pip");
+            pip.Classes.Set("running", running);
+            pip.Classes.Set("unread", !running && pane.Unread);
+            pip.Bind(Border.BackgroundProperty, pip.GetResourceObservable(running ? "NetBrush" : pane.Unread ? "AccentInkBrush" : "GhostBrush"));
+            var title = new TextBlock
+            {
+                Text = pane.Status.Label.Length > 0 ? pane.Status.Label : MessageCatalog.Get("common.new_session", language),
+                MaxWidth = 180,
+                TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            var content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 7 };
+            content.Children.Add(pip);
+            content.Children.Add(title);
+            Grid.SetColumn(title, 1);
+            var button = new Button { Classes = { "pane-tab" }, Content = content };
             button.Classes.Set("current", ReferenceEquals(pane, active));
             AutomationProperties.SetAutomationId(button, "action:pane.activate");
             AutomationProperties.SetName(button, pane.Status.Label);

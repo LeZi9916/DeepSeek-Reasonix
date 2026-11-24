@@ -59,8 +59,12 @@ public sealed partial class NativeDomainTests
                         .Single(button => AutomationProperties.GetAutomationId(button) == "action:pane.close");
                     Assert.Equal(1, firstClose.Opacity);
                     Assert.Equal(0, secondClose.Opacity);
-                    Assert.Contains(buttons[0].GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "●");
-                    Assert.Contains(buttons[1].GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "•");
+                    var firstPip = buttons[0].GetVisualDescendants().OfType<Border>()
+                        .Single(border => border.Classes.Contains("pane-pip"));
+                    var secondPip = buttons[1].GetVisualDescendants().OfType<Border>()
+                        .Single(border => border.Classes.Contains("pane-pip"));
+                    Assert.Contains("running", firstPip.Classes);
+                    Assert.Contains("unread", secondPip.Classes);
                     var point = buttons[1].TranslatePoint(new Point(40, 12), window)!.Value;
                     window.MouseMove(point);
                     window.MouseDown(point, MouseButton.Left);
