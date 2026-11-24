@@ -41,7 +41,10 @@ public sealed partial class NativeDomainTests
             Assert.NotNull(analysis);
             Assert.False(analysis.IsVisible);
             Assert.Equal(1, w.FindControl<TextBlock>("CrumbTitle")!.Opacity);
-            Assert.Equal(FontWeight.Normal, w.FindControl<TextBlock>("ProjectName")!.FontWeight);
+            var project = w.FindControl<TextBlock>("ProjectName")!;
+            Assert.Equal(FontWeight.Normal, project.FontWeight);
+            Assert.Equal(520, project.MaxWidth);
+            Assert.Equal(TextTrimming.CharacterEllipsis, project.TextTrimming);
             available = true;
             w.ShowState(new SessionState { Running = true });
             w.ShowState(Reasonix.Studio.Testing.ReferenceConversation.Create());

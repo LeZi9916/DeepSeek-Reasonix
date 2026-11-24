@@ -94,7 +94,7 @@
                   <Path Data="M3,5 Q3,4 5,4 H10 L12,7 H20 Q22,7 22,9 V18 Q22,20 20,20 H5 Q3,20 3,18 Z" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.7" StrokeJoin="Round"/>
                 </Canvas></Viewbox>
               </Button>
-              <TextBlock Name="ProjectName" Grid.Column="1" Margin="8,0,0,0" Text="Reasonix Studio" FontSize="{DynamicResource StudioType13}" FontWeight="Normal" Foreground="{DynamicResource MutedBrush}" />
+              <TextBlock Name="ProjectName" Grid.Column="1" Margin="8,0,0,0" Text="Reasonix Studio" FontSize="{DynamicResource StudioType13}" FontWeight="Normal" Foreground="{DynamicResource MutedBrush}" MaxWidth="520" TextTrimming="CharacterEllipsis" />
               <Border Name="IsolatedBadge" Grid.Column="2" Margin="8,0,0,0" CornerRadius="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="5,0" IsVisible="False"><TextBlock Name="IsolatedBadgeLabel" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}"/></Border>
               <Border Name="HostBadge" Grid.Column="3" Margin="8,0,0,0" CornerRadius="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Padding="5,0" IsVisible="False"><TextBlock Name="HostBadgeLabel" MaxWidth="100" TextTrimming="CharacterEllipsis" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}"/></Border>
               <TextBlock Grid.Column="4" Margin="8,0,0,0" Text="/" FontSize="{DynamicResource StudioType13}" Opacity="0.5" />
