@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="using:Reasonix.Studio.Controls" xmlns:composer="using:Reasonix.Studio.Shell.Composer"
+             xmlns:pages="using:Reasonix.Studio.Pages"
+             x:Class="Reasonix.Studio.Shell.Workbench.SubagentRunView" UseLayoutRounding="False"
+             AutomationProperties.AutomationId="class:agentrun">
+  <UserControl.Styles>
+    <Style Selector="Button.subagent-run-stop">
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="Padding" Value="14,0"/>
+      <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="7"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="pages|SessionPage.read-only-run Button#Cite, pages|SessionPage.read-only-run Button#More">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    <Style Selector="Button.subagent-run-stop:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  </UserControl.Styles>
+  <Grid RowDefinitions="40,Auto,Auto,*,Auto" Background="{DynamicResource RaisedBrush}">
+    <Border BorderThickness="0,0,0,1" BorderBrush="{DynamicResource HairBrush}" Padding="12,0,8,0">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="6">
+        <composer:SubagentAvatar Name="Avatar" VerticalAlignment="Center"/>
+        <ctl:StudioLineText Name="RunTitle" Grid.Column="1" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType13}"
+                            FontWeight="Medium" LineHeight="16.9" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+        <ctl:StudioLineText Name="Model" Grid.Column="2" FontSize="{DynamicResource StudioType12}" LineHeight="15.6" FontWeight="Normal"
+                            TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Foreground="{DynamicResource FaintBrush}"/>
+        <Grid Grid.Column="3" VerticalAlignment="Center">
+          <Button Name="Stop" Classes="subagent-run-stop" AutomationProperties.AutomationId="action:agent.stop" IsVisible="False"/>
+          <ctl:StudioLineText Name="RunState" FontSize="{DynamicResource StudioType12}" LineHeight="15.6" FontWeight="Normal"
+                              VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
+        </Grid>
+      </Grid>
+    </Border>
+    <Border Name="TaskCard" Grid.Row="1" IsVisible="False" Margin="14,12,14,0" Padding="12,10" CornerRadius="10"
+            BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource PageBrush}">
+      <StackPanel Spacing="4">
+        <ctl:StudioLineText Name="TaskLabel" FontSize="{DynamicResource StudioType12}" LineHeight="15.6" FontWeight="Medium" Foreground="{DynamicResource FaintBrush}"/>
+        <SelectableTextBlock Name="TaskText" FontSize="{DynamicResource StudioType13}" LineHeight="20.8" FontWeight="Normal"
+                             Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
+      </StackPanel>
+    </Border>
+    <TextBlock Name="ReadError" Grid.Row="2" IsVisible="False" Margin="14,8,14,0" TextWrapping="Wrap"
+               Foreground="{DynamicResource ErrInkBrush}" FontSize="{DynamicResource StudioType12}"/>
+    <pages:SessionPage Name="RunTranscript" Grid.Row="3" Margin="11,28,0,0" Classes="read-only-run" IsVisible="False" TextElement.FontFamily="{DynamicResource ConversationUiFamily}"/>
+    <TextBlock Name="Loading" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"
+               Foreground="{DynamicResource MutedBrush}" FontSize="{DynamicResource StudioType12}"/>
+    <Border Name="Footer" Grid.Row="4" IsVisible="False" Margin="14,0,14,14" Padding="12,8" CornerRadius="7" Background="{DynamicResource PageBrush}">
+      <TextBlock Name="FooterText" TextWrapping="Wrap" FontWeight="Normal" FontSize="{DynamicResource StudioType12}"
+                 LineHeight="19.2" Foreground="{DynamicResource MutedBrush}"/>
+    </Border>
+  </Grid>
+</UserControl>

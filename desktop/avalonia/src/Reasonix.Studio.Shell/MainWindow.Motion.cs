@@ -155,6 +155,8 @@ public sealed partial class MainWindow
             {
                 ComposerRunTokens.CancelFeedback();
                 _viewMotion?.Cancel.Cancel();
+                _workbenchDismiss?.Cancel();
+                _workbenchCanvasFade?.Cancel();
             }
         }
     }

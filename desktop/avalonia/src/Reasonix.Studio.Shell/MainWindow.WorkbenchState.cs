@@ -69,6 +69,10 @@ public sealed partial class MainWindow
             Launcher = _workbenchLauncherSelected,
             Browser = ManualBrowserHost.Content as Control,
             Browsers = _browserPages.ToArray(),
+            Jobs = _jobOutputViews.ToArray(),
+            Agents = _subagentRuns.ToArray(),
+            SubagentRun = SubagentRunHost.IsVisible ? SubagentRunHost.Content as SubagentRunView : null,
+            JobOutput = BackgroundJobHost.IsVisible ? BackgroundJobHost.Content as BackgroundJobOutputView : null,
             BrowserVisible = ManualBrowserHost.IsVisible,
             Terminal = _terminalId,
             Folders = new Dictionary<string, WorkspaceListing>(_fileDirectories, StringComparer.Ordinal),
@@ -91,6 +95,8 @@ public sealed partial class MainWindow
     private void RestoreWorkbenchPresentation()
     {
         _browserPages.Clear();
+        _jobOutputViews.Clear();
+        _subagentRuns.Clear();
         _showHiddenFiles = _workspacePreferences.ShowHiddenFiles;
         _fullWorkbench = false;
         if (_engine is not { } engine || !_workbenchStates.TryGetValue(engine, out var state) || state.Root != _workspaceRoot)
@@ -110,6 +116,8 @@ public sealed partial class MainWindow
         _fileCollapsed.UnionWith(state.Collapsed);
         ManualBrowserHost.Content = state.Browser;
         _browserPages.AddRange(state.Browsers);
+        _jobOutputViews.AddRange(state.Jobs);
+        _subagentRuns.AddRange(state.Agents);
         _gitApi = state.GitApi;
         _gitLifetime = state.GitLifetime;
         state.GitLifetime = null;
@@ -119,7 +127,7 @@ public sealed partial class MainWindow
             GitRepositories.Children.Add(repository);
         }
 
-        RebuildTabs();
+        RebuildTabs(animateSelection: false);
     }
 
     /// <summary>Restores the selected surface after the new runtime's history is visible.</summary>
@@ -133,9 +141,17 @@ public sealed partial class MainWindow
 
         WorkbenchPanel.IsVisible = true;
         LayoutWorkbench();
-        if (state.BrowserVisible)
+        if (state.SubagentRun is { } run)
         {
-            OpenManualBrowser();
+            SelectSubagentRun(run, animateSelection: false);
+        }
+        else if (state.JobOutput is { } jobOutput)
+        {
+            SelectJobOutput(jobOutput, animateSelection: false);
+        }
+        else if (state.BrowserVisible)
+        {
+            OpenManualBrowser(animateSelection: false);
         }
         else if (state.Terminal is { } terminal)
         {
@@ -143,7 +159,7 @@ public sealed partial class MainWindow
         }
         else if (state.File is { } path)
         {
-            await OpenEntryAsync(new WorkspaceFileEntry(path, false)).ConfigureAwait(true);
+            await OpenEntryAsync(new WorkspaceFileEntry(path, false), animateTab: false).ConfigureAwait(true);
             if (!ReferenceEquals(_engine, pane.Engine))
             {
                 return;
@@ -162,13 +178,13 @@ public sealed partial class MainWindow
         }
         else if (state.Git is { } git)
         {
-            ShowGitCanvas(git.Title, git.View);
+            ShowGitCanvas(git.Title, git.View, animateSelection: false);
         }
 
         if (ReferenceEquals(_engine, pane.Engine))
         {
             ExplorerPane.IsVisible = state.Explorer;
-            SetWorkbenchLauncher(state.Launcher);
+            SetWorkbenchLauncher(state.Launcher, animateSelection: false);
             ExplorerScroller.Offset = state.ExplorerOffset;
         }
     }
@@ -209,6 +225,12 @@ public sealed partial class MainWindow
         {
             pages.AddRange(_browserPages);
             _browserPages.Clear();
+            HideJobOutput();
+            BackgroundJobHost.Content = null;
+            _jobOutputViews.Clear();
+            HideSubagentRun();
+            SubagentRunHost.Content = null;
+            _subagentRuns.Clear();
             _boundWorkspaceEngine = null;
             ResetGit();
         }
@@ -335,5 +357,23 @@ public sealed partial class MainWindow
 
         /// <summary>Gets or initializes the independently open browser pages.</summary>
         internal Browser.ManualWebPreview[] Browsers { get; init; } = [];
+
+        /// <summary>Gets or initializes the independently open background job tabs.</summary>
+        internal BackgroundJobOutputView[] Jobs { get; init; } = [];
+
+        /// <summary>Gets or initializes the child execution records open in this conversation.</summary>
+        internal SubagentRunView[] Agents { get; init; } = [];
+
+        /// <summary>Gets or initializes the selected child execution record.</summary>
+        internal SubagentRunView? SubagentRun
+        {
+            get; init;
+        }
+
+        /// <summary>Gets or initializes the active background job view.</summary>
+        internal BackgroundJobOutputView? JobOutput
+        {
+            get; init;
+        }
     }
 }

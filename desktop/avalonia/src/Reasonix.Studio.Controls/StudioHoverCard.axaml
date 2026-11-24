@@ -1,4 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Controls.StudioHoverCard" x:Name="Root" Focusable="False">
+  <UserControl.Styles>
+    <Style Selector="ScrollViewer.anchor-card:not(:pointerover) /template/ ScrollBar">
+      <Setter Property="Opacity" Value="0"/>
+    </Style>
+  </UserControl.Styles>
   <Grid>
     <ContentPresenter Name="AnchorPresenter" Content="{Binding Anchor, ElementName=Root}" HorizontalContentAlignment="Stretch"/>
     <Popup Name="Surface" Placement="TopEdgeAlignedLeft" VerticalOffset="-8" PlacementTarget="{Binding #AnchorPresenter}" IsLightDismissEnabled="False" ShouldUseOverlayLayer="True">

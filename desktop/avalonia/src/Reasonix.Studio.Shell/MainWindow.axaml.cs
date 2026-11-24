@@ -312,6 +312,7 @@ public sealed partial class MainWindow : Window
         // before the window tears anything down.
         SaveDraft();
 
+        CancelWorkbenchDismissal();
         _motionLifetime.Cancel();
         _runClock?.Stop();
         ResetGit();

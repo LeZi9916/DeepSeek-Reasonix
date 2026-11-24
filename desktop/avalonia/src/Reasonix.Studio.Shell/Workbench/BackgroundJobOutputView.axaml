@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Workbench.BackgroundJobOutputView"
+             AutomationProperties.AutomationId="class:jobrun" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="Button.job-output-action">
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="Padding" Value="14,0"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/>
+      <Setter Property="CornerRadius" Value="7"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}"
+                  CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.job-output-action:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  </UserControl.Styles>
+  <Grid RowDefinitions="40,Auto,*,Auto" Background="{DynamicResource RaisedBrush}">
+    <Border BorderThickness="0,0,0,1" BorderBrush="{DynamicResource HairBrush}" Padding="12,0,8,0">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+          <Canvas Width="24" Height="24"><Path Name="Mark" Data="{StaticResource Glyph.job-play}" Stroke="{DynamicResource MutedBrush}"
+                                                StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+        </Viewbox>
+        <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8" HorizontalAlignment="Left">
+          <TextBlock Name="TitleText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                     Foreground="{DynamicResource TextBrush}" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"/>
+          <TextBlock Name="JobState" Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                     FontSize="{DynamicResource StudioType12}" FontWeight="Normal" Foreground="{DynamicResource FaintBrush}"/>
+        </Grid>
+        <Button Name="Stop" Grid.Column="2" Classes="job-output-action" VerticalAlignment="Center" AutomationProperties.AutomationId="action:job.cancel"/>
+      </Grid>
+    </Border>
+    <TextBlock Name="ReadError" Grid.Row="1" IsVisible="False" Margin="14,8,14,0" TextWrapping="Wrap"
+               Foreground="{DynamicResource ErrInkBrush}" FontSize="{DynamicResource StudioType12}"/>
+    <ScrollViewer Name="OutputScroll" Grid.Row="2" Padding="14,12" Background="{DynamicResource FaceCodeBrush}"
+                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" AutomationProperties.AutomationId="action:job.scroll">
+      <StackPanel>
+        <SelectableTextBlock Name="Command" FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource MutedBrush}"
+                             FontSize="{DynamicResource StudioType12}" FontWeight="Normal" LineHeight="19.2" TextWrapping="Wrap"/>
+        <SelectableTextBlock Name="Output" FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource TextBrush}"
+                             FontSize="{DynamicResource StudioType12}" FontWeight="Normal" LineHeight="19.2" TextWrapping="Wrap"/>
+      </StackPanel>
+    </ScrollViewer>
+    <Border Name="FollowingBar" Grid.Row="3" MinHeight="36" Padding="14,0,8,0" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <TextBlock Name="FollowingText" FontSize="{DynamicResource StudioType11}" FontWeight="Normal"
+                   Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center"/>
+        <Button Name="Follow" Grid.Column="1" Width="28" Height="26" Padding="0" VerticalAlignment="Center" AutomationProperties.AutomationId="action:job.follow">
+          <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="M6 9l6 6 6-6" Stroke="{DynamicResource MutedBrush}"
+                                                                             StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        </Button>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

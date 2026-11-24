@@ -20,6 +20,12 @@ public sealed partial class MainWindow
     /// <summary>Runtime for which the Git widgets were mounted.</summary>
     private StudioPageClient? _gitApi;
 
+    /// <summary>The change badge preference read from the active kernel.</summary>
+    private (StudioPageClient Owner, bool Visible)? _changedFilesPreference;
+
+    /// <summary>Rejects an older preference read after a setting has been applied.</summary>
+    private int _changedFilesRead;
+
     /// <summary>Discards late repository discovery results.</summary>
     private long _gitDiscovery;
 
@@ -96,6 +102,7 @@ public sealed partial class MainWindow
             ResetGit();
             _gitApi = api;
             _gitLifetime = CancellationTokenSource.CreateLinkedTokenSource(_closing.Token);
+            _ = ReadChangedFilesPreferenceAsync(api, _gitLifetime.Token);
         }
 
         var token = _gitLifetime!.Token;
@@ -217,13 +224,15 @@ public sealed partial class MainWindow
     /// <summary>Shows a Git view without destroying any underlying file drafts.</summary>
     /// <param name="title">Canvas title.</param>
     /// <param name="view">Git patch or changes board.</param>
-    private void ShowGitCanvas(string title, Control view)
+    /// <param name="animateSelection">Whether the view was selected in the current workbench.</param>
+    private void ShowGitCanvas(string title, Control view, bool animateSelection = true)
     {
-        SetWorkbenchLauncher(false);
+        SetWorkbenchLauncher(false, animateSelection);
         _fileRead++;
         HideBrowser();
         _openFile = null;
         SelectWorkspaceFile(null);
+        var newlyOpened = _gitSurface is null;
         _gitSurface = (title, view);
         if (view.Classes.Contains("git-board"))
         {
@@ -236,7 +245,7 @@ public sealed partial class MainWindow
         SetFileBarTitle(title, path: false);
         FileModes.IsVisible = false;
         SaveFile.IsVisible = false;
-        RebuildTabs();
+        RebuildTabs(newlyOpened && animateSelection ? view : null, animateSelection);
     }
 
     /// <summary>Locates the deepest repository that owns a workspace file.</summary>
@@ -249,13 +258,47 @@ public sealed partial class MainWindow
         return repo is null ? (string.Empty, path) : (repo, path[(repo.Length + 1)..]);
     }
 
+    /// <summary>Reads whether the active kernel shows file changes above the composer.</summary>
+    /// <param name="api">The active Git session's API.</param>
+    /// <param name="token">Cancels when the workspace changes.</param>
+    /// <returns>The preference read.</returns>
+    private async Task ReadChangedFilesPreferenceAsync(StudioPageClient api, CancellationToken token)
+    {
+        var ticket = ++_changedFilesRead;
+        try
+        {
+            var visible = await api.FlagAsync(StudioSetting.ChangedFiles, token).ConfigureAwait(true);
+            if (ticket == _changedFilesRead && !token.IsCancellationRequested)
+            {
+                ApplyChangedFilesPreference(api, visible);
+            }
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+        }
+    }
+
+    /// <summary>Applies the companion badge preference to this composer's active session.</summary>
+    /// <param name="api">Kernel that supplied the setting.</param>
+    /// <param name="visible">Whether file changes are shown on the composer.</param>
+    private void ApplyChangedFilesPreference(StudioPageClient api, bool visible)
+    {
+        if (ReferenceEquals(_engine?.Pages, api))
+        {
+            _changedFilesRead++;
+            _changedFilesPreference = (api, visible);
+            UpdateGitBadge();
+        }
+    }
+
     /// <summary>Displays the total number of changed files from the current repository reads.</summary>
     private void UpdateGitBadge()
     {
         var count = GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.ChangeCount);
         GitCountBadge.IsVisible = count > 0;
         TotalGitCount.Text = count.ToString(System.Globalization.CultureInfo.CurrentCulture);
-        ChangedFiles.IsVisible = count > 0;
+        var visible = _changedFilesPreference is not { } pref || !ReferenceEquals(pref.Owner, _engine?.Pages) || pref.Visible;
+        ChangedFiles.IsVisible = count > 0 && visible;
         ChangedFilesLabel.Text = MessageCatalog.Get("composer.n_files_changed", Language, ("n", TotalGitCount.Text));
         ChangedAdded.Text = "+" + GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.LineChanges.Added).ToString(System.Globalization.CultureInfo.CurrentCulture);
         ChangedRemoved.Text = "−" + GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.LineChanges.Removed).ToString(System.Globalization.CultureInfo.CurrentCulture);

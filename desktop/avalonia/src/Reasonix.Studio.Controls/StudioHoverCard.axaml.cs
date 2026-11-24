@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -9,6 +10,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using System;
+using System.Collections.Specialized;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,6 +40,9 @@ public sealed partial class StudioHoverCard : UserControl
     /// <summary>Bridges the small gap between trigger and floating card.</summary>
     private readonly DispatcherTimer _leave = new() { Interval = TimeSpan.FromMilliseconds(110) };
 
+    /// <summary>The transform applied to the card about its anchor edge.</summary>
+    private readonly MatrixTransform _anchorTransform = new();
+
     /// <summary>The current owner for keyboard dismissal.</summary>
     private TopLevel? _owner;
 
@@ -59,6 +64,13 @@ public sealed partial class StudioHoverCard : UserControl
         InitializeComponent();
         ActualThemeVariantChanged += (_, _) => UpdateShadow();
         UpdateShadow();
+        Frame.PropertyChanged += (_, args) =>
+        {
+            if (ScaleFromAnchor && args.Property == OpacityProperty)
+            {
+                UpdateAnchorTransform();
+            }
+        };
         AnchorPresenter.PointerEntered += (_, _) =>
         {
             if (CanHover?.Invoke() != false)
@@ -90,7 +102,7 @@ public sealed partial class StudioHoverCard : UserControl
                 Open();
                 Pinned?.Invoke();
             }
-            else
+            else if (!ScaleFromAnchor || CanHover?.Invoke() == false || !AnchorPresenter.IsPointerOver)
             {
                 Close();
             }
@@ -112,6 +124,11 @@ public sealed partial class StudioHoverCard : UserControl
         AttachedToVisualTree += (_, _) =>
         {
             _owner = TopLevel.GetTopLevel(this);
+            if (_owner is not null)
+            {
+                _owner.Classes.CollectionChanged += MotionChanged;
+            }
+
             _owner?.AddHandler(KeyDownEvent, OnOwnerKey, RoutingStrategies.Tunnel);
             _owner?.AddHandler(PointerPressedEvent, OnOwnerPointer, RoutingStrategies.Tunnel, true);
         };
@@ -156,6 +173,24 @@ public sealed partial class StudioHoverCard : UserControl
         get => GetValue(CardWidthProperty); set => SetValue(CardWidthProperty, value);
     }
 
+    /// <summary>Gets or sets a value indicating whether the popup opens above the anchor's right edge.</summary>
+    public bool AlignRight
+    {
+        get; set;
+    }
+
+    /// <summary>Gets or sets a value indicating whether the card scales and slides from the anchor as it fades.</summary>
+    public bool ScaleFromAnchor
+    {
+        get; set;
+    }
+
+    /// <summary>Gets or sets the fraction of the viewport available to the card.</summary>
+    public double CardHeightFraction
+    {
+        get; set;
+    } = 1;
+
     /// <summary>Gets a value indicating whether the card is visible.</summary>
     public bool IsOpen => Surface.IsOpen && !_hiding;
 
@@ -177,21 +212,29 @@ public sealed partial class StudioHoverCard : UserControl
             return;
         }
 
+        var from = ScaleFromAnchor && Surface.IsOpen ? Frame.Opacity : 0;
         _reveal?.Cancel();
         _hiding = false;
         Frame.IsHitTestVisible = true;
         Surface.VerticalOffset = -Gap;
+        Surface.Placement = AlignRight ? PlacementMode.TopEdgeAlignedRight : PlacementMode.TopEdgeAlignedLeft;
         var size = TopLevel.GetTopLevel(this)?.ClientSize ?? new Size(760, 480);
         Frame.Width = Math.Min(CardWidth, Math.Max(120, size.Width - 32));
-        CardScroll.MaxHeight = Math.Max(80, size.Height - 32);
-        Surface.IsOpen = true;
-        if (_owner?.Classes.Contains("motion") == true)
+        CardScroll.MaxHeight = Math.Max(80, Math.Min(size.Height - 32, (size.Height * CardHeightFraction) - 2));
+        CardScroll.Classes.Set("anchor-card", ScaleFromAnchor);
+        var animate = _owner?.Classes.Contains("motion") == true;
+        Frame.Opacity = animate ? from : 1;
+        if (ScaleFromAnchor)
         {
-            _ = FadeAsync(false);
+            Frame.RenderTransformOrigin = new RelativePoint(AlignRight ? 1 : 0, 1, RelativeUnit.Relative);
+            Frame.RenderTransform = _anchorTransform;
+            UpdateAnchorTransform();
         }
-        else
+
+        Surface.IsOpen = true;
+        if (animate)
         {
-            Frame.Opacity = 1;
+            _ = FadeAsync(false, from);
         }
     }
 
@@ -201,49 +244,98 @@ public sealed partial class StudioHoverCard : UserControl
     {
         _leave.Stop();
         _pinned = false;
+        if (_hiding && !immediately)
+        {
+            return;
+        }
+
+        var from = ScaleFromAnchor ? Frame.Opacity : 1;
         _reveal?.Cancel();
         if (!immediately && Surface.IsOpen && _owner is { IsVisible: true } && _owner.Classes.Contains("motion"))
         {
             _hiding = true;
             Frame.IsHitTestVisible = false;
-            _ = FadeAsync(true);
+            Frame.Opacity = from;
+            _ = FadeAsync(true, from);
         }
         else
         {
-            Surface.IsOpen = false;
-            _hiding = false;
-            Frame.Opacity = 1;
+            Settle(true);
         }
     }
 
-    /// <summary>Uses the shared line transition while allowing every newer interaction to cancel it.</summary>
-    /// <param name="closing">Whether the card is leaving.</param><returns>The optional reveal transition.</returns>
-    private async Task FadeAsync(bool closing)
+    /// <summary>Keeps the opacity and the anchor-relative transform on the same clock.</summary>
+    /// <param name="closing">Whether the card is leaving.</param>
+    /// <param name="from">The visible opacity before the previous motion was cancelled.</param>
+    /// <returns>The optional reveal transition.</returns>
+    private async Task FadeAsync(bool closing, double from)
     {
+        var to = closing ? 0d : 1d;
+        if (from == to)
+        {
+            Settle(closing);
+            return;
+        }
+
         using var lifetime = new CancellationTokenSource();
         _reveal = lifetime;
+        var duration = this.TryFindResource("TLine", out var value) && value is TimeSpan time ? time : TimeSpan.FromMilliseconds(120);
         var animation = new Animation
         {
-            Duration = this.TryFindResource("TLine", out var duration) && duration is TimeSpan time ? time : TimeSpan.FromMilliseconds(120),
-            Easing = new CubicEaseOut(),
-            Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, closing ? 1d : 0d) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, closing ? 0d : 1d) } } },
+            Duration = ScaleFromAnchor ? duration * Math.Abs(to - from) : duration,
+            Easing = ScaleFromAnchor ? new SplineEasing(0.16, 1, 0.3, 1) : new CubicEaseOut(),
+            Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, from) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, to) } } },
         };
         try
         {
             await animation.RunAsync(Frame, lifetime.Token).ConfigureAwait(true);
-            if (!lifetime.IsCancellationRequested && closing)
+            if (!lifetime.IsCancellationRequested)
             {
-                Surface.IsOpen = false;
-                _hiding = false;
+                Settle(closing);
             }
         }
-        catch (OperationCanceledException) when (lifetime.IsCancellationRequested) { }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
+        {
+        }
         finally
         {
             if (ReferenceEquals(_reveal, lifetime))
             {
                 _reveal = null;
             }
+        }
+    }
+
+    /// <summary>Applies the collapsed pose around the popup's anchor edge.</summary>
+    private void UpdateAnchorTransform()
+    {
+        var hidden = 1 - Frame.Opacity;
+        var scale = 1 - (0.015 * hidden);
+        _anchorTransform.Matrix = new Matrix(scale, 0, 0, scale, 0, 4 * hidden);
+    }
+
+    /// <summary>Publishes the requested state after animation or reduced motion.</summary>
+    /// <param name="closing">Whether to remove the popup from the overlay.</param>
+    private void Settle(bool closing)
+    {
+        if (closing)
+        {
+            Surface.IsOpen = false;
+        }
+
+        _hiding = false;
+        Frame.Opacity = 1;
+    }
+
+    /// <summary>Applies a change in the owning window's effective motion preference.</summary>
+    /// <param name="sender">The window's style classes.</param>
+    /// <param name="args">The changed classes.</param>
+    private void MotionChanged(object? sender, NotifyCollectionChangedEventArgs args)
+    {
+        if (_reveal is { IsCancellationRequested: false } reveal && _owner?.Classes.Contains("motion") != true)
+        {
+            reveal.Cancel();
+            Settle(_hiding);
         }
     }
 
@@ -297,6 +389,11 @@ public sealed partial class StudioHoverCard : UserControl
     /// <summary>Releases the owner's routed-event subscription.</summary>
     private void DetachOwner()
     {
+        if (_owner is not null)
+        {
+            _owner.Classes.CollectionChanged -= MotionChanged;
+        }
+
         _owner?.RemoveHandler(KeyDownEvent, OnOwnerKey);
         _owner?.RemoveHandler(PointerPressedEvent, OnOwnerPointer);
         _owner = null;

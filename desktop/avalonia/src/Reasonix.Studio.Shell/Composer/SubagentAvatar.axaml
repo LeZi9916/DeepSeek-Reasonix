@@ -1,0 +1,10 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Composer.SubagentAvatar" Width="20" Height="20" IsHitTestVisible="False">
+  <Border Name="Tint" CornerRadius="7">
+    <Viewbox Name="Icon" Width="13" Height="13">
+      <Canvas Width="24" Height="24">
+        <Path Name="Bot" Data="{StaticResource Glyph.agent}" StrokeThickness="1.45" StrokeJoin="Round" StrokeLineCap="Round"/>
+      </Canvas>
+    </Viewbox>
+  </Border>
+</UserControl>

@@ -1,0 +1,56 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:local="using:Reasonix.Studio.Shell.Composer">
+    <Style Selector="Button.compose-deck-chip">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+      <Setter Property="Padding" Value="8,0"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="11"/>
+      <Setter Property="Height" Value="22"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector=".live Button.compose-deck-chip">
+      <Setter Property="Background" Value="{DynamicResource NetWashBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource NetInkBrush}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector=".failed Button.compose-deck-chip">
+      <Setter Property="Background"><SolidColorBrush Color="{DynamicResource Err}" Opacity="0.12"/></Setter>
+      <Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector="Button.compose-deck-chip:pointerover">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
+    </Style>
+    <Style Selector="Window.motion Button.compose-deck-chip">
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+          <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Window.motion .live local|JobStatusPulse">
+      <Style.Animations>
+        <Animation Duration="0:0:1.6" IterationCount="Infinite">
+          <KeyFrame Cue="0%"><Setter Property="Phase" Value="0"/></KeyFrame>
+          <KeyFrame Cue="70%" KeySpline="0,0,0.58,1"><Setter Property="Phase" Value="1"/></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="Phase" Value="1"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+</Styles>

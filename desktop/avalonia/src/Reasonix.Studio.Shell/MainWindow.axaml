@@ -308,7 +308,7 @@
                   </Grid>
                 </ctl:StudioComposer>
                 <Border Grid.Row="1" Height="27" VerticalAlignment="Bottom" RenderTransform="translate(0px,-3px)" Padding="2,0" TextElement.FontSize="{DynamicResource StudioType11}" TextElement.Foreground="{DynamicResource GhostBrush}" AutomationProperties.AutomationId="class:studio-meterrail">
-                  <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto">
+                  <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto">
                   <ctl:StudioHoverCard Name="SpeedHover" CardWidth="268" OpenOnFocus="True">
                     <ctl:StudioHoverCard.Anchor><Button Name="SpeedToggle" Classes="compose-context"><StackPanel Orientation="Horizontal" Spacing="5"><ctl:StudioSparkline Name="SpeedSpark" Width="44" Height="13" IsVisible="False" Stroke="{DynamicResource FaintBrush}"/><ctl:StudioLineText Name="SpeedText" Classes="compose-reading" TextAlignment="Right" Text="—"/><ctl:StudioLineText Name="SpeedUnit" Text="tok/s"/><Border Name="SpeedLive" Width="4" Height="4" Margin="1,0,0,0" CornerRadius="2" Background="{DynamicResource GhostBrush}" VerticalAlignment="Center"/></StackPanel></Button></ctl:StudioHoverCard.Anchor>
                     <ctl:StudioHoverCard.Card><metrics:SpeedDetailCard Name="SpeedDetails"/></ctl:StudioHoverCard.Card>
@@ -324,6 +324,11 @@
                   <StackPanel Name="ExtraMeters" Grid.Column="3" Orientation="Horizontal" Spacing="10" Margin="6,0" VerticalAlignment="Center"><StackPanel Name="TariffMeter" Orientation="Horizontal" Spacing="4" IsVisible="False"><ctl:StudioLineText Name="TariffText"/><ctl:StudioLineText Name="TariffRemainingText" Foreground="{DynamicResource MutedBrush}"/></StackPanel><ctl:StudioLineText Name="SessionCostText" IsVisible="False"/><ctl:StudioLineText Name="TurnCostText" IsVisible="False"/></StackPanel>
                   <Button Name="HideAmounts" Foreground="{DynamicResource ComposeMaskBrush}" Grid.Column="4" Classes="compose-context compose-mask" Width="22" Padding="5,0" AutomationProperties.AutomationId="action:metrics.hide-amounts"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.eye}" Stroke="{DynamicResource ComposeMaskBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/><Path Name="AmountMaskSlash" IsVisible="False" Data="M3 3 21 21" Stroke="{DynamicResource ComposeMaskBrush}" StrokeThickness="1.8" StrokeLineCap="Round"/></Canvas></Viewbox></Button>
                   <Button Name="WalletButton" Grid.Column="5" Classes="compose-context" IsVisible="False"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.wallet}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="WalletText" Classes="compose-reading"/></StackPanel></Button>
+                  <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="1">
+                    <composer:SubagentChip Name="Subagents" IsVisible="False"/>
+                    <composer:ProcessChip Name="Processes" IsVisible="False"/>
+                    <composer:BackgroundJobChip Name="BackgroundJobs" IsVisible="False"/>
+                  </StackPanel>
                   </Grid>
                 </Border>
                 <composer:ComposerPendingSweep Name="PendingComposerSweep" Grid.Row="1" Height="1"
@@ -335,6 +340,7 @@
           <Border Name="WorkbenchPanel" Grid.Column="1" Margin="0,8,8,8" AutomationProperties.AutomationId="class:workbench" IsVisible="False"
                   TextElement.FontFamily="{DynamicResource WorkbenchUiFamily}" TextElement.FontWeight="Medium"
                   Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" ClipToBounds="True">
+            <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
             <Grid RowDefinitions="42,*">
               <Grid UseLayoutRounding="False" ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="2" AutomationProperties.AutomationId="class:workbench-tabs" Background="{DynamicResource PageBrush}">
                 <Border Grid.ColumnSpan="5" VerticalAlignment="Bottom" Height="1" Background="{DynamicResource BorderBrush}" IsHitTestVisible="False"/>
@@ -426,9 +432,16 @@
                   <Thumb Name="ExplorerGrip" Grid.RowSpan="3" Width="5" HorizontalAlignment="Right" Background="Transparent"
                          Cursor="SizeWestEast" ZIndex="2"/>
                 </Grid>
-                <Grid Grid.Column="1" AutomationProperties.AutomationId="class:workbench-canvas">
-                  <Grid Name="FileCanvas" RowDefinitions="40,*,Auto" Background="{DynamicResource RaisedBrush}"
-                        IsVisible="{Binding !#ManualBrowserHost.IsVisible}">
+                <Grid Name="WorkspaceCanvas" Grid.Column="1" AutomationProperties.AutomationId="class:workbench-canvas">
+                  <Grid Name="FileCanvas" RowDefinitions="40,*,Auto" Background="{DynamicResource RaisedBrush}">
+                    <Grid.IsVisible>
+                      <MultiBinding Converter="{x:Static conv:BoolConverters.And}">
+                        <Binding Path="!#ManualBrowserHost.IsVisible"/>
+                        <Binding Path="!#BackgroundJobHost.IsVisible"/>
+                        <Binding Path="!#SubagentRunHost.IsVisible"/>
+                        <Binding Path="!#WorkbenchEmpty.IsVisible"/>
+                      </MultiBinding>
+                    </Grid.IsVisible>
                   <Grid UseLayoutRounding="False" AutomationProperties.AutomationId="class:workbench-filebar">
                     <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6" Margin="12,0,8,0">
                       <TextBlock Name="WorkbenchTitle" VerticalAlignment="Center" FontSize="{DynamicResource StudioType12}" TextTrimming="CharacterEllipsis"/>
@@ -497,6 +510,8 @@
                   </Border>
                   </Grid>
                   <ctl:StudioSurfaceHost Name="ManualBrowserHost" IsVisible="False"/>
+                  <ContentControl Name="BackgroundJobHost" IsVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+                  <ContentControl Name="SubagentRunHost" IsVisible="False" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
                   <Border Name="WorkbenchEmpty" IsVisible="False" Margin="16,24" MaxWidth="320" Padding="18,20"
                           VerticalAlignment="Center" Background="{DynamicResource RaisedBrush}"
                           BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10"

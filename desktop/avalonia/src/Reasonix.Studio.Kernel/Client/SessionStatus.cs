@@ -1,3 +1,4 @@
+using Reasonix.Studio.Contracts.Jobs;
 using System.Text.Json.Serialization;
 
 namespace Reasonix.Studio.Kernel.Client;
@@ -42,17 +43,26 @@ public sealed record SessionStatus
 
     /// <summary>Gets the current task's execution approval boundary.</summary>
     [JsonPropertyName("toolApprovalMode")]
-    public string ToolApprovalMode { get; init; } = "ask";
+    public string ToolApprovalMode
+    {
+        get; init;
+    } = "ask";
 
     /// <summary>Gets the current model's reasoning effort.</summary>
     [JsonPropertyName("effort")]
-    public string Effort { get; init; } = "auto";
+    public string Effort
+    {
+        get; init;
+    } = "auto";
 
     /// <summary>
     /// Gets the conversation's label, which the rail and the title show.
     /// </summary>
     [JsonPropertyName("label")]
-    public string Label { get; init; } = string.Empty;
+    public string Label
+    {
+        get; init;
+    } = string.Empty;
 
     /// <summary>
     /// Gets a value indicating whether a turn is in flight.
@@ -71,7 +81,10 @@ public sealed record SessionStatus
     /// Gets the workspace the session runs in.
     /// </summary>
     [JsonPropertyName("workspaceRoot")]
-    public string WorkspaceRoot { get; init; } = string.Empty;
+    public string WorkspaceRoot
+    {
+        get; init;
+    } = string.Empty;
 
     /// <summary>Gets the active session's working directory.</summary>
     [JsonPropertyName("cwd")]
@@ -88,13 +101,19 @@ public sealed record SessionStatus
     /// the kernel knows: two conversations in one workspace differ by this path.
     /// </remarks>
     [JsonPropertyName("sessionPath")]
-    public string SessionPath { get; init; } = string.Empty;
+    public string SessionPath
+    {
+        get; init;
+    } = string.Empty;
 
     /// <summary>
     /// Gets the model the composer is set to.
     /// </summary>
     [JsonPropertyName("modelRef")]
-    public string ModelRef { get; init; } = string.Empty;
+    public string ModelRef
+    {
+        get; init;
+    } = string.Empty;
 
     /// <summary>Gets the provider's display name for the active model.</summary>
     [JsonPropertyName("providerDisplayName")]
@@ -131,6 +150,20 @@ public sealed record SessionStatus
     /// </summary>
     [JsonPropertyName("window")]
     public long Window
+    {
+        get; init;
+    }
+
+    /// <summary>Gets the background jobs still running in this session.</summary>
+    [JsonPropertyName("jobs")]
+    public BackgroundJobStatus[]? Jobs
+    {
+        get; init;
+    }
+
+    /// <summary>Gets the background jobs that already ended in this session.</summary>
+    [JsonPropertyName("endedJobs")]
+    public BackgroundJobStatus[]? EndedJobs
     {
         get; init;
     }

@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Reasonix.Studio.Pages.I18n;
 using System.Linq;
 using System.Threading.Tasks;
@@ -43,13 +42,12 @@ public sealed partial class MainWindow
     /// <returns>The workbench navigation.</returns>
     private Task ToggleChromeWorkbenchAsync()
     {
-        if (!WorkbenchPanel.IsVisible)
+        if (!WorkbenchPanel.IsVisible || _workbenchDismiss is not null)
         {
             return OpenWorkbenchAsync();
         }
 
-        CloseWorkbench.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-        return Task.CompletedTask;
+        return DismissWorkbenchAsync();
     }
 
     /// <summary>Reflects the active side view and number of retained workbench surfaces.</summary>

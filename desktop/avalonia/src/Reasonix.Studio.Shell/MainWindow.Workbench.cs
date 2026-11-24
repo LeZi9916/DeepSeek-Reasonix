@@ -85,6 +85,8 @@ public sealed partial class MainWindow
             if (e.Property == IsVisibleProperty)
             {
                 UpdateWorkbenchHeader();
+                RefreshJobOutputVisibility();
+                RefreshSubagentRunVisibility();
             }
         };
         UpdateWorkbenchHeader();
@@ -181,12 +183,21 @@ public sealed partial class MainWindow
         Label(CloseWorkbench, "app.close_workbench");
         SetFileBarTitle(MessageCatalog.Get(MessageKey.Common.Workbench, Language), path: false);
         WorkbenchView.Click += async (_, _) => await OpenWorkbenchAsync().ConfigureAwait(true);
-        CloseWorkbench.Click += (_, _) =>
+        CloseWorkbench.Click += async (_, _) => await DismissWorkbenchAsync().ConfigureAwait(true);
+        WorkbenchPanel.PropertyChanged += (_, change) =>
         {
-            DetachTerminal();
-            WorkbenchPanel.IsVisible = false;
-            LayoutWorkbench();
-            Composer.Focus();
+            if (change.Property != IsVisibleProperty)
+            {
+                return;
+            }
+
+            RefreshJobOutputVisibility();
+            RefreshSubagentRunVisibility();
+            if (!WorkbenchPanel.IsVisible)
+            {
+                CancelWorkbenchDismissal();
+                _workbenchDockEntrance?.Cancel();
+            }
         };
         FileEditor.TextChanged += (_, _) =>
         {
@@ -320,11 +331,14 @@ public sealed partial class MainWindow
         _fileRead++;
         ManualBrowserHost.Content = null;
         HideBrowser();
+        BackgroundJobHost.Content = null;
+        SubagentRunHost.Content = null;
         ResetGit();
         _workspaceRoot = root;
         _boundWorkspaceEngine = _engine;
         _workspaceBufferScope = scope;
         ResetFileTree();
+        UpdateWorkbenchCanvas(null, animate: false);
         _openFile = null;
         ExplorerPane.IsVisible = false;
         SetReadOnlyBadge(null);
@@ -345,13 +359,32 @@ public sealed partial class MainWindow
     /// <returns>The initial directory read.</returns>
     private async Task OpenWorkbenchAsync()
     {
+        RevealWorkbench(animate: true);
+        await Task.WhenAll(ListFilesAsync(), LoadGitAsync()).ConfigureAwait(true);
+        RefreshWorkbenchLauncher(refreshContents: true);
+    }
+
+    /// <summary>Opens the workbench and plays the shared entrance for an explicit action.</summary>
+    /// <param name="animate">Whether to play the opening motion.</param>
+    private void RevealWorkbench(bool animate)
+    {
+        var opening = !WorkbenchPanel.IsVisible || _workbenchDismiss is not null;
+        CancelWorkbenchDismissal();
         ShowAnalysis(false);
         WorkbenchPanel.IsVisible = true;
         RevealWorkspace.IsVisible = _engine?.IsRemote != true;
         LayoutWorkbench();
-        EnterView(WorkbenchPanel);
-        await Task.WhenAll(ListFilesAsync(), LoadGitAsync()).ConfigureAwait(true);
-        RefreshWorkbenchLauncher(refreshContents: true);
+        if (opening && animate && Classes.Contains("motion"))
+        {
+            if (double.IsNaN(WorkbenchPanel.Width))
+            {
+                EnterView(WorkbenchPanel, slideX: 24, durationMs: 200, easing: new Avalonia.Animation.KeySpline(0.2, 0, 0, 1));
+            }
+            else
+            {
+                _ = EnterWorkbenchDockAsync();
+            }
+        }
     }
 
     /// <summary>Gives a narrow workbench the pane; wide windows retain the conversation beside it.</summary>
@@ -359,12 +392,18 @@ public sealed partial class MainWindow
     {
         var room = LayoutRoot.Bounds.Width - LayoutRoot.ColumnDefinitions[0].Width.Value;
         var overlay = _fullWorkbench || room <= 640;
+        if (overlay)
+        {
+            _workbenchDockEntrance?.Cancel();
+        }
+
         UpdateWorkbenchHeader();
         Grid.SetColumn(WorkbenchPanel, overlay ? 0 : 1);
         WorkbenchPanel.Width = overlay ? double.NaN : Math.Min(510, room - 246);
         WorkbenchPanel.Margin = new Avalonia.Thickness(overlay ? 2 : 0, 8, 8, 8);
         ConversationArea.IsVisible = !(overlay && WorkbenchPanel.IsVisible);
         var stacked = LayoutRoot.Bounds.Width <= 840;
+        Conversation.SetMessageRailAvailable(!stacked);
         var docked = WorkbenchPanel.IsVisible && !overlay;
         ComposerArea.Margin = new Avalonia.Thickness(stacked ? 10 : docked ? 39 : 24, 0);
         ConversationArea.Margin = new Avalonia.Thickness(0, 0, docked ? 2 : 0, 0);
@@ -383,10 +422,11 @@ public sealed partial class MainWindow
 
     /// <summary>Opens a listed workspace file or a diff, ignoring superseded reads.</summary>
     /// <param name="entry">The entry selected in the explorer or tab strip.</param>
+    /// <param name="animateTab">Whether this open came from user navigation.</param>
     /// <returns>The opened entry.</returns>
-    private async Task OpenEntryAsync(FileEntry entry)
+    private async Task OpenEntryAsync(FileEntry entry, bool animateTab = true)
     {
-        SetWorkbenchLauncher(false);
+        SetWorkbenchLauncher(false, animateSelection: animateTab);
         if (_engine is not { } engine)
         {
             return;
@@ -397,6 +437,7 @@ public sealed partial class MainWindow
         FileCanvas.RowDefinitions[0].Height = new GridLength(40);
         FileMore.IsVisible = true;
         var key = (WorkspaceBufferScope, entry.Path);
+        var newlyOpened = animateTab && !_fileBuffers.ContainsKey(key);
         try
         {
             if (!_fileBuffers.TryGetValue(key, out var buffer) || !buffer.Dirty)
@@ -446,7 +487,7 @@ public sealed partial class MainWindow
             FileModes.IsVisible = true;
             FileEditor.IsVisible = true;
             DrawFileToolbar(buffer);
-            RebuildTabs();
+            RebuildTabs(newlyOpened ? entry.Path : null, animateSelection: animateTab);
             FileEditor.Text = buffer.Draft;
             FileEditor.IsReadOnly = buffer.Original.ReadOnly;
             SetFileBarTitle(buffer.Original, entry.Path);
@@ -474,9 +515,13 @@ public sealed partial class MainWindow
     /// <summary>Opens an isolated, user-operated system browser in the workbench.</summary>
     /// <param name="html">Optional workspace HTML already read under the file grant.</param>
     /// <param name="newPage">Whether an explicit launcher action creates another browser tab.</param>
-    private void OpenManualBrowser(string? html = null, bool newPage = false)
+    /// <param name="animateSelection">Whether the browser was selected in the current workbench.</param>
+    private void OpenManualBrowser(string? html = null, bool newPage = false, bool animateSelection = true)
     {
-        SetWorkbenchLauncher(false);
+        CancelWorkbenchDismissal();
+        HideJobOutput();
+        HideSubagentRun();
+        SetWorkbenchLauncher(false, animateSelection);
         DetachTerminal();
         ShowAnalysis(false);
         WorkbenchPanel.IsVisible = true;
@@ -488,7 +533,8 @@ public sealed partial class MainWindow
             ManualBrowserHost.Content = preview;
         }
 
-        if (html is null && !_browserPages.Contains(preview))
+        var newlyOpened = html is null && !_browserPages.Contains(preview);
+        if (newlyOpened)
         {
             _browserPages.Add(preview);
         }
@@ -502,7 +548,7 @@ public sealed partial class MainWindow
         SaveFile.IsVisible = html is not null;
         ManualBrowserHost.IsVisible = true;
         preview.Wake();
-        RebuildTabs();
+        RebuildTabs(newlyOpened && animateSelection ? preview : null, animateSelection);
         if (html is null)
         {
             SetFileBarTitle(MessageCatalog.Get(MessageKey.Workbench.Browser, Language), path: false);
@@ -521,6 +567,8 @@ public sealed partial class MainWindow
     /// <summary>Restores the native file explorer without navigating the guest.</summary>
     private void HideBrowser()
     {
+        HideJobOutput();
+        HideSubagentRun();
         FileCanvas.RowDefinitions[0].Height = new GridLength(40);
         FileMore.IsVisible = _openFile is not null;
         BackToEditor.IsVisible = false;

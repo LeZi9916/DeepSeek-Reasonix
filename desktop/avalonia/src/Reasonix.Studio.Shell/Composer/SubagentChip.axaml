@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="using:Reasonix.Studio.Controls" xmlns:local="using:Reasonix.Studio.Shell.Composer"
+             x:Class="Reasonix.Studio.Shell.Composer.SubagentChip" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerDeck.axaml"/>
+    <Style Selector="Button.agent-stop-all">
+      <Setter Property="Height" Value="24"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Padding" Value="10,0"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" BorderThickness="1" CornerRadius="12">
+            <ContentPresenter Content="{TemplateBinding Content}" VerticalContentAlignment="Center"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.agent-stop-all:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  </UserControl.Styles>
+  <ctl:StudioHoverCard Name="Details" AlignRight="True" ScaleFromAnchor="True" CardWidth="340" CardHeightFraction="0.38" Gap="7" PinOnClick="True">
+    <ctl:StudioHoverCard.Anchor>
+      <Button Name="Trigger" Classes="compose-deck-chip" AutomationProperties.AutomationId="action:deck.agents">
+        <StackPanel Orientation="Horizontal" Spacing="5">
+          <Viewbox Width="12" Height="12" VerticalAlignment="Center" IsHitTestVisible="False">
+            <Canvas Width="24" Height="24">
+              <Path Data="M6 3v12 M6 15a3 3 0 1 0 0 6a3 3 0 1 0 0-6 M18 3a3 3 0 1 0 0 6a3 3 0 1 0 0-6 M18 9a9 9 0 0 1 -9 9" Stroke="{Binding #Trigger.Foreground}" StrokeThickness="1.8" StrokeJoin="Round" StrokeLineCap="Round"/>
+            </Canvas>
+          </Viewbox>
+          <local:JobStatusPulse Name="Pulse" Width="6" Height="6" VerticalAlignment="Center" IsHitTestVisible="False"
+                                Ink="{DynamicResource NetBrush}" Ring="{DynamicResource NetWashBrush}"/>
+          <ctl:StudioLineText Name="Count" Foreground="{Binding #Trigger.Foreground}" VerticalAlignment="Center" FontWeight="Medium"
+                              FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}"/>
+          <ctl:StudioLineText Name="Caption" Foreground="{Binding #Trigger.Foreground}" VerticalAlignment="Center"
+                              FontWeight="{Binding #Trigger.FontWeight}" FontFamily="{DynamicResource ConversationUiFamily}" FontSize="{DynamicResource StudioType12}"/>
+        </StackPanel>
+      </Button>
+    </ctl:StudioHoverCard.Anchor>
+    <ctl:StudioHoverCard.Card>
+      <StackPanel Margin="6">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="8,6,8,8" Height="16.9">
+          <ctl:StudioLineText Name="Heading" FontSize="{DynamicResource StudioType13}" LineHeight="16.9" FontWeight="SemiBold"
+                              VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+          <ctl:StudioLineText Name="Summary" Grid.Column="1" FontSize="{DynamicResource StudioType12}" LineHeight="15.6"
+                              FontWeight="Normal" VerticalAlignment="Center" Foreground="{DynamicResource FaintBrush}"/>
+        </Grid>
+        <StackPanel Name="Rows"/>
+        <Border Margin="0,4,0,0" Padding="8,8,8,4" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" MinHeight="24">
+            <ctl:StudioLineText Name="Hint" FontSize="{DynamicResource StudioType12}" LineHeight="15.6" FontWeight="Normal"
+                                Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center"/>
+            <Button Name="StopAll" Grid.Column="1" Classes="agent-stop-all" AutomationProperties.AutomationId="action:agent.stop-all"/>
+          </Grid>
+        </Border>
+      </StackPanel>
+    </ctl:StudioHoverCard.Card>
+  </ctl:StudioHoverCard>
+</UserControl>

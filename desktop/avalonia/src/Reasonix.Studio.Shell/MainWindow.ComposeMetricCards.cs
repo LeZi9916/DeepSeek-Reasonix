@@ -34,6 +34,16 @@ public sealed partial class MainWindow
     private void InitializeComposeMetrics()
     {
         CacheHover.CanHover = () => !ContextHover.IsPinned;
+        BackgroundJobs.CancelRequested = CancelBackgroundJobsAsync;
+        BackgroundJobs.OutputRequested += OpenBackgroundJobOutput;
+        BackgroundJobs.JobsChanged += jobs =>
+        {
+            Conversation.ShowBackgroundJobs(jobs);
+            UpdateProcessChip();
+        };
+        Subagents.StopRequested = StopDelegateCallsAsync;
+        Subagents.TranscriptRequested += async activity => await OpenDelegateRunAsync(activity).ConfigureAwait(true);
+        Conversation.BackgroundJobOutputRequested += OpenBackgroundJobOutput;
         _tariffPulse.Tick += (_, _) => DrawTariff();
         CacheHover.Pinned += () =>
         {
@@ -83,6 +93,11 @@ public sealed partial class MainWindow
         SpeedHover.Close();
         CacheHover.Close();
         ContextHover.Close();
+        BackgroundJobs.Close();
+        Subagents.Close();
+        Processes.Close();
+        _delegateLookup?.Cancel();
+        CloseDelegatePreview();
     }
 
     /// <summary>Projects ledger figures and supported generation timings into native cards.</summary>

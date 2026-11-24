@@ -1,5 +1,5 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:sys="using:System" xmlns:workbench="using:Reasonix.Studio.Shell.Workbench" x:Class="Reasonix.Studio.Shell.Workbench.WorkbenchHeaderTab"
+             xmlns:composer="using:Reasonix.Studio.Shell.Composer" xmlns:sys="using:System" xmlns:workbench="using:Reasonix.Studio.Shell.Workbench" x:Class="Reasonix.Studio.Shell.Workbench.WorkbenchHeaderTab"
              UseLayoutRounding="False" MinWidth="72" MaxWidth="168" VerticalAlignment="Top">
   <UserControl.Resources>
     <StreamGeometry x:Key="BrowserGlyph">M22 12a10 10 0 1 0-20 0 10 10 0 1 0 20 0z M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20 M2 12h20</StreamGeometry>
@@ -26,6 +26,7 @@
           <Path Name="TabGlyph" Data="{StaticResource Glyph.file-text}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
         </Canvas>
       </Viewbox>
+      <composer:SubagentAvatar Name="AgentIcon" Width="16" Height="16" Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" IsVisible="False"/>
       <Button Name="Dismiss" Grid.Column="1" Classes="wb-tab-close" AutomationProperties.AutomationId="action:workbench.close">
         <Grid Width="13" Height="13">
           <Viewbox Name="CloseGlyph" Width="13" Height="13">

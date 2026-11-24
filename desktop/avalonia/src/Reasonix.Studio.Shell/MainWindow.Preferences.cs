@@ -656,7 +656,17 @@ public sealed partial class MainWindow
 
         var api = _engine.Pages;
         var value = await api.FlagAsync(setting, _closing.Token).ConfigureAwait(true);
+        if (setting == StudioSetting.ChangedFiles)
+        {
+            ApplyChangedFilesPreference(api, value);
+        }
+
         var toggle = new ToggleSwitch { IsChecked = value, OnContent = string.Empty, OffContent = string.Empty, MinWidth = 0 };
+        if (setting == StudioSetting.ChangedFiles)
+        {
+            AutomationProperties.SetAutomationId(toggle, "action:chrome.changed-files");
+        }
+
         toggle.Click += async (_, _) =>
         {
             toggle.IsEnabled = false;
@@ -666,6 +676,10 @@ public sealed partial class MainWindow
                 if (setting == StudioSetting.FoldWork)
                 {
                     Conversation.ApplyPreferences(Language, value);
+                }
+                else if (setting == StudioSetting.ChangedFiles)
+                {
+                    ApplyChangedFilesPreference(api, value);
                 }
             }
             catch (Exception error)

@@ -175,6 +175,9 @@ public sealed partial class MainWindow
     private void ShowComposeStatus(SessionStatus status)
     {
         _composerStatus = status;
+        BackgroundJobs.Show(status, Language);
+        UpdateProcessChip();
+        RefreshBackgroundJobOutputs(status);
         UpdateAttachmentWarning();
         PlanModeLabel.Text = status.Plan ? "Plan" : "Agent";
         ApprovalModeLabel.Text = MessageCatalog.Get(ApprovalKey(status.ToolApprovalMode), Language);

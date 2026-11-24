@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="using:Reasonix.Studio.Controls" xmlns:local="using:Reasonix.Studio.Shell.Composer"
+             x:Class="Reasonix.Studio.Shell.Composer.BackgroundJobChip" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerDeck.axaml"/>
+    <Style Selector="Border.job-deck-row:pointerover"><Setter Property="Background" Value="{DynamicResource FloatHiBrush}"/></Style>
+    <Style Selector="Button.job-deck-action">
+      <Setter Property="Height" Value="24"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="Padding" Value="10,0"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="FontFamily" Value="{DynamicResource ConversationUiFamily}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}"
+                  BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}" VerticalContentAlignment="Center"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.job-deck-action:pointerover">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="Button.job-deck-action.job-deck-sure">
+      <Setter Property="Background" Value="{DynamicResource ErrBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource ErrFgBrush}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+  </UserControl.Styles>
+  <ctl:StudioHoverCard Name="Details" AlignRight="True" ScaleFromAnchor="True" CardWidth="360" CardHeightFraction="0.38" Gap="7" PinOnClick="True">
+    <ctl:StudioHoverCard.Anchor>
+      <Button Name="Trigger" Classes="compose-deck-chip" AutomationProperties.AutomationId="action:deck.jobs">
+        <StackPanel Orientation="Horizontal" Spacing="5">
+          <local:JobStatusPulse Name="Pulse" Width="6" Height="6" VerticalAlignment="Center" IsHitTestVisible="False"
+                                Ink="{DynamicResource NetBrush}" Ring="{DynamicResource NetWashBrush}"/>
+          <Viewbox Width="12" Height="12" VerticalAlignment="Center" IsHitTestVisible="False">
+            <Canvas Width="24" Height="24">
+              <Path Data="{StaticResource Glyph.job-play}"
+                    Stroke="{Binding #Trigger.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+            </Canvas>
+          </Viewbox>
+          <ctl:StudioLineText Name="Count" Foreground="{Binding #Trigger.Foreground}" VerticalAlignment="Center" FontWeight="Medium"
+                              FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}"/>
+          <ctl:StudioLineText Name="Caption" Foreground="{Binding #Trigger.Foreground}" VerticalAlignment="Center"
+                              FontWeight="{Binding #Trigger.FontWeight}" FontFamily="{DynamicResource ConversationUiFamily}" FontSize="{DynamicResource StudioType12}"/>
+        </StackPanel>
+      </Button>
+    </ctl:StudioHoverCard.Anchor>
+    <ctl:StudioHoverCard.Card>
+      <StackPanel Name="Rows" Margin="6" Spacing="3"/>
+    </ctl:StudioHoverCard.Card>
+  </ctl:StudioHoverCard>
+</UserControl>

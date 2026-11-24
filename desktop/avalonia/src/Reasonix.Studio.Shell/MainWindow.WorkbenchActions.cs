@@ -36,7 +36,7 @@ public sealed partial class MainWindow
         WorkbenchStart.BrowserRequested += () => OpenManualBrowser(newPage: true);
         WorkbenchStart.TerminalRequested += () => OnTerminals(null, new RoutedEventArgs());
         WorkbenchStart.FileRequested += async path => await OpenEntryAsync(new WorkspaceFileEntry(path, false)).ConfigureAwait(true);
-        foreach (var surface in new Control[] { RenderedFile, ManualBrowserHost, TerminalSurface, FileErrorPanel, ExplorerPane })
+        foreach (var surface in new Control[] { RenderedFile, ManualBrowserHost, BackgroundJobHost, SubagentRunHost, TerminalSurface, FileErrorPanel, ExplorerPane })
         {
             surface.PropertyChanged += (_, e) =>
             {
@@ -116,14 +116,15 @@ public sealed partial class MainWindow
 
     /// <summary>Updates whether the launcher owns the selected tab.</summary>
     /// <param name="selected">Whether the reader deliberately opened the new tab.</param>
-    private void SetWorkbenchLauncher(bool selected)
+    /// <param name="animateSelection">Whether the launcher was selected in the current workbench.</param>
+    private void SetWorkbenchLauncher(bool selected, bool animateSelection = true)
     {
         var changed = _workbenchLauncherSelected != selected;
         _workbenchLauncherSelected = selected;
         RefreshWorkbenchLauncher(refreshContents: selected);
         if (changed)
         {
-            RebuildTabs();
+            RebuildTabs(animateSelection: animateSelection);
         }
     }
 
@@ -131,7 +132,7 @@ public sealed partial class MainWindow
     /// <param name="refreshContents">Whether the workspace listing changed while the launcher was already shown.</param>
     private void RefreshWorkbenchLauncher(bool refreshContents = false)
     {
-        var empty = _openFile is null && !ManualBrowserHost.IsVisible && !RenderedFile.IsVisible
+        var empty = _openFile is null && !ManualBrowserHost.IsVisible && !BackgroundJobHost.IsVisible && !SubagentRunHost.IsVisible && !RenderedFile.IsVisible
             && !TerminalSurface.IsVisible && !FileErrorPanel.IsVisible;
         var visible = _workbenchLauncherSelected || (empty && !ExplorerPane.IsVisible);
         WorkbenchEmpty.IsVisible = empty && ExplorerPane.IsVisible;

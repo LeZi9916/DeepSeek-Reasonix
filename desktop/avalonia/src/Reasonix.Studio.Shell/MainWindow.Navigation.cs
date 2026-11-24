@@ -10,6 +10,7 @@ using Reasonix.Studio.Shell.Session;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
@@ -32,6 +33,16 @@ public sealed partial class MainWindow
     /// <summary>Orders all session navigation through one canonical target.</summary>
     /// <param name="target">Host, workspace and transcript identity.</param><returns>The latest visible navigation.</returns>
     internal Task OpenTargetAsync(SessionOpenTarget target) => NavigateAsync(target, null);
+
+    /// <summary>Recognizes the typed tool result that can add a job to the status endpoint.</summary>
+    /// <param name="frame">The admitted kernel frame.</param>
+    /// <returns>Whether the job list should be read again.</returns>
+    private static bool StartsBackgroundJob(Contracts.Events.WireFrame frame) =>
+        !frame.IsReplay && frame.Kind == "tool_result" && frame.Payload.ValueKind == JsonValueKind.Object
+        && frame.Payload.TryGetProperty("tool", out var tool) && tool.ValueKind == JsonValueKind.Object
+        && tool.TryGetProperty("execution", out var execution) && execution.ValueKind == JsonValueKind.Object
+        && execution.TryGetProperty("state", out var state) && state.ValueKind == JsonValueKind.String
+        && state.GetString() == "background_started";
 
     /// <summary>Orders retained-tab activation through the same navigation ticket as every other entry.</summary>
     /// <param name="pane">The explicitly selected retained pane.</param><returns>The acknowledged navigation.</returns>
@@ -428,7 +439,9 @@ public sealed partial class MainWindow
             _compactOperations.Remove(engine);
         }
 
-        if (frame.Kind is "usage" or "turn_started" or "turn_done" or "approval_request" or "ask_request")
+        if (frame.Kind is "usage" or "turn_started" or "turn_done" or "approval_request" or "ask_request"
+            || (frame.Kind == "inbox_changed" && pane.Status?.Jobs is { Length: > 0 })
+            || StartsBackgroundJob(frame))
         {
             _ = ReadPaneStatusAsync(pane);
         }

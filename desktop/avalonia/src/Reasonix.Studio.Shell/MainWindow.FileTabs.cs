@@ -11,11 +11,13 @@ namespace Reasonix.Studio.Shell;
 public sealed partial class MainWindow
 {
     /// <summary>Builds tabs for files opened in this workspace.</summary>
-    private void RebuildTabs()
+    /// <param name="newSurface">Identity of a surface just opened by the reader.</param>
+    /// <param name="animateSelection">Whether this rebuild is part of the current workbench interaction.</param>
+    private void RebuildTabs(object? newSurface = null, bool animateSelection = true)
     {
         FileTabs.Children.Clear();
         Control? selected = null;
-        var current = WorkbenchStart.IsVisible || (ManualBrowserHost.IsVisible && !BackToEditor.IsVisible)
+        var current = WorkbenchStart.IsVisible || BackgroundJobHost.IsVisible || SubagentRunHost.IsVisible || (ManualBrowserHost.IsVisible && !BackToEditor.IsVisible)
             ? null
             : SelectedWorkbenchDocument;
         foreach (var (key, buffer) in _fileBuffers.Where(pair => pair.Key.Root == WorkspaceBufferScope))
@@ -33,11 +35,16 @@ public sealed partial class MainWindow
             tab.Click += async (_, _) => await OpenEntryAsync(new FileEntry(key.Path, false)).ConfigureAwait(true);
             tab.ContextFlyout = BuildWorkspaceFileMenu(new FileEntry(key.Path, false));
             var close = group.CloseButton;
-            close.Click += (_, _) =>
+            close.Click += async (_, _) =>
             {
                 if (!buffer.Dirty && !buffer.Saving)
                 {
-                    CloseFile(key, buffer);
+                    if (await group.LeaveAsync(_motionLifetime.Token).ConfigureAwait(true)
+                        && !buffer.Dirty && _fileBuffers.TryGetValue(key, out var currentBuffer) && ReferenceEquals(buffer, currentBuffer))
+                    {
+                        CloseFile(key, buffer);
+                    }
+
                     return;
                 }
 
@@ -58,11 +65,15 @@ public sealed partial class MainWindow
                 prompt.ShowAt(close);
             };
             FileTabs.Children.Add(group);
+            if (Equals(newSurface, key.Path) && Classes.Contains("motion"))
+            {
+                group.Enter(_motionLifetime.Token);
+            }
         }
 
         if (_gitSurface is { } git)
         {
-            var isActive = !WorkbenchStart.IsVisible && !ManualBrowserHost.IsVisible && RenderedFile.IsVisible
+            var isActive = !WorkbenchStart.IsVisible && !ManualBrowserHost.IsVisible && !BackgroundJobHost.IsVisible && !SubagentRunHost.IsVisible && RenderedFile.IsVisible
                 && ReferenceEquals(git.View, RenderedFile.Content);
             var group = new WorkbenchHeaderTab(git.Title, "Changes", isActive, Language) { Tag = git };
             if (git.View is GitChangesView changes)
@@ -75,6 +86,11 @@ public sealed partial class MainWindow
             Avalonia.Automation.AutomationProperties.SetAutomationId(close, "action:workbench.close-git");
             close.Click += async (_, _) =>
             {
+                if (!await group.LeaveAsync(_motionLifetime.Token).ConfigureAwait(true) || _gitSurface != git)
+                {
+                    return;
+                }
+
                 var visible = ReferenceEquals(git.View, RenderedFile.Content);
                 _gitSurface = null;
                 if (visible)
@@ -100,18 +116,35 @@ public sealed partial class MainWindow
                 RebuildTabs();
             };
             FileTabs.Children.Insert(0, group);
+            if (ReferenceEquals(newSurface, git.View) && Classes.Contains("motion"))
+            {
+                group.Enter(_motionLifetime.Token);
+            }
+
             if (isActive)
             {
                 selected = group;
             }
         }
 
-        selected = AppendSurfaceTabs() ?? selected;
+        selected = AppendSurfaceTabs(newSurface) ?? selected;
+        selected = AppendJobOutputTabs(newSurface) ?? selected;
+        selected = AppendSubagentRunTabs(newSurface) ?? selected;
         if (_workbenchLauncherSelected)
         {
             selected = new WorkbenchHeaderTab(MessageCatalog.Get("workbench.new_tab_label", Language), "New", true, Language) { Classes = { "launcher" } };
             FileTabs.Children.Add(selected);
         }
+
+        object? canvasKey = selected switch
+        {
+            { Tag: WorkbenchSurfaceTarget target } => target.Canvas,
+            { Tag: ValueTuple<string, Control> } => "changes:",
+            { Tag: string path } => "file:" + path,
+            not null when _workbenchLauncherSelected => "launcher:",
+            _ => null,
+        };
+        UpdateWorkbenchCanvas(canvasKey, animateSelection);
 
         Avalonia.Threading.Dispatcher.UIThread.Post(
             () =>
@@ -201,6 +234,7 @@ public sealed partial class MainWindow
             WorkspaceFiles.SelectedItem = null;
         }
 
+        RefreshWorkbenchLauncher();
         RebuildTabs();
     }
 }

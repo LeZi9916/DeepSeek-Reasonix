@@ -15,18 +15,22 @@ public sealed partial class MainWindow
     private readonly List<ManualWebPreview> _browserPages = [];
 
     /// <summary>Appends retained browser tabs and their explicit close commands.</summary>
+    /// <param name="newSurface">Identity of a browser just opened by the reader.</param>
     /// <returns>The selected browser tab, when the browser owns the workbench.</returns>
-    private WorkbenchHeaderTab? AppendSurfaceTabs()
+    private WorkbenchHeaderTab? AppendSurfaceTabs(object? newSurface)
     {
         WorkbenchHeaderTab? active = null;
         foreach (var page in _browserPages.ToArray())
         {
             var title = MessageCatalog.Get("workbench.browser", Language);
-            var target = new WorkbenchSurfaceTarget(title, () =>
-            {
-                ManualBrowserHost.Content = page;
-                OpenManualBrowser();
-            });
+            var target = new WorkbenchSurfaceTarget(
+                title,
+                () =>
+                {
+                    ManualBrowserHost.Content = page;
+                    OpenManualBrowser();
+                },
+                page);
             var selected = !WorkbenchStart.IsVisible && ManualBrowserHost.IsVisible && ReferenceEquals(page, ManualBrowserHost.Content);
             var group = new WorkbenchHeaderTab(title, "Browser", selected, Language) { Tag = target };
             if (selected)
@@ -50,8 +54,18 @@ public sealed partial class MainWindow
             tab.ContextFlyout = menu;
             var close = group.CloseButton;
             AutomationProperties.SetAutomationId(close, "action:workbench.close-browser");
-            close.Click += (_, _) => CloseBrowsers([page]);
+            close.Click += async (_, _) =>
+            {
+                if (await group.LeaveAsync(_motionLifetime.Token).ConfigureAwait(true) && _browserPages.Contains(page))
+                {
+                    CloseBrowsers([page]);
+                }
+            };
             FileTabs.Children.Add(group);
+            if (ReferenceEquals(newSurface, page) && Classes.Contains("motion"))
+            {
+                group.Enter(_motionLifetime.Token);
+            }
 
             void Add(string key, string action, Action run)
             {
@@ -94,5 +108,6 @@ public sealed partial class MainWindow
 
     /// <summary>A retained surface selected from a tab or its overflow entry.</summary>
     /// <param name="Title">Displayed tab title.</param><param name="Open">The tab's activation.</param>
-    private sealed record WorkbenchSurfaceTarget(string Title, Action Open);
+    /// <param name="Canvas">The retained content for this tab.</param>
+    private sealed record WorkbenchSurfaceTarget(string Title, Action Open, Control Canvas);
 }

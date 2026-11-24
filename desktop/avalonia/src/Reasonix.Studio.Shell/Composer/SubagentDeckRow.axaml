@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="using:Reasonix.Studio.Controls" xmlns:local="using:Reasonix.Studio.Shell.Composer"
+             x:Class="Reasonix.Studio.Shell.Composer.SubagentDeckRow" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="Button.agent-deck-row">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Padding" Value="8,7"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="CornerRadius" Value="7"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="{TemplateBinding CornerRadius}">
+            <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Stretch"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.agent-deck-row:pointerover"><Setter Property="Background" Value="{DynamicResource FloatHiBrush}"/></Style>
+  </UserControl.Styles>
+  <Button Name="Open" Classes="agent-deck-row" AutomationProperties.AutomationId="action:agent.open" HorizontalAlignment="Stretch">
+    <Grid ColumnDefinitions="Auto,*,Auto,14" ColumnSpacing="9">
+      <local:SubagentAvatar Name="Avatar" Height="18" Width="18" VerticalAlignment="Center"/>
+      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+        <ctl:StudioLineText Name="AgentName" FontFamily="{DynamicResource StudioMonoFamily}" FontWeight="Medium"
+                            FontSize="{DynamicResource StudioType12}" LineHeight="16.8" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextBrush}"/>
+        <ctl:StudioLineText Name="AgentLabel" FontWeight="Normal" FontSize="{DynamicResource StudioType12}" LineHeight="16.8"
+                            TextTrimming="CharacterEllipsis" Foreground="{DynamicResource FaintBrush}" IsVisible="False"/>
+      </StackPanel>
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+        <local:PlanRunMark Name="StepMark" Classes="deck-progress" VerticalAlignment="Center"/>
+        <ctl:StudioLineText Name="Reading" FontWeight="Normal" FontSize="{DynamicResource StudioType12}" LineHeight="12" VerticalAlignment="Center"/>
+      </StackPanel>
+      <Viewbox Grid.Column="3" Width="14" Height="14" VerticalAlignment="Center">
+        <Canvas Width="24" Height="24">
+          <Path Data="m9 6 6 6-6 6" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeJoin="Round" StrokeLineCap="Round"/>
+        </Canvas>
+      </Viewbox>
+    </Grid>
+  </Button>
+</UserControl>

@@ -155,6 +155,8 @@ public sealed partial class MainWindow
     {
         ShowSidebarState(state);
         ShowPlanStrip(state);
+        Subagents.Show(state, Language);
+        UpdateProcessChip();
         var running = state.Running;
         ComposeSurface.Classes.Set("running", running);
         ComposeBranch.IsEnabled = !running;
