@@ -66,7 +66,7 @@ public sealed partial class StudioHoverCard : UserControl
         UpdateShadow();
         Frame.PropertyChanged += (_, args) =>
         {
-            if (ScaleFromAnchor && args.Property == OpacityProperty)
+            if (args.Property == OpacityProperty && (ScaleFromAnchor || HiddenTransform is not null))
             {
                 UpdateAnchorTransform();
             }
@@ -185,6 +185,18 @@ public sealed partial class StudioHoverCard : UserControl
         get; set;
     }
 
+    /// <summary>Gets or sets the card transform at zero opacity, relative to its anchor edge.</summary>
+    public ITransform? HiddenTransform
+    {
+        get; set;
+    }
+
+    /// <summary>Gets or sets the easing shared by the opacity and transform.</summary>
+    public Easing? RevealEasing
+    {
+        get; set;
+    }
+
     /// <summary>Gets or sets the fraction of the viewport available to the card.</summary>
     public double CardHeightFraction
     {
@@ -212,7 +224,9 @@ public sealed partial class StudioHoverCard : UserControl
             return;
         }
 
-        var from = ScaleFromAnchor && Surface.IsOpen ? Frame.Opacity : 0;
+        var animate = _owner?.Classes.Contains("motion") == true;
+        var from = Surface.IsOpen ? Frame.Opacity : 0;
+        Frame.Opacity = animate ? from : 1;
         _reveal?.Cancel();
         _hiding = false;
         Frame.IsHitTestVisible = true;
@@ -222,9 +236,7 @@ public sealed partial class StudioHoverCard : UserControl
         Frame.Width = Math.Min(CardWidth, Math.Max(120, size.Width - 32));
         CardScroll.MaxHeight = Math.Max(80, Math.Min(size.Height - 32, (size.Height * CardHeightFraction) - 2));
         CardScroll.Classes.Set("anchor-card", ScaleFromAnchor);
-        var animate = _owner?.Classes.Contains("motion") == true;
-        Frame.Opacity = animate ? from : 1;
-        if (ScaleFromAnchor)
+        if (ScaleFromAnchor || HiddenTransform is not null)
         {
             Frame.RenderTransformOrigin = new RelativePoint(AlignRight ? 1 : 0, 1, RelativeUnit.Relative);
             Frame.RenderTransform = _anchorTransform;
@@ -249,19 +261,19 @@ public sealed partial class StudioHoverCard : UserControl
             return;
         }
 
-        var from = ScaleFromAnchor ? Frame.Opacity : 1;
-        _reveal?.Cancel();
-        if (!immediately && Surface.IsOpen && _owner is { IsVisible: true } && _owner.Classes.Contains("motion"))
+        if (immediately || !Surface.IsOpen || _owner is not { IsVisible: true } || !_owner.Classes.Contains("motion"))
         {
-            _hiding = true;
-            Frame.IsHitTestVisible = false;
-            Frame.Opacity = from;
-            _ = FadeAsync(true, from);
-        }
-        else
-        {
+            _reveal?.Cancel();
             Settle(true);
+            return;
         }
+
+        var from = Frame.Opacity;
+        Frame.Opacity = from;
+        _reveal?.Cancel();
+        _hiding = true;
+        Frame.IsHitTestVisible = false;
+        _ = FadeAsync(true, from);
     }
 
     /// <summary>Keeps the opacity and the anchor-relative transform on the same clock.</summary>
@@ -282,8 +294,8 @@ public sealed partial class StudioHoverCard : UserControl
         var duration = this.TryFindResource("TLine", out var value) && value is TimeSpan time ? time : TimeSpan.FromMilliseconds(120);
         var animation = new Animation
         {
-            Duration = ScaleFromAnchor ? duration * Math.Abs(to - from) : duration,
-            Easing = ScaleFromAnchor ? new SplineEasing(0.16, 1, 0.3, 1) : new CubicEaseOut(),
+            Duration = duration * Math.Abs(to - from),
+            Easing = RevealEasing ?? (ScaleFromAnchor ? new SplineEasing(0.16, 1, 0.3, 1) : new CubicEaseOut()),
             Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, from) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, to) } } },
         };
         try
@@ -310,8 +322,14 @@ public sealed partial class StudioHoverCard : UserControl
     private void UpdateAnchorTransform()
     {
         var hidden = 1 - Frame.Opacity;
-        var scale = 1 - (0.015 * hidden);
-        _anchorTransform.Matrix = new Matrix(scale, 0, 0, scale, 0, 4 * hidden);
+        var pose = HiddenTransform?.Value ?? new Matrix(0.985, 0, 0, 0.985, 0, 4);
+        _anchorTransform.Matrix = new Matrix(
+            double.Lerp(1, pose.M11, hidden),
+            pose.M12 * hidden,
+            pose.M21 * hidden,
+            double.Lerp(1, pose.M22, hidden),
+            pose.M31 * hidden,
+            pose.M32 * hidden);
     }
 
     /// <summary>Publishes the requested state after animation or reduced motion.</summary>

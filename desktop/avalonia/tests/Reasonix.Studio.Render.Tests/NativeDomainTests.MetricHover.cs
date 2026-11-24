@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -18,6 +19,78 @@ namespace Reasonix.Studio.Render.Tests;
 
 public sealed partial class NativeDomainTests
 {
+    /// <summary>Samples both directions of the real composer metric hover transition.</summary>
+    /// <param name="name">The metric card and trigger prefix.</param>
+    /// <param name="hiddenScale">The collapsed scale at zero opacity.</param>
+    /// <returns>The mounted hover motion check.</returns>
+    [Theory]
+    [InlineData("Speed", 1.0)]
+    [InlineData("Cache", 0.985)]
+    [InlineData("Context", 0.985)]
+    public Task ComposerMetricHoverFadesWithoutJumpingOnReentry(string name, double hiddenScale) => WithSettingsAsync(
+        "conversation",
+        async (w, reads) =>
+        {
+            await WaitForMotionFrame(() => w.Classes.Contains("motion")).ConfigureAwait(true);
+            w.AdoptComposer(reads.Read<SessionStatus>("/status"));
+            w.UpdateLayout();
+            var hover = w.FindControl<StudioHoverCard>(name + "Hover")!;
+            hover.Resources["TLine"] = TimeSpan.FromMilliseconds(360);
+            var trigger = w.FindControl<Button>(name + "Toggle")!;
+            var frame = hover.FindControl<Border>("Frame")!;
+            var popup = hover.FindControl<Popup>("Surface")!;
+            var inside = trigger.TranslatePoint(new Point(10, 10), w)!.Value;
+            var outside = new Point(600, 100);
+            var stem = "metric-hover-" + name.ToLowerInvariant();
+
+            w.MouseMove(outside);
+            w.MouseMove(inside);
+            Assert.True(hover.IsOpen);
+            await WaitForMotionFrame(() => frame.Opacity is > 0.37 and < 0.92).ConfigureAwait(true);
+            AssertPose();
+            Capture("enter");
+            await WaitForMotionFrame(() => frame.Opacity == 1 && !frame.IsAnimating(Visual.OpacityProperty)).ConfigureAwait(true);
+            Capture("open");
+
+            w.MouseMove(outside);
+            await WaitForMotionFrame(() => !hover.IsOpen && InFlight()).ConfigureAwait(true);
+            Assert.True(popup.IsOpen);
+            Assert.False(frame.IsHitTestVisible);
+            AssertPose();
+            Capture("exit");
+            var held = frame.Opacity;
+            hover.Open();
+            Assert.True(hover.IsOpen);
+            Assert.True(frame.IsHitTestVisible);
+            Assert.Equal(held, frame.Opacity, 5);
+            AssertPose();
+
+            w.Classes.Remove("motion");
+            Assert.Equal(1, frame.Opacity);
+            AssertPose();
+            w.Classes.Add("motion");
+            w.MouseMove(inside);
+            w.MouseMove(outside);
+            await WaitForMotionFrame(() => !popup.IsOpen).ConfigureAwait(true);
+            Capture("closed");
+
+            bool InFlight() => frame.Opacity is > 0.12 and < 0.67;
+
+            void AssertPose()
+            {
+                var transform = frame.RenderTransform!.Value;
+                Assert.Equal(4 * (1 - frame.Opacity), transform.M32, 5);
+                Assert.Equal(double.Lerp(hiddenScale, 1, frame.Opacity), transform.M11, 5);
+            }
+
+            void Capture(string phase)
+            {
+                var top = (int)Math.Ceiling(frame.Bounds.Height + hover.Gap + 8);
+                CaptureMotionRegion(w, trigger, -8, top, (int)Math.Ceiling(frame.Bounds.Width) + 16, top + 29, $"{stem}-{phase}");
+            }
+        },
+        allowMotion: true);
+
     /// <summary>A session with no billed requests does not acquire an empty cost chip.</summary>
     /// <returns>The initial ledger reading.</returns>
     [Fact]
