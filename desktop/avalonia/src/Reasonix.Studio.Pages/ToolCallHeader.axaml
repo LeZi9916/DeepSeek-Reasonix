@@ -1,19 +1,79 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Reasonix.Studio.Pages" xmlns:ctl="using:Reasonix.Studio.Controls"
              x:Class="Reasonix.Studio.Pages.ToolCallHeader" UseLayoutRounding="False">
-  <UserControl.Styles><StyleInclude Source="avares://Reasonix.Studio.Pages/ConversationStyles.axaml"/></UserControl.Styles>
+  <UserControl.RenderTransform><TranslateTransform/></UserControl.RenderTransform>
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Reasonix.Studio.Pages/ConversationStyles.axaml"/>
+    <Style Selector="Border#Chevron"><Setter Property="RenderTransform" Value="rotate(45deg) translate(-1px,1px)"/></Style>
+    <Style Selector="Border#Chevron.open"><Setter Property="RenderTransform" Value="rotate(225deg) translate(-1px,1px)"/></Style>
+    <Style Selector="Window.motion Border#Chevron">
+      <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></Setter>
+    </Style>
+    <Style Selector="TextBlock#JobReading"><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
+    <Style Selector="TextBlock#JobReading.live"><Setter Property="Foreground" Value="{DynamicResource NetInkBrush}"/></Style>
+    <Style Selector="TextBlock#JobReading.failed"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
+    <Style Selector="Button.background-output-link">
+      <Setter Property="Height" Value="16.5"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" FontWeight="{TemplateBinding FontWeight}"
+                     FontSize="{TemplateBinding FontSize}" VerticalAlignment="Center"/>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.background-output-link:pointerover /template/ TextBlock">
+      <Setter Property="TextDecorations" Value="Underline"/>
+    </Style>
+    <Style Selector="Window.motion Canvas#RunningStatus">
+      <Style.Animations>
+        <Animation Duration="0:0:0.6" IterationCount="Infinite">
+          <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0"/></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+  </UserControl.Styles>
   <StackPanel>
     <Button Name="Toggle" Classes="conversation-disclosure" Height="28" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-      <Grid ColumnDefinitions="14,Auto,*,14,10" ColumnSpacing="9" Margin="10,0" VerticalAlignment="Center">
-        <Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.edit}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+      <Grid Name="HeaderGrid" ColumnDefinitions="14,Auto,*,14,10" ColumnSpacing="9" Margin="10,0" VerticalAlignment="Center">
+        <Viewbox Name="ToolKind" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Name="ToolGlyph" Data="{StaticResource Glyph.edit}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
         <TextBlock Name="ToolName" Grid.Column="1" FontSize="{DynamicResource StudioType12}" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}"/>
-        <TextBlock Name="Argument" Grid.Column="2" FontSize="{DynamicResource StudioType11}" FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-        <Viewbox Grid.Column="3" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Name="Status" Data="{StaticResource Glyph.check}" Stroke="{DynamicResource OkBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
-        <Viewbox Grid.Column="4" Width="10" Height="10"><Canvas Width="24" Height="24"><Path Name="Chevron" Data="M9 6 15 12 9 18" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        <Grid Grid.Column="2" ColumnDefinitions="*,Auto" ColumnSpacing="9" HorizontalAlignment="Left">
+          <TextBlock Name="Argument" FontSize="{DynamicResource StudioType11}" FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+          <Border Name="DelegateLabel" Grid.Column="1" IsVisible="False" VerticalAlignment="Center" CornerRadius="5"
+                  Padding="6,1.5" Background="{DynamicResource LabelAgentWashBrush}">
+            <ctl:StudioLineText Name="DelegateName" FontSize="{DynamicResource StudioType11}" LineHeight="11" FontWeight="Medium"
+                                FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource LabelAgentBrush}"
+                                MaxWidth="132" TextTrimming="CharacterEllipsis"/>
+          </Border>
+        </Grid>
+        <TextBlock Name="JobReading" Grid.Column="3" IsVisible="False" VerticalAlignment="Center" FontWeight="Normal"
+                   FontSize="{DynamicResource StudioType11}" TextTrimming="CharacterEllipsis"/>
+        <Grid Name="StatusSlot" Grid.Column="3">
+          <Viewbox Name="StaticStatus" Width="12" Height="12"><Viewbox.RenderTransform><ScaleTransform/></Viewbox.RenderTransform><Canvas Width="24" Height="24"><Path Name="Status" Data="{StaticResource Glyph.check}" Stroke="{DynamicResource OkBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+          <Canvas Name="RunningStatus" Width="11" Height="11" IsVisible="False" RenderTransformOrigin="50%,50%">
+            <Canvas.RenderTransform><RotateTransform Angle="0"/></Canvas.RenderTransform>
+            <Path Data="M 9.036,1.964 A 5,5 0 1 1 1.964,1.964" Stroke="{DynamicResource NetInkBrush}" StrokeThickness="1"/>
+          </Canvas>
+        </Grid>
+        <Border Name="Chevron" Grid.Column="4" Width="5" Height="5" BorderThickness="0,0,1,1" BorderBrush="#747871" HorizontalAlignment="Center" VerticalAlignment="Center"/>
       </Grid>
     </Button>
-    <ScrollViewer Name="Output" IsVisible="False" MaxHeight="180" Margin="10,5,0,5" HorizontalScrollBarVisibility="Disabled">
-      <SelectableTextBlock Name="Result" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
-    </ScrollViewer>
+    <local:DisclosureMotion Name="Detail" FadeContent="True" DurationMs="120">
+      <ScrollViewer Name="Output" MaxHeight="180" Margin="10,5,0,5" HorizontalScrollBarVisibility="Disabled">
+        <SelectableTextBlock Name="Result" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+      </ScrollViewer>
+    </local:DisclosureMotion>
     <Button Name="ExpandOutput" Classes="conversation-disclosure" HorizontalAlignment="Left" Margin="10,0,0,2" IsVisible="False"/>
+    <ctl:StudioLineText Name="JobNote" IsVisible="False" Margin="33,0,10,0" TextWrapping="Wrap" FontWeight="Normal"
+               Foreground="{DynamicResource FaintBrush}" FontSize="{DynamicResource StudioType11}" LineHeight="16.5"/>
   </StackPanel>
 </UserControl>

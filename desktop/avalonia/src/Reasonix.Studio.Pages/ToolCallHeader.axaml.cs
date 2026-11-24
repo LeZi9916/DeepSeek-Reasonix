@@ -24,9 +24,10 @@ internal sealed partial class ToolCallHeader : UserControl
     /// <summary>Initializes a new instance of the <see cref="ToolCallHeader"/> class.</summary>
     /// <param name="tool">Canonical tool row.</param>
     /// <param name="language">Interface language.</param>
+    /// <param name="inActivity">Whether the call is shown in the grouped step list.</param>
     /// <param name="openStep">Whether the step begins expanded.</param><param name="openOutput">Whether the output begins unclipped.</param>
     /// <param name="rememberStep">Records an explicit step choice.</param><param name="rememberOutput">Records an explicit clip choice.</param>
-    internal ToolCallHeader(ToolItem tool, InterfaceLanguage language, bool openStep, bool openOutput, Action<bool> rememberStep, Action<bool> rememberOutput)
+    internal ToolCallHeader(ToolItem tool, InterfaceLanguage language, bool inActivity, bool openStep, bool openOutput, Action<bool> rememberStep, Action<bool> rememberOutput)
     {
         AvaloniaXamlLoader.Load(this);
         _output = this.FindControl<ScrollViewer>("Output")!;
@@ -46,6 +47,65 @@ internal sealed partial class ToolCallHeader : UserControl
         }
 
         ToolTip.SetTip(argument, tool.Call.Args);
+        if (inActivity)
+        {
+            var glyph = this.FindControl<Path>("ToolGlyph")!;
+            var kind = this.FindControl<Viewbox>("ToolKind")!;
+            kind.Width = kind.Height = 14;
+            glyph.StrokeThickness = 1.45;
+            var icon = tool.Call.Name switch
+            {
+                "bash" or "bash_output" => "Glyph.terminal",
+                "read_file" => "Glyph.file-text",
+                "grep" => "Glyph.search",
+                "ls" => "Glyph.folder",
+                "web_fetch" => "Glyph.network",
+                _ => "Glyph.edit",
+            };
+            glyph.Bind(Path.DataProperty, StudioTypography.Resource(tool.Call.Profile is null ? icon : "Glyph.git-fork"));
+            var caption = tool.Call.Name switch
+            {
+                "bash" => "chat.run_command",
+                "bash_output" => "chat.command_output",
+                "read_file" => "chat.read_file",
+                "write_file" => "chat.write_file",
+                "edit_file" => "chat.edit_file",
+                "grep" => "chat.search_code",
+                "glob" => "safety.finding_files",
+                "ls" => "chat.list_directory",
+                _ => null,
+            };
+            if (caption is not null)
+            {
+                name.Text = MessageCatalog.Get(caption, language);
+            }
+
+            name.FontWeight = FontWeight.Normal;
+            name.Bind(TextBlock.FontSizeProperty, StudioTypography.Size(13));
+            argument.Text = ActivityDisclosure.ShortArgument(tool.Call.Args);
+            argument.Bind(TextBlock.FontSizeProperty, StudioTypography.Size(12));
+            argument.Bind(TextBlock.ForegroundProperty, StudioTypography.Resource("TextBrush"));
+            this.FindControl<Grid>("HeaderGrid")!.ColumnDefinitions = new ColumnDefinitions("14,Auto,*,14");
+            this.FindControl<Border>("Chevron")!.IsVisible = false;
+        }
+
+        if (tool.Call.Profile is { } profile)
+        {
+            if (inActivity)
+            {
+                name.Text = MessageCatalog.Get("chat.subtask", language);
+            }
+
+            var delegateName = profile.Name?.Trim();
+            this.FindControl<TextBlock>("DelegateName")!.Text = delegateName;
+            this.FindControl<Border>("DelegateLabel")!.IsVisible = !string.IsNullOrEmpty(delegateName);
+        }
+
+        InitializeBackgroundJob(tool, language, inActivity);
+
+        var spins = inActivity && tool.Running;
+        this.FindControl<Canvas>("RunningStatus")!.IsVisible = spins;
+        this.FindControl<Viewbox>("StaticStatus")!.IsVisible = !spins;
         var status = this.FindControl<Path>("Status")!;
         status.Bind(Avalonia.Controls.Shapes.Shape.StrokeProperty, StudioTypography.Resource(tool.Running ? "NetBrush" : string.IsNullOrEmpty(tool.Call.Err) ? "OkBrush" : "ErrInkBrush"));
         if (tool.Running || !string.IsNullOrEmpty(tool.Call.Err))
@@ -53,21 +113,29 @@ internal sealed partial class ToolCallHeader : UserControl
             status.Data = Geometry.Parse(tool.Running ? "M12 3 A9 9 0 1 0 21 12" : "M6 6 18 18 M18 6 6 18");
         }
 
+        var detail = this.FindControl<DisclosureMotion>("Detail")!;
         var toggle = this.FindControl<Button>("Toggle")!;
         var all = this.FindControl<Button>("ExpandOutput")!;
         var cap = tool.Running || !string.IsNullOrEmpty(tool.Call.Err) ? 256d : 88d;
-        AutomationProperties.SetName(toggle, tool.Call.Name);
+        AutomationProperties.SetName(toggle, BackgroundJobId is null ? tool.Call.Name : name.Text);
         _output.PropertyChanged += (_, change) =>
         {
-            if (change.Property == ScrollViewer.ExtentProperty || change.Property == IsVisibleProperty)
+            if (change.Property == ScrollViewer.ExtentProperty)
+            {
+                ShowMore();
+            }
+        };
+        detail.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == IsVisibleProperty)
             {
                 ShowMore();
             }
         };
         toggle.Click += (_, _) =>
         {
-            SetOpen(!_output.IsVisible);
-            _rememberStep(_output.IsVisible);
+            SetOpen(!detail.Expanded, animate: true);
+            _rememberStep(detail.Expanded);
             ShowMore();
         };
         all.Click += (_, _) =>
@@ -86,7 +154,7 @@ internal sealed partial class ToolCallHeader : UserControl
             ShowMore();
         }
 
-        void ShowMore() => all.IsVisible = _output.IsVisible && _output.Extent.Height > cap;
+        void ShowMore() => all.IsVisible = detail.Expanded && _output.Extent.Height > cap;
     }
 
     /// <summary>Shows the detail when find matches the tool output.</summary>
@@ -98,9 +166,10 @@ internal sealed partial class ToolCallHeader : UserControl
 
     /// <summary>Updates the mounted detail and its disclosure mark.</summary>
     /// <param name="open">Whether the step is expanded.</param>
-    private void SetOpen(bool open)
+    /// <param name="animate">Whether the reader toggled the row.</param>
+    private void SetOpen(bool open, bool animate = false)
     {
-        _output.IsVisible = open;
-        this.FindControl<Path>("Chevron")!.Data = Geometry.Parse(open ? "M6 9 12 15 18 9" : "M9 6 15 12 9 18");
+        this.FindControl<DisclosureMotion>("Detail")!.SetExpanded(open, animate);
+        this.FindControl<Border>("Chevron")!.Classes.Set("open", open);
     }
 }

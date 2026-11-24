@@ -127,6 +127,33 @@ public static class Format
         return Decimals(value / 1_000_000d, 1, language) + "M";
     }
 
+    /// <summary>Formats elapsed whole seconds with the job card's unit labels.</summary>
+    /// <param name="milliseconds">The job duration.</param>
+    /// <param name="language">The reader's language.</param>
+    /// <returns>The localized elapsed time.</returns>
+    public static string JobElapsed(long milliseconds, InterfaceLanguage language)
+    {
+        var seconds = milliseconds / 1000;
+        var minutes = seconds / 60;
+        if (minutes == 0)
+        {
+            return MessageCatalog.Get("common.n_s", language, ("n", Format.Count(seconds, language)));
+        }
+
+        if (minutes < 60)
+        {
+            var remainder = seconds % 60;
+            return remainder == 0
+                ? MessageCatalog.Get("panels.m_min", language, ("m", Format.Count(minutes, language)))
+                : MessageCatalog.Get("common.m_m_s_s", language, ("m", Format.Count(minutes, language)), ("s", remainder.ToString("00", CultureInfo.InvariantCulture)));
+        }
+
+        var hours = Format.Count(minutes / 60, language);
+        return minutes % 60 == 0
+            ? MessageCatalog.Get("panels.h_h", language, ("h", hours))
+            : MessageCatalog.Get("common.h_h_m_m", language, ("h", hours), ("m", Format.Count(minutes % 60, language)));
+    }
+
     /// <summary>
     /// Spells a run time compactly: seconds under a minute, then hours, minutes
     /// and seconds with any zero unit left out.

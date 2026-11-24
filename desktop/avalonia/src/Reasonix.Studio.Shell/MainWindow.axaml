@@ -4,6 +4,7 @@
         xmlns:ctl="using:Reasonix.Studio.Controls"
         xmlns:pages="using:Reasonix.Studio.Pages"
         xmlns:appearance="using:Reasonix.Studio.Shell.Appearance"
+        xmlns:notices="using:Reasonix.Studio.Shell.Notices"
         xmlns:settings="using:Reasonix.Studio.Shell.Settings"
         xmlns:rail="using:Reasonix.Studio.Pages.Rail"
         xmlns:workbench="using:Reasonix.Studio.Shell.Workbench"
@@ -24,6 +25,12 @@
     </ResourceDictionary>
   </Window.Resources>
   <Window.Styles>
+    <Style Selector="Window.motion notices|CopyNotice.arriving">
+      <Style.Animations><Animation Duration="0:0:0.18" Easing="0.16,1,0.3,1">
+        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/><Setter Property="TranslateTransform.Y" Value="6"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+      </Animation></Style.Animations>
+    </Style>
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Settings.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Workbench.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Conversation.axaml" />
@@ -83,6 +90,7 @@
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     </Style>
   </Window.Styles>
+  <Panel>
   <LayoutTransformControl Name="ScaledWindow">
   <Grid>
   <Grid Name="LayoutRoot" ColumnDefinitions="264,*" Background="{DynamicResource PageBrush}">
@@ -764,9 +772,14 @@
     <Button Name="Maximise" Content="□" Classes="caption" />
     <Button Name="CloseCaption" Content="×" Classes="caption" />
   </StackPanel>
+  <Canvas Name="CopyNoticeLayer">
+    <StackPanel Name="CopyNotices" Width="380" Spacing="8" Canvas.Right="16" Canvas.Bottom="16"
+                AutomationProperties.AutomationId="class:toasts"/>
+  </Canvas>
   <Border Name="GlobalError" IsVisible="False" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="16" MaxWidth="480" Padding="12" CornerRadius="8" Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource ErrInkBrush}" BorderThickness="1" AutomationProperties.LiveSetting="Assertive">
     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12"><SelectableTextBlock Name="GlobalErrorText" TextWrapping="Wrap" Foreground="{DynamicResource ErrInkBrush}"/><Button Grid.Column="1" Classes="icon" Content="×" Click="OnDismissGlobalError"/></Grid>
   </Border>
   </Grid>
   </LayoutTransformControl>
+  </Panel>
 </Window>

@@ -17,7 +17,7 @@ namespace Reasonix.Studio.State;
 /// window and a live one agree, and it is why nothing here reads the clock except
 /// through a value the caller supplies.
 /// </remarks>
-public sealed class SessionReducer
+public sealed partial class SessionReducer
 {
     /// <summary>
     /// The message key the chip shows while waiting for the workspace.
@@ -101,6 +101,16 @@ public sealed class SessionReducer
         if (payload is null)
         {
             return state;
+        }
+
+        if (state.ResponseWait is not null && payload.Kind is not (
+            "turn_started" or "retrying" or "stream_attempt" or "notice" or "phase" or "turn_phase" or "mcp_surface_ready" or
+            "workspace_changed" or "inbox_changed" or "browser_tabs_changed" or "context_maintenance" or "extension_surface" or "extension_status"))
+        {
+            state = state with
+            {
+                ResponseWait = null,
+            };
         }
 
         var sealedState = payload.DecisionReceipt is { } receipt ? PromptDecisions.Receipt(state, receipt) : state;
@@ -585,6 +595,21 @@ public sealed class SessionReducer
             case "turn_started":
                 return BeginTurn(state, payload);
 
+            case "retrying":
+                return state with
+                {
+                    ResponseWait = new ModelResponseWait(
+                        _clock(),
+                        true,
+                        payload.RetryAttempt,
+                        payload.RetryMax,
+                        payload.RetryScope,
+                        payload.RetryCause,
+                        payload.RetryStatus,
+                        payload.RetryDelayMs,
+                        payload.RetryTimeoutSecs),
+                };
+
             case "reasoning":
                 return state with
                 {
@@ -603,12 +628,15 @@ public sealed class SessionReducer
                 return DispatchTool(state, payload);
 
             case "tool_progress":
-                return payload.Tool is null
-                    ? state
-                    : state with
+                return payload.Tool switch
+                {
+                    null => state,
+                    { Name: { } name } tool when name.StartsWith("reasonix.subagent.", StringComparison.Ordinal) => NoteSubagentProgress(state, tool),
+                    { } tool => state with
                     {
-                        Items = FoldProgress(state.Items, payload.Tool),
-                    };
+                        Items = FoldProgress(state.Items, tool),
+                    },
+                };
 
             case "tool_result":
                 return SettleTool(state, payload);
@@ -774,6 +802,7 @@ public sealed class SessionReducer
         return state with
         {
             Doing = handedBack ? WaitingModel : state.Doing,
+            ResponseWait = handedBack ? new ModelResponseWait(_clock()) : state.ResponseWait,
             Items = items,
         };
     }
@@ -848,10 +877,12 @@ public sealed class SessionReducer
             };
         }
 
+        var now = _clock();
         return state with
         {
             Running = true,
-            RunSince = _clock(),
+            RunSince = now,
+            ResponseWait = new ModelResponseWait(now),
             Doing = "common.running",
             Terminal = null,
             OutLive = 0,

@@ -106,6 +106,7 @@ public sealed partial class SessionEngine
             next = _state with
             {
                 Running = running,
+                ResponseWait = running ? _state.ResponseWait : null,
                 Items = running ? _state.Items : _state.Items.Select(item => item is SayItem { Done: false } say ? say with { Done = true } : item).ToArray(),
                 Revision = _state.Revision + 1,
             };

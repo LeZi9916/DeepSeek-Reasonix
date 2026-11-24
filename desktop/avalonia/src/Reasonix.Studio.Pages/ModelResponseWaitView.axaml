@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Reasonix.Studio.Pages" xmlns:ctl="using:Reasonix.Studio.Controls"
+             x:Class="Reasonix.Studio.Pages.ModelResponseWaitView"
+             UseLayoutRounding="False" IsVisible="False">
+  <UserControl.Styles>
+    <Style Selector="Ellipse.wait-dot"><Setter Property="Fill" Value="{DynamicResource GhostBrush}"/></Style>
+    <Style Selector="local|ModelResponseWaitView.retry Ellipse.wait-dot"><Setter Property="Fill" Value="{DynamicResource WarnBrush}"/></Style>
+    <Style Selector="TextBlock#Label"><Setter Property="Foreground" Value="{DynamicResource GhostBrush}"/></Style>
+    <Style Selector="local|ModelResponseWaitView.retry TextBlock#Label"><Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/></Style>
+    <Style Selector="Window.motion Ellipse#First">
+      <Style.Animations>
+        <Animation Duration="0:0:1.15" IterationCount="Infinite">
+          <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.22"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+          <KeyFrame Cue="50%" KeySpline="0.42,0,0.58,1"><Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.Y" Value="-3"/></KeyFrame>
+          <KeyFrame Cue="100%" KeySpline="0.42,0,0.58,1"><Setter Property="Opacity" Value="0.22"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+    <Style Selector="Window.motion Ellipse#Second">
+      <Style.Animations>
+        <Animation Duration="0:0:1.15" Delay="0:0:0.15" IterationCount="Infinite">
+          <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.22"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+          <KeyFrame Cue="50%" KeySpline="0.42,0,0.58,1"><Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.Y" Value="-3"/></KeyFrame>
+          <KeyFrame Cue="100%" KeySpline="0.42,0,0.58,1"><Setter Property="Opacity" Value="0.22"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+    <Style Selector="Window.motion Ellipse#Third">
+      <Style.Animations>
+        <Animation Duration="0:0:1.15" Delay="0:0:0.3" IterationCount="Infinite">
+          <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.22"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+          <KeyFrame Cue="50%" KeySpline="0.42,0,0.58,1"><Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.Y" Value="-3"/></KeyFrame>
+          <KeyFrame Cue="100%" KeySpline="0.42,0,0.58,1"><Setter Property="Opacity" Value="0.22"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+  </UserControl.Styles>
+  <StackPanel Height="25" Orientation="Horizontal" Spacing="5">
+    <Ellipse Name="First" Classes="wait-dot" Width="4" Height="4" VerticalAlignment="Center"><Ellipse.RenderTransform><TranslateTransform/></Ellipse.RenderTransform></Ellipse>
+    <Ellipse Name="Second" Classes="wait-dot" Width="4" Height="4" VerticalAlignment="Center"><Ellipse.RenderTransform><TranslateTransform/></Ellipse.RenderTransform></Ellipse>
+    <Ellipse Name="Third" Classes="wait-dot" Width="4" Height="4" VerticalAlignment="Center"><Ellipse.RenderTransform><TranslateTransform/></Ellipse.RenderTransform></Ellipse>
+    <ctl:StudioLineText Name="Label" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}"
+                        FontWeight="Normal" LineHeight="17" VerticalAlignment="Center" Margin="5,0,0,0" RenderTransform="translate(0px,1px)"/>
+  </StackPanel>
+</UserControl>

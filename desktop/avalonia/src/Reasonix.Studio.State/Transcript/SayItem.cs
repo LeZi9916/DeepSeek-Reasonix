@@ -47,6 +47,12 @@ public sealed record SayItem : TranscriptItem
         get; init;
     }
 
+    /// <summary>Gets when this runtime observed the first reasoning delta, in Unix milliseconds.</summary>
+    public long? ThoughtStartedAt
+    {
+        get; init;
+    }
+
     /// <summary>
     /// Gets how long the model thought, once that is known.
     /// </summary>

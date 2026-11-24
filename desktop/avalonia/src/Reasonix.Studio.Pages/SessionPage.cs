@@ -2,8 +2,11 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Events;
 using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
@@ -11,6 +14,7 @@ using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Reasonix.Studio.Pages;
 
@@ -39,6 +43,21 @@ public sealed partial class SessionPage : UserControl
     /// </summary>
     private readonly ScrollViewer _scroll;
 
+    /// <summary>Retains the provider wait below the transcript when rows are rebuilt.</summary>
+    private readonly ModelResponseWaitView _responseWait = new();
+
+    /// <summary>The reading column shared by the transcript and the provider wait.</summary>
+    private readonly StackPanel _flow;
+
+    /// <summary>Tracks the reader's submitted messages alongside the transcript.</summary>
+    private readonly MessageRail _messageRail = new() { IsVisible = false };
+
+    /// <summary>Paints the active landing ring above the transcript viewport.</summary>
+    private readonly MessageLandingHighlight _messageLanding = new();
+
+    /// <summary>Places quote and copy actions above the selected reply text.</summary>
+    private readonly ReplySelection _replySelection = new();
+
     /// <summary>Hosts the optional preceding-history control outside the scrolling transcript.</summary>
     private readonly ContentControl _historyHeader = new();
 
@@ -63,21 +82,30 @@ public sealed partial class SessionPage : UserControl
         {
             Orientation = Orientation.Vertical,
             Spacing = 0,
+        };
+        _flow = new StackPanel
+        {
             Margin = new Thickness(24, 0, 24, 36),
             [!MaxWidthProperty] = StudioTypography.Resource("Column"),
+            Children = { _rows, _responseWait },
         };
 
         _scroll = new ScrollViewer
         {
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            Content = _rows,
+            Content = _flow,
             Margin = new Thickness(0, 0, 6, 0),
         };
         _scroll.Classes.Add("conversation-scroll");
 
         _scroll.ScrollChanged += (_, e) =>
         {
+            if (e.OffsetDelta != default || e.ViewportDelta != default)
+            {
+                _replySelection.Clear();
+            }
+
             var previousEnd = _scroll.ScrollBarMaximum.Y - e.ExtentDelta.Y + e.ViewportDelta.Y;
             if (e.ExtentDelta.Y > 0 && _scroll.Offset.Y >= previousEnd - 2)
             {
@@ -85,7 +113,24 @@ public sealed partial class SessionPage : UserControl
             }
         };
         Grid.SetRow(_scroll, 1);
-        Content = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), Children = { _historyHeader, _scroll } };
+        Grid.SetRow(_messageRail, 1);
+        Grid.SetRow(_messageLanding, 1);
+        Grid.SetRow(_replySelection, 1);
+        Content = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), Children = { _historyHeader, _scroll, _messageLanding, _messageRail, _replySelection } };
+        AddHandler(PointerPressedEvent, OnSelectionPointerPressed, RoutingStrategies.Tunnel, true);
+        AddHandler(PointerReleasedEvent, OnSelectionPointerReleased, RoutingStrategies.Bubble, true);
+        _replySelection.QuoteRequested += text => QuoteRequested?.Invoke(text);
+        _replySelection.CopyFinished += succeeded => CopySelectionFinished?.Invoke(succeeded);
+        InitializeMessageRail();
+        _backgroundClock.Tick += (_, _) =>
+        {
+            if (IsEffectivelyVisible)
+            {
+                RefreshBackgroundTools();
+            }
+        };
+        AttachedToVisualTree += (_, _) => RefreshBackgroundTools();
+        DetachedFromVisualTree += (_, _) => _backgroundClock.Stop();
         ActualThemeVariantChanged += (_, _) => Rebuild(_state.Items);
     }
 
@@ -101,6 +146,9 @@ public sealed partial class SessionPage : UserControl
 
     /// <summary>Raised when the reader quotes a passage into the composer.</summary>
     public event Action<string>? QuoteRequested;
+
+    /// <summary>Raised with the result of copying a selected reply passage.</summary>
+    public event Action<bool>? CopySelectionFinished;
 
     /// <summary>
     /// Gets the state the page is showing.
@@ -162,12 +210,13 @@ public sealed partial class SessionPage : UserControl
             Language = language;
             FoldsTurnWork = fold;
             Rebuild(_state.Items);
+            _responseWait.Show(_state.ResponseWait, Language);
         }
     }
 
     /// <summary>Sets the reading inset inside the full-width scroll viewport.</summary>
     /// <param name="inset">Symmetric horizontal flow padding.</param>
-    public void SetReadingInset(double inset) => _rows.Margin = new Thickness(inset, 0, inset, 36);
+    public void SetReadingInset(double inset) => _flow.Margin = new Thickness(inset, 0, inset, 36);
 
     /// <summary>
     /// Shows one state.
@@ -186,12 +235,17 @@ public sealed partial class SessionPage : UserControl
         if (MoveNewAnswerLine() || _rows.Children.Count == 0
             || (!ReferenceEquals(previous.Items, state.Items) && !UpdateAnswers(previous.Items, state.Items)))
         {
+            var activityCounts = VisibleActivityCounts(previous);
             Rebuild(state.Items);
+            AnimateActivityCounts(activityCounts);
+            AnimateActivityChanges(previous);
         }
         else if (previous.Running != state.Running)
         {
             RefreshLiveActivity(state.Items);
         }
+
+        _responseWait.Show(state.ResponseWait, Language);
     }
 
     /// <summary>
@@ -254,8 +308,38 @@ public sealed partial class SessionPage : UserControl
             Padding = item is SayItem ? new Thickness(6, 0, 0, 0) : default,
         };
 
+        if (item is UserItem || (inActivity && item is ToolItem))
+        {
+            row.Tag = item;
+        }
+
         AutomationProperties.SetAutomationId(row, "class:call");
         return row;
+    }
+
+    /// <summary>Clears the previous toolbar when starting a new pointer action in the transcript.</summary>
+    /// <param name="sender">This transcript.</param>
+    /// <param name="args">The original pointer press.</param>
+    private void OnSelectionPointerPressed(object? sender, PointerPressedEventArgs args)
+    {
+        if (args.Source is Visual visual && !_replySelection.ContainsToolbar(visual))
+        {
+            _replySelection.Clear();
+        }
+    }
+
+    /// <summary>Offers selection actions after the existing selectable text processes the release.</summary>
+    /// <param name="sender">This transcript.</param>
+    /// <param name="args">The original pointer release.</param>
+    private void OnSelectionPointerReleased(object? sender, PointerReleasedEventArgs args)
+    {
+        if (args.InitialPressMouseButton != MouseButton.Right &&
+            args.Source is SelectableTextBlock text &&
+            text.GetVisualAncestors().OfType<AnswerCard>().FirstOrDefault() is { } reply &&
+            reply.AllowsSelectionTools(text))
+        {
+            _replySelection.Settle(text, _scroll, Language);
+        }
     }
 
     /// <summary>
@@ -680,6 +764,8 @@ public sealed partial class SessionPage : UserControl
         var held = _scroll.Offset;
         _rows.Children.Clear();
         _drawn.Clear();
+        _backgroundTools.Clear();
+        _backgroundClock.Stop();
         GatherLiveWork(items);
 
         if (items.Count == 0)
@@ -690,11 +776,13 @@ public sealed partial class SessionPage : UserControl
                 [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
                 Opacity = 0.55,
             });
+            RefreshMessageRail();
             return;
         }
 
         DrawRows(items);
-
+        RefreshBackgroundTools();
+        RefreshMessageRail();
         _scroll.Offset = held;
     }
 

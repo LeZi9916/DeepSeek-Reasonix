@@ -52,7 +52,8 @@ internal sealed partial class AnswerCard
 
     /// <summary>Projects block spacing without inserting selectable empty lines into the message.</summary>
     /// <param name="source">The original Markdown.</param>
-    private void ShowMarkdown(string source)
+    /// <returns>The last visible text block in the parsed Markdown.</returns>
+    private SelectableTextBlock ShowMarkdown(string source)
     {
         var blocks = this.FindControl<StackPanel>("AnswerBlocks")!;
         var document = Markdown.Parse(source);
@@ -60,12 +61,13 @@ internal sealed partial class AnswerCard
         {
             Trim(blocks, 1);
             MarkdownAnswer.Show(_answer, source);
-            return;
+            return _answer;
         }
 
         var first = document[0];
         MarkdownAnswer.Show(_answer, source[first.Span.Start..(first.Span.End + 1)]);
         var blockIndex = 1;
+        var last = _answer;
         foreach (var block in document.Skip(1))
         {
             var gap = FontSizeForReading() * 0.7;
@@ -87,6 +89,7 @@ internal sealed partial class AnswerCard
                     if (leaf is not null)
                     {
                         MarkdownAnswer.Show(content, source[leaf.Span.Start..(entry.Span.End + 1)]);
+                        last = content;
                     }
 
                     Grid.SetColumn(content, 1);
@@ -99,12 +102,14 @@ internal sealed partial class AnswerCard
                 var text = ChildAt(blocks, blockIndex, ReadingText);
                 text.Margin = new Thickness(0, gap, 0, 0);
                 MarkdownAnswer.Show(text, source[block.Span.Start..(block.Span.End + 1)]);
+                last = text;
             }
 
             blockIndex++;
         }
 
         Trim(blocks, blockIndex);
+        return last;
     }
 
     /// <summary>Reads the current independent reading size.</summary>

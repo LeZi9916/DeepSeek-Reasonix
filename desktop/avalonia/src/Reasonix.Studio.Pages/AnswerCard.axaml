@@ -1,7 +1,30 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Reasonix.Studio.Pages"
              x:Class="Reasonix.Studio.Pages.AnswerCard" UseLayoutRounding="False">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light"><SolidColorBrush x:Key="ReplySelectionBrush" Color="#B1D3FA"/></ResourceDictionary>
+        <ResourceDictionary x:Key="Dark"><SolidColorBrush x:Key="ReplySelectionBrush" Color="#577CA2"/></ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
   <UserControl.Styles>
+    <Style Selector="StackPanel#AnswerBlocks SelectableTextBlock">
+      <Setter Property="SelectionBrush" Value="{DynamicResource ReplySelectionBrush}"/>
+    </Style>
     <StyleInclude Source="avares://Reasonix.Studio.Pages/ConversationStyles.axaml"/>
+    <Style Selector="local|SweepTextBlock#ThoughtLabel"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+    <Style Selector="Button:pointerover local|SweepTextBlock#ThoughtLabel"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+    <Style Selector="Window.motion local|SweepTextBlock#ThoughtLabel.live">
+      <Setter Property="Foreground" Value="{Binding SweepBrush, RelativeSource={RelativeSource Self}, DataType=local:SweepTextBlock}"/>
+      <Style.Animations>
+        <Animation Duration="0:0:1.6" IterationCount="Infinite">
+          <KeyFrame Cue="0%"><Setter Property="SweepPosition" Value="-2.25"/></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="SweepPosition" Value="0.75"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
   </UserControl.Styles>
   <StackPanel Margin="0,0,0,21">
     <Grid Height="25" Margin="0,0,0,10" ColumnDefinitions="21,8,*">
@@ -13,15 +36,29 @@
     <Button Name="Thought" Classes="conversation-disclosure" HorizontalAlignment="Left">
       <StackPanel Orientation="Horizontal" Spacing="6">
         <Viewbox Width="10" Height="10"><Canvas Width="24" Height="24"><Path Name="ThoughtChevron" Data="M9 6 15 12 9 18" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
-        <TextBlock Name="ThoughtLabel" FontSize="{DynamicResource StudioType13}" LineHeight="18.2"/>
+        <Grid>
+          <TextBlock Name="ThoughtOut" IsVisible="False" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw"
+                     FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" LineHeight="18.2" Foreground="{DynamicResource MutedBrush}">
+            <TextBlock.RenderTransform><TranslateTransform/></TextBlock.RenderTransform>
+          </TextBlock>
+          <local:SweepTextBlock Name="ThoughtLabel" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" LineHeight="18.2" SweepBase="{DynamicResource Muted}" SweepHighlight="{DynamicResource Text}"/>
+        </Grid>
       </StackPanel>
     </Button>
-    <SelectableTextBlock Name="Reasoning" Margin="14,5,0,0" FontSize="{DynamicResource StudioType13}" LineHeight="21.84" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}" IsVisible="False"/>
+    <local:DisclosureMotion Name="ReasoningBody">
+      <Grid>
+        <SelectableTextBlock Name="Reasoning" Margin="14,5,0,0" FontSize="{DynamicResource StudioType13}" LineHeight="21.84" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}"/>
+        <local:StreamCaret Name="ThoughtCaret" Fill="{DynamicResource FaintBrush}" MarkSize="5,11"/>
+      </Grid>
+    </local:DisclosureMotion>
     <TextBlock Name="ReasoningPreview" Margin="14,1,0,3" FontSize="{DynamicResource StudioType12}" LineHeight="18"
                Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis" IsVisible="False"/>
-    <StackPanel Name="AnswerBlocks" AutomationProperties.AutomationId="class:txt">
-      <SelectableTextBlock Name="Answer" FontSize="{DynamicResource StudioReadingSize}" LineHeight="{DynamicResource StudioReadingHeight}" FontWeight="Medium" TextWrapping="Wrap"/>
-    </StackPanel>
+    <Grid>
+      <StackPanel Name="AnswerBlocks" AutomationProperties.AutomationId="class:txt">
+        <SelectableTextBlock Name="Answer" FontSize="{DynamicResource StudioReadingSize}" LineHeight="{DynamicResource StudioReadingHeight}" FontWeight="Medium" TextWrapping="Wrap"/>
+      </StackPanel>
+      <local:StreamCaret Name="AnswerCaret" Fill="{DynamicResource NetBrush}"/>
+    </Grid>
     <ContentControl Name="Activity" HorizontalContentAlignment="Stretch"/>
     <StackPanel Orientation="Horizontal" Spacing="4" Margin="-6,4,0,0">
       <Button Name="Copy" Classes="conversation-action">

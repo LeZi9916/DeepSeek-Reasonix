@@ -19,6 +19,12 @@ public sealed record SessionState
     /// </summary>
     public IReadOnlyList<TranscriptItem> Items { get; init; } = System.Array.Empty<TranscriptItem>();
 
+    /// <summary>Gets the live phases reported by child-run trackers, keyed by call id.</summary>
+    public IReadOnlyDictionary<string, string> SubagentPhases
+    {
+        get; init;
+    } = new System.Collections.ObjectModel.ReadOnlyDictionary<string, string>(new Dictionary<string, string>(System.StringComparer.Ordinal));
+
     /// <summary>
     /// Gets the task list the kernel last reported.
     /// </summary>
@@ -55,6 +61,12 @@ public sealed record SessionState
     /// Gets what the status chip says the turn is doing, as a message key.
     /// </summary>
     public string Doing { get; init; } = "common.idle";
+
+    /// <summary>Gets the current wait for a provider response.</summary>
+    public ModelResponseWait? ResponseWait
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Gets the error the window is showing, if any.

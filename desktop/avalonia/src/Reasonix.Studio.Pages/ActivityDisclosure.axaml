@@ -1,14 +1,65 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Reasonix.Studio.Pages"
              x:Class="Reasonix.Studio.Pages.ActivityDisclosure" UseLayoutRounding="False">
-  <UserControl.Styles><StyleInclude Source="avares://Reasonix.Studio.Pages/ConversationStyles.axaml"/></UserControl.Styles>
+  <UserControl.Styles>
+    <StyleInclude Source="avares://Reasonix.Studio.Pages/ConversationStyles.axaml"/>
+    <Style Selector="Button.activity-toggle">
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+    <Style Selector="Button.activity-group">
+      <Setter Property="Height" Value="26"/>
+      <Setter Property="Margin" Value="-6,0"/>
+      <Setter Property="Padding" Value="6,0"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="Button.activity-group Border#CountViewport"><Setter Property="Height" Value="12"/></Style>
+    <Style Selector="TextBlock#Summary"><Setter Property="LineHeight" Value="18"/></Style>
+    <Style Selector="Button.activity-group TextBlock#Summary">
+      <Setter Property="LineHeight" Value="12"/>
+      <!-- Align the Avalonia glyph baseline to the 12 px viewport before the roll. -->
+      <Setter Property="Margin" Value="0,-4,0,0"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+    </Style>
+    <Style Selector="Button.activity-group.open"><Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/></Style>
+    <Style Selector="Button.activity-group:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    <Style Selector="Button.activity-toggle:not(.activity-group) Viewbox#Chevron"><Setter Property="Margin" Value="2,0,0,0"/></Style>
+    <Style Selector="local|SweepTextBlock#ActivityNow"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+    <Style Selector="Window.motion local|SweepTextBlock#ActivityNow">
+      <Setter Property="Foreground" Value="{Binding SweepBrush, RelativeSource={RelativeSource Self}, DataType=local:SweepTextBlock}"/>
+      <Style.Animations>
+        <Animation Duration="0:0:1.6" IterationCount="Infinite">
+          <KeyFrame Cue="0%"><Setter Property="SweepPosition" Value="-2.25"/></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="SweepPosition" Value="0.75"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+    <Style Selector="Window.motion Viewbox#Chevron">
+      <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></Setter>
+    </Style>
+  </UserControl.Styles>
   <StackPanel Margin="0,6,0,0">
-    <Button Name="Toggle" Classes="conversation-disclosure activity-toggle" Height="28" HorizontalAlignment="Left">
-      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-        <Viewbox Width="12" Height="12" Margin="2,0,0,0"><Canvas Width="24" Height="24"><Path Name="Chevron" Data="M9 6 15 12 9 18" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
-        <Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Name="Status" Data="{StaticResource Glyph.check}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
-        <TextBlock Name="Summary" FontSize="{DynamicResource StudioType12}" LineHeight="18" Foreground="{DynamicResource FaintBrush}"/>
-      </StackPanel>
+    <Button Name="Toggle" Classes="conversation-disclosure activity-toggle">
+      <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto" VerticalAlignment="Center">
+        <Viewbox Name="Chevron" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="M6 9 12 15 18 9" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        <TextBlock Name="TitleLabel" Grid.Column="1" Margin="7,0,0,0" IsVisible="False" FontSize="{DynamicResource StudioType13}" LineHeight="18.2" FontWeight="Normal" Foreground="{DynamicResource MutedBrush}"/>
+        <Viewbox Name="StatusMark" Grid.Column="2" Margin="7,0,0,0" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Name="Status" Data="{StaticResource Glyph.check}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        <TextBlock Name="RunningCount" Grid.Column="3" Margin="7,0,0,0" IsVisible="False" FontSize="{DynamicResource StudioType12}" LineHeight="18" FontWeight="Normal" Foreground="{DynamicResource FaintBrush}"/>
+        <local:SweepTextBlock Name="ActivityNow" Grid.Column="4" Margin="7,0,0,0" IsVisible="False"
+                              HorizontalAlignment="Left" FontSize="{DynamicResource StudioType13}" LineHeight="18.2"
+                              SweepBase="{DynamicResource Muted}" SweepHighlight="{DynamicResource Text}" TextTrimming="CharacterEllipsis"/>
+        <StackPanel Name="SummaryContent" Grid.Column="4" Margin="7,0,0,0" Orientation="Horizontal" HorizontalAlignment="Left">
+          <Border Name="CountViewport" ClipToBounds="True" VerticalAlignment="Center">
+            <TextBlock Name="Summary" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}">
+              <TextBlock.RenderTransform><TranslateTransform/></TextBlock.RenderTransform>
+            </TextBlock>
+          </Border>
+          <TextBlock Name="SummaryDetails" IsVisible="False" VerticalAlignment="Center" FontWeight="Normal"
+                     FontSize="{DynamicResource StudioType12}" LineHeight="12" Foreground="{DynamicResource FaintBrush}"/>
+        </StackPanel>
+      </Grid>
     </Button>
-    <ContentControl Name="Body" HorizontalContentAlignment="Stretch"/>
+    <local:DisclosureMotion Name="Body" FadeContent="True"/>
   </StackPanel>
 </UserControl>

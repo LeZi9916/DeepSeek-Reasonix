@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.State.Transcript;
 using System;
@@ -34,21 +35,8 @@ public sealed partial class SessionPage
 
         var selected = ((ordinal % matches.Length) + matches.Length) % matches.Length;
         var index = matches[selected].index;
-        if (index < _drawn.Count)
+        if (RevealTranscriptRow(index) is { } control)
         {
-            var control = _drawn[index];
-            if (!control.IsEffectivelyVisible && FoldsTurnWork && !DisclosureChoices.WorkOpen)
-            {
-                DisclosureChoices.WorkOpen = true;
-                Rebuild(_state.Items);
-                control = _drawn[index];
-            }
-
-            foreach (var group in control.GetVisualAncestors().OfType<ActivityDisclosure>())
-            {
-                group.Reveal();
-            }
-
             if (control is Border { Child: AnswerCard card })
             {
                 card.RevealReasoning(query);
@@ -72,5 +60,49 @@ public sealed partial class SessionPage
         return (selected + 1, matches.Length);
 
         bool Has(string? value) => value?.Contains(query, StringComparison.CurrentCultureIgnoreCase) == true;
+    }
+
+    /// <summary>Brings the requested run's originating tool call into the conversation viewport.</summary>
+    /// <param name="id">The kernel's call identity.</param>
+    public void RevealToolCall(string id)
+    {
+        for (var i = 0; i < _state.Items.Count; i++)
+        {
+            if (_state.Items[i] is ToolItem tool && tool.Call.ID == id)
+            {
+                if (RevealTranscriptRow(i) is { } row)
+                {
+                    Dispatcher.UIThread.Post(() => JumpToTranscriptRow(row), DispatcherPriority.Loaded);
+                }
+
+                return;
+            }
+        }
+    }
+
+    /// <summary>Opens any containing fold before the reader jumps to a row.</summary>
+    /// <param name="index">The canonical transcript row index.</param>
+    /// <returns>The row that can be brought into view.</returns>
+    private Control? RevealTranscriptRow(int index)
+    {
+        if (index >= _drawn.Count)
+        {
+            return null;
+        }
+
+        var control = _drawn[index];
+        if (!control.IsEffectivelyVisible && FoldsTurnWork && !DisclosureChoices.WorkOpen)
+        {
+            DisclosureChoices.WorkOpen = true;
+            Rebuild(_state.Items);
+            control = _drawn[index];
+        }
+
+        foreach (var group in control.GetVisualAncestors().OfType<ActivityDisclosure>())
+        {
+            group.Reveal();
+        }
+
+        return control;
     }
 }

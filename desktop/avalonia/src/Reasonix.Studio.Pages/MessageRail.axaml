@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Pages.MessageRail" UseLayoutRounding="False">
+  <UserControl.Styles>
+    <Style Selector="Button.message-mark">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Padding" Value="0,0,4,0"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="MinWidth" Value="0"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Right"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button.message-mark Border.message-line"><Setter Property="Background" Value="{DynamicResource BorderBrush}"/></Style>
+    <Style Selector="Button.message-mark.seen Border.message-line"><Setter Property="Background" Value="{DynamicResource MutedBrush}"/></Style>
+    <Style Selector="Button.message-mark.starred Border.message-line"><Setter Property="Background" Value="{DynamicResource WarnBrush}"/></Style>
+    <Style Selector="Button.message-mark.current Border.message-line"><Setter Property="Background" Value="{DynamicResource TextBrush}"/></Style>
+    <Style Selector="Window.motion Border.message-line">
+      <Setter Property="Transitions"><Transitions>
+        <DoubleTransition Property="Width" Duration="0:0:0.12" Easing="0.2,0,0,1"/>
+        <BrushTransition Property="Background" Duration="0:0:0.12"/>
+      </Transitions></Setter>
+    </Style>
+    <Style Selector="Window.motion Border.viewport-band">
+      <Setter Property="Transitions"><Transitions>
+        <DoubleTransition Property="Canvas.Top" Duration="0:0:0.3" Easing="0.2,0,0,1"/>
+        <DoubleTransition Property="Height" Duration="0:0:0.3" Easing="0.2,0,0,1"/>
+      </Transitions></Setter>
+    </Style>
+    <Style Selector="Window.motion Border.message-peek.shown">
+      <Style.Animations><Animation Duration="0:0:0.12" Easing="0.16,1,0.3,1">
+        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/><Setter Property="TranslateTransform.X" Value="6"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.X" Value="0"/></KeyFrame>
+      </Animation></Style.Animations>
+    </Style>
+    <Style Selector="Button.message-run-row">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Padding" Value="8,0"/>
+      <Setter Property="Height" Value="30"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="CornerRadius" Value="5"/>
+    </Style>
+    <Style Selector="Button.message-run-row:pointerover /template/ ContentPresenter"><Setter Property="Background" Value="{DynamicResource FloatHiBrush}"/></Style>
+  </UserControl.Styles>
+  <Grid>
+    <Canvas Name="Track" HorizontalAlignment="Right" Width="30" Margin="0,0,8,0" Background="Transparent"
+            AutomationProperties.AutomationId="class:srail">
+      <Border Name="Band" Classes="viewport-band" Canvas.Left="2" Width="26" CornerRadius="6"
+              Background="{DynamicResource OverlayBrush}" IsHitTestVisible="False" IsVisible="False"/>
+    </Canvas>
+    <Border Name="Peek" Classes="message-peek" AutomationProperties.AutomationId="class:srail-peek"
+            HorizontalAlignment="Right" VerticalAlignment="Top" Width="250" Padding="11,9"
+            Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+            CornerRadius="{DynamicResource RMd}" BoxShadow="0 16 40 -14 #33171e2d" IsHitTestVisible="False" IsVisible="False">
+      <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
+      <StackPanel>
+        <TextBlock Name="Heading" FontSize="{DynamicResource StudioType12}" FontWeight="SemiBold" LineHeight="16.8" Foreground="{DynamicResource MutedBrush}"/>
+        <TextBlock Name="Excerpt" FontSize="{DynamicResource StudioType13}" FontWeight="Medium" LineHeight="20.15"
+                   Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxLines="2" Margin="0,3,0,0"/>
+        <TextBlock Name="Hint" FontSize="{DynamicResource StudioType11}" FontWeight="Medium" LineHeight="15.4"
+                   Foreground="{DynamicResource FaintBrush}" Margin="0,6,0,0"/>
+      </StackPanel>
+    </Border>
+    <Border Name="Run" HorizontalAlignment="Right" VerticalAlignment="Top" Width="250" MaxHeight="300" Padding="5"
+            Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+            CornerRadius="{DynamicResource RMd}" BoxShadow="0 16 40 -14 #33171e2d" IsVisible="False">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Name="RunRows"/>
+      </ScrollViewer>
+    </Border>
+  </Grid>
+</UserControl>

@@ -100,6 +100,7 @@ public sealed partial class MainWindow : Window
         ApplyLiveGrace();
 
         Conversation.Language = language;
+        Conversation.ConfigureMessageRailBookmarks(_workspacePreferences.MessageRailBookmarks ?? new Dictionary<string, int[]>(), SaveMessageRailBookmarks);
         Conversation.SetTranscriptFolding(_workspacePreferences.Folding ?? new());
         Conversation.SetShowsNewAnswers(_workspacePreferences.ShowNewAnswerMarker);
         Projects.Language = Language;
@@ -121,6 +122,8 @@ public sealed partial class MainWindow : Window
         Composer.AddHandler(KeyDownEvent, OnComposerKey, RoutingStrategies.Tunnel);
         Composer.TextChanged += OnComposerTextChanged;
         Conversation.Answered += OnAnswered;
+        Conversation.CopySelectionFinished += ShowCopyNotice;
+        CopyNoticeLayer.LayoutUpdated += (_, _) => PositionCopyNotices();
         Conversation.QuoteRequested += passage =>
         {
             var quote = string.Join(Environment.NewLine, passage.Split('\n').Select(line => "> " + line));

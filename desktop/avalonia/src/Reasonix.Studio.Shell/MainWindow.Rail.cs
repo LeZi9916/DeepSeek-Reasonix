@@ -53,6 +53,10 @@ public sealed partial class MainWindow
     private void AdoptSessionPath(string path)
     {
         _sessionPath = path ?? string.Empty;
+        var scope = _sessionPath.Length == 0
+            ? string.Empty
+            : System.Text.Json.JsonSerializer.Serialize(new[] { _engine?.DraftHost ?? string.Empty, _sessionPath });
+        Conversation.SetMessageRailScope(scope, _engine);
     }
 
     /// <summary>

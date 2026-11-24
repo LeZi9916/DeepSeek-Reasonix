@@ -67,13 +67,21 @@ public sealed partial class SessionPage
             changed: TranscriptFolding.ChangedFile(tool.Call));
         if (tool.Hidden <= 0)
         {
-            return new ToolCallHeader(
+            var header = new ToolCallHeader(
                 tool,
                 Language,
+                inActivity,
                 step,
                 FoldChoice(TranscriptPart.Output, tool.Id) ?? _folding.StartsOpen(TranscriptPart.Output),
                 open => RememberFold(TranscriptPart.Steps, tool.Id, open),
                 open => RememberFold(TranscriptPart.Output, tool.Id, open));
+            if (header.BackgroundJobId is not null)
+            {
+                header.BackgroundOutputRequested += OpenBackgroundToolOutput;
+                _backgroundTools.Add(header);
+            }
+
+            return header;
         }
 
         var body = new StackPanel { Spacing = 4 };

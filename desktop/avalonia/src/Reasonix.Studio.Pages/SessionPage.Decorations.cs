@@ -243,7 +243,7 @@ public sealed partial class SessionPage
             TranscriptPart.Activity,
             live: !tally.Settled || work.Any(row => _liveWork.Contains(row.Id)),
             changed: work.OfType<ToolItem>().Any(tool => TranscriptFolding.ChangedFile(tool.Call)));
-        var body = new StackPanel { Name = "ActivityBody", Spacing = 2, IsVisible = open, Margin = new Thickness(17, 2, 0, 2) };
+        var body = new StackPanel { Name = "ActivityBody", Spacing = 2, IsVisible = open, Margin = new Thickness(19, 2, 0, 2) };
         foreach (var row in work)
         {
             var control = RowOf(row, inActivity: true);
@@ -251,10 +251,19 @@ public sealed partial class SessionPage
             body.Children.Add(control);
         }
 
-        return new ActivityDisclosure(body, HeadlineOf(tally), open, tally.Failed > 0 ? "ErrInkBrush" : tally.Running > 0 ? "NetBrush" : "OkBrush", value => RememberFold(TranscriptPart.Activity, id, value))
+        var disclosure = new ActivityDisclosure(
+            body,
+            MessageCatalog.Get("chat.count_actions", Language, ("count", Format.Count(tally.Calls, Language))),
+            open,
+            tally.Failed > 0 ? "ErrInkBrush" : tally.Running > 0 ? "NetBrush" : "OkInkBrush",
+            value => RememberFold(TranscriptPart.Activity, id, value),
+            MessageCatalog.Get("chat.activity", Language))
         {
-            Tag = work,
+            Tag = work.ToArray(),
         };
+        disclosure.SetCountDetails(tally.Calls, ActivityDetails(tally));
+        disclosure.ConfigureLive(work.OfType<ToolItem>().LastOrDefault(tool => tool.Running), tally.Running, tally.Failed > 0, Language);
+        return disclosure;
     }
 
     /// <summary>Lets grouped reads follow the same step default as individual calls.</summary>
@@ -275,35 +284,23 @@ public sealed partial class SessionPage
         return new ActivityDisclosure(body, label, open, failed ? "ErrInkBrush" : "FaintBrush", value => RememberFold(TranscriptPart.Steps, reads.Id, value));
     }
 
-    /// <summary>
-    /// Words one stretch of work: what it is, how much of it is running or failed,
-    /// how many calls it made and how long it took.
-    /// </summary>
+    /// <summary>Formats the failure and elapsed-time details beside the rolling count.</summary>
     /// <param name="tally">The stretch's tally.</param>
-    /// <returns>The head's text.</returns>
-    private string HeadlineOf(ActivityTally tally)
+    /// <returns>The details, including their leading separator when present.</returns>
+    private string ActivityDetails(ActivityTally tally)
     {
-        var parts = new List<string>
-        {
-            MessageCatalog.Get("chat.count_actions", Language, ("count", Format.Count(tally.Calls, Language))),
-        };
-
-        if (tally.Running > 0)
-        {
-            parts.Add(MessageCatalog.Get("chat.n_running", Language, ("n", Format.Count(tally.Running, Language))));
-        }
-
+        var details = string.Empty;
         if (tally.Failed > 0)
         {
-            parts.Add(MessageCatalog.Get("chat.n_failed", Language, ("n", Format.Count(tally.Failed, Language))));
+            details += " · " + MessageCatalog.Get("chat.n_failed", Language, ("n", Format.Count(tally.Failed, Language)));
         }
 
         if (tally.Settled && tally.Milliseconds >= 1000)
         {
-            parts.Add(MessageCatalog.Get("common.n_s", Language, ("n", Format.Count(tally.Milliseconds / 1000, Language))));
+            details += " · " + MessageCatalog.Get("common.n_s", Language, ("n", Format.Count(tally.Milliseconds / 1000, Language)));
         }
 
-        return string.Join(" · ", parts);
+        return details;
     }
 
     /// <summary>

@@ -1,0 +1,71 @@
+<Canvas xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Reasonix.Studio.Pages.ReplySelection" Name="ReplySelectionLayer" ClipToBounds="True">
+  <Canvas.Styles>
+    <Style Selector="Button.selection-action">
+      <Setter Property="Height" Value="24"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Padding" Value="10,0"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RPill}"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}" VerticalContentAlignment="Center"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.selection-action:pointerover">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="Window.motion Border.reply-selection.above">
+      <Style.Animations><Animation Duration="0:0:0.12" Easing="0,0,0.58,1">
+        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/><Setter Property="TranslateTransform.Y" Value="3"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+      </Animation></Style.Animations>
+    </Style>
+    <Style Selector="Window.motion Border.reply-selection.below">
+      <Style.Animations><Animation Duration="0:0:0.12" Easing="0,0,0.58,1">
+        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/><Setter Property="TranslateTransform.Y" Value="-3"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+      </Animation></Style.Animations>
+    </Style>
+  </Canvas.Styles>
+  <Border Name="Toolbar" Classes="reply-selection" Height="32" IsVisible="False"
+          AutomationProperties.AutomationId="class:sel-tools"
+          Padding="3" CornerRadius="{DynamicResource RMd}" Background="{DynamicResource FloatBrush}"
+          BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+    <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
+    <StackPanel Orientation="Horizontal" Spacing="2">
+      <Button Name="QuoteButton" Classes="selection-action" Focusable="False" AutomationProperties.AutomationId="action:reply.quote">
+        <StackPanel Orientation="Horizontal" Spacing="5">
+          <Viewbox Width="13" Height="13"><Canvas Width="24" Height="24">
+            <Path Stroke="{Binding #QuoteButton.Foreground}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"
+                  Data="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/>
+          </Canvas></Viewbox>
+          <TextBlock Name="QuoteLabel" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+      <Button Name="CopyButton" Classes="selection-action" Focusable="False" AutomationProperties.AutomationId="action:reply.selection.copy">
+        <StackPanel Orientation="Horizontal" Spacing="5">
+          <Viewbox Width="13" Height="13"><Canvas Width="24" Height="24">
+            <Rectangle Width="14" Height="14" Canvas.Left="8" Canvas.Top="8" RadiusX="2" RadiusY="2"
+                       Stroke="{Binding #CopyButton.Foreground}" StrokeThickness="2"/>
+            <Path Data="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                  Stroke="{Binding #CopyButton.Foreground}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/>
+          </Canvas></Viewbox>
+          <TextBlock Name="CopyLabel" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Button>
+    </StackPanel>
+  </Border>
+</Canvas>

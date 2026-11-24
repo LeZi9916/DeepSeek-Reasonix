@@ -15,11 +15,6 @@ namespace Reasonix.Studio.State;
 public sealed class TextAppender
 {
     /// <summary>
-    /// The ids whose thought clock is still running, and when it started.
-    /// </summary>
-    private readonly Dictionary<string, long> _thoughtSince = new Dictionary<string, long>();
-
-    /// <summary>
     /// The sequence every new row's identity is minted from.
     /// </summary>
     private readonly IdSequence _ids;
@@ -84,13 +79,8 @@ public sealed class TextAppender
         }
 
         var id = _ids.Next();
-        if (reasoning)
-        {
-            _thoughtSince[id] = _clock();
-        }
-
         next.Add(reasoning
-            ? new SayItem { Id = id, Reasoning = text, Source = source }
+            ? new SayItem { Id = id, Reasoning = text, Source = source, ThoughtStartedAt = _clock() }
             : new SayItem { Id = id, Text = text, Source = source });
         return next;
     }
@@ -117,14 +107,14 @@ public sealed class TextAppender
             return items;
         }
 
-        var since = _thoughtSince.TryGetValue(open.Id, out var started) ? started : _clock();
-        var elapsed = System.Math.Max(0, _clock() - since);
-        _thoughtSince.Remove(open.Id);
+        var now = _clock();
+        var elapsed = System.Math.Max(0, now - (open.ThoughtStartedAt ?? now));
 
         var next = new List<TranscriptItem>(items);
         next[at] = open with
         {
             ThoughtMs = elapsed,
+            ThoughtStartedAt = null,
         };
         return next;
     }
@@ -162,6 +152,7 @@ public sealed class TextAppender
             var settled = say with
             {
                 Done = true,
+                ThoughtStartedAt = null,
                 Cut = marked ? cut : say.Cut,
             };
 

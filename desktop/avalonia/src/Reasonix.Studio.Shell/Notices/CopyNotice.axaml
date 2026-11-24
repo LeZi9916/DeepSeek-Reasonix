@@ -1,0 +1,40 @@
+<Border xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Reasonix.Studio.Shell.Notices.CopyNotice" Classes="copy-notice"
+        Padding="12,10,10,10" CornerRadius="{DynamicResource RMd}" BorderThickness="1"
+        BorderBrush="{DynamicResource BorderBrush}" Background="{DynamicResource FloatBrush}"
+        AutomationProperties.LiveSetting="Polite" AutomationProperties.AutomationId="class:toast">
+  <Border.Styles>
+    <Style Selector="Button.copy-notice-dismiss">
+      <Setter Property="Height" Value="24"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Padding" Value="10,0"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RPill}"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border CornerRadius="{TemplateBinding CornerRadius}" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="Button.copy-notice-dismiss:pointerover">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+  </Border.Styles>
+  <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
+  <Grid ColumnDefinitions="16,*,Auto" ColumnSpacing="10">
+    <Viewbox Width="16" Height="16" Margin="0,1,0,0" VerticalAlignment="Top"><Canvas Width="24" Height="24">
+      <Path Data="M12 2 A10 10 0 1 0 12 22 A10 10 0 1 0 12 2 M12 16v-4 M12 8h.01"
+            Stroke="{DynamicResource OkInkBrush}" StrokeThickness="2" StrokeLineCap="Round"/>
+    </Canvas></Viewbox>
+    <TextBlock Name="Message" Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" LineHeight="20.15"
+               FontSize="{DynamicResource StudioType13}" Foreground="{DynamicResource TextBrush}"/>
+    <Button Name="Dismiss" Grid.Column="2" Margin="0,-4" Classes="copy-notice-dismiss"
+            AutomationProperties.AutomationId="action:toast.dismiss"/>
+  </Grid>
+</Border>

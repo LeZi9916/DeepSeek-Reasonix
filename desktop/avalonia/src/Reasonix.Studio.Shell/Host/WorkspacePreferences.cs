@@ -45,6 +45,12 @@ internal sealed record WorkspacePreferences
         get; init;
     }
 
+    /// <summary>Gets or initializes starred transcript positions by saved conversation.</summary>
+    public IReadOnlyDictionary<string, int[]> MessageRailBookmarks
+    {
+        get; init;
+    } = new Dictionary<string, int[]>(StringComparer.Ordinal);
+
     /// <summary>Gets or initializes the three most recently selected canonical palette entries.</summary>
     public IReadOnlyList<string> PaletteRecent
     {
@@ -148,12 +154,13 @@ internal sealed record WorkspacePreferences
     }
 
     /// <summary>Reads optional local preferences without preventing a launch.</summary>
+    /// <param name="path">An alternate preference path, for an isolated desktop profile.</param>
     /// <returns>The saved choices or defaults.</returns>
-    internal static WorkspacePreferences Load()
+    internal static WorkspacePreferences Load(string? path = null)
     {
         try
         {
-            return JsonSerializer.Deserialize<WorkspacePreferences>(File.ReadAllText(PathOf())) ?? new();
+            return JsonSerializer.Deserialize<WorkspacePreferences>(File.ReadAllText(path ?? PathOf())) ?? new();
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -162,11 +169,12 @@ internal sealed record WorkspacePreferences
     }
 
     /// <summary>Persists choices for the next desktop launch.</summary>
-    internal void Save()
+    /// <param name="path">An alternate preference path, for an isolated desktop profile.</param>
+    internal void Save(string? path = null)
     {
         try
         {
-            var path = PathOf();
+            path ??= PathOf();
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllText(path, JsonSerializer.Serialize(this));
         }
