@@ -464,6 +464,8 @@
   <!-- token text -->
   <Color x:Key="Text">#292B29</Color>
   <SolidColorBrush x:Key="TextBrush" Color="{StaticResource Text}" />
+  <Color x:Key="SendHover">#2F322F</Color>
+  <SolidColorBrush x:Key="SendHoverBrush" Color="{StaticResource SendHover}" />
   <x:String x:Key="token:--text">rgb(41, 43, 41)</x:String>
   <!-- token tip-delay -->
   <sys:TimeSpan x:Key="TipDelay">0:0:0.300</sys:TimeSpan>
@@ -976,6 +978,8 @@
   <!-- token text -->
   <Color x:Key="Text">#E7E8E3</Color>
   <SolidColorBrush x:Key="TextBrush" Color="{StaticResource Text}" />
+  <Color x:Key="SendHover">#E1E2DD</Color>
+  <SolidColorBrush x:Key="SendHoverBrush" Color="{StaticResource SendHover}" />
   <x:String x:Key="token:--text">rgb(231, 232, 227)</x:String>
   <!-- token tip-delay -->
   <sys:TimeSpan x:Key="TipDelay">0:0:0.300</sys:TimeSpan>

@@ -56,6 +56,7 @@
   <Style Selector="Button.compose-send Path"><Setter Property="Stroke" Value="{DynamicResource PageBrush}"/><Setter Property="StrokeThickness" Value="2"/></Style>
   <Style Selector="Button.compose-send TextBlock"><Setter Property="Foreground" Value="{DynamicResource PageBrush}"/><Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="LineHeight" Value="{DynamicResource StudioType13}"/></Style>
   <Style Selector="Button.compose-send:disabled"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource GhostBrush}"/></Style>
+  <Style Selector="Button.compose-send:pointerover:not(:disabled)"><Setter Property="Background" Value="{DynamicResource SendHoverBrush}"/></Style>
   <Style Selector="Button.compose-send:disabled Path"><Setter Property="Stroke" Value="{DynamicResource GhostBrush}"/></Style>
   <Style Selector="Window.motion Button.compose-send">
     <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/><BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></Setter>
