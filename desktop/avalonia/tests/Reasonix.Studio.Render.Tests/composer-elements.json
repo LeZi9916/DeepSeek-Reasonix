@@ -214,13 +214,13 @@
       },
       "ModelLabel": {
         "box": [
-          521.890625,
+          523.0625,
           94,
-          110.109375,
+          108.9375,
           19.5
         ],
         "fontSize": 13,
-        "fontWeight": 600,
+        "fontWeight": 500,
         "lineHeight": 19.5,
         "color": "#292b29",
         "inkRows": [
@@ -457,13 +457,13 @@
       },
       "ModelLabel": {
         "box": [
-          521.890625,
+          523.0625,
           94,
-          110.109375,
+          108.9375,
           19.5
         ],
         "fontSize": 13,
-        "fontWeight": 600,
+        "fontWeight": 500,
         "lineHeight": 19.5,
         "color": "#e7e8e3",
         "inkRows": [
@@ -700,13 +700,13 @@
       },
       "ModelLabel": {
         "box": [
-          501.890625,
+          503.0625,
           94,
-          110.109375,
+          108.9375,
           19.5
         ],
         "fontSize": 13,
-        "fontWeight": 600,
+        "fontWeight": 500,
         "lineHeight": 19.5,
         "color": "#292b29",
         "inkRows": [
@@ -943,13 +943,13 @@
       },
       "ModelLabel": {
         "box": [
-          501.890625,
+          503.0625,
           94,
-          110.109375,
+          108.9375,
           19.5
         ],
         "fontSize": 13,
-        "fontWeight": 600,
+        "fontWeight": 500,
         "lineHeight": 19.5,
         "color": "#e7e8e3",
         "inkRows": [
