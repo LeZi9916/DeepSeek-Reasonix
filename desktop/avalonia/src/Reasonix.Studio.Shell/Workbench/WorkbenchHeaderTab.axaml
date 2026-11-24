@@ -1,6 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:sys="using:System" xmlns:workbench="using:Reasonix.Studio.Shell.Workbench" x:Class="Reasonix.Studio.Shell.Workbench.WorkbenchHeaderTab"
-             UseLayoutRounding="False" MinWidth="72" MaxWidth="220" VerticalAlignment="Top">
+             UseLayoutRounding="False" MinWidth="72" MaxWidth="168" Height="34" VerticalAlignment="Top">
   <UserControl.Resources>
     <StreamGeometry x:Key="BrowserGlyph">M22 12a10 10 0 1 0-20 0 10 10 0 1 0 20 0z M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20 M2 12h20</StreamGeometry>
     <StreamGeometry x:Key="NewGlyph">M5 12h14 M12 5v14</StreamGeometry>
