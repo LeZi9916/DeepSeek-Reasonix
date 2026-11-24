@@ -118,6 +118,13 @@
     <Setter Property="CornerRadius" Value="7"/>
   </Style>
   <Style Selector="Button.workspace-quick-link:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  <Style Selector="Window.motion Button.workspace-quick-link">
+    <Setter Property="RenderTransform" Value="scale(1)"/>
+    <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.06"/></Transitions></Setter>
+  </Style>
+  <Style Selector="Window.motion Button.workspace-quick-link:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.94)"/>
+  </Style>
   <Style Selector="ScrollViewer.conversation-scroll ScrollBar">
     <Setter Property="Opacity" Value="0"/>
     <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12"/></Transitions></Setter>
