@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -40,6 +41,9 @@ public sealed partial class NativeDomainTests
             Assert.Equal(new Point(63, 7), tab.TranslatePoint(default, header));
             Assert.InRange(tab.Bounds.Width, 126, 141);
             Assert.Equal(35, tab.Bounds.Height);
+            var picker = tab.GetVisualDescendants().OfType<Button>()
+                .Single(button => AutomationProperties.GetAutomationId(button) == "action:workbench.tab");
+            Assert.Equal(FontWeight.Medium, picker.FontWeight);
             Assert.Contains(tab.GetVisualDescendants().OfType<Viewbox>(), view => view.Name == "TabIcon" && view.Bounds.Width == 14);
             Assert.All(new[] { add, expand, dismiss }, button =>
             {

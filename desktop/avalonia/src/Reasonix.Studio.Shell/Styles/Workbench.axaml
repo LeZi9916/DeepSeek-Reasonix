@@ -133,11 +133,11 @@
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
   </Style>
   <Style Selector="Button.wb-tab">
-    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="FontWeight" Value="Normal"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
     <Setter Property="CornerRadius" Value="10,10,0,0"/>
   </Style>
   <Style Selector="workbench|WorkbenchHeaderTab:pointerover Button.wb-tab, workbench|WorkbenchHeaderTab.active Button.wb-tab"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
-  <Style Selector="workbench|WorkbenchHeaderTab.active Button.wb-tab"><Setter Property="FontWeight" Value="SemiBold"/></Style>
+  <Style Selector="workbench|WorkbenchHeaderTab.active Button.wb-tab"><Setter Property="FontWeight" Value="Medium"/></Style>
   <Style Selector="Button.wb-tab-close">
     <Setter Property="Width" Value="22"/><Setter Property="VerticalAlignment" Value="Stretch"/>
     <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="Opacity" Value="0.4"/>
