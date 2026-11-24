@@ -7,6 +7,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Shell.Composer;
+using Reasonix.Studio.Shell.Settings;
 using System;
 using System.Linq;
 using System.Net;
@@ -228,6 +229,26 @@ public sealed partial class NativeDomainTests
         var first = rows[0].TranslatePoint(default, w)!.Value.Y;
         var second = rows[1].TranslatePoint(default, w)!.Value.Y;
         Assert.InRange(second - first, 44.4, 45.6);
+    });
+
+    /// <summary>Checks the table start and the content below it against the reference.</summary>
+    /// <returns>The tools-card layout check.</returns>
+    [Fact]
+    public Task ToolsTableUsesTheReferenceTopAndPath() => WithSettings("settings-tools", (w, _) =>
+    {
+        PumpNavigation(() => w.GetVisualDescendants().OfType<Border>().Any(border =>
+            border.Classes.Contains("safety-tool-row")));
+        var card = w.GetVisualDescendants().OfType<Border>()
+            .First(border => AutomationProperties.GetAutomationId(border) == "class:prefs-card");
+        var view = w.GetVisualDescendants().OfType<PermissionSettingsView>().Single();
+        var table = view.FindControl<StackPanel>("RuleTables")!;
+        var path = view.FindControl<TextBlock>("RulesPath")!;
+        var outside = view.FindControl<Border>("OutsideText")!;
+        Assert.InRange(card.Bounds.Height, 1352.5, 1356.5);
+        Assert.InRange(table.TranslatePoint(default, w)!.Value.Y, 783.8, 785.2);
+        Assert.InRange(path.TranslatePoint(default, w)!.Value.Y, 1047.0, 1049.5);
+        Assert.Equal(15, path.Bounds.Height);
+        Assert.InRange(outside.TranslatePoint(default, w)!.Value.Y, 1067.5, 1069.5);
     });
 
     /// <summary>Checks the approval segment's reference width.</summary>
