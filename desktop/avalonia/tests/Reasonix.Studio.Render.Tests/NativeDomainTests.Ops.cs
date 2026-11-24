@@ -254,4 +254,17 @@ public sealed partial class NativeDomainTests
             Dispatcher.UIThread.RunJobs();
         }
     });
+
+    /// <summary>Checks the shortcut table's reference row pitch.</summary>
+    /// <returns>The controls layout check.</returns>
+    [Fact]
+    public Task KeyboardShortcutRowsKeepTheReferencePitch() => WithSettings("settings-controls", (w, _) =>
+    {
+        var rows = w.GetVisualDescendants().OfType<Border>()
+            .Where(border => AutomationProperties.GetAutomationId(border) == "class:keys-row").ToArray();
+        Assert.Equal(15, rows.Length);
+        double Y(Control control) => control.TranslatePoint(default, w)!.Value.Y;
+        Assert.InRange(Y(rows[0]), 368.2, 369.2);
+        Assert.InRange(Y(rows[^1]), 648.2, 649.2);
+    });
 }

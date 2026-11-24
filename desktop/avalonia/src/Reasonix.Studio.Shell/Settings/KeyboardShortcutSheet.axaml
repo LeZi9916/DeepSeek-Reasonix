@@ -16,10 +16,10 @@
       <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
     </Style>
   </local:SettingsFormView.Styles>
-  <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="0,11,0,10">
+  <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="0,7,0,6">
     <StackPanel>
       <TextBlock Tag="settings.keyboard_shortcuts" FontWeight="SemiBold" LineHeight="18.2" Foreground="{DynamicResource TextBrush}"/>
-      <TextBlock Tag="settings.all_shortcuts_incl_global_and_esc" Classes="safety-hint" Margin="0,2,0,10"/>
+      <TextBlock Tag="settings.all_shortcuts_incl_global_and_esc" Classes="safety-hint" Margin="0,2,0,5.18"/>
       <StackPanel Name="KeyboardRows"/>
     </StackPanel>
   </Border>
