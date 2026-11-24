@@ -227,10 +227,14 @@ public sealed partial class NativeDomainTests
         var presets = w.GetVisualDescendants().OfType<PresetWorkspace>().Single();
         var create = presets.FindControl<Button>("Create")!;
         var mode = presets.FindControl<ToggleSwitch>("ModePicker")!;
+        var apply = presets.FindControl<Border>("ApplyNote")!;
+        var applyText = presets.FindControl<TextBlock>("ApplyNoteText")!;
         var card = w.GetVisualDescendants().OfType<PresetCatalogEntry>().First();
         double Y(Control control) => control.TranslatePoint(default, w)!.Value.Y;
         Assert.InRange(Y(create), 337.4, 338.4);
         Assert.InRange(Y(mode), 449.8, 450.8);
         Assert.InRange(Y(card), 617.0, 618.0);
+        Assert.InRange(Y(apply), 927.0, 928.4);
+        Assert.Equal("本机 · 新开的会话生效", applyText.Text);
     });
 }

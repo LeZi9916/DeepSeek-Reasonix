@@ -82,6 +82,7 @@ public sealed partial class PresetWorkspace : SettingsFormView
         Extra.Header = Text("common.more_actions");
         ExplicitDefault.Header = Text("persona.explicit_default_configuration");
         FooterHint.Text = Text("persona.available_to_new_conversations_after");
+        ApplyNoteText.Text = Text("session.this_machine") + " · " + Text("settings.applies_to_new_sessions");
         How.Click += (_, _) => HowCopy.IsVisible = !HowCopy.IsVisible;
         ActivePreset.IsVisible = active is not null;
         if (active is not null)

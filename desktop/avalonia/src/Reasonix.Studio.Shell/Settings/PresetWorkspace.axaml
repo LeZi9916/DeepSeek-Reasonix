@@ -75,6 +75,13 @@
       </StackPanel>
       <WrapPanel ItemSpacing="8" LineSpacing="8"><local:PresetImport Name="Import"/><Button Name="Refresh" Tag="common.reload"
           Classes="preset-act" AutomationProperties.AutomationId="action:agent-preset.reload"/></WrapPanel>
+      <Border Name="ApplyNote" Margin="0,16,0,0" Padding="0,10,0,0" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}">
+        <StackPanel Orientation="Horizontal" Spacing="5">
+          <Ellipse Width="4" Height="4" VerticalAlignment="Center" Fill="{DynamicResource GhostBrush}"/>
+          <TextBlock Name="ApplyNoteText" FontSize="{DynamicResource StudioType12}" LineHeight="16.8" VerticalAlignment="Center"
+                     Foreground="{DynamicResource GhostBrush}"/>
+        </StackPanel>
+      </Border>
       <TextBlock Name="ActivePreset" Classes="preset-caption" Margin="0,12,0,0"/>
     </StackPanel>
     <StackPanel Name="Editor" IsVisible="False">
