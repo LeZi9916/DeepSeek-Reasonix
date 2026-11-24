@@ -118,6 +118,11 @@ public sealed partial class NativeDomainTests
         w.FindControl<Button>("ModelButton")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Dispatcher.UIThread.RunJobs();
         Assert.True(picker.IsOpen);
+        var frame = picker.FindControl<Border>("Frame")!;
+        Assert.InRange(frame.Bounds.Width, 599, 601);
+        Assert.InRange(frame.Bounds.Height, 439, 441);
+        var aside = picker.FindControl<Border>("Aside")!;
+        Assert.InRange(aside.Bounds.Width, 259, 261);
         var search = picker.FindControl<TextBox>("Search")!;
         Assert.False(string.IsNullOrEmpty(search.PlaceholderText));
         var chips = picker.FindControl<WrapPanel>("Chips")!;

@@ -221,10 +221,12 @@ public sealed partial class ModelPicker : UserControl
         var viewport = top?.ClientSize ?? new Size(900, 700);
         var available = Math.Max(320, viewport.Width - 24);
         var width = Math.Min(600, available);
+        var pickerMax = Math.Min(440, Math.Max(320, viewport.Height - 160));
         var narrow = width < 560;
         Frame.Width = width;
+        Frame.MaxHeight = pickerMax;
         Frame.Classes.Set("narrow", narrow);
-        Layout.ColumnDefinitions[1].Width = narrow ? new GridLength(0) : new GridLength(216);
+        Layout.ColumnDefinitions[1].Width = narrow ? new GridLength(0) : new GridLength(260);
         Layout.RowDefinitions[5].Height = narrow ? new GridLength(0, GridUnitType.Auto) : new GridLength(0);
         Grid.SetRow(Aside, narrow ? 5 : 0);
         Grid.SetRowSpan(Aside, narrow ? 1 : 5);
