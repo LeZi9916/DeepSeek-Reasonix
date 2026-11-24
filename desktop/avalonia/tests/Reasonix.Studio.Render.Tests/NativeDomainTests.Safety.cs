@@ -214,4 +214,16 @@ public sealed partial class NativeDomainTests
             AutomationProperties.GetAutomationId(button) == "action:permissions.remove-rule");
         Assert.Equal(0, remove.Opacity);
     });
+
+    /// <summary>Checks the approval segment's reference width.</summary>
+    /// <returns>The segmented-control layout check.</returns>
+    [Fact]
+    public Task ApprovalSegmentsUseTheReferenceWidth() => WithSettings("settings-tools", (w, _) =>
+    {
+        PumpNavigation(() => w.GetVisualDescendants().OfType<Border>().Any(border =>
+            AutomationProperties.GetAutomationId(border) == "role:radiogroup"));
+        var group = w.GetVisualDescendants().OfType<Border>()
+            .First(border => AutomationProperties.GetAutomationId(border) == "role:radiogroup");
+        Assert.InRange(group.Bounds.Width, 245, 247);
+    });
 }

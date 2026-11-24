@@ -338,7 +338,7 @@
   </Style>
   <Style Selector="RadioButton.segmented">
     <Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/><Setter Property="Height" Value="26"/>
-    <Setter Property="Padding" Value="10,0"/><Setter Property="Margin" Value="1,0"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+    <Setter Property="Padding" Value="9.75,0"/><Setter Property="Margin" Value="1,0"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
     <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
     <Setter Property="Template"><ControlTemplate>
       <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
