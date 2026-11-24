@@ -319,6 +319,8 @@
   <!-- token page -->
   <Color x:Key="Page">#F0F0ED</Color>
   <SolidColorBrush x:Key="PageBrush" Color="{StaticResource Page}" />
+  <Color x:Key="PaneTabsBackground">#F8F8F6</Color>
+  <SolidColorBrush x:Key="PaneTabsBackgroundBrush" Color="{StaticResource PaneTabsBackground}" />
   <x:String x:Key="token:--page">rgb(240, 240, 237)</x:String>
   <!-- token pane-gutter -->
   <x:Double x:Key="PaneGutter">12</x:Double>
@@ -833,6 +835,8 @@
   <!-- token page -->
   <Color x:Key="Page">#151615</Color>
   <SolidColorBrush x:Key="PageBrush" Color="{StaticResource Page}" />
+  <Color x:Key="PaneTabsBackground">#171817</Color>
+  <SolidColorBrush x:Key="PaneTabsBackgroundBrush" Color="{StaticResource PaneTabsBackground}" />
   <x:String x:Key="token:--page">rgb(21, 22, 21)</x:String>
   <!-- token pane-gutter -->
   <x:Double x:Key="PaneGutter">12</x:Double>
