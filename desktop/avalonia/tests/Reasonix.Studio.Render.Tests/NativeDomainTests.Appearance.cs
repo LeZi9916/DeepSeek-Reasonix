@@ -101,6 +101,9 @@ public sealed partial class NativeDomainTests
             var label = w.GetVisualDescendants().OfType<TextBlock>()
                 .First(block => block.Text == "明暗" && block.Classes.Contains("setting-row-name"));
             Assert.Equal(FontWeight.SemiBold, label.FontWeight);
+            var themeHeading = w.GetVisualDescendants().OfType<TextBlock>()
+                .First(block => block.Text == "界面主题");
+            Assert.Equal(FontWeight.Medium, themeHeading.FontWeight);
             var selectedRing = w.GetVisualDescendants().OfType<Border>()
                 .Single(border => border.BorderThickness.Left == 2 && border.CornerRadius.TopLeft == 7);
             Assert.Equal(2, selectedRing.BorderThickness.Left);

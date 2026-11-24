@@ -208,7 +208,7 @@ public sealed partial class MainWindow
         var group = new StackPanel { Spacing = 8, Tag = "look.interface_theme", Margin = new Thickness(0, 12) };
         card.Children.Add(group);
         var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
-        heading.Children.Add(new TextBlock { Text = MessageCatalog.Get("look.interface_theme", Language), FontWeight = FontWeight.SemiBold });
+        heading.Children.Add(new TextBlock { Text = MessageCatalog.Get("look.interface_theme", Language), FontWeight = FontWeight.Medium });
         var now = new TextBlock
         {
             Text = MessageCatalog.Get("look.in_effect_now", Language),
