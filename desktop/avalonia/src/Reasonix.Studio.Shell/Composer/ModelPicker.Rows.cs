@@ -147,7 +147,10 @@ public sealed partial class ModelPicker
         grid.Children.Add(text);
         if (level.Equals(current, StringComparison.OrdinalIgnoreCase))
         {
-            grid.Children.Add(CheckAt(1));
+            var check = CheckAt(1);
+            check.VerticalAlignment = VerticalAlignment.Top;
+            check.Margin = new Thickness(0, 3, 0, 0);
+            grid.Children.Add(check);
         }
 
         var button = new Button { Content = grid, Tag = level };
