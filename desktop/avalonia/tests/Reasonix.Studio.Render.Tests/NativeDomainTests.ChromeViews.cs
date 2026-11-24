@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -39,6 +40,8 @@ public sealed partial class NativeDomainTests
             var analysis = w.FindControl<Button>("ChromeAnalysis");
             Assert.NotNull(analysis);
             Assert.False(analysis.IsVisible);
+            Assert.Equal(1, w.FindControl<TextBlock>("CrumbTitle")!.Opacity);
+            Assert.Equal(FontWeight.Normal, w.FindControl<TextBlock>("ProjectName")!.FontWeight);
             available = true;
             w.ShowState(new SessionState { Running = true });
             w.ShowState(Reasonix.Studio.Testing.ReferenceConversation.Create());
