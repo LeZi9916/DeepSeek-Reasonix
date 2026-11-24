@@ -171,5 +171,9 @@ public sealed partial class NativeDomainTests
             .Concat(transcript.GetVisualDescendants().OfType<ScrollBar>()).ToArray();
         Assert.NotEmpty(bars);
         Assert.All(bars, bar => Assert.Equal(0, bar.Opacity));
+        var bar = bars.First(item => item.IsEffectivelyVisible);
+        w.MouseMove(bar.TranslatePoint(new Point(4, 12), w)!.Value);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(1, bar.Opacity);
     });
 }
