@@ -5,6 +5,7 @@
     <Style Selector="Button.pane-tab:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
     <Style Selector="Button.pane-close"><Setter Property="Width" Value="17"/><Setter Property="Height" Value="17"/><Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/><Setter Property="Padding" Value="0"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="CornerRadius" Value="4"/><Setter Property="FontSize" Value="13"/><Setter Property="Foreground" Value="{DynamicResource GhostBrush}"/><Setter Property="Opacity" Value="0"/></Style>
     <Style Selector="Button.pane-close.current"><Setter Property="Opacity" Value="1"/></Style>
+    <Style Selector="Button.pane-close:pointerover"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
     <Style Selector="StackPanel.pane-tab-group:pointerover Button.pane-close"><Setter Property="Opacity" Value="1"/></Style>
     <Style Selector="TextBlock.pane-workspace"><Setter Property="FontSize" Value="10"/><Setter Property="FontFamily" Value="{DynamicResource WorkbenchMonoFamily}"/><Setter Property="Foreground" Value="{DynamicResource GhostBrush}"/></Style>
     <Style Selector="TextBlock.pane-host"><Setter Property="FontSize" Value="10"/><Setter Property="FontFamily" Value="{DynamicResource WorkbenchMonoFamily}"/><Setter Property="Foreground" Value="{DynamicResource NetBrush}"/></Style>
