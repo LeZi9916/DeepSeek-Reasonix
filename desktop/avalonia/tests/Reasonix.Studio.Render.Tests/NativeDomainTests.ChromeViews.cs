@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Reasonix.Studio.State;
 using System.Net.Http;
 using System.Text.Json.Nodes;
@@ -45,6 +46,7 @@ public sealed partial class NativeDomainTests
             Assert.True(analysis.IsEffectivelyVisible);
             var workbench = w.FindControl<Button>("ViewSwitch")!;
             Assert.True(workbench.IsEffectivelyVisible);
+            Assert.Contains(workbench.GetVisualDescendants().OfType<Viewbox>(), view => view.Bounds.Width == 16);
             Capture("conversation");
 
             analysis.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

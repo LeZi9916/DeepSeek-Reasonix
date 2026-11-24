@@ -106,7 +106,7 @@
           <Grid Name="ChromeTools">
             <StackPanel Name="ChromeActions" Orientation="Horizontal" Spacing="4">
             <Button Name="FindButton" Classes="icon" HorizontalAlignment="Left" AutomationProperties.AutomationId="action:transcript.find">
-              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
+              <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
                 <Path Data="{StaticResource Glyph.search}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.4" StrokeLineCap="Round"/>
               </Canvas></Viewbox>
             </Button>
@@ -122,13 +122,13 @@
               </ContentControl>
             </Button>
             <Button Name="ChromeAnalysis" Classes="icon chrome-view" IsVisible="False" AutomationProperties.AutomationId="action:pane.view">
-              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
+              <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
                 <Path Data="M2 12h4l3-9 6 18 3-9h4" Stroke="{Binding #ChromeAnalysis.Foreground}" StrokeThickness="1.4" StrokeLineCap="Round" StrokeJoin="Round"/>
               </Canvas></Viewbox>
             </Button>
             <Button Name="ViewSwitch" Classes="icon chrome-view" AutomationProperties.AutomationId="action:pane.view">
               <Grid Width="28" Height="28">
-                <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
+                <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
                   <Path Data="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M9 3v18"
                         Stroke="{Binding #ViewSwitch.Foreground}" StrokeThickness="1.4" StrokeLineCap="Round" StrokeJoin="Round"/>
                 </Canvas></Viewbox>
