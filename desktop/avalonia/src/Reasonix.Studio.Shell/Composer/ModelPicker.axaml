@@ -14,7 +14,7 @@
            IsLightDismissEnabled="True">
       <Border Name="Frame" Classes="model-picker">
         <Grid Name="Layout" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" ColumnDefinitions="*,0">
-          <Grid Name="PickHeader" Grid.Row="0" Margin="10,9,10,4" ColumnDefinitions="*,Auto">
+          <Grid Name="PickHeader" Grid.Row="0" Margin="14,12,14,8" ColumnDefinitions="*,Auto">
             <TextBlock Name="PickTitle" Classes="model-picker-title" VerticalAlignment="Center"/>
             <TextBlock Name="PickSubtitle" Grid.Column="1" Classes="model-picker-subtitle" VerticalAlignment="Center"/>
           </Grid>

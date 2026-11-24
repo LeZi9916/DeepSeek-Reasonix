@@ -23,7 +23,7 @@
     <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
     <Setter Property="Padding" Value="7,0"/>
     <Setter Property="MinHeight" Value="32"/>
-    <Setter Property="Margin" Value="8,4,8,6"/>
+    <Setter Property="Margin" Value="8,0,8,6"/>
   </Style>
   <Style Selector="TextBox.model-picker-query">
     <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
@@ -40,7 +40,7 @@
     <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
   </Style>
   <Style Selector="WrapPanel.model-picker-chips">
-    <Setter Property="Margin" Value="8,0,8,4"/>
+    <Setter Property="Margin" Value="8,0,8,6"/>
   </Style>
   <Style Selector="Button.model-chip">
     <Setter Property="Height" Value="24"/>
@@ -71,7 +71,7 @@
     <Setter Property="BorderThickness" Value="1"/>
   </Style>
   <Style Selector="StackPanel.model-picker-list">
-    <Setter Property="Margin" Value="8,0,8,4"/>
+    <Setter Property="Margin" Value="4,0,4,6"/>
   </Style>
   <Style Selector="Border.model-group">
     <Setter Property="Padding" Value="8,4,8,3"/>
@@ -156,9 +156,9 @@
     <Setter Property="Foreground" Value="{DynamicResource OkInkBrush}"/>
   </Style>
   <Style Selector="Button.model-manage">
-    <Setter Property="MinHeight" Value="38"/>
-    <Setter Property="Padding" Value="10,0"/>
-    <Setter Property="Margin" Value="0,4,0,0"/>
+    <Setter Property="MinHeight" Value="36"/>
+    <Setter Property="Padding" Value="14,0"/>
+    <Setter Property="Margin" Value="0"/>
     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Background" Value="Transparent"/>
