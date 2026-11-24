@@ -97,6 +97,13 @@
   <Style Selector="settings|SettingsGroup.global-shortcut-setting TextBlock#Heading">
     <Setter Property="FontWeight" Value="Medium"/>
   </Style>
+  <Style Selector="ScrollViewer#SettingsScroller ScrollBar">
+    <Setter Property="Opacity" Value="0"/>
+    <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12"/></Transitions></Setter>
+  </Style>
+  <Style Selector="ScrollViewer#SettingsScroller ScrollBar:pointerover">
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
   <Style Selector="Border.settings-card">
     <Setter Property="Padding" Value="20,18,20,8"/><Setter Property="CornerRadius" Value="15"/>
     <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>

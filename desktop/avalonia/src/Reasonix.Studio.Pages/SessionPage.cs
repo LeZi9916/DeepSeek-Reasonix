@@ -74,6 +74,7 @@ public sealed partial class SessionPage : UserControl
             Content = _rows,
             Margin = new Thickness(0, 0, 6, 0),
         };
+        _scroll.Classes.Add("conversation-scroll");
 
         _scroll.ScrollChanged += (_, e) =>
         {

@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
@@ -156,5 +157,19 @@ public sealed partial class NativeDomainTests
         var badge = w.GetVisualDescendants().OfType<Border>()
             .Single(border => border.Child is TextBlock { Text: "重启后生效" });
         Assert.True(badge.IsEffectivelyVisible);
+    });
+
+    /// <summary>Checks the overlay scrollbars stay hidden until interaction.</summary>
+    /// <returns>The scrollbar style check.</returns>
+    [Fact]
+    public Task SettingsAndTranscriptScrollbarsHideAtRest() => WithSettings("settings-appearance", (w, _) =>
+    {
+        var settings = w.FindControl<ScrollViewer>("SettingsScroller")!;
+        var transcript = w.GetVisualDescendants().OfType<ScrollViewer>()
+            .Single(scroller => scroller.Classes.Contains("conversation-scroll"));
+        var bars = settings.GetVisualDescendants().OfType<ScrollBar>()
+            .Concat(transcript.GetVisualDescendants().OfType<ScrollBar>()).ToArray();
+        Assert.NotEmpty(bars);
+        Assert.All(bars, bar => Assert.Equal(0, bar.Opacity));
     });
 }
