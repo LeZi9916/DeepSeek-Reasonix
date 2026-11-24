@@ -120,6 +120,12 @@ public sealed partial class NativeDomainTests
         Capture("detail");
         var protocol = sheet.GetVisualDescendants().OfType<Button>().Single(button =>
             AutomationProperties.GetAutomationId(button) == "action:provider.protocol" && Equals(button.Tag, "anthropic"));
+        var protocolGroup = sheet.GetVisualDescendants().OfType<WrapPanel>().Single(panel => panel.Name == "Protocols").GetVisualParent<Border>()!;
+        var openAi = sheet.GetVisualDescendants().OfType<Button>().Single(button =>
+            AutomationProperties.GetAutomationId(button) == "action:provider.protocol" && Equals(button.Tag, "openai"));
+        Assert.InRange(protocolGroup.Bounds.Width, 258, 261);
+        Assert.InRange(openAi.Bounds.Width, 89, 92);
+        Assert.InRange(protocol.Bounds.Width, 162, 165);
         Click(protocol);
         Assert.Contains(sheet.GetVisualDescendants().OfType<TextBlock>(), item => item.Name == "ProviderSubtitle" && item.Text == "Anthropic 兼容 · api.deepseek.com");
         var address = Assert.Single(sheet.GetVisualDescendants().OfType<TextBox>(), item => item.Name == "Endpoint");
