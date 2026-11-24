@@ -28,6 +28,68 @@
       <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
     <Style Selector="TextBlock.extension-caption.failure"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
+    <Style Selector="Ellipse.reload-dot"><Setter Property="Fill" Value="{DynamicResource GhostBrush}"/></Style>
+    <Style Selector="Button.extension-reload.reloading Ellipse.reload-dot"><Setter Property="Fill" Value="{DynamicResource NetBrush}"/></Style>
+    <Style Selector="Button.extension-reload.applied Ellipse.reload-dot"><Setter Property="Fill" Value="{DynamicResource OkBrush}"/></Style>
+    <Style Selector="Button.extension-reload.refused Ellipse.reload-dot"><Setter Property="Fill" Value="{DynamicResource ErrBrush}"/></Style>
+    <Style Selector="Button.extension-action.extension-reload.reloading:disabled"><Setter Property="Opacity" Value="1"/></Style>
+    <Style Selector="Button.extension-action.extension-reload.applied">
+      <Setter Property="Foreground" Value="{DynamicResource OkInkBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource OkBrush}"/>
+    </Style>
+    <Style Selector="Button.extension-action.extension-reload.refused">
+      <Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource ErrBrush}"/>
+    </Style>
+    <Style Selector="TextBlock.reload-note.applied"><Setter Property="Foreground" Value="{DynamicResource OkInkBrush}"/></Style>
+    <Style Selector="TextBlock.reload-note.refused"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
+    <Style Selector="Window.motion Button.extension-reload">
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+          <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Window.motion Ellipse.reload-dot">
+      <Setter Property="Transitions">
+        <Transitions><BrushTransition Property="Fill" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/></Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Window.motion Button.extension-reload.reloading Ellipse.reload-dot">
+      <Style.Animations>
+        <Animation Duration="0:0:0.6" IterationCount="Infinite">
+          <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+          <KeyFrame Cue="50%" KeySpline="0.25,0.1,0.25,1"><Setter Property="Opacity" Value="0.4"/></KeyFrame>
+          <KeyFrame Cue="100%" KeySpline="0.25,0.1,0.25,1"><Setter Property="Opacity" Value="1"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+    <Style Selector="Window.motion Button.extension-reload.applied Ellipse.reload-dot">
+      <Style.Animations>
+        <Animation Duration="0:0:0.18" Easing="0.16,1,0.3,1">
+          <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/><Setter Property="TranslateTransform.Y" Value="6"/></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+    <Style Selector="Window.motion Button.extension-reload.refused">
+      <Style.Animations>
+        <Animation Duration="0:0:0.18">
+          <KeyFrame Cue="0%"><Setter Property="TranslateTransform.X" Value="0"/></KeyFrame>
+          <KeyFrame Cue="30%" KeySpline="0.16,1,0.3,1"><Setter Property="TranslateTransform.X" Value="-2"/></KeyFrame>
+          <KeyFrame Cue="70%" KeySpline="0.16,1,0.3,1"><Setter Property="TranslateTransform.X" Value="2"/></KeyFrame>
+          <KeyFrame Cue="100%" KeySpline="0.16,1,0.3,1"><Setter Property="TranslateTransform.X" Value="0"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+    <Style Selector="Window.motion TextBlock.reload-note.present">
+      <Style.Animations>
+        <Animation Duration="0:0:0.12" Easing="0.16,1,0.3,1" FillMode="Backward" PlaybackBehavior="OnlyIfVisible">
+          <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/><Setter Property="TranslateTransform.Y" Value="6"/></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.Y" Value="0"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
   </UserControl.Styles>
   <StackPanel Spacing="16">
     <Border Name="Away" IsVisible="False" Padding="12,9" CornerRadius="10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
@@ -40,16 +102,29 @@
     <settings:ExtensionSection Name="Packages" Tag="settings.plugin_packages"/>
     <settings:ExtensionSection Name="Services" Tag="ext.external_services"/>
     <settings:ExtensionSection Name="Skills" Tag="settings.skills"/>
-    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14,10">
-      <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="8">
-        <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24">
-          <Path Data="M20 7v5h-5 M4 17v-5h5 M5.5 7a8 8 0 0 1 14-1l.5 2 M18.5 17a8 8 0 0 1-14 1L4 16"
-                Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
-        </Canvas></Viewbox>
-        <TextBlock Name="Footnote" Grid.Column="1" Classes="extension-caption" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
-        <Button Name="Reload" Grid.Column="2" Classes="extension-action" IsVisible="False" AutomationProperties.AutomationId="action:extensions.reload"/>
-      </Grid>
-    </Border>
+    <StackPanel Name="ReloadArea" Spacing="9">
+      <Border Name="ReloadFoot" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14,10">
+        <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="8">
+          <Viewbox Width="14" Height="14" VerticalAlignment="Center"><Canvas Width="24" Height="24">
+            <Path Data="M20 7v5h-5 M4 17v-5h5 M5.5 7a8 8 0 0 1 14-1l.5 2 M18.5 17a8 8 0 0 1-14 1L4 16"
+                  Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+          </Canvas></Viewbox>
+          <TextBlock Name="Footnote" Grid.Column="1" Classes="extension-caption" Foreground="{DynamicResource MutedBrush}" LineHeight="18" FontWeight="Normal" VerticalAlignment="Center"/>
+          <Button Name="Reload" Grid.Column="2" Classes="extension-action extension-reload" VerticalAlignment="Center" AutomationProperties.AutomationId="action:extensions.reload">
+            <Button.RenderTransform><TranslateTransform/></Button.RenderTransform>
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <Ellipse Name="ReloadDot" Classes="reload-dot" Width="5" Height="5" VerticalAlignment="Center">
+                <Ellipse.RenderTransform><TranslateTransform/></Ellipse.RenderTransform>
+              </Ellipse>
+              <TextBlock Name="ReloadLabel" FontSize="{DynamicResource StudioType12}" FontWeight="Medium" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+        </Grid>
+      </Border>
+      <TextBlock Name="ReloadNote" Classes="extension-caption reload-note" FontSize="{DynamicResource StudioType13}" FontWeight="Normal" LineHeight="20.8" IsVisible="False" AutomationProperties.LiveSetting="Polite">
+        <TextBlock.RenderTransform><TranslateTransform/></TextBlock.RenderTransform>
+      </TextBlock>
+    </StackPanel>
     <TextBlock Name="Failure" Classes="extension-caption failure" IsVisible="False" AutomationProperties.LiveSetting="Polite"/>
   </StackPanel>
 </UserControl>

@@ -81,12 +81,16 @@ internal sealed partial class InstalledExtensionsView : UserControl
     public InstalledExtensionsView()
     {
         InitializeComponent();
+        InitializeReload();
         SizeChanged += (_, e) =>
         {
             var compact = e.NewSize.Width <= 500;
             Packages.SetCompact(compact);
             Services.SetCompact(compact);
             Skills.SetCompact(compact);
+            var split = e.NewSize.Width > 720;
+            ReloadArea.Width = split ? 400 : double.NaN;
+            ReloadArea.HorizontalAlignment = split ? HorizontalAlignment.Left : HorizontalAlignment.Stretch;
         };
     }
 
@@ -136,14 +140,8 @@ internal sealed partial class InstalledExtensionsView : UserControl
         Footnote.Text = Text("settings.changes_apply_from_the_next_turn");
         BackToScope.Content = Text("ext.back_to_the_current_project");
         BackToScope.Click += async (_, _) => await ChangeScopeAsync(null).ConfigureAwait(true);
-        Reload.Content = Text("common.retry");
-        Reload.Click += async (_, _) =>
-        {
-            if (await MutateAsync(() => api.ReloadExtensionsAsync(token)).ConfigureAwait(true))
-            {
-                Reload.IsVisible = false;
-            }
-        };
+        _reloadRevision++;
+        SetReloadFeedback(ReloadFeedback.Offer);
 
         await Task.WhenAll(LoadPackagesAsync(), ReadScopeChoicesAsync()).ConfigureAwait(true);
         await ChangeScopeAsync(null).ConfigureAwait(true);
@@ -306,7 +304,14 @@ internal sealed partial class InstalledExtensionsView : UserControl
     /// <returns>The installed inventory.</returns>
     private async Task LoadPackagesAsync()
     {
-        var inventory = await _api!.PluginsAsync(_token).ConfigureAwait(true);
+        var api = _api!;
+        var token = _token;
+        var inventory = await api.PluginsAsync(token).ConfigureAwait(true);
+        if (!ReferenceEquals(_api, api) || token.IsCancellationRequested)
+        {
+            return;
+        }
+
         var expanded = _pluginRows.Where(pair => pair.Value.IsExpanded).Select(pair => (string?)pair.Key["name"]).ToHashSet();
         _pluginRows.Clear();
         _packageRows.Children.Clear();
@@ -688,19 +693,6 @@ internal sealed partial class InstalledExtensionsView : UserControl
         {
             Report(error);
             return false;
-        }
-    }
-
-    /// <summary>Displays deferred runtime reload after a persisted package change.</summary>
-    /// <param name="failure">Host reload error, if any.</param>
-    private void ShowReloadFailure(string? failure)
-    {
-        Reload.IsVisible = !string.IsNullOrEmpty(failure);
-        if (Reload.IsVisible)
-        {
-            Failure.Text = Text("common.saved_not_applied_yet") + " · " + failure;
-            Failure.Classes.Add("failure");
-            Failure.IsVisible = true;
         }
     }
 
