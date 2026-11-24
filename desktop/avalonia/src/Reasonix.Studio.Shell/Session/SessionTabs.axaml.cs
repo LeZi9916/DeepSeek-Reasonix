@@ -65,11 +65,14 @@ internal sealed partial class SessionTabs : UserControl
             Add("app.close_the_others_n", () => CloseRequested?.Invoke(panes.Where(p => p != pane).ToArray()), panes.Count - 1);
             Add("app.close_all_n", () => CloseRequested?.Invoke(panes.ToArray()), panes.Count);
             button.ContextFlyout = menu;
-            var close = new Button { Classes = { "pane-tab" }, Content = "×", Width = 26, Padding = default };
+            var close = new Button { Content = "×" };
+            close.Classes.Add("pane-close");
+            close.Classes.Set("current", ReferenceEquals(pane, active));
             AutomationProperties.SetAutomationId(close, "action:pane.close");
             AutomationProperties.SetName(close, MessageCatalog.Get("workbench.close_tab", language));
             close.Click += (_, _) => CloseRequested?.Invoke([pane]);
-            Tabs.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Children = { button, close } });
+            var group = new StackPanel { Orientation = Orientation.Horizontal, Classes = { "pane-tab-group" }, Children = { button, close } };
+            Tabs.Children.Add(group);
             button.KeyDown += (_, e) =>
             {
                 if (e.Key is not (Key.Left or Key.Right or Key.Home or Key.End))

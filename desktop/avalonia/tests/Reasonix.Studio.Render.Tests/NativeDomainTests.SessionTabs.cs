@@ -52,6 +52,13 @@ public sealed partial class NativeDomainTests
                     tabs.Show(new[] { first, second }, first, InterfaceLanguage.En);
                     Dispatcher.UIThread.RunJobs();
                     var buttons = tabs.GetVisualDescendants().OfType<Button>().Where(button => AutomationProperties.GetAutomationId(button) == "action:pane.activate").ToArray();
+                    Assert.InRange(buttons[0].Bounds.Width, 132, 216);
+                    var firstClose = Assert.IsType<StackPanel>(buttons[0].Parent).Children.OfType<Button>()
+                        .Single(button => AutomationProperties.GetAutomationId(button) == "action:pane.close");
+                    var secondClose = Assert.IsType<StackPanel>(buttons[1].Parent).Children.OfType<Button>()
+                        .Single(button => AutomationProperties.GetAutomationId(button) == "action:pane.close");
+                    Assert.Equal(1, firstClose.Opacity);
+                    Assert.Equal(0, secondClose.Opacity);
                     Assert.Contains(buttons[0].GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "●");
                     Assert.Contains(buttons[1].GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "•");
                     var point = buttons[1].TranslatePoint(new Point(40, 12), window)!.Value;
