@@ -2,6 +2,7 @@
              x:Class="Reasonix.Studio.Pages.UserMessage" UseLayoutRounding="False">
   <UserControl.Styles><StyleInclude Source="avares://Reasonix.Studio.Pages/ConversationStyles.axaml"/>
     <Style Selector="UserControl:pointerover StackPanel.user-actions, UserControl:focus-within StackPanel.user-actions"><Setter Property="Opacity" Value="1"/></Style>
+    <Style Selector="Window.motion StackPanel.user-actions"><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/></Transitions></Setter></Style>
   </UserControl.Styles>
   <StackPanel Name="BubbleColumn" HorizontalAlignment="Right">
     <Border Background="{DynamicResource OverlayBrush}" CornerRadius="15" Padding="14,10" AutomationProperties.AutomationId="class:txt">
