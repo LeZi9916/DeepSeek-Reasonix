@@ -123,7 +123,7 @@
     <Setter Property="MinHeight" Value="36"/><Setter Property="Padding" Value="0,6"/>
   </Style>
   <Style Selector="TextBlock.setting-row-name">
-    <Setter Property="FontWeight" Value="Medium"/><Setter Property="LineHeight" Value="19"/>
+    <Setter Property="FontWeight" Value="SemiBold"/><Setter Property="LineHeight" Value="19"/>
   </Style>
   <Style Selector="TextBlock.setting-row-detail"><Setter Property="LineHeight" Value="18"/></Style>
   <Style Selector="Border.progress-thresholds">

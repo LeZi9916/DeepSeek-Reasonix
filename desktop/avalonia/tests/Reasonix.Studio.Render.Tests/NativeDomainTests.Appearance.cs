@@ -1,6 +1,7 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Controls;
@@ -97,6 +98,9 @@ public sealed partial class NativeDomainTests
             var frames = w.GetVisualDescendants().OfType<Border>()
                 .Where(border => border.Child is AspectRatioView).ToArray();
             Assert.All(frames, border => Assert.Equal(1, border.BorderThickness.Left));
+            var label = w.GetVisualDescendants().OfType<TextBlock>()
+                .First(block => block.Text == "明暗" && block.Classes.Contains("setting-row-name"));
+            Assert.Equal(FontWeight.SemiBold, label.FontWeight);
             var selectedRing = w.GetVisualDescendants().OfType<Border>()
                 .Single(border => border.BorderThickness.Left == 2 && border.CornerRadius.TopLeft == 7);
             Assert.Equal(2, selectedRing.BorderThickness.Left);
