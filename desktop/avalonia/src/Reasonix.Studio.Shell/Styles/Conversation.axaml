@@ -37,6 +37,9 @@
     <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
   </Style>
   <Style Selector="Button.compose-pill"><Setter Property="CornerRadius" Value="999"/></Style>
+  <Style Selector="Window.motion Button.compose-tool">
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></Setter>
+  </Style>
   <Style Selector="Button.compose-changes TextBlock"><Setter Property="FontFeatures" Value="tnum"/></Style>
   <Style Selector="Button.compose-changes TextBlock, Button.compose-context TextBlock"><Setter Property="LineHeight" Value="{DynamicResource StudioType11}"/><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="FontSize" Value="{DynamicResource StudioType11}"/></Style>
   <Style Selector="Button.compose-context"><Setter Property="CornerRadius" Value="5"/><Setter Property="FontSize" Value="{DynamicResource StudioType11}"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="Padding" Value="6,0"/><Setter Property="Height" Value="25"/></Style>
