@@ -103,6 +103,8 @@ public sealed partial class NativeDomainTests
         var modePopup = w.FindControl<ComposerPopup>("ModePopup")!;
         Assert.True(modePopup.IsOpen);
         var modePanel = w.FindControl<ModePanel>("ModePanel")!;
+        var currentBrush = Assert.IsAssignableFrom<ISolidColorBrush>(modePanel.FindControl<Button>("AgentOption")!.Background);
+        Assert.InRange(currentBrush.Color.A, 0, 10);
         modePanel.FindControl<Button>("PlanOption")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Dispatcher.UIThread.RunJobs();
         Assert.Equal("Plan", w.FindControl<TextBlock>("PlanModeLabel")!.Text);
