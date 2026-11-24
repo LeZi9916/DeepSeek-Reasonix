@@ -382,7 +382,17 @@ public sealed partial class PermissionSettingsView : SettingsFormView
                 var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
                 var name = new WrapPanel { ItemSpacing = 8, LineSpacing = 4 };
                 var expanded = !closed.Contains(group.Key);
-                var caret = new TextBlock { Text = expanded ? "▾" : "▸", Classes = { "permission-detail" }, VerticalAlignment = VerticalAlignment.Center };
+                var caret = new Avalonia.Controls.Shapes.Path
+                {
+                    Data = Geometry.Parse("M8 5l7 7-7 7z"),
+                    Width = 8,
+                    Height = 8,
+                    Stretch = Stretch.Uniform,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    RenderTransformOrigin = new RelativePoint(0.5, 0.5, RelativeUnit.Relative),
+                    RenderTransform = new RotateTransform(expanded ? 90 : 0),
+                };
+                caret.Bind(Avalonia.Controls.Shapes.Shape.FillProperty, caret.GetResourceObservable("GhostBrush"));
                 name.Children.Add(caret);
                 name.Children.Add(new TextBlock
                 {
@@ -421,7 +431,7 @@ public sealed partial class PermissionSettingsView : SettingsFormView
                     }
 
                     body.IsVisible = !closed.Contains(group.Key);
-                    caret.Text = body.IsVisible ? "▾" : "▸";
+                    caret.RenderTransform = new RotateTransform(body.IsVisible ? 90 : 0);
                 };
                 RuleTables.Children.Add(new Border { Child = header, Classes = { "permission-line" } });
                 foreach (var row in rows)
