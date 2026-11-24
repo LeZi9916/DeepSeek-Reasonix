@@ -110,7 +110,7 @@
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
   </Style>
   <Style Selector="Border.settings-card.compact-bottom">
-    <Setter Property="Padding" Value="20,18,20,4"/>
+    <Setter Property="Padding" Value="20,18,20,5"/>
   </Style>
   <Style Selector="StackPanel#SettingsBody">
     <Setter Property="Margin" Value="24,24,24,48"/>
