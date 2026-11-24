@@ -147,4 +147,14 @@ public sealed partial class NativeDomainTests
         Assert.NotNull(writes[1]["phone"]);
         Dispatcher.UIThread.RunJobs();
     });
+
+    /// <summary>Checks the restart badge on the language row.</summary>
+    /// <returns>The common-page style check.</returns>
+    [Fact]
+    public Task CommonLanguageRowShowsTheRestartBadge() => WithSettings("settings-common", (w, _) =>
+    {
+        var badge = w.GetVisualDescendants().OfType<Border>()
+            .Single(border => border.Child is TextBlock { Text: "重启后生效" });
+        Assert.True(badge.IsEffectivelyVisible);
+    });
 }

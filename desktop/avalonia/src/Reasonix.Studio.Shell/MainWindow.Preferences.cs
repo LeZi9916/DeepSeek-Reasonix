@@ -585,15 +585,21 @@ public sealed partial class MainWindow
             new SectionEntry("zh", "中文"),
             new SectionEntry("en", "English"),
         };
-        Choice(content, MessageKey.Common.Language, choices, (string?)_look["language"] ?? string.Empty, async id =>
-        {
-            if (_engine is not null)
+        Choice(
+            content,
+            MessageKey.Common.Language,
+            choices,
+            (string?)_look["language"] ?? string.Empty,
+            async id =>
             {
-                var look = await _engine.Pages.SetAppearanceAsync(id, null, _closing.Token).ConfigureAwait(true);
-                ApplyAppearance(look, Conversation.FoldsTurnWork);
-                FilterPreferences();
-            }
-        });
+                if (_engine is not null)
+                {
+                    var look = await _engine.Pages.SetAppearanceAsync(id, null, _closing.Token).ConfigureAwait(true);
+                    ApplyAppearance(look, Conversation.FoldsTurnWork);
+                    FilterPreferences();
+                }
+            },
+            "settings.takes_effect_after_a_restart");
     }
 
     /// <summary>Adds the desktop send chord preference.</summary>
@@ -706,7 +712,8 @@ public sealed partial class MainWindow
     /// <param name="choices">Permitted values.</param>
     /// <param name="current">Current value.</param>
     /// <param name="save">Applies one selected value.</param>
-    private void Choice(StackPanel content, string key, SectionEntry[] choices, string current, Func<string, Task> save)
+    /// <param name="applyKey">Optional translated notice describing when the setting takes effect.</param>
+    private void Choice(StackPanel content, string key, SectionEntry[] choices, string current, Func<string, Task> save, string? applyKey = null)
     {
         var action = key switch
         {
@@ -719,7 +726,7 @@ public sealed partial class MainWindow
         };
         if (action is not null)
         {
-            SegmentChoice(content, key, action, choices, current, save);
+            SegmentChoice(content, key, action, choices, current, save, applyKey: applyKey);
             return;
         }
 
@@ -747,7 +754,7 @@ public sealed partial class MainWindow
                 select.IsEnabled = true;
             }
         };
-        AddRow(content, key, select);
+        AddRow(content, key, select, applyKey: applyKey);
     }
 
     /// <summary>A displayed label paired with its stable selection id.</summary>
