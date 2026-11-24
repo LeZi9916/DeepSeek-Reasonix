@@ -4,6 +4,14 @@
     <Style Selector="Button.pane-tab.current"><Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="BorderBrush" Value="Transparent"/></Style>
     <Style Selector="Button.pane-tab:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
     <Style Selector="Button.pane-close"><Setter Property="Width" Value="17"/><Setter Property="Height" Value="17"/><Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/><Setter Property="Padding" Value="0"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="CornerRadius" Value="4"/><Setter Property="FontSize" Value="13"/><Setter Property="Foreground" Value="{DynamicResource GhostBrush}"/><Setter Property="Opacity" Value="0"/></Style>
+    <Style Selector="Window.motion Border#TabMark">
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Canvas.Left" Duration="0:0:0.24" Easing="0.22,1,0.36,1"/>
+          <DoubleTransition Property="Width" Duration="0:0:0.24" Easing="0.22,1,0.36,1"/>
+        </Transitions>
+      </Setter>
+    </Style>
     <Style Selector="Button.pane-close.current"><Setter Property="Opacity" Value="1"/></Style>
     <Style Selector="Button.pane-close:pointerover"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
     <Style Selector="Button.pane-peer"><Setter Property="Width" Value="18"/><Setter Property="Height" Value="18"/><Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="4,0,0,0"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="CornerRadius" Value="6"/><Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="VerticalContentAlignment" Value="Center"/></Style>
