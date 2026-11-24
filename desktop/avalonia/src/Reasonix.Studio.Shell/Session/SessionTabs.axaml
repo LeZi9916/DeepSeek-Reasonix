@@ -7,8 +7,8 @@
     <Style Selector="Window.motion Border#TabMark">
       <Setter Property="Transitions">
         <Transitions>
-          <DoubleTransition Property="Canvas.Left" Duration="0:0:0.24" Easing="0.22,1,0.36,1"/>
-          <DoubleTransition Property="Width" Duration="0:0:0.24" Easing="0.22,1,0.36,1"/>
+          <DoubleTransition Property="Canvas.Left" Duration="0:0:0.26" Easing="0.16,1,0.3,1"/>
+          <DoubleTransition Property="Width" Duration="0:0:0.26" Easing="0.16,1,0.3,1"/>
         </Transitions>
       </Setter>
     </Style>
@@ -21,9 +21,10 @@
     <Style Selector="TextBlock.pane-host"><Setter Property="FontSize" Value="10"/><Setter Property="FontFamily" Value="{DynamicResource WorkbenchMonoFamily}"/><Setter Property="Foreground" Value="{DynamicResource NetBrush}"/></Style>
     <Style Selector="Window.motion Border.pane-pip.running">
       <Style.Animations>
-        <Animation Duration="0:0:1.4" Easing="0.65,0,0.35,1" IterationCount="Infinite" PlaybackDirection="Alternate">
+        <Animation Duration="0:0:0.6" Easing="0.42,0,0.58,1" IterationCount="Infinite">
           <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1"/></KeyFrame>
-          <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.45"/></KeyFrame>
+          <KeyFrame Cue="50%"><Setter Property="Opacity" Value="0.4"/></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
         </Animation>
       </Style.Animations>
     </Style>
