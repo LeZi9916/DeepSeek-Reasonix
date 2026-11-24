@@ -129,5 +129,6 @@ public sealed partial class MainWindow
         }
 
         _workspaceSearch.Open(entries, Language);
+        EnterView(_workspaceSearch, slideX: 14);
     }
 }

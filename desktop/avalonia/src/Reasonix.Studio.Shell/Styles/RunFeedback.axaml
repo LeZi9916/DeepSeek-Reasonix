@@ -1,0 +1,78 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:composer="using:Reasonix.Studio.Shell.Composer">
+  <Styles.Resources>
+    <SolidColorBrush x:Key="RunWaitingWash" Color="{DynamicResource Warn}" Opacity="0.16"/>
+  </Styles.Resources>
+  <Style Selector="Border.compose-run-badge"><Setter Property="Background" Value="{DynamicResource NetWashBrush}"/></Style>
+  <Style Selector="Border.compose-run-badge.waiting"><Setter Property="Background" Value="{DynamicResource RunWaitingWash}"/></Style>
+  <Style Selector="Border.compose-run-badge composer|PlanRunMark"><Setter Property="Foreground" Value="{DynamicResource NetInkBrush}"/></Style>
+  <Style Selector="Border.compose-run-badge TextBlock.compose-run-clock"><Setter Property="Foreground" Value="{DynamicResource NetInkBrush}"/></Style>
+  <Style Selector="Border.compose-run-badge.waiting composer|PlanRunMark"><Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/></Style>
+  <Style Selector="Border.compose-run-badge.waiting TextBlock.compose-run-clock"><Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/></Style>
+  <Style Selector="Border.compose-run-badge composer|PlanRunMark Path"><Setter Property="StrokeThickness" Value="1.7"/></Style>
+  <Style Selector="Window.motion Border.compose-run-badge.moving Path.plan-mark-stem">
+    <Setter Property="StrokeDashArray" Value="1.4400,4.5600"/>
+    <Style.Animations><Animation Duration="0:0:2.2" IterationCount="Infinite">
+      <KeyFrame Cue="0%"><Setter Property="StrokeDashOffset" Value="-0.0000"/></KeyFrame>
+      <KeyFrame Cue="100%"><Setter Property="StrokeDashOffset" Value="-6.0000"/></KeyFrame>
+    </Animation></Style.Animations>
+  </Style>
+  <Style Selector="Window.motion Border.compose-run-badge.moving Path.plan-mark-bowl">
+    <Setter Property="StrokeDashArray" Value="2.4721,7.8283"/>
+    <Style.Animations><Animation Duration="0:0:2.2" IterationCount="Infinite">
+      <KeyFrame Cue="0%"><Setter Property="StrokeDashOffset" Value="-3.3710"/></KeyFrame>
+      <KeyFrame Cue="100%"><Setter Property="StrokeDashOffset" Value="-13.6714"/></KeyFrame>
+    </Animation></Style.Animations>
+  </Style>
+  <Style Selector="Window.motion Border.compose-run-badge.moving Path.plan-mark-leg">
+    <Setter Property="StrokeDashArray" Value="0.7765,2.4588"/>
+    <Style.Animations><Animation Duration="0:0:2.2" IterationCount="Infinite">
+      <KeyFrame Cue="0%"><Setter Property="StrokeDashOffset" Value="-2.1176"/></KeyFrame>
+      <KeyFrame Cue="100%"><Setter Property="StrokeDashOffset" Value="-5.3529"/></KeyFrame>
+    </Animation></Style.Animations>
+  </Style>
+  <Style Selector="Window.motion Border.compose-run-badge.waiting composer|PlanRunMark Path">
+    <Style.Animations><Animation Duration="0:0:0.6" IterationCount="Infinite">
+      <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+      <KeyFrame Cue="50%" KeySpline="0.42,0,0.58,1"><Setter Property="Opacity" Value="0.4"/></KeyFrame>
+      <KeyFrame Cue="100%" KeySpline="0.42,0,0.58,1"><Setter Property="Opacity" Value="1"/></KeyFrame>
+    </Animation></Style.Animations>
+  </Style>
+  <Style Selector="composer|RunTokenValue">
+    <Setter Property="StableInk" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="HighlightInk" Value="{DynamicResource AccentBrush}"/>
+  </Style>
+  <Style Selector="StackPanel.run-token-reading.estimated composer|RunTokenValue">
+    <Setter Property="StableInk" Value="{DynamicResource MutedBrush}"/>
+  </Style>
+  <Style Selector="Window.motion StackPanel.run-token-reading.landed composer|RunTokenValue">
+    <Style.Animations><Animation Duration="0:0:0.52" Easing="0.16,1,0.3,1">
+      <KeyFrame Cue="0%"><Setter Property="Tint" Value="1"/></KeyFrame>
+      <KeyFrame Cue="100%"><Setter Property="Tint" Value="0"/></KeyFrame>
+    </Animation></Style.Animations>
+  </Style>
+  <Style Selector="Window.motion StackPanel.run-token-reading.landed Viewbox.run-token-arrow.up">
+    <Style.Animations><Animation Duration="0:0:0.52" Easing="0.16,1,0.3,1">
+      <KeyFrame Cue="0%">
+        <Setter Property="Opacity" Value="0.45"/><Setter Property="TranslateTransform.Y" Value="3"/>
+        <Setter Property="ScaleTransform.ScaleX" Value="0.86"/><Setter Property="ScaleTransform.ScaleY" Value="0.86"/>
+      </KeyFrame>
+      <KeyFrame Cue="100%">
+        <Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.Y" Value="0"/>
+        <Setter Property="ScaleTransform.ScaleX" Value="1"/><Setter Property="ScaleTransform.ScaleY" Value="1"/>
+      </KeyFrame>
+    </Animation></Style.Animations>
+  </Style>
+  <Style Selector="Window.motion StackPanel.run-token-reading.landed Viewbox.run-token-arrow.down">
+    <Style.Animations><Animation Duration="0:0:0.52" Easing="0.16,1,0.3,1">
+      <KeyFrame Cue="0%">
+        <Setter Property="Opacity" Value="0.45"/><Setter Property="TranslateTransform.Y" Value="-3"/>
+        <Setter Property="ScaleTransform.ScaleX" Value="0.86"/><Setter Property="ScaleTransform.ScaleY" Value="0.86"/>
+      </KeyFrame>
+      <KeyFrame Cue="100%">
+        <Setter Property="Opacity" Value="1"/><Setter Property="TranslateTransform.Y" Value="0"/>
+        <Setter Property="ScaleTransform.ScaleX" Value="1"/><Setter Property="ScaleTransform.ScaleY" Value="1"/>
+      </KeyFrame>
+    </Animation></Style.Animations>
+  </Style>
+</Styles>

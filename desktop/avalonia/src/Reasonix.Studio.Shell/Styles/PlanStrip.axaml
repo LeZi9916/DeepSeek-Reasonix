@@ -1,40 +1,41 @@
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:composer="using:Reasonix.Studio.Shell.Composer">
+  <Style Selector="composer|PlanRunMark"><Setter Property="Foreground" Value="{DynamicResource NetBrush}"/></Style>
   <Style Selector="Window.motion composer|PlanStrip Button.plan-summary">
     <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12"/></Transitions></Setter>
   </Style>
-  <Style Selector="Window.motion composer|PlanStrip.moving Path.plan-mark-stem, Window.motion Border.compose-run-badge.moving Path.plan-mark-stem">
+  <Style Selector="Window.motion composer|PlanStrip.moving Path.plan-mark-stem, Window.motion composer|PlanRunMark.deck-progress Path.plan-mark-stem">
     <Setter Property="StrokeDashArray" Value="3.52,3.52"/>
     <Style.Animations>
-      <Animation Duration="0:0:1.6" Easing="0.65,0,0.35,1" IterationCount="Infinite">
+      <Animation Duration="0:0:1.6" IterationCount="Infinite">
         <KeyFrame Cue="0%"><Setter Property="StrokeDashOffset" Value="3.52"/></KeyFrame>
-        <KeyFrame Cue="22%"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
-        <KeyFrame Cue="78%"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
-        <KeyFrame Cue="100%"><Setter Property="StrokeDashOffset" Value="-3.52"/></KeyFrame>
+        <KeyFrame Cue="22%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
+        <KeyFrame Cue="78%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
+        <KeyFrame Cue="100%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="-3.52"/></KeyFrame>
       </Animation>
     </Style.Animations>
   </Style>
-  <Style Selector="Window.motion composer|PlanStrip.moving Path.plan-mark-bowl, Window.motion Border.compose-run-badge.moving Path.plan-mark-bowl">
+  <Style Selector="Window.motion composer|PlanStrip.moving Path.plan-mark-bowl, Window.motion composer|PlanRunMark.deck-progress Path.plan-mark-bowl">
     <Setter Property="StrokeDashArray" Value="6.04,6.04"/>
     <Style.Animations>
-      <Animation Duration="0:0:1.6" Easing="0.65,0,0.35,1" IterationCount="Infinite">
+      <Animation Duration="0:0:1.6" IterationCount="Infinite">
         <KeyFrame Cue="0%"><Setter Property="StrokeDashOffset" Value="6.04"/></KeyFrame>
-        <KeyFrame Cue="18%"><Setter Property="StrokeDashOffset" Value="6.04"/></KeyFrame>
-        <KeyFrame Cue="48%"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
-        <KeyFrame Cue="82%"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
-        <KeyFrame Cue="100%"><Setter Property="StrokeDashOffset" Value="-6.04"/></KeyFrame>
+        <KeyFrame Cue="18%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="6.04"/></KeyFrame>
+        <KeyFrame Cue="48%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
+        <KeyFrame Cue="82%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
+        <KeyFrame Cue="100%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="-6.04"/></KeyFrame>
       </Animation>
     </Style.Animations>
   </Style>
-  <Style Selector="Window.motion composer|PlanStrip.moving Path.plan-mark-leg, Window.motion Border.compose-run-badge.moving Path.plan-mark-leg">
+  <Style Selector="Window.motion composer|PlanStrip.moving Path.plan-mark-leg, Window.motion composer|PlanRunMark.deck-progress Path.plan-mark-leg">
     <Setter Property="StrokeDashArray" Value="1.90,1.90"/>
     <Style.Animations>
-      <Animation Duration="0:0:1.6" Easing="0.65,0,0.35,1" IterationCount="Infinite">
+      <Animation Duration="0:0:1.6" IterationCount="Infinite">
         <KeyFrame Cue="0%"><Setter Property="StrokeDashOffset" Value="1.90"/></KeyFrame>
-        <KeyFrame Cue="44%"><Setter Property="StrokeDashOffset" Value="1.90"/></KeyFrame>
-        <KeyFrame Cue="62%"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
-        <KeyFrame Cue="86%"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
-        <KeyFrame Cue="100%"><Setter Property="StrokeDashOffset" Value="-1.90"/></KeyFrame>
+        <KeyFrame Cue="44%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="1.90"/></KeyFrame>
+        <KeyFrame Cue="62%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
+        <KeyFrame Cue="86%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="0"/></KeyFrame>
+        <KeyFrame Cue="100%" KeySpline="0.65,0,0.35,1"><Setter Property="StrokeDashOffset" Value="-1.90"/></KeyFrame>
       </Animation>
     </Style.Animations>
   </Style>

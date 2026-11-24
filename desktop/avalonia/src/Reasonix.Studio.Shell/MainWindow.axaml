@@ -38,6 +38,7 @@
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerMenus.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerAttachments.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/PlanStrip.axaml" />
+    <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/RunFeedback.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Sidebar.axaml" />
     <Style Selector="Window.illustrated ctl|StudioPane"><Setter Property="Background" Value="Transparent"/></Style>
     <Style Selector="Window.illustrated ctl|StudioRail"><Setter Property="Background" Value="{DynamicResource ArtworkRailBrush}"/></Style>
@@ -236,9 +237,14 @@
                   <Grid Name="ComposeRows" RowDefinitions="30,Auto,Auto,Auto,46">
                     <Grid Name="ComposeRunState" Grid.Row="0" ColumnDefinitions="*,Auto" Margin="12,6,12,0" Height="24">
                       <Border Name="ComposerRunBadge" HorizontalAlignment="Left" VerticalAlignment="Center" Classes="compose-run-badge"
-                              Padding="7,4" CornerRadius="5" Background="{DynamicResource NetWashBrush}" IsVisible="False">
-                        <composer:PlanRunMark/>
+                              Padding="8,0" Height="22" CornerRadius="{DynamicResource RSm}" IsVisible="False">
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                          <composer:PlanRunMark Width="12" Height="12"/>
+                          <TextBlock Name="ComposerRunClock" Classes="compose-run-clock" IsVisible="False" Opacity="0.78"
+                                     FontSize="{DynamicResource StudioType12}" LineHeight="12" VerticalAlignment="Center"/>
+                        </StackPanel>
                       </Border>
+                      <composer:RunTokens Name="ComposerRunTokens" Grid.Column="1" VerticalAlignment="Center" IsVisible="False"/>
                       <Button Name="ChangedFiles" Grid.Column="1" Classes="compose-changes compose-pill" IsVisible="False" VerticalAlignment="Center" AutomationProperties.AutomationId="action:changes.open">
                         <StackPanel Orientation="Horizontal" Spacing="5"><ctl:StudioLineText Name="ChangedFilesLabel"/><ctl:StudioLineText Name="ChangedAdded" Foreground="{DynamicResource AddBrush}"/><ctl:StudioLineText Name="ChangedRemoved" Foreground="{DynamicResource DelBrush}"/></StackPanel>
                       </Button>
@@ -282,13 +288,14 @@
                       <Button Name="Stop" Grid.RowSpan="2" Grid.Column="2" Classes="compose-tool compose-stop" Width="32" Height="32" IsVisible="False" CornerRadius="16" Margin="4,0,0,0"><PathIcon Width="15" Height="15" Data="M5 5H19V19H5Z"/></Button>
                       <Button Name="Send" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Grid.RowSpan="2" Grid.Column="3" Classes="compose-tool compose-send" Width="32" Height="32" Margin="4,0,0,0" CornerRadius="16" Padding="0" AutomationProperties.AutomationId="action:session.send"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="18" Height="18"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.arrow}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="SendIntent" IsVisible="False" VerticalAlignment="Center"/></StackPanel></Button>
                     </Grid>
+                    <ctl:ComposerSweep Grid.RowSpan="5" BorderThickness="1" CornerRadius="{DynamicResource RLg}" Ink="{DynamicResource Focus}" IsHitTestVisible="False" Opacity="0"/>
                     <composer:ModelPicker Name="ModelPicker" Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
                     <composer:ComposerPopup Name="ModePopup" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="300" MenuPadding="0,0,0,6">
                       <composer:ComposerPopup.Panel>
                         <composer:ModePanel Name="ModePanel"/>
                       </composer:ComposerPopup.Panel>
                     </composer:ComposerPopup>
-                    <composer:ComposerPopup Name="PolicyPopup" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="8">
+                    <composer:ComposerPopup Name="PolicyPopup" Grid.Row="4" HorizontalAlignment="Left" VerticalAlignment="Bottom" PreferredWidth="340" MenuPadding="8" MotionMilliseconds="180">
                       <composer:ComposerPopup.Panel>
                         <composer:PolicyPanel Name="PolicyPanel"/>
                       </composer:ComposerPopup.Panel>
@@ -319,6 +326,9 @@
                   <Button Name="WalletButton" Grid.Column="5" Classes="compose-context" IsVisible="False"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.wallet}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="WalletText" Classes="compose-reading"/></StackPanel></Button>
                   </Grid>
                 </Border>
+                <composer:ComposerPendingSweep Name="PendingComposerSweep" Grid.Row="1" Height="1"
+                                               VerticalAlignment="Bottom" Margin="0,0,0,28" Ink="{DynamicResource NetBrush}"
+                                               ClipToBounds="True" IsHitTestVisible="False" IsVisible="False"/>
               </Grid>
             </StackPanel>
           </Grid>

@@ -88,10 +88,12 @@ public sealed partial class MainWindow
         var draftKey = DraftStore.KeyFor(_engine.DraftHost, status.WorkspaceRoot, status.SessionPath);
         if (draftKey != _draftKey)
         {
+            CloseComposerMenus();
             _draftKey = draftKey;
             ClearAttachments();
         }
 
+        UpdateComposerPending();
         Composer.Text = DraftStore.Read(_drafts, _draftKey);
         Composer.CaretIndex = Composer.Text?.Length ?? 0;
         DismissRefinement();
@@ -154,6 +156,7 @@ public sealed partial class MainWindow
         ShowSidebarState(state);
         ShowPlanStrip(state);
         var running = state.Running;
+        ComposeSurface.Classes.Set("running", running);
         ComposeBranch.IsEnabled = !running;
         if (running)
         {
@@ -165,11 +168,7 @@ public sealed partial class MainWindow
         // starts from too.
         var intent = SendKey.IntentFor(running, QueueDuringRun ? SendKey.Intent.FollowUp : SendKey.Intent.Steer);
         var shortcutHint = SendKey.Hint(_shortcut, running, Language, intent);
-        var runningStatus = MessageCatalog.Get(state.Doing == "common.idle" ? MessageKey.Common.Running : state.Doing, Language);
-        AutomationProperties.SetName(ComposerRunBadge, runningStatus);
-        ToolTip.SetTip(ComposerRunBadge, runningStatus);
-        ComposerRunBadge.IsVisible = running;
-        ComposerRunBadge.Classes.Set("moving", running);
+        ShowComposerRunFeedback(state);
         DrawComposeMeters(state);
         Composer.PlaceholderText = _workspacePreferences.ShowComposerPlaceholder
             ? MessageCatalog.Get(running ? MessageKey.Composer.YouCanKeepTypingWhile : MessageKey.Composer.DescribeATaskQuestionOr, Language)

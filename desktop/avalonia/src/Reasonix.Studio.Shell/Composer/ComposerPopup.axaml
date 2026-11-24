@@ -11,8 +11,8 @@
            VerticalOffset="-9"
            PlacementConstraintAdjustment="SlideX"
            ShouldUseOverlayLayer="True"
-           IsLightDismissEnabled="True">
-      <Border Name="Frame" Classes="composer-menu">
+           IsLightDismissEnabled="False">
+      <Border Name="Frame" Classes="composer-menu" RenderTransformOrigin="0%,100%">
         <ScrollViewer Name="Scroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch">
           <ContentPresenter Name="PanelPresenter" Content="{Binding Panel, ElementName=Root}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"/>
         </ScrollViewer>

@@ -165,11 +165,12 @@ public sealed partial class MainWindow
     private void OpenPreferences()
     {
         QuickLinksPopup.IsOpen = false;
+        CloseComposerMenus();
         DisarmStop();
         SetupPanel.IsVisible = false;
         LayoutRoot.IsVisible = false;
         SettingsPanel.IsVisible = true;
-        EnterView(SettingsPanel);
+        EnterView(SettingsPanel, durationMs: 120, easing: new Avalonia.Animation.KeySpline(0, 0, 0.58, 1));
         BackLabel.Text = MessageCatalog.Get(MessageKey.Settings.BackToWorkspace, Language);
         Avalonia.Automation.AutomationProperties.SetName(CloseSettings, BackLabel.Text);
         SettingsTitle.Text = MessageCatalog.Get(MessageKey.Common.Settings, Language);

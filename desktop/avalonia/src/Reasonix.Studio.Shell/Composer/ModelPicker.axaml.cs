@@ -50,6 +50,9 @@ public sealed partial class ModelPicker : UserControl
         Color.Parse("#C49A3A"),
     ];
 
+    /// <summary>The mounted picker overlay's input and transition state.</summary>
+    private readonly ComposerMenuMotion _motion;
+
     /// <summary>Provider keys the reader narrowed the list to.</summary>
     private readonly HashSet<string> _chosen = new(StringComparer.Ordinal);
 
@@ -89,18 +92,12 @@ public sealed partial class ModelPicker : UserControl
             Close();
             ManageRequested?.Invoke();
         };
-        Surface.Closed += (_, _) =>
+        _motion = new ComposerMenuMotion(this, Surface, Frame);
+        _motion.Closed += () =>
         {
-            Anchor?.Classes.Remove("open");
             Search.Text = string.Empty;
             Closed?.Invoke();
         };
-        Surface.Opened += (_, _) => Dispatcher.UIThread.Post(() =>
-        {
-            Surface.VerticalOffset = -13;
-            Search.Focus();
-            Search.SelectAll();
-        });
     }
 
     /// <summary>Raised when the reader chose another model reference.</summary>
@@ -129,7 +126,7 @@ public sealed partial class ModelPicker : UserControl
     }
 
     /// <summary>Gets a value indicating whether the popup is visible.</summary>
-    public bool IsOpen => Surface.IsOpen;
+    public bool IsOpen => _motion.IsOpen;
 
     /// <summary>Gives an effort its human label.</summary>
     /// <param name="level">Kernel effort value.</param>
@@ -179,7 +176,10 @@ public sealed partial class ModelPicker : UserControl
     }
 
     /// <summary>Closes the popup without changing the session.</summary>
-    public void Close() => Surface.IsOpen = false;
+    public void Close() => _motion.Close();
+
+    /// <summary>Dismisses the overlay when its owning conversation is replaced.</summary>
+    internal void CloseImmediately() => _motion.Close(immediately: true);
 
     /// <summary>Takes a catalog and session status into the panel's fields.</summary>
     /// <param name="models">Chat models the kernel listed.</param>
@@ -215,8 +215,9 @@ public sealed partial class ModelPicker : UserControl
             return;
         }
 
-        Surface.PlacementTarget = Anchor;
-        Surface.VerticalOffset = -13;
+        var triggerGroup = Anchor.Parent as Control ?? Anchor;
+        Surface.PlacementTarget = triggerGroup;
+        Surface.VerticalOffset = -9;
         var top = TopLevel.GetTopLevel(this);
         var viewport = top?.ClientSize ?? new Size(900, 700);
         var available = Math.Max(320, viewport.Width - 24);
@@ -237,12 +238,24 @@ public sealed partial class ModelPicker : UserControl
         Frame.BoxShadow = BoxShadows.Parse(ActualThemeVariant == ThemeVariant.Dark
             ? "0 0 0 1 #59000000, 0 22 60 -22 #D9000000"
             : "inset 0 1 0 #E6FFFFFF, 0 18 44 -18 #33171E2D");
-        Anchor.Classes.Add("open");
-        Surface.IsOpen = true;
-        if (focusEffort)
+        _motion.Open(Anchor, 260, triggerGroup);
+        Dispatcher.UIThread.Post(() =>
         {
-            Dispatcher.UIThread.Post(() => EffortList.Children.OfType<Button>().FirstOrDefault()?.Focus());
-        }
+            if (!IsOpen)
+            {
+                return;
+            }
+
+            if (focusEffort)
+            {
+                EffortList.Children.OfType<Button>().FirstOrDefault()?.Focus();
+            }
+            else
+            {
+                Search.Focus();
+                Search.SelectAll();
+            }
+        });
     }
 
     /// <summary>Draws the fixed labels and placeholders in the requested language.</summary>

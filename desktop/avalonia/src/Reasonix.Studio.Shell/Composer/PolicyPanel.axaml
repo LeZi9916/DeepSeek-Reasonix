@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Reasonix.Studio.Shell.Composer.PolicyPanel"
-             HorizontalAlignment="Stretch">
+             HorizontalAlignment="Stretch" MinHeight="358">
   <StackPanel Spacing="0" Classes="policy-menu">
     <Border Classes="composer-menu-head">
       <Grid ColumnDefinitions="*,Auto">

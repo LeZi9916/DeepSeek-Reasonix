@@ -201,10 +201,24 @@ public sealed partial class MainWindow
         LabelComposeLayout();
     }
 
+    /// <summary>Removes popovers when their owning conversation or view is replaced.</summary>
+    private void CloseComposerMenus()
+    {
+        ModePopup.CloseImmediately();
+        PolicyPopup.CloseImmediately();
+        BranchPopup.CloseImmediately();
+        ModelPicker.CloseImmediately();
+    }
+
     /// <summary>Opens the self-drawn work-mode or permission panel.</summary>
     /// <param name="approval">Whether this is the approval chooser.</param>
     private void ShowComposeModes(bool approval)
     {
+        if (!approval && IsComposerEditPending(ComposerEdit.Plan))
+        {
+            return;
+        }
+
         var popup = approval ? PolicyPopup : ModePopup;
         if (popup.IsOpen)
         {
@@ -243,7 +257,14 @@ public sealed partial class MainWindow
         }
 
         var draft = _draftKey;
-        ModePanel.SetPending(true);
+        var ticket = (engine, draft, ComposerEdit.Plan);
+        if (!BeginComposerEdit(ticket))
+        {
+            return;
+        }
+
+        ModePopup.Close();
+        PlanMode.Focus();
         try
         {
             await engine.Pages.SetPlanAsync(mode == "plan", _closing.Token).ConfigureAwait(true);
@@ -252,7 +273,6 @@ public sealed partial class MainWindow
             {
                 ShowComposeStatus(status);
                 ModePanel.Show(status.Plan, Language);
-                ModePopup.Close();
             }
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
@@ -260,11 +280,14 @@ public sealed partial class MainWindow
         }
         catch (Exception error)
         {
-            ModePanel.ShowError(DescribeError(error));
+            if (engine == _engine && draft == _draftKey)
+            {
+                ShowRefusal(error);
+            }
         }
         finally
         {
-            ModePanel.SetPending(false);
+            EndComposerEdit(ticket);
         }
     }
 
@@ -338,7 +361,7 @@ public sealed partial class MainWindow
     /// <returns>The chooser read.</returns>
     private async Task ShowComposeBranchesAsync()
     {
-        if (_engine is not { } engine)
+        if (_engine is not { } engine || IsComposerEditPending(ComposerEdit.Branch))
         {
             return;
         }
@@ -410,6 +433,12 @@ public sealed partial class MainWindow
             return;
         }
 
+        var ticket = (engine, _draftKey, ComposerEdit.Branch);
+        if (!BeginComposerEdit(ticket))
+        {
+            return;
+        }
+
         BranchPanel.SetPending(reference);
         try
         {
@@ -435,6 +464,10 @@ public sealed partial class MainWindow
             BranchPanel.SetPending(null);
             BranchPanel.ShowError(DescribeError(error));
         }
+        finally
+        {
+            EndComposerEdit(ticket);
+        }
     }
 
     /// <summary>Switches to a branch and keeps a refusal inside the palette.</summary>
@@ -442,6 +475,12 @@ public sealed partial class MainWindow
     private async void OnBranchPicked(string name)
     {
         if (_engine is not { } engine)
+        {
+            return;
+        }
+
+        var ticket = (engine, _draftKey, ComposerEdit.Branch);
+        if (!BeginComposerEdit(ticket))
         {
             return;
         }
@@ -467,6 +506,10 @@ public sealed partial class MainWindow
         {
             BranchPanel.SetPending(null);
             BranchPanel.ShowError(DescribeError(error));
+        }
+        finally
+        {
+            EndComposerEdit(ticket);
         }
     }
 
@@ -552,7 +595,13 @@ public sealed partial class MainWindow
     /// <summary>Reserves the run header only when it has a visible reading.</summary>
     private void LabelComposeLayout()
     {
-        var visible = ChangedFiles.IsVisible || Conversation.State.Running;
+        var visible = ChangedFiles.IsVisible || ComposerRunBadge.IsVisible;
+        ComposerRunTokens.IsVisible = ComposerRunBadge.IsVisible && !ChangedFiles.IsVisible && HasRunTokens(Conversation.State);
+        if (!ComposerRunTokens.IsVisible)
+        {
+            ComposerRunTokens.CancelFeedback();
+        }
+
         ComposeRunState.IsVisible = visible;
         ComposeRows.RowDefinitions[0].Height = new GridLength(visible ? 30 : 0);
     }

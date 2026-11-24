@@ -312,6 +312,8 @@ public sealed partial class MainWindow : Window
         // before the window tears anything down.
         SaveDraft();
 
+        _motionLifetime.Cancel();
+        _runClock?.Stop();
         ResetGit();
         ReleaseWorkbenchPresentations();
         await _closing.CancelAsync().ConfigureAwait(true);
@@ -335,6 +337,7 @@ public sealed partial class MainWindow : Window
         await _sending.WaitAsync().ConfigureAwait(true);
         _sending.Dispose();
         _closing.Dispose();
+        _motionLifetime.Dispose();
     }
 
     /// <summary>

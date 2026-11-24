@@ -110,7 +110,7 @@ public sealed partial class ModelPicker
         };
         button.Classes.Add("model-row");
         button.Classes.Set("current", current);
-        button.SizeChanged += (_, _) => grid.Width = Math.Max(0, button.Bounds.Width - 12);
+        button.SizeChanged += (_, _) => grid.Width = Math.Max(0, button.Bounds.Width - button.Padding.Left - button.Padding.Right);
         AutomationProperties.SetName(button, Label(model));
         ToolTip.SetTip(button, model.Ref);
         button.Click += (_, _) => Choose(model.Ref);

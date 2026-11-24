@@ -1,8 +1,5 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -31,29 +28,19 @@ public sealed partial class ComposerPopup : UserControl
     public static readonly StyledProperty<Thickness> MenuPaddingProperty =
         AvaloniaProperty.Register<ComposerPopup, Thickness>(nameof(MenuPadding), new Thickness(8));
 
-    /// <summary>The window that owns the Escape handler.</summary>
-    private TopLevel? _owner;
+    /// <summary>The transition time as set by the reference menu.</summary>
+    public static readonly StyledProperty<int> MotionMillisecondsProperty =
+        AvaloniaProperty.Register<ComposerPopup, int>(nameof(MotionMilliseconds), 260);
+
+    /// <summary>The mounted popover's input and transition state.</summary>
+    private readonly ComposerMenuMotion _motion;
 
     /// <summary>Initializes a new instance of the <see cref="ComposerPopup"/> class.</summary>
     public ComposerPopup()
     {
         InitializeComponent();
-        Surface.Closed += (_, _) =>
-        {
-            Anchor?.Classes.Remove("open");
-            Closed?.Invoke();
-        };
-        AttachedToVisualTree += (_, _) =>
-        {
-            _owner = TopLevel.GetTopLevel(this);
-            _owner?.AddHandler(KeyDownEvent, OnOwnerKey, RoutingStrategies.Tunnel);
-        };
-        DetachedFromVisualTree += (_, _) =>
-        {
-            Close();
-            _owner?.RemoveHandler(KeyDownEvent, OnOwnerKey);
-            _owner = null;
-        };
+        _motion = new ComposerMenuMotion(this, Surface, Frame);
+        _motion.Closed += () => Closed?.Invoke();
     }
 
     /// <summary>Raised after the popup closed, including light dismissal.</summary>
@@ -87,8 +74,15 @@ public sealed partial class ComposerPopup : UserControl
         set => SetValue(MenuPaddingProperty, value);
     }
 
-    /// <summary>Gets a value indicating whether the popup is visible.</summary>
-    public bool IsOpen => Surface.IsOpen;
+    /// <summary>Gets or sets the reference duration of the popup's transition.</summary>
+    public int MotionMilliseconds
+    {
+        get => GetValue(MotionMillisecondsProperty);
+        set => SetValue(MotionMillisecondsProperty, value);
+    }
+
+    /// <summary>Gets a value indicating whether the popup is accepting input.</summary>
+    public bool IsOpen => _motion.IsOpen;
 
     /// <summary>Opens the panel above its trigger and puts keyboard focus on the first choice.</summary>
     /// <param name="placementTarget">An alternate anchor when the pane uses a two-row toolbar.</param>
@@ -101,7 +95,7 @@ public sealed partial class ComposerPopup : UserControl
         }
 
         Surface.PlacementTarget = placementTarget ?? Anchor;
-        Surface.VerticalOffset = -13;
+        Surface.VerticalOffset = -9;
         var viewport = TopLevel.GetTopLevel(this)?.ClientSize ?? new Size(900, 700);
         Frame.Padding = MenuPadding;
         Frame.Width = Math.Min(PreferredWidth, paneWidth ?? Math.Max(220, viewport.Width - 24));
@@ -110,33 +104,23 @@ public sealed partial class ComposerPopup : UserControl
         Frame.BoxShadow = BoxShadows.Parse(ActualThemeVariant == ThemeVariant.Dark
             ? "0 0 0 1 #59000000, 0 22 60 -22 #D9000000"
             : "inset 0 1 0 #E6FFFFFF, 0 18 44 -18 #33171E2D");
-        Anchor.Classes.Add("open");
-        Surface.IsOpen = true;
+        _motion.Open(Anchor, MotionMilliseconds);
         Dispatcher.UIThread.Post(FocusFirst);
     }
 
     /// <summary>Closes the popup without changing the session.</summary>
-    public void Close() => Surface.IsOpen = false;
+    public void Close() => _motion.Close();
+
+    /// <summary>Dismisses the overlay when its owning conversation is replaced.</summary>
+    internal void CloseImmediately() => _motion.Close(immediately: true);
 
     /// <summary>Focuses the first usable choice after the popup has been laid out.</summary>
     private void FocusFirst()
     {
-        var first = Panel?.GetVisualDescendants().OfType<Button>().FirstOrDefault(button => button.IsEffectivelyVisible && button.IsEnabled);
-        first?.Focus();
-    }
-
-    /// <summary>Closes on Escape and returns focus to the trigger.</summary>
-    /// <param name="sender">Owning top level.</param>
-    /// <param name="args">Keyboard input.</param>
-    private void OnOwnerKey(object? sender, KeyEventArgs args)
-    {
-        if (args.Key != Key.Escape || !IsOpen)
+        if (IsOpen)
         {
-            return;
+            var first = Panel?.GetVisualDescendants().OfType<Button>().FirstOrDefault(button => button.IsEffectivelyVisible && button.IsEnabled);
+            first?.Focus();
         }
-
-        Close();
-        Anchor?.Focus();
-        args.Handled = true;
     }
 }

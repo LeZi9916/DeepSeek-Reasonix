@@ -3,12 +3,14 @@ using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Styling;
 using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.State;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,6 +37,7 @@ public sealed partial class PlanStrip : UserControl
         InitializeComponent();
         Summary.Click += (_, _) => SetExpanded(true, restoreFocus: false);
         Close.Click += (_, _) => Collapse(restoreFocus: true);
+        DetachedFromVisualTree += (_, _) => Reset();
     }
 
     /// <summary>Gets a value indicating whether the reader expanded the list.</summary>
@@ -194,51 +197,44 @@ public sealed partial class PlanStrip : UserControl
         _transition?.Cancel();
         if (TopLevel.GetTopLevel(this) is not Window window || !window.Classes.Contains("motion"))
         {
-            SetBodyVisible(expanded);
-            if (!expanded && restoreFocus)
-            {
-                Summary.Focus();
-            }
+            SettleFold(expanded, restoreFocus);
 
             return;
         }
 
-        _ = AnimateFoldAsync(expanded, restoreFocus);
+        _ = AnimateFoldAsync(window, expanded, restoreFocus);
     }
 
     /// <summary>Animates the plan's reserved height while it opens or exits.</summary>
-    /// <param name="expanded">The requested view.</param><param name="restoreFocus">Whether the summary receives keyboard focus.</param>
+    /// <param name="window">The window that owns the motion preference.</param>
+    /// <param name="expanded">The requested view.</param>
+    /// <param name="restoreFocus">Whether the summary receives keyboard focus.</param>
     /// <returns>Completion of the current fold.</returns>
-    private async Task AnimateFoldAsync(bool expanded, bool restoreFocus)
+    private async Task AnimateFoldAsync(Window window, bool expanded, bool restoreFocus)
     {
+        const double CompactHeight = 34;
         using var transition = new CancellationTokenSource();
         _transition = transition;
-        var previousHeight = Body.IsVisible ? Body.Bounds.Height : 34;
         SetBodyVisible(true);
-        Body.Measure(new Size(Math.Max(1, Bounds.Width - 2), double.PositiveInfinity));
-        var targetHeight = expanded ? Math.Max(34, Body.DesiredSize.Height) : 34;
         Body.IsHitTestVisible = expanded;
-        var animation = new Animation
-        {
-            Duration = TimeSpan.FromMilliseconds(expanded ? 260 : 140),
-            Easing = new SplineEasing(0.16, 1, 0.3, 1),
-            Children =
-            {
-                new KeyFrame { Cue = new Cue(0), Setters = { new Setter(HeightProperty, previousHeight), new Setter(OpacityProperty, expanded ? 0.4 : 1d) } },
-                new KeyFrame { Cue = new Cue(1), Setters = { new Setter(HeightProperty, targetHeight), new Setter(OpacityProperty, expanded ? 1d : 0d) } },
-            },
-        };
+        StepsScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+        Body.Measure(new Size(Math.Max(1, Bounds.Width - 2), double.PositiveInfinity));
+
+        // The CSS close keyframe starts from the natural height even if opening was interrupted.
+        var naturalHeight = Math.Max(CompactHeight, Body.DesiredSize.Height);
+        var duration = TimeSpan.FromMilliseconds(expanded ? 260 : 120);
+        var easing = expanded ? new SplineEasing(0.16, 1, 0.3, 1) : new SplineEasing(0.55, 0, 1, 0.45);
+        window.Classes.CollectionChanged += MotionChanged;
 
         try
         {
-            await animation.RunAsync(Body, transition.Token).ConfigureAwait(true);
+            // One animator per task keeps visual-tree teardown from completing the same task twice.
+            await Task.WhenAll(
+                AnimateFoldValue(HeightProperty, expanded ? CompactHeight : naturalHeight, expanded ? naturalHeight : CompactHeight, duration, easing, transition.Token),
+                AnimateFoldValue(OpacityProperty, expanded ? 0.4 : 1, expanded ? 1 : 0, duration, easing, transition.Token)).ConfigureAwait(true);
             if (!transition.IsCancellationRequested)
             {
-                SetBodyVisible(expanded);
-                if (!expanded && restoreFocus)
-                {
-                    Summary.Focus();
-                }
+                SettleFold(expanded, restoreFocus);
             }
         }
         catch (OperationCanceledException) when (transition.IsCancellationRequested)
@@ -246,10 +242,52 @@ public sealed partial class PlanStrip : UserControl
         }
         finally
         {
+            window.Classes.CollectionChanged -= MotionChanged;
             if (ReferenceEquals(_transition, transition))
             {
                 _transition = null;
             }
+        }
+
+        void MotionChanged(object? sender, NotifyCollectionChangedEventArgs args)
+        {
+            if (!window.Classes.Contains("motion") && ReferenceEquals(_transition, transition) && !transition.IsCancellationRequested)
+            {
+                transition.Cancel();
+                SettleFold(expanded, restoreFocus);
+            }
+        }
+    }
+
+    /// <summary>Runs an individual height or opacity keyframe animation.</summary>
+    /// <param name="property">The animated property.</param>
+    /// <param name="from">The starting value.</param>
+    /// <param name="to">The final value.</param>
+    /// <param name="duration">The reference timing.</param>
+    /// <param name="easing">The reference curve.</param>
+    /// <param name="token">Cancels the current fold.</param>
+    /// <returns>The individual animation.</returns>
+    private Task AnimateFoldValue(StyledProperty<double> property, double from, double to, TimeSpan duration, Easing easing, CancellationToken token) =>
+        new Animation
+        {
+            Duration = duration,
+            Easing = easing,
+            Children =
+            {
+                new KeyFrame { Cue = new Cue(0), Setters = { new Setter(property, from) } },
+                new KeyFrame { Cue = new Cue(1), Setters = { new Setter(property, to) } },
+            },
+        }.RunAsync(Body, token);
+
+    /// <summary>Publishes the settled view before returning focus to the summary.</summary>
+    /// <param name="expanded">Whether to show the expanded list.</param>
+    /// <param name="restoreFocus">Whether to focus the summary after closing.</param>
+    private void SettleFold(bool expanded, bool restoreFocus)
+    {
+        SetBodyVisible(expanded);
+        if (!expanded && restoreFocus)
+        {
+            Summary.Focus();
         }
     }
 
@@ -260,6 +298,7 @@ public sealed partial class PlanStrip : UserControl
         var hadFocus = Summary.IsFocused;
         Body.IsVisible = visible;
         Body.IsHitTestVisible = visible;
+        StepsScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
         Summary.IsVisible = !visible;
         ProgressValue.IsVisible = !visible && Segments.IsVisible;
         Surface.Classes.Set("expanded", visible);

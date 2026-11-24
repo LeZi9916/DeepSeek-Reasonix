@@ -65,8 +65,16 @@ public sealed partial class MainWindow
     /// <returns>The completed read.</returns>
     private async Task OpenModelPickerAsync(bool focusEffort)
     {
-        if (_engine is not { } engine)
+        if (_engine is not { } engine || IsComposerEditPending(ComposerEdit.Model) ||
+            IsComposerEditPending(ComposerEdit.Effort) || IsComposerEditPending(ComposerEdit.ModelMode))
         {
+            return;
+        }
+
+        if (ModelPicker.IsOpen && !focusEffort)
+        {
+            ModelPicker.Close();
+            ModelButton.Focus();
             return;
         }
 
@@ -205,20 +213,18 @@ public sealed partial class MainWindow
         }
 
         var draft = _draftKey;
+        var status = await RunComposerEditAsync(engine, ComposerEdit.Model, () => engine.Pages.SetModelAsync(reference, _closing.Token)).ConfigureAwait(true);
+        if (status is null)
+        {
+            return;
+        }
+
         await TryAnswerAsync(async () =>
         {
-            await engine.Pages.SetModelAsync(reference, _closing.Token).ConfigureAwait(true);
-            if (engine != _engine || draft != _draftKey)
+            await RefreshModelCatalogAsync().ConfigureAwait(true);
+            if (engine == _engine && draft == _draftKey)
             {
-                return;
-            }
-
-            var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-            if (status is not null && engine == _engine && draft == _draftKey)
-            {
-                ShowComposeStatus(status);
-                await RefreshModelCatalogAsync().ConfigureAwait(true);
-                ModelPicker.Refresh(_modelCatalog, status, Language);
+                ModelPicker.Refresh(_modelCatalog, _composerStatus, Language);
                 await LoadComposeTelemetryAsync().ConfigureAwait(true);
             }
         }).ConfigureAwait(true);
@@ -234,15 +240,18 @@ public sealed partial class MainWindow
         }
 
         var draft = _draftKey;
+        var status = await RunComposerEditAsync(engine, ComposerEdit.Effort, () => engine.Pages.SetEffortAsync(level, _closing.Token)).ConfigureAwait(true);
+        if (status is null)
+        {
+            return;
+        }
+
         await TryAnswerAsync(async () =>
         {
-            await engine.Pages.SetEffortAsync(level, _closing.Token).ConfigureAwait(true);
-            var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-            if (status is not null && engine == _engine && draft == _draftKey)
+            await RefreshModelCatalogAsync().ConfigureAwait(true);
+            if (engine == _engine && draft == _draftKey)
             {
-                ShowComposeStatus(status);
-                await RefreshModelCatalogAsync().ConfigureAwait(true);
-                ModelPicker.Refresh(_modelCatalog, status, Language);
+                ModelPicker.Refresh(_modelCatalog, _composerStatus, Language);
             }
         }).ConfigureAwait(true);
     }
@@ -256,17 +265,11 @@ public sealed partial class MainWindow
             return;
         }
 
-        var draft = _draftKey;
-        await TryAnswerAsync(async () =>
+        var status = await RunComposerEditAsync(engine, ComposerEdit.ModelMode, () => engine.Pages.SetModelModeAsync(mode, _closing.Token)).ConfigureAwait(true);
+        if (status is not null)
         {
-            await engine.Pages.SetModelModeAsync(mode, _closing.Token).ConfigureAwait(true);
-            var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-            if (status is not null && engine == _engine && draft == _draftKey)
-            {
-                ShowComposeStatus(status);
-                ModelPicker.Refresh(_modelCatalog, status, Language);
-            }
-        }).ConfigureAwait(true);
+            ModelPicker.Refresh(_modelCatalog, status, Language);
+        }
     }
 
     /// <summary>Opens the settings destination that manages models and connections.</summary>

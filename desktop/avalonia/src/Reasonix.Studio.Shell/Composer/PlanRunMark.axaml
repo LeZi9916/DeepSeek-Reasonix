@@ -1,10 +1,10 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Reasonix.Studio.Shell.Composer.PlanRunMark" Width="14" Height="14" IsHitTestVisible="False">
-  <Viewbox Width="14" Height="14">
+             x:Class="Reasonix.Studio.Shell.Composer.PlanRunMark" Name="Mark" Width="14" Height="14" IsHitTestVisible="False">
+  <Viewbox>
     <Canvas Width="16" Height="16">
-      <Path Classes="plan-mark-stem" Data="M4.7 2.9V13.1" Stroke="{DynamicResource NetBrush}" StrokeThickness="2.9" StrokeLineCap="Round"/>
-      <Path Classes="plan-mark-bowl" Data="M4.7 2.9h4.2a2.9 2.9 0 0 1 0 5.8H4.7" Stroke="{DynamicResource NetBrush}" StrokeThickness="2.9" StrokeLineCap="Round" StrokeJoin="Round"/>
-      <Path Classes="plan-mark-leg" Data="M9 8.7l3.3 4.4" Stroke="{DynamicResource NetBrush}" StrokeThickness="2.9" StrokeLineCap="Round"/>
+      <Path Classes="plan-mark-stem" Data="M4.7 2.9V13.1" Stroke="{Binding #Mark.Foreground}" StrokeThickness="2.9" StrokeLineCap="Round"/>
+      <Path Classes="plan-mark-bowl" Data="M4.7 2.9h4.2a2.9 2.9 0 0 1 0 5.8H4.7" Stroke="{Binding #Mark.Foreground}" StrokeThickness="2.9" StrokeLineCap="Round" StrokeJoin="Round"/>
+      <Path Classes="plan-mark-leg" Data="M9 8.7l3.3 4.4" Stroke="{Binding #Mark.Foreground}" StrokeThickness="2.9" StrokeLineCap="Round"/>
     </Canvas>
   </Viewbox>
 </UserControl>

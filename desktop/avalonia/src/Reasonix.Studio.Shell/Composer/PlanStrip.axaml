@@ -15,6 +15,7 @@
       <Setter Property="MinHeight" Value="0"/><Setter Property="Height" Value="34"/>
       <Setter Property="Padding" Value="12,0,8,0"/><Setter Property="BorderThickness" Value="0"/>
       <Setter Property="Background" Value="Transparent"/><Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="FocusAdorner" Value="{x:Null}"/>
       <Setter Property="Template"><ControlTemplate>
         <Border Background="{TemplateBinding Background}" CornerRadius="9,9,0,0" Padding="{TemplateBinding Padding}">
           <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/>
@@ -40,7 +41,7 @@
     </Style>
   </UserControl.Styles>
   <Border Name="Surface" Classes="plan-surface">
-    <Grid ClipToBounds="True">
+    <Grid>
       <Button Name="Summary" Classes="plan-summary" AutomationProperties.AutomationId="action:plan.fold">
         <Grid ColumnDefinitions="Auto,*,*,Auto" ColumnSpacing="8">
           <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -75,11 +76,14 @@
               </Button>
             </Grid>
           </Border>
-          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <ScrollViewer Name="StepsScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Name="Steps" Margin="6,4,6,6"/>
           </ScrollViewer>
         </Grid>
       </Border>
+      <Border Name="SummaryFocusRing" Margin="-1,-1,-1,0" CornerRadius="10,10,3,3"
+              BorderBrush="#E59700" BorderThickness="2" IsHitTestVisible="False"
+              IsVisible="{Binding #Summary.IsFocused}"/>
     </Grid>
   </Border>
 </UserControl>

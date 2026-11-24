@@ -1,17 +1,5 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Styles.Resources>
-    <ResourceDictionary>
-      <ResourceDictionary.ThemeDictionaries>
-        <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="ComposerChoiceCurrentBrush" Color="#03FFFFFF"/>
-        </ResourceDictionary>
-        <ResourceDictionary x:Key="Light">
-          <SolidColorBrush x:Key="ComposerChoiceCurrentBrush" Color="#02000000"/>
-        </ResourceDictionary>
-      </ResourceDictionary.ThemeDictionaries>
-    </ResourceDictionary>
-  </Styles.Resources>
   <Style Selector="Border.composer-menu">
     <Setter Property="Background" Value="{DynamicResource FloatBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
@@ -59,11 +47,11 @@
       </ControlTemplate>
     </Setter>
   </Style>
-  <Style Selector="Button.choice-row:pointerover">
+  <Style Selector="Button.choice-row.current">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
   </Style>
-  <Style Selector="Button.choice-row.current">
-    <Setter Property="Background" Value="{DynamicResource ComposerChoiceCurrentBrush}"/>
+  <Style Selector="Button.choice-row:pointerover:not(:disabled)">
+    <Setter Property="Background" Value="{DynamicResource FloatHiBrush}"/>
   </Style>
   <Style Selector="Button.choice-row:disabled">
     <Setter Property="Opacity" Value="0.55"/>
