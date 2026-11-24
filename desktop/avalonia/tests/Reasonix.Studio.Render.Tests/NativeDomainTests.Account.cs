@@ -170,4 +170,14 @@ public sealed partial class NativeDomainTests
                 return new HttpResponseMessage(HttpStatusCode.NoContent);
             }
         });
+
+    /// <summary>Checks the version group's reference gap before the log group.</summary>
+    /// <returns>The account layout check.</returns>
+    [Fact]
+    public Task AccountVersionGroupReservesTheReferenceGap() => WithSettings("settings-account", (w, _) =>
+    {
+        var version = w.GetVisualDescendants().OfType<Reasonix.Studio.Shell.Settings.SettingsGroup>()
+            .Single(group => group.GetVisualDescendants().OfType<TextBlock>().Any(block => block.Text == "版本"));
+        Assert.InRange(version.Bounds.Height, 94, 96);
+    });
 }

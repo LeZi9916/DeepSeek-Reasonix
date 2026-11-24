@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Reasonix.Studio.Controls;
@@ -34,7 +35,7 @@ public sealed partial class MainWindow
 
         account.Children.Add(new SettingsGroup("settings.account", "settings.account_hint", access, Language, scope: "settings.account"));
         var diagnostics = Card(column, "settings.version_and_diagnostics");
-        var versions = new StackPanel { Spacing = 11 };
+        var versions = new StackPanel { Spacing = 11, Margin = new Thickness(0, 0, 0, 15) };
         diagnostics.Children.Add(new SettingsGroup("common.version", "settings.versions_hint", versions, Language));
         var logs = new StudioLogs(Language, host.RevealLogsAsync);
         diagnostics.Children.Add(new SettingsGroup("about.logs_and_abnormal_exit_records", "settings.logs_hint", logs, Language));
