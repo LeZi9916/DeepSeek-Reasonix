@@ -266,5 +266,9 @@ public sealed partial class NativeDomainTests
         double Y(Control control) => control.TranslatePoint(default, w)!.Value.Y;
         Assert.InRange(Y(rows[0]), 368.2, 369.2);
         Assert.InRange(Y(rows[^1]), 648.2, 649.2);
+        var cards = w.GetVisualDescendants().OfType<Border>()
+            .Where(border => AutomationProperties.GetAutomationId(border) == "class:prefs-card").ToArray();
+        Assert.InRange(cards[0].Bounds.Height, 469, 471);
+        Assert.InRange(Y(cards[1]), 747.6, 749.6);
     });
 }

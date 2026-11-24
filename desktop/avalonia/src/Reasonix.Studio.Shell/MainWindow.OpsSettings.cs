@@ -21,6 +21,11 @@ public sealed partial class MainWindow
     private void ShowOpsSettings(StackPanel column)
     {
         var keys = Card(column, "settings.keyboard_shortcuts");
+        if (keys.Parent is Border keysCard)
+        {
+            keysCard.Classes.Add("compact-bottom");
+        }
+
         var sheet = new KeyboardShortcutSheet { Tag = "settings.keyboard_shortcuts" };
         keys.Children.Add(sheet);
         sheet.Open(Language);
@@ -48,6 +53,11 @@ public sealed partial class MainWindow
             Message("safety.what_escape_does_while_a"));
 
         var navigation = Card(column, "settings.tabs_and_navigation_card");
+        if (navigation.Parent is Border navigationCard)
+        {
+            navigationCard.Classes.Add("compact-bottom");
+        }
+
         var tabs = new ToggleSwitch { IsChecked = _workspacePreferences.ShowSessionTabs };
         Avalonia.Automation.AutomationProperties.SetAutomationId(tabs, "action:appearance.session-tabs");
         AddRow(navigation, "session.session_tabs", tabs, Message("session.show_tabs_at_the_top"));

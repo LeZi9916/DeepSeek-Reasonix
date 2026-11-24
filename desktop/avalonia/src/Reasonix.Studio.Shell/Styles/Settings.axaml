@@ -102,6 +102,9 @@
     <Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
   </Style>
+  <Style Selector="Border.settings-card.compact-bottom">
+    <Setter Property="Padding" Value="20,18,20,4"/>
+  </Style>
   <Style Selector="StackPanel#SettingsBody">
     <Setter Property="Margin" Value="24,24,24,48"/>
   </Style>
