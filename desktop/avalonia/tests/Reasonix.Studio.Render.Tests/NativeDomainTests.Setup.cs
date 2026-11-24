@@ -15,9 +15,9 @@ public sealed partial class NativeDomainTests
     /// <summary>Chooses an advertised relay protocol and reaches the optional workspace step without saving twice.</summary>
     /// <returns>The native setup flow.</returns>
     [Fact]
-    public Task SetupChoosesProtocolAndCanSkipProject() => WithSettings(
+    public Task SetupChoosesProtocolAndCanSkipProject() => WithSettingsAsync(
         "onboarding",
-        (w, reads) =>
+        async (w, reads) =>
         {
             var creations = 0;
             reads.Exchange = async req =>
@@ -48,13 +48,14 @@ public sealed partial class NativeDomainTests
             }
 
             Click("BeginSetup");
-            w.FindControl<WrapPanel>("SetupServices")!.Children.OfType<RadioButton>().Last().IsChecked = true;
+            w.FindControl<Panel>("SetupServices")!.Children.OfType<RadioButton>().Last().IsChecked = true;
             w.FindControl<TextBox>("ServiceAddress")!.Text = "https://relay.example.invalid";
             w.FindControl<TextBox>("ServiceName")!.Text = "relay";
             Dispatcher.UIThread.RunJobs();
             w.FindControl<TextBox>("ServiceKey")!.Text = "fixture";
             Dispatcher.UIThread.RunJobs();
             Click("ConnectProvider");
+            await WaitForMotionFrame(() => w.FindControl<ComboBox>("ServiceProtocol")!.IsEffectivelyVisible).ConfigureAwait(true);
             var protocols = ControlAt<ComboBox>(w, "action:onboarding.protocol");
             protocols.SelectedIndex = 1;
             Click("ConnectProvider");

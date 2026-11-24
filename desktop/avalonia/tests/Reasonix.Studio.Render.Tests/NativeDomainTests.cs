@@ -198,7 +198,7 @@ public sealed partial class NativeDomainTests
                     if (target == "onboarding")
                     {
                         window.FindControl<Button>("BeginSetup")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                        var services = window.FindControl<WrapPanel>("SetupServices");
+                        var services = window.FindControl<Panel>("SetupServices");
                         Assert.NotNull(services);
                         window.FindControl<TextBox>("ServiceKey")!.Text = "local-only-test";
                         services.Children.OfType<RadioButton>().Last().IsChecked = true;

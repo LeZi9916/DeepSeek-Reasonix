@@ -210,26 +210,44 @@ public sealed partial class NativeDomainTests
     /// <param name="run">The actions in the mounted window.</param>
     /// <param name="workspacePreferences">The native window's saved device options, when already configured.</param>
     /// <returns>The complete scenario.</returns>
-    private static async Task WithSettings(string section, Action<MainWindow, ReferenceReads> run, WorkspacePreferences? workspacePreferences = null)
+    private static Task WithSettings(string section, Action<MainWindow, ReferenceReads> run, WorkspacePreferences? workspacePreferences = null) =>
+        WithSettingsAsync(
+            section,
+            (window, reads) =>
+            {
+                run(window, reads);
+                return Task.CompletedTask;
+            },
+            workspacePreferences);
+
+    /// <summary>Runs a window interaction while allowing the render dispatcher to advance.</summary>
+    /// <param name="section">The starting view.</param>
+    /// <param name="run">The interaction to exercise.</param>
+    /// <param name="workspacePreferences">Optional initial workspace preferences.</param>
+    /// <param name="allowMotion">The effective system motion preference.</param>
+    /// <returns>The completed interaction.</returns>
+    private static async Task WithSettingsAsync(string section, Func<MainWindow, ReferenceReads, Task> run, WorkspacePreferences? workspacePreferences = null, bool allowMotion = false)
     {
         var session = HeadlessUnitTestSession.StartNew(typeof(RasterBuilder));
         await session.Dispatch(
-            () =>
+            async () =>
         {
             using var reads = new ReferenceReads();
             using var http = new HttpClient(reads) { BaseAddress = new Uri("http://127.0.0.1:4000") };
             var engine = new SessionEngine(new KernelClient(http), new SseEventTransport(http.BaseAddress.ToString(), http));
-            var window = new MainWindow(false, engine, InterfaceLanguage.Zh, _ => Task.FromResult(false), workspacePreferences: workspacePreferences) { Width = 1440, Height = 900, RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light };
+            var window = new MainWindow(false, engine, InterfaceLanguage.Zh, _ => Task.FromResult(allowMotion), workspacePreferences: workspacePreferences) { Width = 1440, Height = 900, RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light };
             window.Show();
             try
             {
                 Navigate(window, section);
-                run(window, reads);
+                await run(window, reads).ConfigureAwait(true);
             }
             finally
             {
                 window.Close();
             }
+
+            return 0;
         },
             default);
     }
