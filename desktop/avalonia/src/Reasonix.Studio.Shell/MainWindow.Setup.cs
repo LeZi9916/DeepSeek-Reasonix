@@ -11,15 +11,15 @@ namespace Reasonix.Studio.Shell;
 public sealed partial class MainWindow
 {
     /// <summary>The service shortcuts offered by the reference setup screen.</summary>
-    private static readonly (string Label, string Name, string Address)[] s_setupServices =
+    private static readonly (string Label, string Name, string Address, string Hint, string? Mark)[] s_setupServices =
     [
-        ("DeepSeek", "deepseek", "https://api.deepseek.com"),
-        ("onboarding.siliconflow", "siliconflow", "https://api.siliconflow.cn/v1"),
-        ("onboarding.moonshot", "moonshot", "https://api.moonshot.cn/v1"),
-        ("onboarding.zhipu", "zhipu", "https://open.bigmodel.cn/api/paas/v4"),
-        ("MiMo", "mimo", "https://api.xiaomimimo.com/v1"),
-        ("LongCat", "longcat", "https://api.longcat.chat/openai"),
-        ("onboarding.relay_self_hosted", string.Empty, string.Empty),
+        ("DeepSeek", "deepseek", "https://api.deepseek.com", "onboarding.deepseek_hint", "deepseek"),
+        ("onboarding.siliconflow", "siliconflow", "https://api.siliconflow.cn/v1", "onboarding.siliconflow_hint", null),
+        ("onboarding.moonshot", "moonshot", "https://api.moonshot.cn/v1", "onboarding.moonshot_hint", "kimi"),
+        ("onboarding.zhipu", "zhipu", "https://open.bigmodel.cn/api/paas/v4", "onboarding.zhipu_hint", "zhipu"),
+        ("MiMo", "mimo", "https://api.xiaomimimo.com/v1", "onboarding.mimo_hint", "mimo"),
+        ("LongCat", "longcat", "https://api.longcat.chat/openai", "onboarding.longcat_hint", "longcat"),
+        ("onboarding.relay_self_hosted", string.Empty, string.Empty, "onboarding.relay_hint", null),
     ];
 
     /// <summary>The service state that caused setup to open.</summary>
@@ -32,13 +32,14 @@ public sealed partial class MainWindow
     /// <param name="setup">State returned by the active kernel.</param>
     internal void ShowSetup(ProviderSetup setup)
     {
+        CloseComposerMenus();
+        var entering = !SetupPanel.IsVisible || !WelcomeCard.IsVisible;
         _setup = setup;
         ProjectStep.IsVisible = false;
         SetupServices.Children.Clear();
         foreach (var service in s_setupServices)
         {
-            var radio = new RadioButton { Tag = service.Label, Margin = new Avalonia.Thickness(0, 0, 6, 6) };
-            radio.Classes.Add("segmented");
+            var radio = CreateServiceChoice(service.Label, service.Hint, service.Mark);
             AutomationProperties.SetAutomationId(radio, "action:onboarding.service");
             radio.IsCheckedChanged += (_, _) =>
             {
@@ -51,7 +52,9 @@ public sealed partial class MainWindow
                 ServiceAddress.Text = service.Address;
                 ServiceName.Text = service.Name;
                 ServiceAddress.IsReadOnly = service.Address.Length > 0;
+                ServiceAddress.IsVisible = ServiceName.IsVisible = !ServiceAddress.IsReadOnly;
                 ResetProbe();
+                LabelServiceNote();
             };
             SetupServices.Children.Add(radio);
         }
@@ -65,16 +68,36 @@ public sealed partial class MainWindow
         LayoutRoot.IsVisible = false;
         SetupPanel.IsVisible = true;
         ServiceFields.IsVisible = setup.NoProvider;
-        SetupError.IsVisible = !string.IsNullOrEmpty(setup.Error);
-        SetupError.Text = setup.Error;
+        SetSetupError(setup.Error);
         LabelSetup();
+        if (entering)
+        {
+            SetupDemo.Begin();
+            EnterWelcome();
+        }
+
         BeginSetup.Focus();
     }
 
     /// <summary>Connects the onboarding controls.</summary>
     private void InitializeSetup()
     {
-        ProjectStep.Configure(() => new Host.AvaloniaHost(this).PickFolderAsync(_workspaceRoot), path => ActivateProjectAsync(path, true), ReturnToConversation, DescribeError);
+        ProjectStep.Configure(
+            () => new Host.AvaloniaHost(this).PickFolderAsync(_workspaceRoot),
+            path => OpenTargetCoreAsync(new Pages.Rail.SessionOpenTarget(string.Empty, path, string.Empty), register: true, animateSetupDeparture: true),
+            () => ReturnToConversation(animateSetupDeparture: true),
+            () => ReturnToConversation(),
+            DescribeError);
+        SetupPanel.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == IsVisibleProperty && !SetupPanel.IsVisible)
+            {
+                _setupChoicesMotion?.Cancel();
+                CancelWelcomeEntrance();
+                SetupDemo.End();
+            }
+        };
+        SetupServices.SizeChanged += (_, e) => SetupServices.Columns = Math.Max(1, (int)((e.NewSize.Width + 8) / 128));
         SetupPanel.SizeChanged += (_, e) =>
         {
             var wide = e.NewSize.Width >= 900;
@@ -86,9 +109,13 @@ public sealed partial class MainWindow
         };
         BeginSetup.Click += (_, _) =>
         {
+            CancelWelcomeEntrance();
+            SetupDemo.End();
             WelcomeCard.IsVisible = false;
             SetupForm.IsVisible = true;
             SetupPanel.RowDefinitions[1].MinHeight = 0;
+            EnterView(SetupCard, slideX: 40);
+            EnterSetupChoices(SetupServices);
             ServiceKey.Focus();
         };
         SetupBack.Click += (_, _) =>
@@ -97,13 +124,18 @@ public sealed partial class MainWindow
             {
                 ResetProbe();
                 LabelSetup();
+                EnterView(SetupCard, slideX: -40);
+                EnterSetupChoices(SetupServices);
                 ServiceKey.Focus();
                 return;
             }
 
+            _setupChoicesMotion?.Cancel();
             SetupForm.IsVisible = false;
             WelcomeCard.IsVisible = true;
             SetupPanel.RowDefinitions[1].MinHeight = SetupPanel.Bounds.Width < 900 ? 374 : 0;
+            SetupDemo.Begin();
+            EnterWelcome();
             BeginSetup.Focus();
         };
         SkipWelcome.Click += (_, _) => ReturnToConversation();
@@ -129,30 +161,31 @@ public sealed partial class MainWindow
         SkipWelcome.Content = MessageCatalog.Get(MessageKey.Onboarding.NotNow, Language);
         SetupTime.Text = MessageCatalog.Get(MessageKey.Onboarding.AboutAMinute, Language);
         SetupFoot.Text = MessageCatalog.Get(MessageKey.Onboarding.LocalFirstCredentialsStayIn, Language);
-        DemoAsk.Text = MessageCatalog.Get(MessageKey.Onboarding.DemoAsk, Language);
-        DemoThinking.Text = MessageCatalog.Get(MessageKey.Onboarding.DemoThinking, Language);
-        DemoRead.Text = MessageCatalog.Get(MessageKey.Onboarding.DemoRead, Language) + "  scripts/export.py";
-        DemoEdit.Text = MessageCatalog.Get(MessageKey.Onboarding.DemoEdit, Language) + "  scripts/export.py    +12 −3";
-        DemoRun.Text = MessageCatalog.Get(MessageKey.Onboarding.DemoRun, Language) + "  pytest";
-        DemoDone.Text = MessageCatalog.Get(MessageKey.Onboarding.DemoDone, Language);
-        SetupTitle.Text = MessageCatalog.Get(_probe is null ? "onboarding.connect_one_model_service" : MessageKey.Onboarding.ChooseTheDefaultModel, Language);
-        SetupDescription.Text = _probe is null
-            ? MessageCatalog.Get("onboarding.pick_one_and_fill_the_key", Language)
-            : MessageCatalog.Get("onboarding.connected_to_name_n_models", Language, ("name", ServiceName.Text ?? string.Empty), ("n", _probe.Models.Length.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+        SetupDemo.Label(Language);
+        SetupProgress.Show(_probe is null ? 0 : 1, Language);
+        SetupTitle.Text = MessageCatalog.Get(MessageKey.Onboarding.ConnectOneModelService, Language);
+        SetupDescription.Text = MessageCatalog.Get(MessageKey.Onboarding.PickOneAndFillTheKey, Language);
+        SetupModelLabel.Text = MessageCatalog.Get(MessageKey.Onboarding.PickADefaultModel, Language);
+        SetupModelNote.Text = MessageCatalog.Get(MessageKey.Onboarding.EachConversationCanSwitch, Language);
         SetupBack.Content = MessageCatalog.Get(MessageKey.Common.Back, Language);
         foreach (var radio in SetupServices.Children.OfType<RadioButton>())
         {
-            var label = (string)radio.Tag!;
-            radio.Content = label.StartsWith("onboarding.", StringComparison.Ordinal) ? MessageCatalog.Get(label, Language) : label;
+            LabelServiceChoice(radio);
         }
 
-        ConnectProvider.Content = MessageCatalog.Get(_probe is null ? MessageKey.Onboarding.Connect : MessageKey.Onboarding.Continue, Language);
+        LabelServiceNote();
+        ConnectLabel.Text = MessageCatalog.Get(_probe is null ? MessageKey.Onboarding.Connect : MessageKey.Onboarding.Continue, Language);
+        AutomationProperties.SetName(ConnectProvider, ConnectLabel.Text);
         DeferSetup.Content = MessageCatalog.Get(MessageKey.Onboarding.NotNow, Language);
         ServiceAddress.PlaceholderText = MessageCatalog.Get("onboarding.service_address", Language);
         ServiceName.PlaceholderText = MessageCatalog.Get(MessageKey.Common.Name, Language);
         Label(ServiceAddress, "onboarding.service_address");
         Label(ServiceName, MessageKey.Common.Name);
         Label(ServiceModels, MessageKey.Common.DefaultModel);
+        foreach (var radio in ModelOptions.Children.OfType<RadioButton>())
+        {
+            LabelModelChoice(radio, _probe!);
+        }
     }
 
     /// <summary>Invalidates a model list when its credential or service address changes.</summary>
@@ -164,11 +197,17 @@ public sealed partial class MainWindow
         ServiceModels.ItemsSource = null;
         ServiceModels.IsVisible = false;
         ModelOptions.IsVisible = false;
+        SetupModelField.IsVisible = false;
+        SetupTitle.IsVisible = SetupDescription.IsVisible = true;
         ModelOptions.Children.Clear();
         ServiceFields.IsVisible = _setup?.NoProvider == true;
-        ServiceKey.IsVisible = true;
+        ServiceKeyField.IsVisible = ServiceKey.IsVisible = true;
+        SetupServiceNote.IsVisible = _setup?.NoProvider == true && ServiceAddress.IsReadOnly;
         UpdateConnectButton();
-        ConnectProvider.Content = MessageCatalog.Get(MessageKey.Onboarding.Connect, Language);
+        ConnectLabel.Text = MessageCatalog.Get(MessageKey.Onboarding.Connect, Language);
+        AutomationProperties.SetName(ConnectProvider, ConnectLabel.Text);
+        SetupFound.IsVisible = false;
+        SetupFound.Classes.Remove("enter");
     }
 
     /// <summary>Switches the native controls and event subscription to the chosen project.</summary>
@@ -201,11 +240,14 @@ public sealed partial class MainWindow
             return;
         }
 
-        SetupError.IsVisible = false;
+        SetSetupError(null);
         ConnectProvider.IsEnabled = false;
         DeferSetup.IsEnabled = false;
         SetupBack.IsEnabled = false;
-        ConnectProvider.Content = MessageCatalog.Get("onboarding.checking_the_key", Language);
+        var discovering = _probe is null && _setup.NoProvider;
+        SetConnectFeedback(checking: discovering);
+        ConnectLabel.Text = MessageCatalog.Get(discovering || _probe is null ? "onboarding.checking_the_key" : "common.saving_2", Language);
+        AutomationProperties.SetName(ConnectProvider, ConnectLabel.Text);
         ServiceFields.IsEnabled = false;
         ServiceKey.IsEnabled = false;
         ServiceModels.IsEnabled = false;
@@ -236,6 +278,15 @@ public sealed partial class MainWindow
                     }
                 }
 
+                ShowConnectedProbe(probe);
+                await System.Threading.Tasks.Task.Delay(750, _closing.Token).ConfigureAwait(true);
+                if (!SetupPanel.IsVisible || !SetupForm.IsVisible || !ReferenceEquals(_probe, probe))
+                {
+                    return;
+                }
+
+                SetupFound.Classes.Remove("enter");
+
                 ServiceProtocol.ItemsSource = kinds;
                 ServiceProtocol.SelectedItem = probe.Kind;
                 ServiceProtocol.IsVisible = !ServiceAddress.IsReadOnly && (probe.Ambiguous || kinds.Length > 1);
@@ -249,7 +300,7 @@ public sealed partial class MainWindow
                 {
                     foreach (var name in probe.Models)
                     {
-                        var pick = new RadioButton { Content = name, IsChecked = Equals(ServiceModels.SelectedItem, name) };
+                        var pick = CreateModelChoice(name, Equals(ServiceModels.SelectedItem, name));
                         AutomationProperties.SetAutomationId(pick, "action:onboarding.model");
                         pick.IsCheckedChanged += (_, _) =>
                         {
@@ -262,9 +313,13 @@ public sealed partial class MainWindow
                     }
                 }
 
-                ServiceKey.IsVisible = false;
-                ServiceFields.IsVisible = false;
+                SetupTitle.IsVisible = SetupDescription.IsVisible = false;
+                ServiceKeyField.IsVisible = ServiceKey.IsVisible = false;
+                SetupServiceNote.IsVisible = ServiceFields.IsVisible = false;
+                SetupModelField.IsVisible = true;
                 LabelSetup();
+                EnterView(SetupCard, slideX: 40);
+                EnterSetupChoices(ModelOptions);
                 (ServiceModels.IsVisible ? (Control)ServiceModels : ModelOptions.Children.FirstOrDefault())?.Focus();
                 return;
             }
@@ -302,17 +357,18 @@ public sealed partial class MainWindow
             SetupForm.IsVisible = false;
             ProjectStep.IsVisible = true;
             ProjectStep.Begin(Language);
+            EnterView(ProjectStep, slideX: 40);
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
         {
         }
         catch (Exception error)
         {
-            SetupError.Text = DescribeError(error);
-            SetupError.IsVisible = true;
+            SetSetupError(DescribeError(error));
         }
         finally
         {
+            SetConnectFeedback(checking: false);
             DeferSetup.IsEnabled = true;
             SetupBack.IsEnabled = true;
             ServiceFields.IsEnabled = true;

@@ -1,0 +1,93 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Reasonix.Studio.Shell.Startup"
+             x:Class="Reasonix.Studio.Shell.Startup.WelcomeCurtain" ClipToBounds="True" Focusable="True" Background="#05060A">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Reasonix.Studio.Shell/Startup/BootWordmark.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <Grid>
+    <Canvas IsHitTestVisible="False">
+      <Border Name="GoldGlow">
+        <Border.CacheMode><BitmapCache/></Border.CacheMode>
+        <Border.RenderTransform><TransformGroup><ScaleTransform/><TranslateTransform/></TransformGroup></Border.RenderTransform>
+        <Border>
+          <Border.Effect><BlurEffect Radius="275.4"/></Border.Effect>
+          <Border.Background><RadialGradientBrush RadiusX="70.71%" RadiusY="70.71%">
+            <GradientStop Offset="0" Color="#9EDDA144"/><GradientStop Offset="0.68" Color="#00DDA144"/>
+          </RadialGradientBrush></Border.Background>
+        </Border>
+      </Border>
+      <Border Name="BlueGlow">
+        <Border.CacheMode><BitmapCache/></Border.CacheMode>
+        <Border.RenderTransform><TransformGroup><ScaleTransform/><TranslateTransform/></TransformGroup></Border.RenderTransform>
+        <Border>
+          <Border.Effect><BlurEffect Radius="275.4"/></Border.Effect>
+          <Border.Background><RadialGradientBrush RadiusX="70.71%" RadiusY="70.71%">
+            <GradientStop Offset="0" Color="#8C4266D6"/><GradientStop Offset="0.68" Color="#004266D6"/>
+          </RadialGradientBrush></Border.Background>
+        </Border>
+      </Border>
+      <Border Name="TealGlow">
+        <Border.CacheMode><BitmapCache/></Border.CacheMode>
+        <Border.RenderTransform><TransformGroup><ScaleTransform/><TranslateTransform/></TransformGroup></Border.RenderTransform>
+        <Border>
+          <Border.Effect><BlurEffect Radius="275.4"/></Border.Effect>
+          <Border.Background><RadialGradientBrush RadiusX="70.71%" RadiusY="70.71%">
+            <GradientStop Offset="0" Color="#6B3EA9BA"/><GradientStop Offset="0.7" Color="#003EA9BA"/>
+          </RadialGradientBrush></Border.Background>
+        </Border>
+      </Border>
+    </Canvas>
+    <Border IsHitTestVisible="False">
+      <Border.Background>
+        <RadialGradientBrush Center="50%,45%" GradientOrigin="50%,45%" RadiusX="70.71%" RadiusY="77.78%">
+          <GradientStop Offset="0.30" Color="#00030407"/><GradientStop Offset="1" Color="#B8030407"/>
+        </RadialGradientBrush>
+      </Border.Background>
+    </Border>
+    <StackPanel Name="Scene" VerticalAlignment="Center" Margin="40,0,40,30" IsHitTestVisible="False">
+      <local:WelcomeWordmark Name="Wordmark" Width="300" Height="69.52" HorizontalAlignment="Center"
+                             AutomationProperties.Name="Reasonix">
+        <local:WelcomeWordmark.RenderTransform><TranslateTransform/></local:WelcomeWordmark.RenderTransform>
+      </local:WelcomeWordmark>
+      <TextBlock Name="Studio" Text="STUDIO" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="22"
+                 FontWeight="Medium" LetterSpacing="4.62" LineHeight="22" Margin="0,16,0,0"
+                 HorizontalAlignment="Center" Foreground="#B8FFFFFF">
+        <TextBlock.RenderTransform><TranslateTransform X="1"/></TextBlock.RenderTransform>
+        <TextBlock.Effect><BlurEffect/></TextBlock.Effect>
+      </TextBlock>
+      <TextBlock Name="Subtitle" Text="coding agent" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="13"
+                 LetterSpacing="0.13" LineHeight="17" Margin="0,14,0,0"
+                 HorizontalAlignment="Center" Foreground="#7AFFFFFF"/>
+      <Grid Height="96" Margin="0,4,0,0">
+        <TextBlock Name="Greeting" FontSize="30" LineHeight="40.5" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   TextWrapping="Wrap" TextAlignment="Center" Foreground="White">
+          <TextBlock.RenderTransform><TranslateTransform/></TextBlock.RenderTransform>
+          <TextBlock.Effect><BlurEffect/></TextBlock.Effect>
+        </TextBlock>
+        <Grid Name="TaskLine" RowDefinitions="*,*" HorizontalAlignment="Center" MaxWidth="460">
+          <Grid.RenderTransform><TranslateTransform/></Grid.RenderTransform>
+          <Grid.Effect><BlurEffect/></Grid.Effect>
+          <TextBlock Name="TaskTitle" FontSize="30" LineHeight="40.5" HorizontalAlignment="Center" VerticalAlignment="Center"
+                     TextWrapping="Wrap" TextAlignment="Center" Foreground="White"/>
+          <TextBlock Name="TaskDetail" Grid.Row="1" FontSize="14" LineHeight="23.8" HorizontalAlignment="Center" VerticalAlignment="Center"
+                     MaxWidth="316" TextWrapping="Wrap" TextAlignment="Center" Foreground="#80FFFFFF"/>
+        </Grid>
+      </Grid>
+    </StackPanel>
+    <Border Width="148" Height="2" CornerRadius="1" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+            Margin="0,0,0,40" Background="#1AFFFFFF" ClipToBounds="True" IsHitTestVisible="False">
+      <Border Name="Progress" Height="2" Width="0" CornerRadius="1" HorizontalAlignment="Left">
+        <Border.Background><LinearGradientBrush>
+          <GradientStop Offset="0" Color="#59DDA144"/><GradientStop Offset="1" Color="#FFE0A0"/>
+        </LinearGradientBrush></Border.Background>
+      </Border>
+    </Border>
+    <TextBlock Name="SkipHint" FontSize="12" LineHeight="17" FontFamily="{DynamicResource StudioMonoFamily}"
+               HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,18,16"
+               Foreground="#8FFFFFFF" IsHitTestVisible="False"/>
+  </Grid>
+</UserControl>

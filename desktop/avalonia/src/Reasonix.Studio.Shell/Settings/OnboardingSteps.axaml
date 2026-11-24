@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.OnboardingSteps">
+  <UserControl.Styles>
+    <Style Selector="StackPanel.step TextBlock"><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
+    <Style Selector="StackPanel.step.current TextBlock"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+    <Style Selector="StackPanel.step.current Border.step-mark">
+      <Setter Property="Background" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="StackPanel.step.current TextBlock.step-number"><Setter Property="Foreground" Value="{DynamicResource SurfaceBrush}"/></Style>
+    <Style Selector="StackPanel.step.done Border.step-mark">
+      <Setter Property="Background" Value="{DynamicResource OkWashBrush}"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+  </UserControl.Styles>
+  <ItemsControl Name="Stages">
+    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="10"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+    <ItemsControl.ItemTemplate>
+      <DataTemplate x:DataType="local:OnboardingStep">
+        <StackPanel Classes="step" Classes.current="{Binding Current}" Classes.done="{Binding Complete}" Orientation="Horizontal" Spacing="6">
+          <Border Width="18" Height="1" Margin="0,0,4,0" Background="{DynamicResource BorderBrush}" VerticalAlignment="Center" IsVisible="{Binding HasDivider}"/>
+          <Border Classes="step-mark" Width="20" Height="20" CornerRadius="10" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}">
+            <Grid>
+              <TextBlock Classes="step-number" Text="{Binding Number}" FontSize="{DynamicResource StudioType11}" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding !Complete}"/>
+              <Viewbox Width="12" Height="12" IsVisible="{Binding Complete}">
+                <Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.check}" Stroke="{DynamicResource OkInkBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
+              </Viewbox>
+            </Grid>
+          </Border>
+          <TextBlock Text="{Binding Label}" FontSize="{DynamicResource StudioType12}" FontWeight="Medium" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+        </StackPanel>
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
+  </ItemsControl>
+</UserControl>

@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Settings.OnboardingDemo" Width="320" Height="270"
+             VerticalAlignment="Center" FontFamily="{DynamicResource ConversationUiFamily}"
+             AutomationProperties.AutomationId="class:onb-demo" AutomationProperties.AccessibilityView="Raw">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.demo-label">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="LineHeight" Value="16.8"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="TextBlock.demo-detail">
+      <Setter Property="FontFamily" Value="{DynamicResource StudioMonoFamily}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
+    </Style>
+  </UserControl.Styles>
+  <Border Background="{DynamicResource PageBrush}" BorderBrush="{DynamicResource HairBrush}" BorderThickness="1"
+          CornerRadius="{DynamicResource RMd}" Padding="18,16" ClipToBounds="True">
+    <StackPanel Name="Sequence" Spacing="10" MinHeight="236">
+      <Border Name="RequestRow" Background="{DynamicResource OverlayBrush}" CornerRadius="{DynamicResource RMd}"
+              Padding="11,7" HorizontalAlignment="Right">
+        <TextBlock Name="RequestLabel" Classes="demo-label"/>
+      </Border>
+      <StackPanel Name="ThinkingRow" Orientation="Horizontal" Spacing="8" ClipToBounds="True" Height="16.8">
+        <Viewbox Width="15" Height="15">
+          <Canvas Width="16" Height="16">
+            <Path Name="Stem" Data="M4.7 2.9V13.1" Stroke="{DynamicResource NetBrush}" StrokeThickness="1.7"
+                  StrokeLineCap="Round" StrokeDashArray="6,6"/>
+            <Path Name="Bowl" Data="M4.7 2.9h4.2a2.9 2.9 0 0 1 0 5.8H4.7" Stroke="{DynamicResource NetBrush}"
+                  StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round" StrokeDashArray="10.3,10.3"/>
+            <Path Name="Leg" Data="M9 8.7l3.3 4.4" Stroke="{DynamicResource NetBrush}" StrokeThickness="1.7"
+                  StrokeLineCap="Round" StrokeDashArray="3.24,3.24"/>
+          </Canvas>
+        </Viewbox>
+        <TextBlock Name="ThinkingLabel" Classes="demo-label" Foreground="{DynamicResource MutedBrush}"/>
+      </StackPanel>
+      <Grid Name="ReadRow" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <TextBlock Name="ReadLabel" Classes="demo-label"/>
+        <TextBlock Grid.Column="1" Classes="demo-detail" Text="scripts/export.py"/>
+        <TextBlock Grid.Column="2" Classes="demo-detail" Text="48"/>
+      </Grid>
+      <Grid Name="EditRow" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <TextBlock Name="EditLabel" Classes="demo-label"/>
+        <TextBlock Grid.Column="1" Classes="demo-detail" Text="scripts/export.py"/>
+        <TextBlock Grid.Column="2" Classes="demo-detail" Foreground="{DynamicResource AddBrush}" Text="+12 −3"/>
+      </Grid>
+      <Grid Name="RunRow" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <TextBlock Name="RunLabel" Classes="demo-label"/>
+        <TextBlock Grid.Column="1" Classes="demo-detail" Text="pytest"/>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+          <TextBlock Classes="demo-detail" Foreground="{DynamicResource OkInkBrush}" Text="12"/>
+          <Viewbox Width="12" Height="12"><Canvas Width="24" Height="24">
+            <Path Data="{StaticResource Glyph.check}" Stroke="{DynamicResource OkInkBrush}" StrokeThickness="2" StrokeLineCap="Round"/>
+          </Canvas></Viewbox>
+        </StackPanel>
+      </Grid>
+      <Border Name="ResultRow" Margin="0,4,0,0" Padding="0,10,0,0" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}">
+        <TextBlock Name="ResultLabel" Classes="demo-label" Foreground="{DynamicResource OkInkBrush}"/>
+      </Border>
+    </StackPanel>
+  </Border>
+</UserControl>

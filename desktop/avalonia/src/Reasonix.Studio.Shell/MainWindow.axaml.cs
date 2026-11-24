@@ -136,9 +136,13 @@ public sealed partial class MainWindow : Window
         Projects.MarkedViewed += OnProjectViewed;
         NewSession.Click += (_, _) => OnNewRequested();
         Closed += OnClosed;
+        StartupIntro.Leaving += (_, _) => EnterStartupPage();
+        FirstRunCurtain.Finished += (_, _) => FinishFirstRunCurtain();
 
         if (connectOnOpen)
         {
+            StartupIntro.IsVisible = true;
+            AddHandler(KeyDownEvent, (_, _) => StartupIntro.Skip(), RoutingStrategies.Tunnel);
             Opened += OnOpened;
         }
     }
@@ -222,13 +226,34 @@ public sealed partial class MainWindow : Window
     /// <param name="e">The event arguments.</param>
     private async void OnOpened(object? sender, EventArgs e)
     {
+        _ = StartBootAsync();
+        try
+        {
+            await OpenStartupSessionAsync().ConfigureAwait(true);
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            ShowRefusal(error);
+            StartupIntro.Complete();
+        }
+    }
+
+    /// <summary>Loads the session underneath the startup presentation.</summary>
+    /// <returns>The lifetime of the attached startup session.</returns>
+    private async Task OpenStartupSessionAsync()
+    {
         var launch = await new SessionLauncher().LaunchAsync(_closing.Token).ConfigureAwait(true);
         if (!launch.Started)
         {
             ShowProblem(launch.Problem ?? "这个会话没有启动。");
+            StartupIntro.Complete();
             return;
         }
 
+        StartupIntro.Progress(2);
         _engine = launch.Engine;
         var engine = _engine!;
         _launchOwner ??= engine;
@@ -284,7 +309,7 @@ public sealed partial class MainWindow : Window
                 UpdateMemorySuggestions(engine.State.Running);
             }
 
-            _ = LoadStartupPreferencesAsync();
+            _ = FinishStartupAsync();
             var watching = _navigation?.Panes.FirstOrDefault(pane => ReferenceEquals(pane.Engine, engine))?.Watching ?? engine.StartAsync();
             await watching.ConfigureAwait(true);
         }
@@ -297,6 +322,7 @@ public sealed partial class MainWindow : Window
             if (ReferenceEquals(_engine, engine))
             {
                 ShowRefusal(error);
+                StartupIntro.Complete();
             }
         }
     }

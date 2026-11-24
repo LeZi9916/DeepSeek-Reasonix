@@ -47,6 +47,34 @@ public sealed partial class MainWindow
         get; set;
     }
 
+    /// <summary>Adopts machine preferences without holding up the session stream.</summary>
+    /// <returns>The initial appearance and onboarding reads.</returns>
+    internal async Task LoadStartupPreferencesAsync()
+    {
+        var engine = _launchOwner ?? _engine;
+        if (engine is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await PrepareFirstRunAsync(engine.Pages).ConfigureAwait(true);
+
+            var look = await engine.Pages.AppearanceAsync(_closing.Token).ConfigureAwait(true);
+            var fold = await engine.Pages.FlagAsync(StudioSetting.FoldWork, _closing.Token).ConfigureAwait(true);
+            ApplyAppearance(look, fold);
+            await LoadPaletteAsync(engine.Pages).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            ShowRefusal(error);
+        }
+    }
+
     /// <summary>Connects the settings sheet and the first-run screen to window navigation.</summary>
     private void InitializePreferences()
     {
@@ -76,38 +104,6 @@ public sealed partial class MainWindow
         };
         OpenSettings.Content = MessageCatalog.Get(MessageKey.Common.Settings, Language);
         InitializeSetup();
-    }
-
-    /// <summary>Adopts machine preferences without holding up the session stream.</summary>
-    /// <returns>The initial appearance and onboarding reads.</returns>
-    private async Task LoadStartupPreferencesAsync()
-    {
-        var engine = _launchOwner ?? _engine;
-        if (engine is null)
-        {
-            return;
-        }
-
-        try
-        {
-            var setup = await engine.Pages.ProviderSetupAsync(_closing.Token).ConfigureAwait(true);
-            if (setup is { Required: true } && !_closing.IsCancellationRequested)
-            {
-                ShowSetup(setup);
-            }
-
-            var look = await engine.Pages.AppearanceAsync(_closing.Token).ConfigureAwait(true);
-            var fold = await engine.Pages.FlagAsync(StudioSetting.FoldWork, _closing.Token).ConfigureAwait(true);
-            ApplyAppearance(look, fold);
-            await LoadPaletteAsync(engine.Pages).ConfigureAwait(true);
-        }
-        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
-        {
-        }
-        catch (Exception error)
-        {
-            ShowRefusal(error);
-        }
     }
 
     /// <summary>Adopts the canonical language and zoom in the already-mounted window.</summary>
@@ -181,9 +177,16 @@ public sealed partial class MainWindow
     }
 
     /// <summary>Restores the existing session and draft after closing a full-window sheet.</summary>
-    private async void ReturnToConversation()
+    /// <param name="animateSetupDeparture">Whether setup completed or was skipped from its final step.</param>
+    private async void ReturnToConversation(bool animateSetupDeparture = false)
     {
         if (SettingsPanel.IsVisible && !await MayLeaveSettingsAsync().ConfigureAwait(true))
+        {
+            return;
+        }
+
+        var leavingSetup = animateSetupDeparture && SetupPanel.IsVisible;
+        if (leavingSetup && !await PlaySetupDepartureAsync().ConfigureAwait(true))
         {
             return;
         }
@@ -193,9 +196,19 @@ public sealed partial class MainWindow
         StopAccountSettings();
         SearchResultsPanel.IsVisible = false;
         _settingsRead++;
+        if (SetupPanel.IsVisible)
+        {
+            _ = MarkFirstRunWelcomedAsync();
+        }
+
         SetupPanel.IsVisible = false;
         SettingsPanel.IsVisible = false;
         LayoutRoot.IsVisible = true;
+        if (leavingSetup)
+        {
+            EnterView(ComposerArea, durationMs: 320, slideY: 24);
+        }
+
         ServiceKey.Text = string.Empty;
         Composer.Focus();
     }

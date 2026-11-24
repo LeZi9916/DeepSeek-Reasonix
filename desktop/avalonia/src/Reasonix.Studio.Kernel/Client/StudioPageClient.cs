@@ -260,6 +260,27 @@ public sealed partial class StudioPageClient
     public Task<JsonObject> SetTypographyAsync(string? ui, string? mono, double? scale, double? read, CancellationToken token) =>
         PatchAppearanceAsync(null, null, ui, mono, scale, read, token);
 
+    /// <summary>Reads the kernel's persisted welcome state.</summary>
+    /// <param name="token">Cancels the read.</param>
+    /// <returns>Whether this machine has already seen the welcome.</returns>
+    public async Task<bool> WelcomeSeenAsync(CancellationToken token)
+    {
+        using var response = await _http.GetAsync("/welcome", token).ConfigureAwait(false);
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return true;
+        }
+
+        await KernelClient.EnsureAsync(response, token).ConfigureAwait(false);
+        var state = await BodyAsync<JsonObject>(response, token).ConfigureAwait(false);
+        return (bool?)state["seen"] ?? true;
+    }
+
+    /// <summary>Records the first-run welcome after playback or explicit dismissal.</summary>
+    /// <param name="token">Cancels the write.</param>
+    /// <returns>The kernel acknowledgement.</returns>
+    public Task MarkWelcomedAsync(CancellationToken token) => PostAsync("/welcome", new JsonObject(), token);
+
     /// <summary>Reads first-run setup for this session.</summary>
     /// <param name="token">Cancels the request.</param>
     /// <returns>The setup state, or null for kernels without the endpoint.</returns>

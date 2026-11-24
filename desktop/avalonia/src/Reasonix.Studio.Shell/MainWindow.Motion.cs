@@ -113,13 +113,25 @@ public sealed partial class MainWindow
         _viewMotion = (view, change);
         var animation = new Animation
         {
-            Duration = TimeSpan.FromMilliseconds(260),
+            Duration = TimeSpan.FromMilliseconds(durationMs),
             Children =
             {
                 new KeyFrame { Cue = new Cue(0), Setters = { new Setter(Visual.OpacityProperty, 0d) } },
                 new KeyFrame { Cue = new Cue(1), KeySpline = easing ?? new KeySpline(0.16, 1, 0.3, 1), Setters = { new Setter(Visual.OpacityProperty, 1d) } },
             },
         };
+        if (slideX != 0)
+        {
+            animation.Children[0].Setters.Add(new Setter(TranslateTransform.XProperty, slideX));
+            animation.Children[1].Setters.Add(new Setter(TranslateTransform.XProperty, 0d));
+        }
+
+        if (slideY != 0)
+        {
+            animation.Children[0].Setters.Add(new Setter(TranslateTransform.YProperty, slideY));
+            animation.Children[1].Setters.Add(new Setter(TranslateTransform.YProperty, 0d));
+        }
+
         try
         {
             await animation.RunAsync(view, change.Token).ConfigureAwait(true);
@@ -149,14 +161,22 @@ public sealed partial class MainWindow
         var allowed = !ReducedEffects && await _systemAllowsMotion(_closing.Token).ConfigureAwait(true);
         if (current == _motionRead && !_closing.IsCancellationRequested)
         {
+            var started = allowed && !Classes.Contains("motion");
             Classes.Set("motion", allowed);
             Backdrop.SetMotion(allowed);
-            if (!allowed)
+            SetupDemo.SetMotion(allowed);
+            if (started)
             {
+                EnterWelcome();
+            }
+            else if (!allowed)
+            {
+                CancelWelcomeEntrance();
                 ComposerRunTokens.CancelFeedback();
                 _viewMotion?.Cancel.Cancel();
                 _workbenchDismiss?.Cancel();
                 _workbenchCanvasFade?.Cancel();
+                _setupDeparture?.Cancel();
             }
         }
     }

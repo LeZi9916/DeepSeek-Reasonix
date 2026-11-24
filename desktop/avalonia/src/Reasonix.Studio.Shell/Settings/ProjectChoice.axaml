@@ -1,18 +1,41 @@
 <local:SettingsFormView xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.ProjectChoice">
- <Border MaxWidth="670" Margin="16" Padding="28" CornerRadius="15" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" VerticalAlignment="Center">
+ <Border MaxWidth="640" Margin="24,12" Padding="42,36,42,34" CornerRadius="15" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" VerticalAlignment="Center">
   <StackPanel Spacing="12">
-   <TextBlock Tag="onboarding.which_project" FontSize="{DynamicResource StudioType25}" FontWeight="SemiBold"/>
+   <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,0,0,8">
+    <local:OnboardingSteps Name="Progress" VerticalAlignment="Center"/>
+    <Button Name="Skip" Grid.Column="1" Tag="onboarding.not_now" AutomationProperties.AutomationId="action:onboarding.skip-project"
+            Padding="0" MinHeight="20" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" Background="Transparent" BorderThickness="0"/>
+   </Grid>
+   <TextBlock Tag="onboarding.which_project" FontSize="{DynamicResource StudioType22}" FontWeight="Medium" Foreground="{DynamicResource TextBrush}"/>
    <TextBlock Tag="onboarding.drop_to_choose" TextWrapping="Wrap"/>
-   <Border Name="DropZone" DragDrop.AllowDrop="True" MinHeight="110" Padding="15" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" CornerRadius="9">
-    <StackPanel Spacing="8" VerticalAlignment="Center">
-     <TextBlock Name="PathLabel" TextWrapping="Wrap" HorizontalAlignment="Center"/>
-     <Button Name="Pick" Tag="onboarding.choose_a_folder" AutomationProperties.AutomationId="action:onboarding.pick-folder" HorizontalAlignment="Center"/>
-    </StackPanel>
+   <Border Name="DropZone" Classes="onb-drop" DragDrop.AllowDrop="True" MinHeight="150"
+           CornerRadius="{DynamicResource RMd}" ClipToBounds="True" Background="Transparent">
+    <Grid>
+     <local:OnboardingStripes Name="DropStripes" IsVisible="False" IsHitTestVisible="False" Opacity="0.06" Ink="{DynamicResource AccentBrush}"/>
+     <Rectangle Classes="onb-drop-frame" RadiusX="10" RadiusY="10" StrokeThickness="1.5" IsHitTestVisible="False"/>
+     <StackPanel Spacing="6" Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+      <Viewbox Name="DropIcon" Width="22" Height="22"><Canvas Width="24" Height="24">
+       <Path Data="{StaticResource Glyph.folder}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeJoin="Round" StrokeLineCap="Round"/>
+      </Canvas></Viewbox>
+      <TextBlock Name="PathLabel" TextWrapping="Wrap" HorizontalAlignment="Center" FontSize="{DynamicResource StudioType13}" FontWeight="Medium" Foreground="{DynamicResource MutedBrush}"/>
+      <Grid Name="Chosen" ColumnDefinitions="22,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="2" IsVisible="False">
+       <Grid.RenderTransform><TransformGroup><ScaleTransform/><TranslateTransform/></TransformGroup></Grid.RenderTransform>
+       <Viewbox Grid.RowSpan="2" Width="22" Height="22"><Canvas Width="24" Height="24">
+        <Path Data="{StaticResource Glyph.folder}" Stroke="{DynamicResource TextBrush}" StrokeThickness="1.8" StrokeJoin="Round" StrokeLineCap="Round"/>
+       </Canvas></Viewbox>
+       <TextBlock Name="FolderName" Grid.Column="1" FontWeight="SemiBold" FontSize="{DynamicResource StudioType13}" Foreground="{DynamicResource TextBrush}"/>
+       <TextBlock Name="FolderPath" Grid.Column="1" Grid.Row="1" FontSize="{DynamicResource StudioType12}" FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis"/>
+      </Grid>
+      <Button Name="Pick" Classes="setup-back" Tag="onboarding.choose_a_folder" AutomationProperties.AutomationId="action:onboarding.pick-folder" HorizontalAlignment="Center"/>
+     </StackPanel>
+    </Grid>
    </Border>
-   <TextBlock Name="Error" Foreground="{DynamicResource ErrBrush}" IsVisible="False" TextWrapping="Wrap"/>
-   <WrapPanel><Button Name="Start" Tag="common.start" IsEnabled="False" AutomationProperties.AutomationId="action:onboarding.start"/>
-    <Button Name="Skip" Tag="onboarding.not_now" Margin="6,0" AutomationProperties.AutomationId="action:onboarding.skip-project"/></WrapPanel>
+   <TextBlock Name="Error" Foreground="{DynamicResource ErrInkBrush}" IsVisible="False" TextWrapping="Wrap" FontSize="{DynamicResource StudioType12}"/>
+   <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,4,0,0">
+    <Button Name="SkipProject" Classes="setup-back" Tag="onboarding.not_now" AutomationProperties.AutomationId="action:onboarding.defer-project"/>
+    <Button Name="Start" Classes="setup-go" Tag="common.start" IsEnabled="False" AutomationProperties.AutomationId="action:onboarding.start"/>
+   </StackPanel>
   </StackPanel>
  </Border>
 </local:SettingsFormView>

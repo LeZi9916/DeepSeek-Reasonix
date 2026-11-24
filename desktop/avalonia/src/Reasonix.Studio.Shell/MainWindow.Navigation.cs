@@ -221,8 +221,10 @@ public sealed partial class MainWindow
 
     /// <summary>Locates a runtime and focuses it only for the current navigation.</summary>
     /// <param name="target">Canonical target.</param><param name="register">Whether to register the project.</param>
-    /// <param name="current">Checks the navigation ticket.</param><param name="retained">Optional already open pane.</param><returns>The acknowledged navigation.</returns>
-    private async Task OpenTargetCoreAsync(SessionOpenTarget target, bool register, Func<bool>? current = null, SessionPaneState? retained = null)
+    /// <param name="current">Checks the navigation ticket.</param><param name="retained">Optional already open pane.</param>
+    /// <param name="animateSetupDeparture">Whether opening the workspace completes setup.</param>
+    /// <returns>The acknowledged navigation.</returns>
+    private async Task OpenTargetCoreAsync(SessionOpenTarget target, bool register, Func<bool>? current = null, SessionPaneState? retained = null, bool animateSetupDeparture = false)
     {
         if (_engine is not { } previous)
         {
@@ -260,16 +262,26 @@ public sealed partial class MainWindow
             return;
         }
 
-        await FocusPaneAsync(pane).ConfigureAwait(true);
+        await FocusPaneAsync(pane, animateSetupDeparture).ConfigureAwait(true);
     }
 
     /// <summary>Mounts a retained pane and independently reads its history and status.</summary>
-    /// <param name="pane">Pane to focus.</param><returns>The mounted session.</returns>
-    private async Task FocusPaneAsync(SessionPaneState pane)
+    /// <param name="pane">Pane to focus.</param>
+    /// <param name="animateSetupDeparture">Whether mounting this pane completes setup.</param>
+    /// <returns>The mounted session.</returns>
+    private async Task FocusPaneAsync(SessionPaneState pane, bool animateSetupDeparture = false)
     {
         if (_engine is null || (ReferenceEquals(_activePane, pane) && _sessionPath == pane.Status.SessionPath))
         {
-            Composer.Focus();
+            if (animateSetupDeparture && SetupPanel.IsVisible)
+            {
+                ReturnToConversation(animateSetupDeparture: true);
+            }
+            else
+            {
+                Composer.Focus();
+            }
+
             return;
         }
 
@@ -295,7 +307,7 @@ public sealed partial class MainWindow
         AdoptComposer(pane.Status);
         CrumbTitle.Text = pane.Status.Label.Length > 0 ? pane.Status.Label : MessageCatalog.Get("common.new_session", Language);
         ShowState(pane.Engine.State);
-        ReturnToConversation();
+        ReturnToConversation(animateSetupDeparture);
         DrawPaneTabs();
         _ = MarkPaneViewedAsync(pane);
         EnsurePaneWatching(pane);

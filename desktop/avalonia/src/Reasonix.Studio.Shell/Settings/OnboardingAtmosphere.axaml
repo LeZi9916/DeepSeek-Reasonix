@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Reasonix.Studio.Shell.Settings"
+             x:Class="Reasonix.Studio.Shell.Settings.OnboardingAtmosphere" ClipToBounds="True" IsHitTestVisible="False">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="OnboardingGridInk" Color="#0B445985"/>
+          <Color x:Key="OnboardingHaloInk">#246380D3</Color>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="OnboardingGridInk" Color="#099FB0D7"/>
+          <Color x:Key="OnboardingHaloInk">#2E5B77D6</Color>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <Grid>
+    <local:OnboardingGrid Name="GuideGrid" Margin="0,64,0,0" Ink="{DynamicResource OnboardingGridInk}" Opacity="0.72">
+      <local:OnboardingGrid.OpacityMask>
+        <RadialGradientBrush Center="68%,38%" GradientOrigin="68%,38%" RadiusX="68%" RadiusY="58%">
+          <GradientStop Offset="0" Color="#FF000000"/>
+          <GradientStop Offset="0.78" Color="#00000000"/>
+        </RadialGradientBrush>
+      </local:OnboardingGrid.OpacityMask>
+    </local:OnboardingGrid>
+    <Border Name="Halo" HorizontalAlignment="Right" VerticalAlignment="Top" Opacity="0.7">
+      <Border.CacheMode><BitmapCache/></Border.CacheMode>
+      <Border.RenderTransform><ScaleTransform/></Border.RenderTransform>
+      <Border>
+        <Border.Effect><BlurEffect Radius="56"/></Border.Effect>
+        <Border.Background>
+          <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+            <GradientStop Offset="0" Color="{DynamicResource OnboardingHaloInk}"/>
+            <GradientStop Offset="0.68" Color="Transparent"/>
+          </RadialGradientBrush>
+        </Border.Background>
+      </Border>
+    </Border>
+  </Grid>
+</UserControl>

@@ -5,6 +5,7 @@
         xmlns:pages="using:Reasonix.Studio.Pages"
         xmlns:appearance="using:Reasonix.Studio.Shell.Appearance"
         xmlns:notices="using:Reasonix.Studio.Shell.Notices"
+        xmlns:startup="using:Reasonix.Studio.Shell.Startup"
         xmlns:settings="using:Reasonix.Studio.Shell.Settings"
         xmlns:rail="using:Reasonix.Studio.Pages.Rail"
         xmlns:workbench="using:Reasonix.Studio.Shell.Workbench"
@@ -39,6 +40,7 @@
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/ComposerAttachments.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/PlanStrip.axaml" />
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/RunFeedback.axaml" />
+    <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/OnboardingMotion.axaml"/>
     <StyleInclude Source="avares://Reasonix.Studio.Shell/Styles/Sidebar.axaml" />
     <Style Selector="Window.illustrated ctl|StudioPane"><Setter Property="Background" Value="Transparent"/></Style>
     <Style Selector="Window.illustrated ctl|StudioRail"><Setter Property="Background" Value="{DynamicResource ArtworkRailBrush}"/></Style>
@@ -93,6 +95,7 @@
   </Window.Styles>
   <Panel>
   <LayoutTransformControl Name="ScaledWindow">
+  <LayoutTransformControl.RenderTransform><TranslateTransform/></LayoutTransformControl.RenderTransform>
   <Grid>
   <Grid Name="LayoutRoot" ColumnDefinitions="264,*" Background="{DynamicResource PageBrush}">
     <appearance:ThemeBackdrop Name="Backdrop" Grid.ColumnSpan="2"/>
@@ -168,6 +171,8 @@
           </Grid>
         </Grid>
       </ctl:StudioChrome>
+      <startup:BootChromeSweep Name="StartupChromeSweep" Grid.Row="0"
+                               Ink="{DynamicResource AccentBrush}" ClipToBounds="True" IsHitTestVisible="False"/>
       <ProgressBar Name="NavigationProgress" Height="2" VerticalAlignment="Bottom" IsIndeterminate="True" IsVisible="False" IsHitTestVisible="False"/>
       <session:SessionTabs Name="PaneTabs" Grid.Row="1" IsVisible="False"/>
       <ctl:StudioPane Grid.Row="2">
@@ -190,6 +195,7 @@
               </StackPanel>
             </Border>
             <StackPanel Name="ComposerArea" Classes="compose-area" UseLayoutRounding="False" TextElement.FontFamily="{DynamicResource ConversationUiFamily}" TextElement.FontWeight="Medium" Grid.Row="1" MaxWidth="{DynamicResource Column}" HorizontalAlignment="Stretch" Spacing="8">
+              <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
               <ListBox Name="Suggestions" IsVisible="False" MaxHeight="170" Focusable="False"
                        ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListBox.ItemTemplate>
@@ -724,6 +730,7 @@
         <GradientStop Offset="0" Color="{DynamicResource StudioLightWarm}"/><GradientStop Offset="0.76" Color="Transparent"/>
       </RadialGradientBrush></Border.Background>
     </Border>
+    <settings:OnboardingAtmosphere Name="SetupAtmosphere" Grid.RowSpan="3"/>
     <Border Name="SetupTitleBar" AutomationProperties.AutomationId="class:onb-brandbar" Padding="26,0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
       <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
         <Image Source="/Assets/wordmark.png" Stretch="Uniform" Width="76" Height="18" />
@@ -733,61 +740,108 @@
     <Border Name="WelcomeCard" Grid.Row="1" MaxWidth="900" Height="394" Margin="16,0" Padding="42,36,42,34" CornerRadius="15"
             Background="{DynamicResource SurfaceBrush}" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
             BoxShadow="0 22 48 0 #20191e19" VerticalAlignment="Center" AutomationProperties.AutomationId="class:onb-shell">
+      <Border.RenderTransform><ScaleTransform/></Border.RenderTransform>
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="32" AutomationProperties.AutomationId="class:onb-card">
-        <Grid RowDefinitions="*,Auto,*" AutomationProperties.AutomationId="class:onb-welcome">
+        <Grid Name="WelcomeContent" RowDefinitions="*,Auto,*" AutomationProperties.AutomationId="class:onb-welcome">
         <StackPanel Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" Spacing="8">
-          <Image Source="/Assets/wordmark.png" Stretch="Uniform" Height="26" Width="120" Margin="0,0,0,24"/>
-          <TextBlock Name="WelcomeTitle" HorizontalAlignment="Center" FontSize="{DynamicResource StudioType22}" FontWeight="SemiBold" AutomationProperties.AutomationId="class:onb-t" />
-          <TextBlock Name="WelcomeDescription" AutomationProperties.AutomationId="class:onb-s" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" FontSize="{DynamicResource StudioType13}"/>
-          <Button Name="BeginSetup" AutomationProperties.AutomationId="action:onboarding.begin" Width="240" Height="40" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Margin="0,16,0,0"
-                  Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource AccentFgBrush}" CornerRadius="10" />
-          <Button Name="SkipWelcome" Height="24" MinHeight="0" Padding="8,0" FontSize="{DynamicResource StudioType13}" AutomationProperties.AutomationId="action:onboarding.skip" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" />
-          <TextBlock Name="SetupTime" AutomationProperties.AutomationId="class:onb-note" HorizontalAlignment="Center" Margin="0,12,0,0" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}"/>
+          <settings:OnboardingReveal Name="WelcomeMark" Height="26" Width="120" Margin="0,0,0,24">
+            <settings:OnboardingReveal.RenderTransform><TranslateTransform/></settings:OnboardingReveal.RenderTransform>
+            <Image Source="/Assets/wordmark.png" Stretch="Uniform"/>
+          </settings:OnboardingReveal>
+          <TextBlock Name="WelcomeTitle" HorizontalAlignment="Center" FontSize="{DynamicResource StudioType22}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" AutomationProperties.AutomationId="class:onb-t">
+            <TextBlock.RenderTransform><TranslateTransform/></TextBlock.RenderTransform>
+          </TextBlock>
+          <TextBlock Name="WelcomeDescription" AutomationProperties.AutomationId="class:onb-s" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}">
+            <TextBlock.RenderTransform><TranslateTransform/></TextBlock.RenderTransform>
+          </TextBlock>
+          <StackPanel Name="WelcomeActions" Spacing="8">
+            <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+            <Button Name="BeginSetup" AutomationProperties.AutomationId="action:onboarding.begin" Width="240" Height="40" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Margin="0,16,0,0"
+                    Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource AccentFgBrush}" CornerRadius="10" />
+            <Button Name="SkipWelcome" Height="24" MinHeight="0" Padding="8,0" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" AutomationProperties.AutomationId="action:onboarding.skip" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" />
+          </StackPanel>
+          <TextBlock Name="SetupTime" AutomationProperties.AutomationId="class:onb-note" HorizontalAlignment="Center" Margin="0,12,0,0" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}">
+            <TextBlock.RenderTransform><TranslateTransform/></TextBlock.RenderTransform>
+          </TextBlock>
         </StackPanel>
         </Grid>
-        <Border Name="SetupDemo" Grid.Column="1" Width="320" Height="270" Padding="18,16" VerticalAlignment="Center"
-                CornerRadius="10" Background="{DynamicResource PageBrush}" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
-                AutomationProperties.AutomationId="class:onb-demo">
-          <StackPanel Spacing="10">
-            <Border Background="{DynamicResource OverlayBrush}" CornerRadius="10" Padding="12,6" HorizontalAlignment="Right">
-              <TextBlock Name="DemoAsk" FontSize="{DynamicResource StudioType12}" />
-            </Border>
-            <TextBlock Name="DemoThinking" FontSize="{DynamicResource StudioType12}"/>
-            <TextBlock Name="DemoRead" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}"/>
-            <TextBlock Name="DemoEdit" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}"/>
-            <TextBlock Name="DemoRun" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}"/>
-            <Border Height="1" Background="{DynamicResource BorderBrush}"/>
-            <TextBlock Name="DemoDone" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource OkBrush}"/>
-          </StackPanel>
-        </Border>
+        <settings:OnboardingDemo Name="SetupDemo" Grid.Column="1"/>
       </Grid>
     </Border>
     <Border Grid.Row="2" AutomationProperties.AutomationId="class:onb-foot">
       <TextBlock Name="SetupFoot" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource MutedBrush}" />
     </Border>
-    <settings:ProjectChoice Name="ProjectStep" Grid.Row="1" IsVisible="False"/>
+    <settings:ProjectChoice Name="ProjectStep" Grid.Row="1" IsVisible="False">
+      <settings:ProjectChoice.RenderTransform><TransformGroup><ScaleTransform/><TranslateTransform/></TransformGroup></settings:ProjectChoice.RenderTransform>
+    </settings:ProjectChoice>
     <ScrollViewer Name="SetupForm" Grid.Row="1" IsVisible="False">
-      <Border MaxWidth="900" Margin="18,12" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+      <Border Name="SetupShell" MaxWidth="640" Margin="24,12" HorizontalAlignment="Stretch" VerticalAlignment="Center"
               Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
-              BorderThickness="1" CornerRadius="15" Padding="28">
-        <StackPanel Spacing="14" MaxWidth="540">
-          <TextBlock Name="SetupTitle" FontSize="{DynamicResource StudioType25}" FontWeight="SemiBold" TextWrapping="Wrap" />
-          <TextBlock Name="SetupDescription" TextWrapping="Wrap" />
-          <StackPanel Name="ServiceFields" Spacing="8">
-            <WrapPanel Name="SetupServices" />
+              BorderThickness="1" CornerRadius="15" Padding="42,36,42,34" ClipToBounds="True">
+        <Border.RenderTransform><ScaleTransform/></Border.RenderTransform>
+        <StackPanel Name="SetupCard" Spacing="14">
+          <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="0,0,0,8">
+            <settings:OnboardingSteps Name="SetupProgress" VerticalAlignment="Center"/>
+            <Button Name="DeferSetup" Grid.Column="1" Padding="0" MinHeight="20"
+                    FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" Background="Transparent" BorderThickness="0"/>
+          </Grid>
+          <TextBlock Name="SetupTitle" Margin="0,2,0,0" LineHeight="27.5" FontSize="{DynamicResource StudioType22}"
+                     FontWeight="Medium" Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap" />
+          <TextBlock Name="SetupDescription" Margin="0,-5,0,5" LineHeight="20.4" FontSize="{DynamicResource StudioType12}"
+                     Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap" />
+          <StackPanel Name="ServiceFields" Spacing="14">
+            <UniformGrid Name="SetupServices" Columns="4" ColumnSpacing="8" RowSpacing="8" />
             <TextBox Name="ServiceAddress" Text="https://api.deepseek.com" />
             <TextBox Name="ServiceName" Text="deepseek" />
           </StackPanel>
-          <TextBox Name="ServiceKey" PasswordChar="●" PlaceholderText="API Key" />
-          <ComboBox Name="ServiceProtocol" IsVisible="False" HorizontalAlignment="Stretch" AutomationProperties.AutomationId="action:onboarding.protocol"/>
-          <StackPanel Name="ModelOptions" IsVisible="False" Spacing="4"/>
-          <ComboBox Name="ServiceModels" IsVisible="False" HorizontalAlignment="Stretch" />
-          <TextBlock Name="SetupError" IsVisible="False" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}"/>
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Name="ConnectProvider" />
-            <Button Name="SetupBack" />
-            <Button Name="DeferSetup" />
+          <StackPanel Name="ServiceKeyField" Spacing="6">
+            <TextBlock Text="API key" LineHeight="15.4" FontSize="{DynamicResource StudioType11}"
+                       FontWeight="Medium" Foreground="{DynamicResource FaintBrush}"/>
+            <TextBox Name="ServiceKey" PlaceholderText="sk-…" MinHeight="42.6">
+              <TextBox.RenderTransform><TranslateTransform/></TextBox.RenderTransform>
+            </TextBox>
           </StackPanel>
+          <TextBlock Name="SetupError" IsVisible="False" TextWrapping="Wrap" Foreground="{DynamicResource ErrInkBrush}"
+                     FontSize="{DynamicResource StudioType12}" AutomationProperties.LiveSetting="Assertive"/>
+          <Border Name="SetupFound" IsVisible="False" MinHeight="39" CornerRadius="{DynamicResource RMd}" Padding="12,10"
+                  Background="{DynamicResource OkWashBrush}" AutomationProperties.LiveSetting="Polite">
+            <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
+            <StackPanel Spacing="8" Orientation="Horizontal">
+              <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.check}" Stroke="{DynamicResource OkInkBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+              <TextBlock Name="SetupFoundLabel" FontSize="{DynamicResource StudioType13}" FontWeight="Medium" Foreground="{DynamicResource OkInkBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
+          <ComboBox Name="ServiceProtocol" IsVisible="False" HorizontalAlignment="Stretch" AutomationProperties.AutomationId="action:onboarding.protocol"/>
+          <StackPanel Name="SetupModelField" IsVisible="False" Spacing="6">
+            <TextBlock Name="SetupModelLabel" LineHeight="15.4" FontSize="{DynamicResource StudioType11}"
+                       FontWeight="Medium" Foreground="{DynamicResource FaintBrush}"/>
+            <StackPanel Name="ModelOptions" IsVisible="False" Spacing="6"/>
+            <ComboBox Name="ServiceModels" IsVisible="False" HorizontalAlignment="Stretch" />
+            <TextBlock Name="SetupModelNote" Margin="0,12" LineHeight="19.2" FontSize="{DynamicResource StudioType12}"
+                       Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right" Margin="0,4,0,0" MinHeight="42">
+            <Button Name="SetupBack" Classes="setup-back"/>
+            <Button Name="ConnectProvider" Classes="setup-go" AutomationProperties.AutomationId="action:onboarding.connect">
+              <Grid>
+                <TextBlock Name="ConnectLabel" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                <Viewbox Name="ConnectSpinner" IsVisible="False" Width="16" Height="16">
+                  <Canvas Width="16" Height="16">
+                    <Path Classes="setup-spin-stem" Data="M4.7 2.9V13.1" Stroke="{Binding #ConnectProvider.Foreground}" StrokeThickness="1.7" StrokeLineCap="Round" StrokeDashArray="6,6"/>
+                    <Path Classes="setup-spin-bowl" Data="M4.7 2.9h4.2a2.9 2.9 0 0 1 0 5.8H4.7" Stroke="{Binding #ConnectProvider.Foreground}" StrokeThickness="1.7" StrokeLineCap="Round" StrokeDashArray="10.3,10.3"/>
+                    <Path Classes="setup-spin-leg" Data="M9 8.7l3.3 4.4" Stroke="{Binding #ConnectProvider.Foreground}" StrokeThickness="1.7" StrokeLineCap="Round" StrokeDashArray="3.24,3.24"/>
+                  </Canvas>
+                </Viewbox>
+                <Viewbox Name="ConnectCheck" IsVisible="False" Width="16" Height="16">
+                  <Canvas Width="24" Height="24"><Path Classes="setup-check" Data="{StaticResource Glyph.check}"
+                    Stroke="{Binding #ConnectProvider.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" StrokeDashArray="17.78,17.78"/></Canvas>
+                </Viewbox>
+              </Grid>
+            </Button>
+          </StackPanel>
+          <TextBlock Name="SetupServiceNote" IsVisible="False" Margin="0,12" LineHeight="19.2" FontSize="{DynamicResource StudioType12}"
+                     Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap"/>
         </StackPanel>
       </Border>
     </ScrollViewer>
@@ -806,5 +860,15 @@
   </Border>
   </Grid>
   </LayoutTransformControl>
+    <startup:WelcomeCurtain Name="FirstRunCurtain" IsVisible="False"/>
+    <startup:BootIntro Name="StartupIntro" IsVisible="False" ClipToBounds="True">
+      <startup:BootIntro.Resources>
+        <ResourceDictionary>
+          <ResourceDictionary.MergedDictionaries>
+            <ResourceInclude Source="avares://Reasonix.Studio.Shell/Startup/BootWordmark.axaml"/>
+          </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+      </startup:BootIntro.Resources>
+    </startup:BootIntro>
   </Panel>
 </Window>
