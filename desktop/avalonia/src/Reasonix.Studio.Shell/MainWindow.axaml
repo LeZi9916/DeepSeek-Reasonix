@@ -68,7 +68,12 @@
       </Setter>
     </Style>
     <Style Selector="Window.motion Button.icon:pressed">
-      <Setter Property="RenderTransform" Value="scale(0.96)" />
+      <Setter Property="RenderTransform" Value="scale(0.94)" />
+    </Style>
+    <Style Selector="Window.motion Button.icon /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Transitions">
+        <Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1" /></Transitions>
+      </Setter>
     </Style>
     <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource OverlayBrush}" />

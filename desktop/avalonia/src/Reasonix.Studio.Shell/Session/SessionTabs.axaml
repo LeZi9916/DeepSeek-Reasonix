@@ -12,6 +12,12 @@
         </Transitions>
       </Setter>
     </Style>
+    <Style Selector="Window.motion Button.pane-tab">
+      <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/></Transitions></Setter>
+    </Style>
+    <Style Selector="Window.motion Button.pane-close">
+      <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/><BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/></Transitions></Setter>
+    </Style>
     <Style Selector="Button.pane-close.current"><Setter Property="Opacity" Value="1"/></Style>
     <Style Selector="Button.pane-close:pointerover"><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
     <Style Selector="Button.pane-peer"><Setter Property="Width" Value="18"/><Setter Property="Height" Value="18"/><Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="4,0,0,0"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="CornerRadius" Value="6"/><Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="VerticalContentAlignment" Value="Center"/></Style>
