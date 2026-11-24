@@ -1,8 +1,10 @@
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.VisualTree;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Collections.Generic;
@@ -16,8 +18,15 @@ internal sealed partial class SessionTabs : UserControl
     /// <summary>Retains the current projection while its labels and states remain unchanged.</summary>
     private string _snapshot = string.Empty;
 
+    /// <summary>The visual group that owns the active tab.</summary>
+    private StackPanel? _activeGroup;
+
     /// <summary>Initializes a new instance of the <see cref="SessionTabs"/> class.</summary>
-    public SessionTabs() => InitializeComponent();
+    public SessionTabs()
+    {
+        InitializeComponent();
+        Tabs.LayoutUpdated += (_, _) => PositionMark();
+    }
 
     /// <summary>Raised to focus the selected retained pane.</summary>
     internal event Action<SessionPaneState>? FocusRequested;
@@ -47,6 +56,7 @@ internal sealed partial class SessionTabs : UserControl
 
         _snapshot = snapshot;
         Tabs.Children.Clear();
+        _activeGroup = null;
         var showRoot = panes.Select(p => p.Status.WorkspaceRoot)
             .Where(root => !string.IsNullOrEmpty(root)).Distinct(StringComparer.Ordinal).Count() > 1;
         foreach (var pane in panes)
@@ -171,6 +181,11 @@ internal sealed partial class SessionTabs : UserControl
             close.Click += (_, _) => CloseRequested?.Invoke([pane]);
             var group = new StackPanel { Orientation = Orientation.Horizontal, Classes = { "pane-tab-group" }, Children = { button, close } };
             Tabs.Children.Add(group);
+            if (ReferenceEquals(pane, active))
+            {
+                _activeGroup = group;
+            }
+
             button.KeyDown += (_, e) =>
             {
                 if (e.Key is not (Key.Left or Key.Right or Key.Home or Key.End))
@@ -193,6 +208,7 @@ internal sealed partial class SessionTabs : UserControl
         }
     }
 
+    /// <summary>Places the accent marker under the active tab group.</summary>
     /// <summary>Returns the stroke resource for a peer-thread state.</summary>
     /// <param name="state">Peer-thread state.</param>
     /// <returns>Resource key.</returns>
@@ -233,5 +249,24 @@ internal sealed partial class SessionTabs : UserControl
         var trimmed = root.TrimEnd('/', '\\');
         var separator = trimmed.LastIndexOfAny(['/', '\\']);
         return separator >= 0 ? trimmed[(separator + 1)..] : trimmed;
+    }
+
+    /// <summary>Places the accent marker under the active tab group.</summary>
+    private void PositionMark()
+    {
+        if (_activeGroup is null)
+        {
+            TabMark.IsVisible = false;
+            return;
+        }
+
+        if (_activeGroup.TranslatePoint(default, Tabs) is not { } at)
+        {
+            return;
+        }
+
+        TabMark.Width = _activeGroup.Bounds.Width;
+        Canvas.SetLeft(TabMark, at.X);
+        TabMark.IsVisible = true;
     }
 }

@@ -60,6 +60,10 @@ public sealed partial class NativeDomainTests
                     var firstTab = buttons[0].TranslatePoint(default, strip)!.Value;
                     Assert.InRange(firstTab.X, 11.5, 12.5);
                     Assert.InRange(firstTab.Y, 7.5, 8.5);
+                    var mark = tabs.GetVisualDescendants().OfType<Border>().Single(border => border.Name == "TabMark");
+                    var activeGroup = Assert.IsType<StackPanel>(buttons[0].Parent);
+                    Assert.True(mark.IsVisible);
+                    Assert.Equal(activeGroup.Bounds.Width, mark.Bounds.Width, 3);
                     var peerMark = buttons[0].GetVisualDescendants().OfType<Button>()
                         .Single(button => AutomationProperties.GetAutomationId(button) == "action:peer.thread-open");
                     peerMark.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
