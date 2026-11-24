@@ -251,10 +251,18 @@ public sealed partial class MainWindow
                 };
                 frame.Bind(Border.BorderBrushProperty, frame.GetResourceObservable(selected ? "AccentBrush" : "BorderBrush"));
 
-                var preview = new Panel();
+                var preview = new Panel { UseLayoutRounding = true };
                 preview.Children.Add(frame);
                 if (selected)
                 {
+                    var selectionRing = new Border
+                    {
+                        BorderThickness = new Thickness(2),
+                        CornerRadius = new CornerRadius(7),
+                        IsHitTestVisible = false,
+                    };
+                    selectionRing.Bind(Border.BorderBrushProperty, selectionRing.GetResourceObservable("AccentBrush"));
+                    preview.Children.Add(selectionRing);
                     var ring = new Ellipse { Width = 11, Height = 11 };
                     ring.Bind(Shape.FillProperty, ring.GetResourceObservable("PageBrush"));
                     var dot = new Ellipse { Width = 7, Height = 7 };

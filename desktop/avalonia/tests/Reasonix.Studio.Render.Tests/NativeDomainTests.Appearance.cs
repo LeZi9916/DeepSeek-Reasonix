@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Controls;
 using System;
 using System.Linq;
 using System.Net;
@@ -93,6 +94,12 @@ public sealed partial class NativeDomainTests
             Button[] Cards() => w.GetVisualDescendants().OfType<Button>()
                 .Where(button => AutomationProperties.GetAutomationId(button) == "action:theme.activate").ToArray();
             Assert.Equal(5, Cards().Length);
+            var frames = w.GetVisualDescendants().OfType<Border>()
+                .Where(border => border.Child is AspectRatioView).ToArray();
+            Assert.All(frames, border => Assert.Equal(1, border.BorderThickness.Left));
+            var selectedRing = w.GetVisualDescendants().OfType<Border>()
+                .Single(border => border.BorderThickness.Left == 2 && border.CornerRadius.TopLeft == 7);
+            Assert.Equal(2, selectedRing.BorderThickness.Left);
             var first = Cards()[0];
             Assert.Equal(212.4, first.Bounds.Width, 1);
             Assert.InRange(first.Bounds.Height, 173, 175);

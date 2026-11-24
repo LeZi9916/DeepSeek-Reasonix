@@ -63,7 +63,7 @@ public sealed partial class SessionPage : UserControl
         {
             Orientation = Orientation.Vertical,
             Spacing = 0,
-            Margin = new Thickness(24, 28, 24, 36),
+            Margin = new Thickness(24, 0, 24, 36),
             [!MaxWidthProperty] = StudioTypography.Resource("Column"),
         };
 
@@ -167,7 +167,7 @@ public sealed partial class SessionPage : UserControl
 
     /// <summary>Sets the reading inset inside the full-width scroll viewport.</summary>
     /// <param name="inset">Symmetric horizontal flow padding.</param>
-    public void SetReadingInset(double inset) => _rows.Margin = new Thickness(inset, 28, inset, 36);
+    public void SetReadingInset(double inset) => _rows.Margin = new Thickness(inset, 0, inset, 36);
 
     /// <summary>
     /// Shows one state.

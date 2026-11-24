@@ -569,7 +569,8 @@
       <Thumb.Template><ControlTemplate><Border Background="{TemplateBinding Background}" /></ControlTemplate></Thumb.Template>
     </Thumb>
   </Grid>
-  <Grid Name="SettingsPanel" Focusable="True" Background="{DynamicResource SurfaceBrush}" IsVisible="False" RowDefinitions="48,*">
+  <Grid Name="SettingsPanel" Focusable="True" Background="{DynamicResource SurfaceBrush}" IsVisible="False" RowDefinitions="48,*"
+        TextElement.Foreground="{DynamicResource TextBrush}" TextElement.FontWeight="Medium">
     <Grid Name="SettingsTitleBar" ColumnDefinitions="Auto,*" Background="{DynamicResource PageBrush}" AutomationProperties.AutomationId="class:prefs-windowbar">
       <Border Grid.ColumnSpan="2" Height="1" VerticalAlignment="Bottom" Background="{DynamicResource HairBrush}" />
       <Button Name="CloseSettings" AutomationProperties.AutomationId="action:settings.close" Margin="12,0" Padding="10,0" Height="32"
