@@ -42,6 +42,8 @@ internal sealed partial class SessionTabs : UserControl
 
         _snapshot = snapshot;
         Tabs.Children.Clear();
+        var showRoot = panes.Select(p => p.Status.WorkspaceRoot)
+            .Where(root => !string.IsNullOrEmpty(root)).Distinct(StringComparer.Ordinal).Count() > 1;
         foreach (var pane in panes)
         {
             var running = pane.Engine.State.Running;
@@ -57,10 +59,38 @@ internal sealed partial class SessionTabs : UserControl
                 TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
                 VerticalAlignment = VerticalAlignment.Center,
             };
-            var content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), ColumnSpacing = 7 };
+            var content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), ColumnSpacing = 7 };
             content.Children.Add(pip);
             content.Children.Add(title);
             Grid.SetColumn(title, 1);
+            if (showRoot && !string.IsNullOrEmpty(pane.Status.WorkspaceRoot))
+            {
+                var workspace = new TextBlock
+                {
+                    Text = RootName(pane.Status.WorkspaceRoot),
+                    MaxWidth = 70,
+                    TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                workspace.Classes.Add("pane-workspace");
+                content.Children.Add(workspace);
+                Grid.SetColumn(workspace, 2);
+            }
+
+            if (!string.IsNullOrEmpty(pane.Host))
+            {
+                var host = new TextBlock
+                {
+                    Text = pane.Host,
+                    MaxWidth = 80,
+                    TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                host.Classes.Add("pane-host");
+                content.Children.Add(host);
+                Grid.SetColumn(host, 3);
+            }
+
             var button = new Button { Classes = { "pane-tab" }, Content = content };
             button.Classes.Set("current", ReferenceEquals(pane, active));
             AutomationProperties.SetAutomationId(button, "action:pane.activate");
@@ -110,5 +140,15 @@ internal sealed partial class SessionTabs : UserControl
                 menu.Items.Add(item);
             }
         }
+    }
+
+    /// <summary>Returns the final path segment used as the tab's workspace label.</summary>
+    /// <param name="root">Workspace root path.</param>
+    /// <returns>The root's display name.</returns>
+    private static string RootName(string root)
+    {
+        var trimmed = root.TrimEnd('/', '\\');
+        var separator = trimmed.LastIndexOfAny(['/', '\\']);
+        return separator >= 0 ? trimmed[(separator + 1)..] : trimmed;
     }
 }

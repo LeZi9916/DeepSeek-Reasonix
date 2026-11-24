@@ -65,6 +65,8 @@ public sealed partial class NativeDomainTests
                         .Single(border => border.Classes.Contains("pane-pip"));
                     Assert.Contains("running", firstPip.Classes);
                     Assert.Contains("unread", secondPip.Classes);
+                    Assert.Contains(buttons[0].GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "a" && text.Classes.Contains("pane-workspace"));
+                    Assert.Contains(buttons[1].GetVisualDescendants().OfType<TextBlock>(), text => text.Text == "b" && text.Classes.Contains("pane-workspace"));
                     var point = buttons[1].TranslatePoint(new Point(40, 12), window)!.Value;
                     window.MouseMove(point);
                     window.MouseDown(point, MouseButton.Left);
