@@ -8,7 +8,9 @@ using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Pages.Rail;
 using Reasonix.Studio.Shell.Session;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell;
@@ -20,6 +22,12 @@ public sealed partial class MainWindow
 
     /// <summary>The pane currently mounted in the conversation surface.</summary>
     private SessionPaneState? _activePane;
+
+    /// <summary>Peer-thread state by canonical session path.</summary>
+    private IReadOnlyDictionary<string, PeerTabMark> _peerMarks = new Dictionary<string, PeerTabMark>(StringComparer.Ordinal);
+
+    /// <summary>Guards overlapping peer-state reads.</summary>
+    private bool _peerFetching;
 
     /// <summary>Orders all session navigation through one canonical target.</summary>
     /// <param name="target">Host, workspace and transcript identity.</param><returns>The latest visible navigation.</returns>
@@ -105,6 +113,7 @@ public sealed partial class MainWindow
         PaneTabs.FocusRequested += async pane => await NavigatePaneAsync(pane).ConfigureAwait(true);
         PaneTabs.CloseRequested += async panes => await ClosePanesAsync(panes).ConfigureAwait(true);
         PaneTabs.RenameRequested += pane => Projects.RequestAction(new WorkspaceAction("session.rename-start", new SessionOpenTarget(pane.Host, pane.Status.WorkspaceRoot, pane.Status.SessionPath), new Contracts.Tree.TreeSession { Path = pane.Status.SessionPath, Title = pane.Status.Label }));
+        PaneTabs.PeerOpenRequested += async path => await OpenPeerThreadAsync(path).ConfigureAwait(true);
     }
 
     /// <summary>Retains an acknowledged runtime and subscribes to independent updates.</summary>
@@ -128,6 +137,22 @@ public sealed partial class MainWindow
         engine.HistoryInvalidated -= OnPaneGap;
         engine.HistoryInvalidated += OnPaneGap;
         DrawPaneTabs();
+        _ = RefreshPeerMarksAsync();
+    }
+
+    /// <summary>Opens a peer thread by its canonical session path.</summary>
+    /// <param name="path">Peer session path.</param>
+    /// <returns>The navigation task.</returns>
+    private async Task OpenPeerThreadAsync(string path)
+    {
+        var target = Projects.SearchEntries
+            .Where(entry => RailPresenter.Same(entry.Target.SessionPath, path))
+            .Select(entry => entry.Target)
+            .FirstOrDefault();
+        if (target is not null)
+        {
+            await OpenTargetAsync(target).ConfigureAwait(true);
+        }
     }
 
     /// <summary>Updates tab titles and activity without replacing runtime state.</summary>
@@ -135,11 +160,51 @@ public sealed partial class MainWindow
     {
         if (_workspacePreferences.ShowSessionTabs)
         {
-            PaneTabs.Show(_navigation?.Panes ?? [], _activePane, Language);
+            PaneTabs.Show(_navigation?.Panes ?? [], _activePane, Language, _peerMarks);
         }
         else
         {
             PaneTabs.IsVisible = false;
+        }
+    }
+
+    /// <summary>Reads peer-thread marks for the retained session paths.</summary>
+    /// <returns>The mark refresh.</returns>
+    private async Task RefreshPeerMarksAsync()
+    {
+        if (_peerFetching || _engine is not { } engine)
+        {
+            return;
+        }
+
+        _peerFetching = true;
+        try
+        {
+            var state = await engine.Pages.PeerStateAsync(_closing.Token).ConfigureAwait(true);
+            var next = new Dictionary<string, PeerTabMark>(StringComparer.Ordinal);
+            if ((bool?)state?["enabled"] == true && state?["threads"] is JsonArray threads)
+            {
+                foreach (var thread in threads.OfType<JsonObject>())
+                {
+                    if ((string?)thread["sessionPath"] is { Length: > 0 } path && (string?)thread["state"] is { } mark)
+                    {
+                        next[path] = new PeerTabMark(mark, (string?)thread["title"] ?? string.Empty, (string?)thread["project"] ?? string.Empty);
+                    }
+                }
+            }
+
+            if (next.Count != _peerMarks.Count || next.Any(pair => !_peerMarks.TryGetValue(pair.Key, out var old) || old != pair.Value))
+            {
+                _peerMarks = next;
+                DrawPaneTabs();
+            }
+        }
+        catch (Exception)
+        {
+        }
+        finally
+        {
+            _peerFetching = false;
         }
     }
 

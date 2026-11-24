@@ -43,13 +43,16 @@ public sealed partial class NativeDomainTests
                 var focused = new List<SessionPaneState>();
                 var closed = new List<SessionPaneState[]>();
                 var renamed = new List<SessionPaneState>();
+                var peers = new List<string>();
                 tabs.FocusRequested += focused.Add;
                 tabs.CloseRequested += closed.Add;
                 tabs.RenameRequested += renamed.Add;
+                tabs.PeerOpenRequested += peers.Add;
                 window.Show();
                 try
                 {
-                    tabs.Show(new[] { first, second }, first, InterfaceLanguage.En);
+                    var marks = new Dictionary<string, PeerTabMark> { ["/a/one.jsonl"] = new("replied", "Peer thread", "Peer project") };
+                    tabs.Show(new[] { first, second }, first, InterfaceLanguage.En, marks);
                     Dispatcher.UIThread.RunJobs();
                     var buttons = tabs.GetVisualDescendants().OfType<Button>().Where(button => AutomationProperties.GetAutomationId(button) == "action:pane.activate").ToArray();
                     var strip = Assert.Single(tabs.GetVisualDescendants().OfType<Border>(), border => border.Height == 41);
@@ -57,6 +60,10 @@ public sealed partial class NativeDomainTests
                     var firstTab = buttons[0].TranslatePoint(default, strip)!.Value;
                     Assert.InRange(firstTab.X, 11.5, 12.5);
                     Assert.InRange(firstTab.Y, 7.5, 8.5);
+                    var peerMark = buttons[0].GetVisualDescendants().OfType<Button>()
+                        .Single(button => AutomationProperties.GetAutomationId(button) == "action:peer.thread-open");
+                    peerMark.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert.Equal("/a/one.jsonl", Assert.Single(peers));
                     Assert.InRange(buttons[0].Bounds.Width, 132, 216);
                     var firstClose = Assert.IsType<StackPanel>(buttons[0].Parent).Children.OfType<Button>()
                         .Single(button => AutomationProperties.GetAutomationId(button) == "action:pane.close");

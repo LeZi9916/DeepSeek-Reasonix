@@ -28,13 +28,18 @@ internal sealed partial class SessionTabs : UserControl
     /// <summary>Raised to rename a local pane's canonical conversation.</summary>
     internal event Action<SessionPaneState>? RenameRequested;
 
+    /// <summary>Raised to open a peer thread written by this session.</summary>
+    internal event Action<string>? PeerOpenRequested;
+
     /// <summary>Projects canonical pane identities and activity without recreating their engines.</summary>
     /// <param name="panes">Retained panes.</param><param name="active">Focused pane.</param>
     /// <param name="language">Interface language.</param>
-    internal void Show(IReadOnlyList<SessionPaneState> panes, SessionPaneState? active, InterfaceLanguage language)
+    /// <param name="peerMarks">Peer-thread state by canonical session path.</param>
+    internal void Show(IReadOnlyList<SessionPaneState> panes, SessionPaneState? active, InterfaceLanguage language, IReadOnlyDictionary<string, PeerTabMark>? peerMarks = null)
     {
+        peerMarks ??= new Dictionary<string, PeerTabMark>();
         IsVisible = panes.Count > 1;
-        var snapshot = string.Join("\n", panes.Select(p => $"{p.Engine.GetHashCode()}:{p.Status.Label}:{p.Engine.State.Running}:{p.Unread}:{ReferenceEquals(p, active)}"));
+        var snapshot = string.Join("\n", panes.Select(p => $"{p.Engine.GetHashCode()}:{p.Status.Label}:{p.Engine.State.Running}:{p.Unread}:{ReferenceEquals(p, active)}:{peerMarks.GetValueOrDefault(p.Status.SessionPath)?.State}"));
         if (_snapshot == snapshot)
         {
             return;
@@ -75,7 +80,7 @@ internal sealed partial class SessionTabs : UserControl
                 TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
                 VerticalAlignment = VerticalAlignment.Center,
             };
-            var content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), ColumnSpacing = 7 };
+            var content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto,Auto"), ColumnSpacing = 7 };
             content.Children.Add(pipHolder);
             content.Children.Add(title);
             Grid.SetColumn(title, 1);
@@ -105,6 +110,36 @@ internal sealed partial class SessionTabs : UserControl
                 host.Classes.Add("pane-host");
                 content.Children.Add(host);
                 Grid.SetColumn(host, 3);
+            }
+
+            if (peerMarks.TryGetValue(pane.Status.SessionPath, out var peer))
+            {
+                var mark = new Button { Classes = { "pane-peer" } };
+                mark.Classes.Add(peer.State);
+                mark.AddHandler(PointerPressedEvent, (_, e) => e.Handled = true, RoutingStrategies.Tunnel);
+                var glyph = new Avalonia.Controls.Shapes.Path
+                {
+                    Data = Avalonia.Media.Geometry.Parse(PeerGlyph(peer.State)),
+                    Width = 13,
+                    Height = 13,
+                    Stretch = Avalonia.Media.Stretch.Uniform,
+                    StrokeThickness = 1.8,
+                    StrokeLineCap = Avalonia.Media.PenLineCap.Round,
+                    StrokeJoin = Avalonia.Media.PenLineJoin.Round,
+                };
+                glyph.Bind(Avalonia.Controls.Shapes.Shape.StrokeProperty, glyph.GetResourceObservable(PeerBrush(peer.State)));
+                mark.Content = glyph;
+                var tip = MessageCatalog.Get(PeerCopyKey(peer.State), language, ("title", peer.Title), ("project", peer.Project));
+                ToolTip.SetTip(mark, tip);
+                AutomationProperties.SetAutomationId(mark, "action:peer.thread-open");
+                AutomationProperties.SetName(mark, tip);
+                mark.Click += (_, e) =>
+                {
+                    e.Handled = true;
+                    PeerOpenRequested?.Invoke(pane.Status.SessionPath);
+                };
+                content.Children.Add(mark);
+                Grid.SetColumn(mark, 4);
             }
 
             var button = new Button { Classes = { "pane-tab" }, Content = content };
@@ -157,6 +192,38 @@ internal sealed partial class SessionTabs : UserControl
             }
         }
     }
+
+    /// <summary>Returns the stroke resource for a peer-thread state.</summary>
+    /// <param name="state">Peer-thread state.</param>
+    /// <returns>Resource key.</returns>
+    private static string PeerBrush(string state) => state switch
+    {
+        "replied" => "AccentBrush",
+        "declined" => "ErrInkBrush",
+        _ => "MutedBrush",
+    };
+
+    /// <summary>Returns the localized tooltip key for a peer-thread state.</summary>
+    /// <param name="state">Peer-thread state.</param>
+    /// <returns>Message key.</returns>
+    private static string PeerCopyKey(string state) => state switch
+    {
+        "waiting" => "remote.sent_to_title_project_waiting",
+        "working" => "remote.title_project_accepted_it_and",
+        "replied" => "remote.title_project_replied_to_you",
+        _ => "remote.the_user_of_title_project",
+    };
+
+    /// <summary>Returns the icon path for a peer-thread state.</summary>
+    /// <param name="state">Peer-thread state.</param>
+    /// <returns>Path data.</returns>
+    private static string PeerGlyph(string state) => state switch
+    {
+        "waiting" => "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M12 7v5l3 2",
+        "working" => "M20 12a8 8 0 1 1-2.3-5.6 M20 4v5h-5",
+        "replied" => "M4 5h16v11H9l-5 4z",
+        _ => "M6 6l12 12 M18 6L6 18",
+    };
 
     /// <summary>Returns the final path segment used as the tab's workspace label.</summary>
     /// <param name="root">Workspace root path.</param>
