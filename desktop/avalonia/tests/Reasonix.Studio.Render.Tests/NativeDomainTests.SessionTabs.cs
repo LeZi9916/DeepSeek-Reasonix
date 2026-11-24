@@ -52,6 +52,11 @@ public sealed partial class NativeDomainTests
                     tabs.Show(new[] { first, second }, first, InterfaceLanguage.En);
                     Dispatcher.UIThread.RunJobs();
                     var buttons = tabs.GetVisualDescendants().OfType<Button>().Where(button => AutomationProperties.GetAutomationId(button) == "action:pane.activate").ToArray();
+                    var strip = Assert.Single(tabs.GetVisualDescendants().OfType<Border>(), border => border.Height == 41);
+                    Assert.Equal(41, strip.Bounds.Height);
+                    var firstTab = buttons[0].TranslatePoint(default, strip)!.Value;
+                    Assert.InRange(firstTab.X, 11.5, 12.5);
+                    Assert.InRange(firstTab.Y, 7.5, 8.5);
                     Assert.InRange(buttons[0].Bounds.Width, 132, 216);
                     var firstClose = Assert.IsType<StackPanel>(buttons[0].Parent).Children.OfType<Button>()
                         .Single(button => AutomationProperties.GetAutomationId(button) == "action:pane.close");

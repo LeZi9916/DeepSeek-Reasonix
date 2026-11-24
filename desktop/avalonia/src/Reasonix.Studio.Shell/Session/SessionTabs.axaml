@@ -18,7 +18,7 @@
       </Style.Animations>
     </Style>
   </UserControl.Styles>
-  <Border BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,0,1" Background="{DynamicResource PageBrush}" Height="35">
+  <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Background="{DynamicResource PageBrush}" Height="41" Padding="12,8,0,0">
     <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
       <StackPanel Name="Tabs" Orientation="Horizontal" Spacing="2"/>
     </ScrollViewer>
