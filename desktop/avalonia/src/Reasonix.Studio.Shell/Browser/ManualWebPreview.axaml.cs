@@ -6,6 +6,7 @@ using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell.Browser;
 
@@ -33,6 +34,12 @@ public sealed partial class ManualWebPreview : UserControl
     /// <summary>Whether the guest is still navigating.</summary>
     private bool _navigating;
 
+    /// <summary>The validated browser page offered to the system launcher.</summary>
+    private Uri? _externalAddress;
+
+    /// <summary>Whether the current navigation began from the address field.</summary>
+    private bool _addressNavigation;
+
     /// <summary>Initializes a new instance of the <see cref="ManualWebPreview"/> class.</summary>
     public ManualWebPreview()
         : this(null, LanguageResolver.FromMachine())
@@ -53,6 +60,9 @@ public sealed partial class ManualWebPreview : UserControl
         Label(Back, MessageKey.Workbench.Back);
         Label(Forward, MessageKey.Workbench.Forward);
         Label(Reload, MessageKey.Common.Reload);
+        LoadingLabel.Text = MessageCatalog.Get(MessageKey.Workbench.OpeningPage, language);
+        BrowserExternal.Content = MessageCatalog.Get(MessageKey.Workbench.OpenInExternalBrowser, language);
+        BrowserExternal.Click += async (_, _) => await OpenExternalPageAsync().ConfigureAwait(true);
         Go.Click += (_, _) => OpenAddress();
         Address.KeyDown += (_, e) =>
         {
@@ -84,14 +94,7 @@ public sealed partial class ManualWebPreview : UserControl
         }
 
         _sleepAddress = null;
-        try
-        {
-            Guest().Source = address;
-        }
-        catch (Exception error)
-        {
-            ShowFailure(error.Message);
-        }
+        NavigateAddress(address);
     }
 
     /// <summary>Releases a hidden guest after it has remained idle for fifteen minutes.</summary>
@@ -117,10 +120,12 @@ public sealed partial class ManualWebPreview : UserControl
     /// <summary>Releases the native guest when its browser tab is explicitly closed.</summary>
     internal void ClosePage()
     {
-        GuestHost.Child = null;
         _guest = null;
+        GuestHost.Child = null;
         _sleepAddress = null;
-        _navigating = false;
+        _documentAddress = null;
+        _externalAddress = null;
+        SetNavigating(false);
     }
 
     /// <summary>Previews local HTML inside a script-free sandbox with no host file URL.</summary>
@@ -128,6 +133,9 @@ public sealed partial class ManualWebPreview : UserControl
     internal void ShowDocument(string html)
     {
         Notice.IsVisible = false;
+        _externalAddress = null;
+        _addressNavigation = false;
+        SetNavigating(true);
         try
         {
             var sandbox = "<!doctype html><meta charset=utf-8><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; frame-src 'self' about:; img-src data:; style-src 'unsafe-inline'\"><style>body{margin:0}iframe{width:100vw;height:100vh;border:none}</style><iframe sandbox srcdoc=\""
@@ -146,15 +154,33 @@ public sealed partial class ManualWebPreview : UserControl
     {
         if (!PreviewAddress.TryRead(Address.Text, _kernel, out var address))
         {
-            ShowFailure(MessageCatalog.Get(MessageKey.Workbench.EnterAValidHttpOr, _language));
+            ShowNotice(MessageCatalog.Get(MessageKey.Workbench.EnterAValidHttpOr, _language));
             return;
         }
 
+        NavigateAddress(address);
+    }
+
+    /// <summary>Starts feedback immediately for a validated address, including when the adapter is starting.</summary>
+    /// <param name="address">The web address accepted by the preview boundary.</param>
+    private void NavigateAddress(Uri address)
+    {
         _documentAddress = null;
         Notice.IsVisible = false;
+        _externalAddress = address;
+        _addressNavigation = true;
+        SetNavigating(true);
         try
         {
-            Guest().Source = address;
+            var view = Guest();
+            if (view.Source == address)
+            {
+                view.Refresh();
+            }
+            else
+            {
+                view.Source = address;
+            }
         }
         catch (Exception error)
         {
@@ -172,26 +198,42 @@ public sealed partial class ManualWebPreview : UserControl
         }
 
         var view = WorkbenchWebGuest.Create();
-        view.NavigationStarted += (sender, e) =>
+        view.NavigationStarted += (_, e) =>
         {
+            if (!ReferenceEquals(_guest, view))
+            {
+                e.Cancel = true;
+                return;
+            }
+
             _lastSeen = DateTimeOffset.UtcNow;
-            _navigating = true;
             var destination = e.Request?.AbsoluteUri;
             if (_documentAddress is not null && (destination is null or "about:blank" || e.Request == _documentAddress))
+            {
+                SetNavigating(true);
+                return;
+            }
+
+            if (!PreviewAddress.TryRead(destination, _kernel, out var address))
+            {
+                e.Cancel = true;
+                ShowFailure(MessageCatalog.Get(MessageKey.Workbench.EnterAValidHttpOr, _language));
+                return;
+            }
+
+            _documentAddress = null;
+            _externalAddress = address;
+            Notice.IsVisible = false;
+            SetNavigating(true);
+        };
+        view.NavigationCompleted += (_, e) =>
+        {
+            if (!ReferenceEquals(_guest, view) || !CompletesActiveNavigation(e.Request))
             {
                 return;
             }
 
-            if (!PreviewAddress.TryRead(destination, _kernel, out _))
-            {
-                e.Cancel = true;
-                _navigating = false;
-                ShowFailure(MessageCatalog.Get(MessageKey.Workbench.EnterAValidHttpOr, _language));
-            }
-        };
-        view.NavigationCompleted += (_, e) =>
-        {
-            _navigating = false;
+            SetNavigating(false);
             _lastSeen = DateTimeOffset.UtcNow;
             if (!e.IsSuccess)
             {
@@ -202,7 +244,7 @@ public sealed partial class ManualWebPreview : UserControl
                 Notice.IsVisible = false;
                 if (PreviewAddress.TryRead(e.Request?.AbsoluteUri, _kernel, out var address))
                 {
-                    Address.Text = address!.AbsoluteUri;
+                    Address.Text = address.AbsoluteUri;
                 }
             }
 
@@ -212,15 +254,21 @@ public sealed partial class ManualWebPreview : UserControl
         view.NewWindowRequested += (_, e) =>
         {
             e.Handled = true;
-            if (PreviewAddress.TryRead(e.Request?.AbsoluteUri, _kernel, out var target))
+            if (ReferenceEquals(_guest, view) && PreviewAddress.TryRead(e.Request?.AbsoluteUri, _kernel, out var target))
             {
-                Address.Text = target!.AbsoluteUri;
+                Address.Text = target.AbsoluteUri;
                 FocusAddress();
             }
         };
-        view.ProcessTerminated += (_, _) => ShowFailure(MessageCatalog.Get(MessageKey.Workbench.ThisPageCouldNotBe, _language));
-        GuestHost.Child = view;
+        view.ProcessTerminated += (_, _) =>
+        {
+            if (ReferenceEquals(_guest, view))
+            {
+                ShowFailure(MessageCatalog.Get(MessageKey.Workbench.ThisPageCouldNotBe, _language));
+            }
+        };
         _guest = view;
+        GuestHost.Child = view;
         return view;
     }
 
@@ -228,8 +276,70 @@ public sealed partial class ManualWebPreview : UserControl
     /// <param name="reason">The visible reason.</param>
     private void ShowFailure(string reason)
     {
+        SetNavigating(false);
+        ShowNotice(reason);
+    }
+
+    /// <summary>Shows an address or launcher refusal without changing a different navigation.</summary>
+    /// <param name="reason">The visible reason.</param>
+    private void ShowNotice(string reason)
+    {
         Notice.Text = reason;
         Notice.IsVisible = true;
+    }
+
+    /// <summary>Ignores the completion of a page superseded by another address.</summary>
+    /// <param name="request">The address reported by the platform, if available.</param>
+    /// <returns>Whether this completion can settle the current navigation.</returns>
+    private bool CompletesActiveNavigation(Uri? request)
+    {
+        if (request is null || !_navigating)
+        {
+            return true;
+        }
+
+        if (_documentAddress is { } document)
+        {
+            return request == document || request.AbsoluteUri == "about:blank";
+        }
+
+        return _externalAddress is not { } active ||
+            Uri.Compare(request, active, UriComponents.HttpRequestUrl, UriFormat.SafeUnescaped, StringComparison.Ordinal) == 0;
+    }
+
+    /// <summary>Updates the existing navigation state and the footer associated with typed addresses.</summary>
+    /// <param name="active">Whether the native guest still has a navigation in flight.</param>
+    private void SetNavigating(bool active)
+    {
+        _navigating = active;
+        _addressNavigation &= active;
+        BrowserFooter.IsVisible = _externalAddress is not null;
+        BrowserLoading.IsVisible = _addressNavigation && BrowserFooter.IsVisible;
+        LoadingDot.Classes.Set("browser-loading-dot", BrowserLoading.IsVisible);
+    }
+
+    /// <summary>Opens the validated page through the platform launcher after the reader clicks the footer.</summary>
+    /// <returns>The platform operation.</returns>
+    private async Task OpenExternalPageAsync()
+    {
+        if (_externalAddress is not { } target || TopLevel.GetTopLevel(this)?.Launcher is not { } launcher)
+        {
+            return;
+        }
+
+        var opened = false;
+        try
+        {
+            opened = await launcher.LaunchUriAsync(target).ConfigureAwait(true);
+        }
+        catch (Exception error) when (error is not OutOfMemoryException)
+        {
+        }
+
+        if (!opened && ReferenceEquals(_externalAddress, target))
+        {
+            ShowNotice(MessageCatalog.Get(MessageKey.Common.CouldNotOpenABrowser, _language, ("at", target.AbsoluteUri)));
+        }
     }
 
     /// <summary>Labels one native toolbar control.</summary>

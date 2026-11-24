@@ -1,6 +1,51 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Reasonix.Studio.Shell.Browser.ManualWebPreview">
-  <Grid RowDefinitions="Auto,Auto,*" Background="{DynamicResource SurfaceBrush}">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="BrowserFooterSurface" Color="{DynamicResource Page}"/>
+          <SolidColorBrush x:Key="BrowserFooterRule" Color="{DynamicResource Border}"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="BrowserFooterSurface" Color="{DynamicResource Surface}"/>
+          <SolidColorBrush x:Key="BrowserFooterRule" Color="{DynamicResource Hair}"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  <UserControl.Styles>
+    <Style Selector="Window.motion Ellipse.browser-loading-dot">
+      <Style.Animations><Animation Duration="0:0:0.6" IterationCount="Infinite">
+        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+        <KeyFrame Cue="50%" KeySpline="0.42,0,0.58,1"><Setter Property="Opacity" Value="0.4"/></KeyFrame>
+        <KeyFrame Cue="100%" KeySpline="0.42,0,0.58,1"><Setter Property="Opacity" Value="1"/></KeyFrame>
+      </Animation></Style.Animations>
+    </Style>
+    <Style Selector="Button.browser-footer-link">
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Padding" Value="8,3"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="CornerRadius" Value="{DynamicResource RXs}"/>
+      <Setter Property="Template"><ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+                Padding="{TemplateBinding Padding}">
+          <ContentPresenter Content="{TemplateBinding Content}" VerticalContentAlignment="Center"/>
+        </Border>
+      </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Button.browser-footer-link:pointerover">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+  </UserControl.Styles>
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{DynamicResource SurfaceBrush}">
     <Grid Margin="6" ColumnDefinitions="Auto,Auto,Auto,*,Auto" ColumnSpacing="4">
       <Button Name="Back" Content="←" Padding="6,2" IsEnabled="False" />
       <Button Name="Forward" Grid.Column="1" Content="→" Padding="6,2" IsEnabled="False"/>
@@ -9,6 +54,19 @@
       <Button Name="Go" Grid.Column="4" Padding="8,2" />
     </Grid>
     <SelectableTextBlock Name="Notice" Grid.Row="1" IsVisible="False" Margin="8,0,8,5" TextWrapping="Wrap"/>
-    <Border Name="GuestHost" Grid.Row="2" Background="White" ClipToBounds="True"/>
+    <Border Name="GuestHost" Grid.Row="2" Background="{DynamicResource PageBrush}" ClipToBounds="True"/>
+    <Border Name="BrowserFooter" Grid.Row="3" IsVisible="False" Padding="12,7" MinHeight="39"
+            BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BrowserFooterRule}"
+            Background="{DynamicResource BrowserFooterSurface}" AutomationProperties.AutomationId="class:studio-browser-note">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+        <StackPanel Name="BrowserLoading" IsVisible="False" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+          <Ellipse Name="LoadingDot" Width="6" Height="6" Fill="#7890C7" VerticalAlignment="Center"/>
+          <TextBlock Name="LoadingLabel" FontSize="{DynamicResource StudioType11}" LineHeight="15.95" FontWeight="Normal"
+                     Foreground="{DynamicResource GhostBrush}" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
+        <Button Name="BrowserExternal" Grid.Column="1" Classes="browser-footer-link"
+                VerticalAlignment="Center" AutomationProperties.AutomationId="action:browser.external"/>
+      </Grid>
+    </Border>
   </Grid>
 </UserControl>
