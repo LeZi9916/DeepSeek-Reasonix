@@ -20,7 +20,7 @@
   <Style Selector="Button.remote-add:pointerover"><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Style>
   <Style Selector="Button.remote-candidate">
    <Setter Property="MinHeight" Value="0"/><Setter Property="Height" Value="22"/>
-   <Setter Property="Padding" Value="9,0"/>
+   <Setter Property="Padding" Value="12,0"/>
    <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
    <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
    <Setter Property="Template"><ControlTemplate>
@@ -33,6 +33,7 @@
     </Grid>
    </ControlTemplate></Setter>
    <Style Selector="^.alias"><Setter Property="FontFamily" Value="{DynamicResource StudioMonoFamily}"/></Style>
+   <Style Selector="^:not(.alias)"><Setter Property="Padding" Value="10,0"/><Setter Property="Height" Value="23"/></Style>
    <Style Selector="^:not(.alias) /template/ Viewbox#CandidatePlus"><Setter Property="IsVisible" Value="False"/></Style>
    <Style Selector="^:pointerover"><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
    <Style Selector="^:pointerover /template/ Rectangle#CandidateOutline"><Setter Property="StrokeDashArray" Value="{x:Null}"/></Style>

@@ -261,4 +261,22 @@ public sealed partial class NativeDomainTests
             Dispatcher.UIThread.RunJobs();
         }
     });
+
+    /// <summary>Checks the SSH candidate chips against the reference geometry.</summary>
+    /// <returns>The network settings layout check.</returns>
+    [Fact]
+    public Task RemoteCandidatesUseReferenceChipGeometry() => WithSettings("settings-network", (w, _) =>
+    {
+        Button[] Chips() => w.GetVisualDescendants().OfType<Button>()
+            .Where(button => AutomationProperties.GetAutomationId(button) == "action:remotes.add").ToArray();
+        PumpNavigation(() => Chips().Length == 2);
+        var chips = Chips();
+        Assert.Equal(76, chips[0].Bounds.Width, 3);
+        Assert.Equal(112, chips[1].Bounds.Width, 3);
+        Assert.Equal(22, chips[0].Bounds.Height, 3);
+        var all = w.GetVisualDescendants().OfType<Button>().Single(button =>
+            AutomationProperties.GetAutomationId(button) == "action:remotes.add-all");
+        Assert.Equal(68, all.Bounds.Width, 3);
+        Assert.Equal(23, all.Bounds.Height, 3);
+    });
 }
