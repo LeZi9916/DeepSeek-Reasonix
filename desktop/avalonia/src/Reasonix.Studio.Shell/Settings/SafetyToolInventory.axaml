@@ -2,7 +2,7 @@
   xmlns:local="using:Reasonix.Studio.Shell.Settings" x:Class="Reasonix.Studio.Shell.Settings.SafetyToolInventory">
   <local:SettingsFormView.Styles>
     <Style Selector="Border.safety-tool-row">
-      <Setter Property="Padding" Value="12,6"/><Setter Property="BorderThickness" Value="0,1,0,0"/>
+      <Setter Property="Padding" Value="12,0"/><Setter Property="BorderThickness" Value="0,1,0,0"/>
       <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
     </Style>
     <Style Selector="TextBlock.safety-tool-detail">
@@ -17,7 +17,7 @@
         <Border Classes="setting-apply" Margin="0"><TextBlock Tag="settings.applies_to_new_sessions" VerticalAlignment="Center"/></Border>
       </WrapPanel>
       <TextBlock Tag="ext.a_tool_you_turn_off" Classes="safety-tool-detail" Margin="0,2,0,10"/>
-      <StackPanel Name="ToolRows"/>
+      <StackPanel Name="ToolRows" Spacing="12"/>
       <TextBlock Name="Error" Foreground="{DynamicResource ErrInkBrush}" TextWrapping="Wrap" IsVisible="False"/>
     </StackPanel>
   </Border>

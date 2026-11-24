@@ -64,7 +64,7 @@ public sealed partial class SafetyToolInventory : SettingsFormView
                     VerticalAlignment = VerticalAlignment.Center,
                     Children =
                     {
-                        new TextBlock { Text = name, TextWrapping = TextWrapping.Wrap, LineHeight = 19 },
+                        new TextBlock { Text = name, TextWrapping = TextWrapping.Wrap, LineHeight = 16 },
                         new TextBlock { Text = description, Classes = { "safety-tool-detail" } },
                     },
                 };

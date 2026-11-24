@@ -226,4 +226,20 @@ public sealed partial class NativeDomainTests
             .First(border => AutomationProperties.GetAutomationId(border) == "role:radiogroup");
         Assert.InRange(group.Bounds.Width, 245, 247);
     });
+
+    /// <summary>Checks the tool inventory rows against the reference line rhythm.</summary>
+    /// <returns>The tool-row layout check.</returns>
+    [Fact]
+    public Task ToolRowsUseTheReferenceHeightAndPitch() => WithSettings("settings-tools", (w, _) =>
+    {
+        PumpNavigation(() => w.GetVisualDescendants().OfType<Border>().Any(border =>
+            border.Classes.Contains("safety-tool-row")));
+        var rows = w.GetVisualDescendants().OfType<Border>()
+            .Where(border => border.Classes.Contains("safety-tool-row")).ToArray();
+        Assert.True(rows.Length >= 2);
+        Assert.All(rows, row => Assert.InRange(row.Bounds.Height, 37.0, 38.2));
+        var first = rows[0].TranslatePoint(default, w)!.Value.Y;
+        var second = rows[1].TranslatePoint(default, w)!.Value.Y;
+        Assert.InRange(second - first, 49.3, 49.9);
+    });
 }
