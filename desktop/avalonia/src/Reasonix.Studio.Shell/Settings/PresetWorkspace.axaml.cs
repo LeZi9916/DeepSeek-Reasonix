@@ -233,8 +233,8 @@ public sealed partial class PresetWorkspace : SettingsFormView
                     continue;
                 }
 
-                var group = new StackPanel { Spacing = 12 };
-                var title = new TextBlock { Text = scope.Label, FontWeight = FontWeight.Medium };
+                var group = new StackPanel { Spacing = 12.66 };
+                var title = new TextBlock { Text = scope.Label, FontWeight = FontWeight.Medium, FontSize = 13, LineHeight = 22.09 };
                 title.Bind(TextBlock.ForegroundProperty, title.GetResourceObservable("MutedBrush"));
                 group.Children.Add(title);
                 Groups.Children.Add(group);

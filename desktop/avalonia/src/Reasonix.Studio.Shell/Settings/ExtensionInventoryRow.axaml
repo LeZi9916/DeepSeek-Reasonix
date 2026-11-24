@@ -32,7 +32,7 @@
                   <Canvas Width="24" Height="24"><Path Name="Caret" Data="m9 18 6-6-6-6" Stroke="{DynamicResource FaintBrush}"
                            StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas>
                 </Viewbox>
-                <TextBlock Name="Meta" Grid.Column="1" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Name="Meta" Grid.Column="1" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis"/>
               </Grid>
             </StackPanel>
           </Grid>

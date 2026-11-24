@@ -3,8 +3,8 @@
   <local:SettingsFormView.Styles>
     <Style Selector="RadioButton.memory-nav"><Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/><Setter Property="Height" Value="30"/><Setter Property="Padding" Value="10,0"/>
       <Setter Property="Template"><ControlTemplate><Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="6"><ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Stretch" Content="{TemplateBinding Content}"/></Border></ControlTemplate></Setter>
-      <Setter Property="Background" Value="Transparent"/></Style>
-    <Style Selector="RadioButton.memory-nav:checked, RadioButton.memory-nav:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+      <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+    <Style Selector="RadioButton.memory-nav:checked, RadioButton.memory-nav:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
     <Style Selector="Button.memory-entry"><Setter Property="MinHeight" Value="0"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Template"><ControlTemplate><Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}"><ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Stretch" VerticalAlignment="Center"/></Border></ControlTemplate></Setter></Style>
     <Style Selector="Button.memory-entry:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
   </local:SettingsFormView.Styles>
@@ -21,7 +21,7 @@
     <TextBlock Name="Failure" TextWrapping="Wrap" Foreground="{DynamicResource ErrBrush}" IsVisible="False"/>
     <Button Name="Reload" Tag="common.reload" IsVisible="False"/>
     <TextBlock Name="Recall" FontSize="{DynamicResource StudioType12}" LineHeight="18" TextWrapping="Wrap" Margin="0,0,0,12" Foreground="{DynamicResource FaintBrush}"/>
-    <Border AutomationProperties.AutomationId="class:memgrid" BorderThickness="1" BorderBrush="{DynamicResource HairBrush}" Background="{DynamicResource SurfaceBrush}" CornerRadius="9" ClipToBounds="True">
+    <Border AutomationProperties.AutomationId="class:memgrid" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}" Background="{DynamicResource SurfaceBrush}" CornerRadius="10" ClipToBounds="True">
       <Grid Name="Columns" ColumnDefinitions="190,300,*" RowDefinitions="Auto,Auto,Auto">
         <Border Name="CategoryBorder" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,1,0"><WrapPanel Name="Categories" Orientation="Horizontal" Margin="8,12"/></Border>
         <Border Name="Catalog" Grid.Column="1" Padding="8,12" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,0,1,0"><StackPanel Spacing="2">
@@ -46,8 +46,8 @@
               <ScrollViewer MaxHeight="220"><SelectableTextBlock Name="Prose" FontWeight="Medium" FontFamily="{DynamicResource DataReadingFamily}" FontSize="13" LineHeight="22.09375" TextWrapping="Wrap"/></ScrollViewer>
             </Border>
             <Grid ColumnDefinitions="*,*" ColumnSpacing="20">
-              <StackPanel Spacing="6"><TextBlock Tag="memory.content" Height="16" FontSize="11" FontWeight="SemiBold"/><StackPanel Name="ContentFacts" Spacing="6"/></StackPanel>
-              <StackPanel Grid.Column="1" Spacing="6"><TextBlock Tag="memory.use" Height="16" FontSize="11" FontWeight="SemiBold"/><StackPanel Name="UseFacts" Spacing="6"/></StackPanel>
+              <StackPanel Spacing="6"><TextBlock Tag="memory.content" Height="16" FontSize="10" FontWeight="Medium" Foreground="{DynamicResource FaintBrush}"/><StackPanel Name="ContentFacts" Spacing="6"/></StackPanel>
+              <StackPanel Grid.Column="1" Spacing="6"><TextBlock Tag="memory.use" Height="16" FontSize="10" FontWeight="Medium" Foreground="{DynamicResource FaintBrush}"/><StackPanel Name="UseFacts" Spacing="6"/></StackPanel>
             </Grid>
             <TextBlock Name="Facts" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
             <Button Name="History" AutomationProperties.AutomationId="action:memory.history"/>

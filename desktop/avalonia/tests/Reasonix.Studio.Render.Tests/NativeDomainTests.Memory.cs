@@ -179,6 +179,26 @@ public sealed partial class NativeDomainTests
             Assert.Equal(1, dismisses);
         });
 
+    /// <summary>Checks the memory row pill and the reference label scale.</summary>
+    /// <returns>The memory list style check.</returns>
+    [Fact]
+    public Task MemoryRowsUseTheReferencePillAndTypeScale() => WithSettings("settings-storage", (w, _) =>
+    {
+        var entries = w.GetVisualDescendants().OfType<Button>()
+            .Where(button => AutomationProperties.GetAutomationId(button) == "action:memory.open" && button.IsEffectivelyVisible)
+            .ToArray();
+        Assert.NotEmpty(entries);
+        var badge = entries.SelectMany(entry => entry.GetVisualDescendants().OfType<Border>())
+            .FirstOrDefault(border => border.Child is TextBlock { Text: "新" });
+        Assert.NotNull(badge);
+        Assert.Equal(999, badge.CornerRadius.TopLeft);
+        Assert.NotNull(badge.Background);
+        var title = entries[0].GetVisualDescendants().OfType<TextBlock>().First(block => block.Text == "每天最多发一个版本");
+        Assert.Equal(13, title.FontSize);
+        var metadata = entries[0].GetVisualDescendants().OfType<TextBlock>().First(block => block.Text?.Contains(" · ", StringComparison.Ordinal) == true);
+        Assert.Equal(10, metadata.FontSize);
+    });
+
     /// <summary>Opens the reference composer with the optional mode picker enabled.</summary>
     /// <param name="run">The mounted composer interactions.</param>
     /// <returns>The complete scenario.</returns>

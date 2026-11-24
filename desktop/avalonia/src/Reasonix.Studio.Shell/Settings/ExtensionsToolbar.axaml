@@ -15,11 +15,11 @@
       </ControlTemplate></Setter>
     </Style>
     <Style Selector="Button.ext-switch-tab">
-      <Setter Property="Height" Value="25"/><Setter Property="Padding" Value="11,0"/><Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="Height" Value="25"/><Setter Property="Padding" Value="10,0"/><Setter Property="CornerRadius" Value="5"/>
     </Style>
     <Style Selector="Button.ext-switch-tab.active">
       <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontWeight" Value="Medium"/>
     </Style>
     <Style Selector="Button.ext-command">
       <Setter Property="Height" Value="30"/><Setter Property="Padding" Value="12,0"/><Setter Property="CornerRadius" Value="10"/>

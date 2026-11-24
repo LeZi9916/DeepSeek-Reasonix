@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Shell.Settings;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -216,5 +217,20 @@ public sealed partial class NativeDomainTests
             button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Dispatcher.UIThread.RunJobs();
         }
+    });
+
+    /// <summary>Checks the preset catalog's reference vertical rhythm.</summary>
+    /// <returns>The layout check.</returns>
+    [Fact]
+    public Task AgentPresetCatalogUsesTheReferenceVerticalRhythm() => WithSettings("settings-session", (w, _) =>
+    {
+        var presets = w.GetVisualDescendants().OfType<PresetWorkspace>().Single();
+        var create = presets.FindControl<Button>("Create")!;
+        var mode = presets.FindControl<ToggleSwitch>("ModePicker")!;
+        var card = w.GetVisualDescendants().OfType<PresetCatalogEntry>().First();
+        double Y(Control control) => control.TranslatePoint(default, w)!.Value.Y;
+        Assert.InRange(Y(create), 337.4, 338.4);
+        Assert.InRange(Y(mode), 449.8, 450.8);
+        Assert.InRange(Y(card), 617.0, 618.0);
     });
 }

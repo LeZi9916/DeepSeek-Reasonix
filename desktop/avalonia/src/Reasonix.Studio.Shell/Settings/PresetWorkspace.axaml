@@ -58,7 +58,7 @@
                    TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
       </Grid>
       <Border CornerRadius="15" BorderBrush="{DynamicResource HairBrush}" BorderThickness="1" Background="{DynamicResource SurfaceBrush}"
-              Padding="15,17,15,16" Margin="0,0,0,16">
+              Padding="15,20,15,18" Margin="0,0,0,16">
         <Grid ColumnDefinitions="*,Auto" RowDefinitions="20,Auto" RowSpacing="6" ColumnSpacing="16">
           <TextBlock Name="ModePickerLabel" Tag="persona.show_mode_picker" FontWeight="SemiBold" VerticalAlignment="Center"/>
           <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Tag="persona.off_by_default_enable_to" Foreground="{DynamicResource MutedBrush}"
@@ -69,8 +69,8 @@
       </Border>
       <TextBlock Tag="persona.click_a_card_to_set" Margin="0,0,0,28" LineHeight="22.1" TextWrapping="Wrap" Foreground="{DynamicResource MutedBrush}"/>
       <StackPanel Name="Groups" Spacing="28"/>
-      <StackPanel Spacing="8" Margin="0,20,0,16">
-        <Button Name="How" Tag="persona.how_to_use" Classes="preset-flat preset-muted" MinHeight="24"/>
+      <StackPanel Spacing="8" Margin="0,28,0,20">
+        <Button Name="How" Tag="persona.how_to_use" Classes="preset-flat preset-muted" MinHeight="20.4"/>
         <TextBlock Name="HowCopy" Tag="persona.choose_an_agent_mode_above" Classes="preset-caption" IsVisible="False"/>
       </StackPanel>
       <WrapPanel ItemSpacing="8" LineSpacing="8"><local:PresetImport Name="Import"/><Button Name="Refresh" Tag="common.reload"

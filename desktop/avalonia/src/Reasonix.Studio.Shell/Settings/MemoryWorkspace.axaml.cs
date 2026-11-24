@@ -351,7 +351,7 @@ public sealed partial class MemoryWorkspace : SettingsFormView
         {
             var row = new Grid { ColumnDefinitions = new ColumnDefinitions("56,*"), ColumnSpacing = 10 };
             var label = new DataParagraph { Text = Text(key), FontSize = 12, LineHeight = 17.390625, TextWrapping = TextWrapping.Wrap };
-            label.Bind(TextBlock.ForegroundProperty, label.GetResourceObservable("MutedBrush"));
+            label.Bind(TextBlock.ForegroundProperty, label.GetResourceObservable("FaintBrush"));
             var content = new DataParagraph { Text = value, FontSize = 12, LineHeight = 17.390625, TextWrapping = TextWrapping.Wrap };
             Grid.SetColumn(content, 1);
             row.Children.Add(label);
@@ -391,14 +391,17 @@ public sealed partial class MemoryWorkspace : SettingsFormView
             {
                 if (o.Id == "user" || o.Id == "faded" || (o.Id.StartsWith("galaxy:", StringComparison.Ordinal) && !Categories.Children.OfType<TextBlock>().Any(c => Equals(c.Tag, "galaxies"))))
                 {
-                    Categories.Children.Add(new TextBlock
+                    var section = new TextBlock
                     {
                         Text = o.Id == "user" ? Text("common.type") : o.Id == "faded" ? string.Empty : Text("memory.galaxy"),
                         Tag = o.Id == "user" ? "types" : o.Id == "faded" ? "end" : "galaxies",
                         Height = o.Id == "faded" ? 10 : 28,
                         Padding = new Thickness(10, 8, 0, 0),
-                        FontSize = 11,
-                    });
+                        FontSize = 10,
+                        FontWeight = FontWeight.Medium,
+                    };
+                    section.Bind(TextBlock.ForegroundProperty, section.GetResourceObservable("FaintBrush"));
+                    Categories.Children.Add(section);
                 }
 
                 var icon = o.Id.StartsWith("galaxy:", StringComparison.Ordinal)
@@ -417,6 +420,7 @@ public sealed partial class MemoryWorkspace : SettingsFormView
                 content.Children.Add(label);
                 var count = new TextBlock { Text = items.Count(o.Matches).ToString(CultureInfo.CurrentCulture), FontSize = 12, VerticalAlignment = VerticalAlignment.Center };
                 count.MinWidth = count.Text!.Length * 7.78125;
+                count.Bind(TextBlock.ForegroundProperty, count.GetResourceObservable("FaintBrush"));
                 Grid.SetColumn(count, 2);
                 content.Children.Add(count);
                 var option = new RadioButton { Content = content, IsChecked = o.Id == filter, HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -454,8 +458,8 @@ public sealed partial class MemoryWorkspace : SettingsFormView
             {
                 var name = (string)m["name"]!;
                 var copy = new StackPanel { Spacing = 2 };
-                var titleLine = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Height = 18.1875 };
-                titleLine.Children.Add(new TextBlock { Text = (string?)m["title"] ?? name, FontSize = 14, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis });
+                var titleLine = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 6, Height = 18.1875 };
+                titleLine.Children.Add(new TextBlock { Text = (string?)m["title"] ?? name, FontSize = 13, FontWeight = FontWeight.Medium, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
                 var badge = (bool?)m["new"] == true
                     ? "common.new"
                     : (string?)m["state"] switch
@@ -466,13 +470,16 @@ public sealed partial class MemoryWorkspace : SettingsFormView
                     };
                 if (badge is not null)
                 {
-                    var status = Caption(Text(badge));
+                    var text = new TextBlock { Text = Text(badge), FontSize = 10, FontWeight = FontWeight.SemiBold, LineHeight = 16, VerticalAlignment = VerticalAlignment.Center };
+                    text.Bind(TextBlock.ForegroundProperty, text.GetResourceObservable("AccentFgBrush"));
+                    var status = new Border { Child = text, CornerRadius = new CornerRadius(999), Padding = new Thickness(6, 0), VerticalAlignment = VerticalAlignment.Center };
+                    status.Bind(Border.BackgroundProperty, status.GetResourceObservable("AccentBrush"));
                     Grid.SetColumn(status, 1);
                     titleLine.Children.Add(status);
                 }
 
                 copy.Children.Add(titleLine);
-                copy.Children.Add(new TextBlock { Text = types.First(o => o.Id == TypeOf(m)).Label + " · " + ((string?)m["galaxy"] ?? Text("memory.no_galaxy")), FontSize = 11, Height = 16, TextTrimming = TextTrimming.CharacterEllipsis });
+                copy.Children.Add(new TextBlock { Text = types.First(o => o.Id == TypeOf(m)).Label + " · " + ((string?)m["galaxy"] ?? Text("memory.no_galaxy")), FontSize = 10, Height = 16, TextTrimming = TextTrimming.CharacterEllipsis });
                 var button = new Button { Content = copy, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch, Padding = new Thickness(12, 9), Margin = new Thickness(0, 0, 8, 0) };
                 button.Classes.Add("memory-entry");
                 button.Bind(Button.BackgroundProperty, button.GetResourceObservable(name == selected ? "AccentWashBrush" : "SurfaceBrush"));

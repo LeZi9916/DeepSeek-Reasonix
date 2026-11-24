@@ -48,8 +48,8 @@
         </Button>
         <Border Grid.Row="1" Padding="24,16" BorderBrush="{DynamicResource HairBrush}" BorderThickness="0,1,0,0">
           <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="20">
-            <Button Name="ViewBuiltin" Classes="preset-flat preset-muted" MinHeight="28" AutomationProperties.AutomationId="action:agent-preset.view"/>
-            <Button Name="Usage" Grid.Column="1" Classes="preset-flat preset-muted" MinHeight="28" AutomationProperties.AutomationId="action:agent-preset.usage"/>
+            <Button Name="ViewBuiltin" Classes="preset-flat preset-muted" MinHeight="28" FontSize="{DynamicResource StudioType13}" AutomationProperties.AutomationId="action:agent-preset.view"/>
+            <Button Name="Usage" Grid.Column="1" Classes="preset-flat preset-muted" MinHeight="28" FontSize="{DynamicResource StudioType13}" AutomationProperties.AutomationId="action:agent-preset.usage"/>
             <Button Name="CopyBuiltin" Grid.Column="3" Classes="preset-flat preset-muted" Width="28" Height="28"
                     AutomationProperties.AutomationId="action:agent-preset.copy">
               <Viewbox Width="18" Height="18">
