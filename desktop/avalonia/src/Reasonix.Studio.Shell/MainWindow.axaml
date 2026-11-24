@@ -241,7 +241,7 @@
                     <TextBox Name="Composer" Classes="compose-input" Grid.Row="3" AcceptsReturn="True" TextWrapping="Wrap"
                              Background="Transparent" BorderThickness="0" CornerRadius="0" Padding="0" MinHeight="42" MaxHeight="168"
                              FontFamily="{DynamicResource ConversationUiFamily}" FontWeight="Medium" FontSize="{DynamicResource StudioType14}" LineHeight="{DynamicResource StudioUserHeight}"
-                             Foreground="{DynamicResource TextBrush}" PlaceholderForeground="{DynamicResource FaintBrush}" VerticalContentAlignment="Top"
+                             Foreground="{DynamicResource TextBrush}" PlaceholderForeground="{DynamicResource MutedBrush}" VerticalContentAlignment="Top"
                              Margin="16,10,16,0" AutomationProperties.AutomationId="role:combobox" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                       <TextBox.Resources><Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness><SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent"/></TextBox.Resources>
                     </TextBox>
