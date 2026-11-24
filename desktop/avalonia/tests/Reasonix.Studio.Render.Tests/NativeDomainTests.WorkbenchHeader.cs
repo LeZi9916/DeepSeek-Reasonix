@@ -39,7 +39,7 @@ public sealed partial class NativeDomainTests
             Assert.Equal(new Point(8, 7), files.TranslatePoint(default, header));
             Assert.Equal(new Point(63, 7), tab.TranslatePoint(default, header));
             Assert.InRange(tab.Bounds.Width, 126, 141);
-            Assert.Equal(34, tab.Bounds.Height);
+            Assert.Equal(35, tab.Bounds.Height);
             Assert.Contains(tab.GetVisualDescendants().OfType<Viewbox>(), view => view.Name == "TabIcon" && view.Bounds.Width == 14);
             Assert.All(new[] { add, expand, dismiss }, button =>
             {

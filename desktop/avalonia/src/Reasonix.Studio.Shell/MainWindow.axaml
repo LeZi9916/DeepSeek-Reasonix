@@ -324,9 +324,9 @@
                   </StackPanel>
                 </Button>
                 <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
-                  <ScrollViewer Name="TabViewport" Height="34" Margin="0,0,0,1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" VerticalAlignment="Bottom" VerticalContentAlignment="Top"
+                  <ScrollViewer Name="TabViewport" Height="35" Margin="0" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" VerticalAlignment="Bottom" VerticalContentAlignment="Top"
                                 AutomationProperties.AutomationId="role:tablist">
-                    <StackPanel Name="FileTabs" Orientation="Horizontal" Spacing="2" Height="34" VerticalAlignment="Top" />
+                    <StackPanel Name="FileTabs" Orientation="Horizontal" Spacing="2" Height="35" VerticalAlignment="Top" />
                   </ScrollViewer>
                   <Button Name="TabOverflow" Grid.Column="1" Classes="wb-header-button wb-header-overflow" Margin="2,0,0,1" IsVisible="False" AutomationProperties.AutomationId="action:workbench.tab-overflow">
                     <Button.Flyout><MenuFlyout/></Button.Flyout>
