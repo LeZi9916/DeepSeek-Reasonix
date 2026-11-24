@@ -20,9 +20,14 @@ internal static class ProviderVendorMark
         }
 
         var key = "ProviderMark." + vendor;
-        var artwork = scope.FindResource(key) ?? Application.Current?.FindResource(key);
+        var artwork = scope.FindResource(key);
+        if (artwork is UnsetValueType)
+        {
+            artwork = Application.Current?.FindResource(key);
+        }
+
         return artwork is IControlTemplate template
-            ? new ContentControl { Template = template, Width = size, Height = size, IsHitTestVisible = false }
+            ? new ContentControl { Name = "VendorMark", Template = template, Width = size, Height = size, IsHitTestVisible = false }
             : null;
     }
 }

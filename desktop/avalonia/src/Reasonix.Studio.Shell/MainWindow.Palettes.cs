@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
@@ -96,7 +97,7 @@ public sealed partial class MainWindow
     /// <returns>The swatch.</returns>
     private static Grid PaletteSample(JsonObject? pack)
     {
-        var art = new Grid { Width = 190, Height = 104, ColumnDefinitions = new ColumnDefinitions("29,*") };
+        var art = new Grid { ColumnDefinitions = new ColumnDefinitions("26,*") };
         var dictionary = pack is null ? new ResourceDictionary() : PaletteResources(pack);
         foreach (var variant in new[] { ThemeVariant.Light, ThemeVariant.Dark })
         {
@@ -106,7 +107,7 @@ public sealed partial class MainWindow
             }
 
             var colors = (ResourceDictionary)dictionary.ThemeDictionaries[variant];
-            foreach (var key in new[] { "PageBrush", "SurfaceBrush", "MutedBrush", "AccentBrush" })
+            foreach (var key in new[] { "PageBrush", "SurfaceBrush", "RaisedBrush", "BorderBrush", "HairBrush", "TextBrush", "MutedBrush", "GhostBrush", "AccentBrush" })
             {
                 if (!colors.ContainsKey(key) && Application.Current!.TryGetResource(key, variant, out var fallback))
                 {
@@ -117,18 +118,42 @@ public sealed partial class MainWindow
 
         art.Resources.MergedDictionaries.Add(dictionary);
         art.Bind(Panel.BackgroundProperty, art.GetResourceObservable("PageBrush"));
-        var rail = new Border();
+        var rail = new Border { BorderThickness = new Thickness(0, 0, 1, 0) };
         rail.Bind(Border.BackgroundProperty, rail.GetResourceObservable("SurfaceBrush"));
+        rail.Bind(Border.BorderBrushProperty, rail.GetResourceObservable("HairBrush"));
         art.Children.Add(rail);
-        var lines = new StackPanel { Margin = new Thickness(12, 16), Spacing = 7 };
-        Grid.SetColumn(lines, 1);
-        art.Children.Add(lines);
-        foreach (var (width, brush) in new[] { (116, "MutedBrush"), (76, "MutedBrush"), (40, "AccentBrush") })
+
+        var body = new Border
         {
-            var line = new Border { Width = width, Height = brush == "AccentBrush" ? 5 : 2, HorizontalAlignment = HorizontalAlignment.Left };
-            line.Bind(Border.BackgroundProperty, line.GetResourceObservable(brush));
-            lines.Children.Add(line);
-        }
+            Margin = new Thickness(10),
+            Padding = new Thickness(8, 9),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(4),
+        };
+        body.Bind(Border.BackgroundProperty, body.GetResourceObservable("RaisedBrush"));
+        body.Bind(Border.BorderBrushProperty, body.GetResourceObservable("HairBrush"));
+        Grid.SetColumn(body, 1);
+        art.Children.Add(body);
+
+        var lines = new Grid { RowDefinitions = new RowDefinitions("Auto,Auto,*,Auto"), RowSpacing = 5 };
+        var first = new Border { Height = 4, CornerRadius = new CornerRadius(2), Opacity = 0.78 };
+        first.Bind(Border.BackgroundProperty, first.GetResourceObservable("TextBrush"));
+        lines.Children.Add(first);
+
+        var shortened = new Border { Height = 4, CornerRadius = new CornerRadius(2), Opacity = 0.72 };
+        shortened.Bind(Border.BackgroundProperty, shortened.GetResourceObservable("MutedBrush"));
+        var shortRow = new Grid { ColumnDefinitions = new ColumnDefinitions("58*,42*") };
+        shortRow.Children.Add(shortened);
+        Grid.SetRow(shortRow, 1);
+        lines.Children.Add(shortRow);
+
+        var mark = new Border { Height = 5, CornerRadius = new CornerRadius(2) };
+        mark.Bind(Border.BackgroundProperty, mark.GetResourceObservable("AccentBrush"));
+        var markRow = new Grid { ColumnDefinitions = new ColumnDefinitions("34*,66*") };
+        markRow.Children.Add(mark);
+        Grid.SetRow(markRow, 3);
+        lines.Children.Add(markRow);
+        body.Child = lines;
 
         return art;
     }
@@ -182,26 +207,101 @@ public sealed partial class MainWindow
         var packs = await LoadPaletteAsync(api).ConfigureAwait(true);
         var group = new StackPanel { Spacing = 8, Tag = "look.interface_theme", Margin = new Thickness(0, 12) };
         card.Children.Add(group);
-        group.Children.Add(new TextBlock { Text = MessageCatalog.Get("look.interface_theme", Language), FontWeight = FontWeight.SemiBold });
+        var heading = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
+        heading.Children.Add(new TextBlock { Text = MessageCatalog.Get("look.interface_theme", Language), FontWeight = FontWeight.SemiBold });
+        var now = new TextBlock
+        {
+            Text = MessageCatalog.Get("look.in_effect_now", Language),
+            FontSize = 12,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        now.Bind(TextBlock.ForegroundProperty, now.GetResourceObservable("FaintBrush"));
+        Grid.SetColumn(now, 1);
+        heading.Children.Add(now);
+        group.Children.Add(heading);
         group.Children.Add(Detail(MessageCatalog.Get("look.choose_the_workbench_surfaces_and", Language)));
-        var featured = new WrapPanel();
-        var illustrated = new WrapPanel();
+        var featured = new Settings.PaletteGrid();
         group.Children.Add(featured);
-        var more = new Expander { IsExpanded = true, Header = MessageCatalog.Get("look.more_installed_themes", Language), Content = illustrated, HorizontalAlignment = HorizontalAlignment.Stretch };
-        group.Children.Add(more);
+        Settings.ThemeMore? more = null;
         Populate(packs);
 
         void Populate(JsonArray inventory)
         {
+            if (more is not null)
+            {
+                group.Children.Remove(more);
+                more = null;
+            }
+
+            var illustrated = new Settings.PaletteGrid();
             featured.Children.Clear();
-            illustrated.Children.Clear();
             var active = inventory.OfType<JsonObject>().FirstOrDefault(p => (bool?)p["active"] == true);
             foreach (var pack in inventory.OfType<JsonObject>().Prepend(null))
             {
                 var id = (string?)pack?["id"] ?? string.Empty;
                 var name = (string?)pack?["name"] ?? MessageCatalog.Get(MessageKey.Common.Default, Language);
-                var button = new Button { Content = PaletteSample(pack), Padding = new Thickness(7), CornerRadius = new CornerRadius(10), BorderThickness = new Thickness(1) };
-                button.Bind(Button.BorderBrushProperty, button.GetResourceObservable(ReferenceEquals(active, pack) ? "AccentBrush" : "BorderBrush"));
+                var selected = ReferenceEquals(active, pack);
+
+                var frame = new Border
+                {
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(7),
+                    ClipToBounds = true,
+                    Child = new AspectRatioView { Ratio = 1.6, Child = PaletteSample(pack) },
+                };
+                frame.Bind(Border.BorderBrushProperty, frame.GetResourceObservable(selected ? "AccentBrush" : "BorderBrush"));
+
+                var preview = new Panel();
+                preview.Children.Add(frame);
+                if (selected)
+                {
+                    var ring = new Ellipse { Width = 11, Height = 11 };
+                    ring.Bind(Shape.FillProperty, ring.GetResourceObservable("PageBrush"));
+                    var dot = new Ellipse { Width = 7, Height = 7 };
+                    dot.Bind(Shape.FillProperty, dot.GetResourceObservable("AccentBrush"));
+                    var mark = new Grid
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Right,
+                        VerticalAlignment = VerticalAlignment.Top,
+                        Margin = new Thickness(0, 7, 7, 0),
+                    };
+                    mark.Children.Add(ring);
+                    mark.Children.Add(dot);
+                    preview.Children.Add(mark);
+                }
+
+                var nameBlock = new TextBlock
+                {
+                    Text = name,
+                    FontSize = 13,
+                    LineHeight = 16,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                };
+                nameBlock.Bind(TextBlock.ForegroundProperty, nameBlock.GetResourceObservable(selected ? "TextBrush" : "MutedBrush"));
+                var authorBlock = new TextBlock
+                {
+                    Text = (string?)pack?["author"] ?? MessageCatalog.Get("common.built_in", Language),
+                    FontSize = 10,
+                    LineHeight = 16,
+                    Margin = new Thickness(0, 2, 0, 0),
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                };
+                authorBlock.Bind(TextBlock.ForegroundProperty, authorBlock.GetResourceObservable("GhostBrush"));
+
+                var content = new StackPanel { Spacing = 7 };
+                content.Children.Add(preview);
+                var label = new StackPanel();
+                label.Children.Add(nameBlock);
+                label.Children.Add(authorBlock);
+                content.Children.Add(label);
+                var button = new Button
+                {
+                    Content = content,
+                    Classes = { "palette" },
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                    VerticalContentAlignment = VerticalAlignment.Top,
+                };
                 AutomationProperties.SetAutomationId(button, "action:theme.activate");
                 AutomationProperties.SetName(button, name);
                 button.Click += async (_, _) =>
@@ -231,26 +331,90 @@ public sealed partial class MainWindow
                         group.IsEnabled = true;
                     }
                 };
-                var tile = new StackPanel { Spacing = 4, Margin = new Thickness(0, 0, 14, 10) };
-                tile.Children.Add(button);
-                tile.Children.Add(new TextBlock
+
+                var cell = new StackPanel { Spacing = 6 };
+                cell.Children.Add(button);
+                if ((bool?)pack?["removable"] == true)
                 {
-                    Text = name,
-                    Margin = new Thickness(7, 2, 0, 0),
-                    [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
-                });
-                tile.Children.Add(new TextBlock
-                {
-                    Text = (string?)pack?["author"] ?? MessageCatalog.Get("common.built_in", Language),
-                    Margin = new Thickness(7, 0, 0, 0),
-                    [!TextBlock.FontSizeProperty] = StudioTypography.Size(10),
-                    Foreground = Brushes.Gray,
-                });
+                    cell.Children.Add(Remove(id, name));
+                }
+
                 var container = pack?["sky"] is not null || (bool?)pack?["background"]?["image"] == true ? illustrated : featured;
-                container.Children.Add(tile);
+                container.Children.Add(cell);
             }
 
-            more.IsVisible = illustrated.Children.Count > 0;
+            if (illustrated.Children.Count > 0)
+            {
+                more = new Settings.ThemeMore(
+                    MessageCatalog.Get("look.more_installed_themes", Language),
+                    MessageCatalog.Get("look.illustrated_and_background_themes_you", Language),
+                    MessageCatalog.Get("common.n", Language, ("n", illustrated.Children.Count.ToString(System.Globalization.CultureInfo.InvariantCulture))),
+                    illustrated);
+                group.Children.Add(more);
+            }
+        }
+
+        Button Remove(string id, string name)
+        {
+            var armed = false;
+            var button = new Button
+            {
+                Content = MessageCatalog.Get("common.delete", Language),
+                Classes = { "palette-remove" },
+                HorizontalAlignment = HorizontalAlignment.Left,
+            };
+            AutomationProperties.SetAutomationId(button, "action:theme.remove");
+            AutomationProperties.SetName(button, MessageCatalog.Get("look.delete_theme_name", Language, ("name", name)));
+            button.Click += async (_, _) =>
+            {
+                if (_pickingPalette)
+                {
+                    return;
+                }
+
+                if (!armed)
+                {
+                    armed = true;
+                    button.Content = MessageCatalog.Get("common.confirm_delete", Language);
+                    button.Classes.Add("confirming");
+                    return;
+                }
+
+                _pickingPalette = true;
+                button.IsEnabled = false;
+                try
+                {
+                    await api.RemoveThemeAsync(id, _closing.Token).ConfigureAwait(true);
+                    Populate(await LoadPaletteAsync(api).ConfigureAwait(true));
+                }
+                catch (Exception error) when (!_closing.IsCancellationRequested)
+                {
+                    SettingsError.Text = DescribeError(error);
+                    button.IsEnabled = true;
+                    armed = false;
+                    button.Classes.Remove("confirming");
+                    button.Content = MessageCatalog.Get("common.delete", Language);
+                }
+                finally
+                {
+                    _pickingPalette = false;
+                }
+            };
+            button.PointerExited += (_, _) => Disarm();
+            button.LostFocus += (_, _) => Disarm();
+            return button;
+
+            void Disarm()
+            {
+                if (!armed)
+                {
+                    return;
+                }
+
+                armed = false;
+                button.Classes.Remove("confirming");
+                button.Content = MessageCatalog.Get("common.delete", Language);
+            }
         }
     }
 }

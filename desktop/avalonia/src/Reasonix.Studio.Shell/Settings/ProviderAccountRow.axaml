@@ -70,9 +70,9 @@
             </Viewbox>
           </Panel>
           <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
-            <TextBlock Name="ServiceName" FontSize="{DynamicResource StudioType13}" FontWeight="Bold"
+            <TextBlock Name="ServiceName" FontSize="{DynamicResource StudioType13}" FontWeight="Medium"
                        Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis"/>
-            <TextBlock Name="ServiceHost" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}"
+            <TextBlock Name="ServiceHost" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource FaintBrush}"
                        FontFamily="{DynamicResource WorkbenchMonoFamily}" TextTrimming="CharacterEllipsis"/>
           </StackPanel>
         </Grid>

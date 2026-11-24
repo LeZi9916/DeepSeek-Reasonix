@@ -83,6 +83,8 @@ public sealed partial class NativeDomainTests
             .Where(button => AutomationProperties.GetAutomationId(button) == "action:provider.select").ToArray();
         Assert.Equal(3, rows.Length);
         Assert.Equal(new[] { "deepseek-anthropic", "myrelay", "myrelay-work" }, rows.Select(AutomationProperties.GetName));
+        Assert.All(rows.Take(2), row => Assert.Contains(row.GetVisualDescendants().OfType<ContentControl>(), mark => mark.Name == "VendorMark"));
+        Assert.DoesNotContain(rows[2].GetVisualDescendants().OfType<ContentControl>(), mark => mark.Name == "VendorMark");
         Assert.Contains(rail.GetVisualDescendants().OfType<TextBlock>(), item => item.Text == "api.deepseek.com");
         var add = Action(rail, "provider.add-start");
         Assert.Equal(32, add.Bounds.Height);

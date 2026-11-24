@@ -2,7 +2,7 @@
 owner: @esengine
 backup: @SivanCola
 status: active
-reviewed: 2026-11-22
+reviewed: 2026-11-24
 ---
 
 # Desktop workspace parity ledger
@@ -62,9 +62,9 @@ The reference is the checked-in `frontend-next` application, including its final
 | Browser address/history/preview | Native WebView2 | HTTP validation, no kernel cookie bridge, explicit generated sandbox document, back/forward/reload | Actual Windows WebView smoke, including retained native history across tabs, at system scaling 150% |
 | Terminal | Native terminal surface | Owning engine guards late requests; focus detaches presentation, explicit close ends PTY | Existing terminal tests and workspace lifetime regression |
 | Settings destinations | Existing native settings sheet | Search, usage, MCP, controls, worktree and device entry points land at the applicable destination | Palette destination, wallet and settings regression tests |
-| Model service settings | `Settings.ModelServices` | Two-pane provider rail and selected-provider sheet: active badge, reorder arrows, protocol chips, base URL/key/token fields, save/revert, test and confirmed delete; add opens the existing provider setup | `ModelSettingsShowsProviderOrderControls`; `electron-settings-model-dark.png`, `settings-model.dark.png` |
+| Model service settings | `Settings.ModelServices` | Two-pane provider rail and selected-provider sheet: the declared vendor mark (DeepSeek, OpenRouter, …) replaces the fallback server glyph, active badge, reorder arrows, protocol chips, base URL/key/token fields, save/revert, test and confirmed delete; add opens the existing provider setup | `ModelServicesUsesTheReferenceRailAndProtocolSheet`; `electron-settings-model-dark.png`, `settings-model.dark.png` |
 | Common settings | Settings navigation and notification rows | Nav counts use the reference totals; notifications and sound carry the reference descriptions, with the four dependent occasions indented; common page title and `· N 项` header were compared against Electron dark/light | `settings-common.dark.json` capture; `electron-settings-common-dark.png`, `settings-common.dark.png` |
-| Appearance settings | Theme cards in `ShowPalettesAsync` | Theme swatches use the reference 190×104 preview, 14px gaps, a separate 13px name and 10px source line below the card, and the accent outline on the active pack | `settings-appearance.dark.json`; `electron-settings-appearance-dark.png`, `settings-appearance.dark.png` |
+| Appearance settings | Theme cards in `ShowPalettesAsync` | Five equal columns of 212×134 fill the 1440 content column (16:10 preview, 12px column gap, 14px row gap); the 13px name and 10px source sit under the preview inside the same button, the active pack carries the accent outline and dot, and a removable pack deletes only after the second press through `DELETE /themes/{id}` | `ThemeCardsFillTheReferenceGridAndRemoveOnlyAfterConfirmation`; `settings-appearance.dark.json`; `electron-settings-appearance-dark.png`, `settings-appearance.dark.png` |
 | Permission settings | Approval card in `MainWindow.Preferences` | The reference's first approval row is mounted with the four real kernel modes (`dontAsk`, `ask`, `auto`, `yolo`) and writes through `/tool-approval-mode`; rule toggles and the rule list remain a backend gap, so no static controls were fabricated | `settings-tools.dark.json`; `electron-settings-tools-dark.png`, `settings-tools.dark.png` |
 | Agent behaviour | Preset cards in `PresetWorkspace` | Preset cards use the reference header: name with inline new-task badge, scope id at the right, description, and a 22px catalog heading; default selection keeps the accent outline | `settings-session.dark.json`; `electron-settings-session-dark.png`, `settings-session.dark.png` |
 | Mode picker preference | Session settings row and `WorkspacePreferences.ShowModePicker` | The reference's show-mode-picker panel is mounted with the existing localized copy; its toggle persists in workspace preferences and immediately hides/shows the composer's real `PlanMode` control | `settings-session.dark.json`; `NativeDomainTests.Composer` |
@@ -77,3 +77,5 @@ Native WebView smoke uses the actual Windows desktop adapter. Scaled headless ca
 Live SSH credential negotiation, internet account pairing and macOS/Linux platform adapters were not exercised on this Windows machine. Remote state and refusal paths use canonical HTTP fixtures. No claim about those live external services follows from fixture coverage.
 
 The final integrated run passes 299 baseline tests and 213 native tests with the Windows host required. Strict solution compilation has zero warnings and zero errors. Native WebView2, per-runtime browser cleanup and all four viewport/theme captures are included in validation.json.
+
+On 2026-11-24 the Electron reference was rebuilt from `desktop/frontend-next` and captured locally at 1440 × 900 in both schemes for the appearance and conversation screens. The appearance theme grid, provider vendor marks and shared page-index buttons were compared against those captures. Twenty-eight targeted settings cases, sixteen geometry-gate cases and nine theme/navigation cases passed; the complete host-backed suite was not rerun in this round.

@@ -205,7 +205,7 @@
   <Style Selector="Button.preset-muted"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
   <Style Selector="Button.preset-muted:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
   <Style Selector="Button.preset-act">
-    <Setter Property="Height" Value="24"/><Setter Property="Padding" Value="11,0"/><Setter Property="CornerRadius" Value="999"/>
+    <Setter Property="Height" Value="24"/><Setter Property="Padding" Value="10,0"/><Setter Property="CornerRadius" Value="999"/>
     <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
     <Setter Property="BorderThickness" Value="1"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
   </Style>
@@ -213,10 +213,47 @@
   <Style Selector="Button.preset-major">
     <Setter Property="Height" Value="36"/><Setter Property="Padding" Value="16,0"/><Setter Property="CornerRadius" Value="10"/>
     <Setter Property="Foreground" Value="{DynamicResource PageBrush}"/><Setter Property="Background" Value="{DynamicResource TextBrush}"/>
-    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource TextBrush}"/><Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="FontWeight" Value="SemiBold"/>
   </Style>
   <Style Selector="Button.preset-major:pointerover"><Setter Property="Background" Value="{DynamicResource MutedBrush}"/></Style>
   <Style Selector="Button.preset-act:disabled, Button.preset-major:disabled"><Setter Property="Opacity" Value="0.55"/></Style>
+  <Style Selector="Button.palette">
+    <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Padding" Value="0"/><Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="VerticalContentAlignment" Value="Top"/>
+    <Setter Property="Template"><ControlTemplate>
+      <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+      </Border>
+    </ControlTemplate></Setter>
+  </Style>
+  <Style Selector="Button.palette-remove">
+    <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
+    <Setter Property="Height" Value="22"/><Setter Property="Padding" Value="7,0"/><Setter Property="CornerRadius" Value="999"/>
+    <Setter Property="FontSize" Value="11"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/><Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Template"><ControlTemplate>
+      <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+              Padding="{TemplateBinding Padding}">
+        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+      </Border>
+    </ControlTemplate></Setter>
+  </Style>
+  <Style Selector="Button.palette-remove:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="Button.palette-remove.confirming">
+    <Setter Property="Foreground" Value="{DynamicResource ErrBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource ErrBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+  </Style>
   <Style Selector="Grid#SettingsPanel ToggleSwitch">
     <Setter Property="Width" Value="34"/><Setter Property="Height" Value="20"/>
     <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
@@ -284,6 +321,17 @@
     <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Template"><ControlTemplate>
+      <Border Name="PageLinkFrame" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}"
+              Padding="{TemplateBinding Padding}">
+        <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                          HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+      </Border>
+    </ControlTemplate></Setter>
+  </Style>
+  <Style Selector="Button.page-link:pointerover /template/ Border#PageLinkFrame">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
   </Style>
   <Style Selector="RadioButton.segmented">
     <Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/><Setter Property="Height" Value="26"/>

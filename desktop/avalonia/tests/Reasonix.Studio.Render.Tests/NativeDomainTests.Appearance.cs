@@ -63,4 +63,48 @@ public sealed partial class NativeDomainTests
             Assert.Equal("monospace", (string?)look["fontMono"]);
             Assert.Equal(3, writes);
         });
+
+    /// <summary>Checks the reference palette grid, label block and confirmed theme removal.</summary>
+    /// <returns>The appearance interaction.</returns>
+    [Fact]
+    public Task ThemeCardsFillTheReferenceGridAndRemoveOnlyAfterConfirmation() => WithSettings(
+        "settings-appearance",
+        (w, reads) =>
+        {
+            var themes = reads.Read<JsonArray>("/themes");
+            var removed = 0;
+            reads.Exchange = request =>
+            {
+                if (request.Method == HttpMethod.Delete)
+                {
+                    var id = request.RequestUri!.AbsolutePath.Split('/').Last();
+                    if (themes.FirstOrDefault(theme => (string?)theme?["id"] == id) is { } item)
+                    {
+                        themes.Remove(item);
+                    }
+
+                    removed++;
+                    return Task.FromResult<HttpResponseMessage?>(new HttpResponseMessage(HttpStatusCode.NoContent));
+                }
+
+                return Task.FromResult<HttpResponseMessage?>(request.RequestUri!.AbsolutePath == "/themes" ? JsonReply(themes) : null);
+            };
+
+            Button[] Cards() => w.GetVisualDescendants().OfType<Button>()
+                .Where(button => AutomationProperties.GetAutomationId(button) == "action:theme.activate").ToArray();
+            Assert.Equal(5, Cards().Length);
+            var first = Cards()[0];
+            Assert.Equal(212.4, first.Bounds.Width, 1);
+            Assert.InRange(first.Bounds.Height, 173, 175);
+            var cell = Assert.IsType<StackPanel>(Cards().Single(button => AutomationProperties.GetName(button) == "Dusk").Parent);
+            var remove = Assert.Single(cell.Children.OfType<Button>(), button =>
+                AutomationProperties.GetAutomationId(button) == "action:theme.remove");
+            Assert.Equal("删除", remove.Content);
+            remove.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal("确认删除", remove.Content);
+            Assert.Equal(0, removed);
+            remove.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            PumpNavigation(() => removed == 1 && Cards().Length == 4);
+            Assert.DoesNotContain(Cards(), button => AutomationProperties.GetName(button) == "Dusk");
+        });
 }

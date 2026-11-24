@@ -103,6 +103,16 @@ public sealed partial class StudioPageClient
     /// <returns>The kernel acknowledgement.</returns>
     public Task ActivateThemeAsync(string id, CancellationToken token) => PostAsync("/themes", new JsonObject { ["id"] = id }, token);
 
+    /// <summary>Deletes one installed theme pack and its files.</summary>
+    /// <param name="id">The installed pack id.</param>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The request completion.</returns>
+    public async Task RemoveThemeAsync(string id, CancellationToken token)
+    {
+        using var response = await _http.DeleteAsync("/themes/" + System.Uri.EscapeDataString(id), token).ConfigureAwait(false);
+        await KernelClient.EnsureAsync(response, token).ConfigureAwait(false);
+    }
+
     /// <summary>Reads how proposed facts may be stored.</summary>
     /// <param name="token">Cancels the read.</param>
     /// <returns>The saved mode, or null for an older host.</returns>
