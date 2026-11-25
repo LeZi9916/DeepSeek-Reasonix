@@ -239,6 +239,7 @@ public sealed partial class SessionPage : UserControl
             Rebuild(state.Items);
             AnimateActivityCounts(activityCounts);
             AnimateActivityChanges(previous);
+            AnimatePromptEntrances(previous);
         }
         else if (previous.Running != state.Running)
         {
@@ -308,7 +309,7 @@ public sealed partial class SessionPage : UserControl
             Padding = item is SayItem ? new Thickness(6, 0, 0, 0) : default,
         };
 
-        if (item is UserItem || (inActivity && item is ToolItem))
+        if (item is UserItem || (inActivity && item is ToolItem) || item is ApprovalItem || item is AskItem)
         {
             row.Tag = item;
         }
