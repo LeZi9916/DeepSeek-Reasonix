@@ -12,6 +12,7 @@ using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Host;
 using Reasonix.Studio.State;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell;
@@ -207,10 +208,18 @@ public sealed partial class MainWindow
 
         var rows = QueuePresenter.Rows(_queue, state.Running, Language);
         QueueScroll.IsVisible = rows.Count > 0;
+        var current = rows.Select(row => row.Id).ToHashSet(StringComparer.Ordinal);
         foreach (var row in rows)
         {
-            QueueStrip.Children.Add(Row(row));
+            var control = Row(row);
+            QueueStrip.Children.Add(control);
+            if (_queueRendered.Add(row.Id))
+            {
+                EnterQueueRow(control);
+            }
         }
+
+        _queueRendered.IntersectWith(current);
 
         // A queue the kernel paused keeps its lines and dispatches nothing. The
         // release is offered once, above the list, because every line waits on
@@ -308,7 +317,7 @@ public sealed partial class MainWindow
         }
 
         grid.Children.Add(actions);
-        return new Border { Classes = { "compose-queue-row" }, Child = grid };
+        return new Border { Tag = row.Id, Classes = { "compose-queue-row" }, Child = grid };
     }
 
     /// <summary>
