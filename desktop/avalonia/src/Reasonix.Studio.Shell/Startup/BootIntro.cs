@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Contracts.Diagnostics;
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -56,11 +57,26 @@ internal sealed partial class BootIntro : Control
     /// <summary>The caption and outline ink.</summary>
     private static readonly IBrush s_dim = Brush.Parse("#8A857B");
 
+    /// <summary>The immutable progress marker fill.</summary>
+    private static readonly IBrush s_progressGold = new SolidColorBrush(s_gold).ToImmutable();
+
+    /// <summary>The immutable outline of a completed progress marker.</summary>
+    private static readonly IPen s_progressLit = new Pen(s_progressGold).ToImmutable();
+
+    /// <summary>The immutable outline of a pending progress marker.</summary>
+    private static readonly IPen s_progressPending = new Pen(s_dim).ToImmutable();
+
     /// <summary>Measures elapsed time independently of paint frequency.</summary>
     private readonly Stopwatch _clock = new();
 
     /// <summary>Provides per-launch differences in the sky and the shattered mark.</summary>
     private readonly Random _random = new();
+
+    /// <summary>Timestamp of the preceding animation tick for diagnostics.</summary>
+    private long _lastTick;
+
+    /// <summary>Whether the first visible drawing has been recorded.</summary>
+    private bool _painted;
 
     /// <summary>The meteor, stars and embers for this launch.</summary>
     private BootSky? _sky;
@@ -93,10 +109,10 @@ internal sealed partial class BootIntro : Control
     private double _time;
 
     /// <summary>Caption for a delayed kernel connection.</summary>
-    private string _connecting = string.Empty;
+    private FormattedText? _connecting;
 
     /// <summary>Caption for a delayed workspace read.</summary>
-    private string _preparing = string.Empty;
+    private FormattedText? _preparing;
 
     /// <summary>Occurs when the first page can begin its arrival.</summary>
     internal event EventHandler? Leaving;
@@ -123,10 +139,21 @@ internal sealed partial class BootIntro : Control
             return;
         }
 
+        if (!_painted)
+        {
+            _painted = true;
+            StudioPerformance.Record("startup.first-draw", Program.BootStarted);
+        }
+
         var overlay = new Rect(size);
         var exit = DepartureTime;
         var leaving = !double.IsNaN(exit);
         var fade = leaving ? 1 - s_ease.Ease(Unit(_calm ? exit / 300 : (exit - 1050) / 500)) : 1;
+        if (fade <= 0)
+        {
+            return;
+        }
+
         using var cover = context.PushOpacity(fade);
         context.FillRectangle(s_night, overlay);
         if (!_clock.IsRunning)
@@ -143,8 +170,11 @@ internal sealed partial class BootIntro : Control
         if (_sky is not null)
         {
             var skyAlpha = double.IsNaN(_skipAt) ? 1 : 1 - s_ease.Ease(Unit((_time - _skipAt) / 300));
-            using var opacity = context.PushOpacity(skyAlpha);
-            _sky.Draw(context, size, impact, Math.Min(double.IsNaN(_skipAt) ? _time : _skipAt, Quiet));
+            if (skyAlpha > 0)
+            {
+                using var opacity = context.PushOpacity(skyAlpha);
+                _sky.Draw(context, size, impact, Math.Min(double.IsNaN(_skipAt) ? _time : _skipAt, Quiet));
+            }
         }
 
         var dark = ActualThemeVariant == ThemeVariant.Dark;
@@ -177,8 +207,8 @@ internal sealed partial class BootIntro : Control
             return;
         }
 
-        _connecting = english ? "Connecting to the kernel…" : "正在连接内核…";
-        _preparing = english ? "Preparing the workspace…" : "正在准备工作区…";
+        _connecting = Caption(english ? "Connecting to the kernel…" : "正在连接内核…");
+        _preparing = Caption(english ? "Preparing the workspace…" : "正在准备工作区…");
         _calm = !motion;
         if (motion)
         {
@@ -236,6 +266,12 @@ internal sealed partial class BootIntro : Control
         base.OnDetachedFromVisualTree(e);
     }
 
+    /// <summary>Shapes a caption once for the duration of the animation.</summary>
+    /// <param name="text">The localized caption.</param>
+    /// <returns>The shaped caption.</returns>
+    private static FormattedText Caption(string text) =>
+        new(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 11.5, s_dim);
+
     /// <summary>Advances the active sequence and requests the next frame.</summary>
     /// <param name="timestamp">The compositor timestamp.</param>
     private void Frame(TimeSpan timestamp)
@@ -245,6 +281,13 @@ internal sealed partial class BootIntro : Control
             return;
         }
 
+        var tick = StudioPerformance.Timestamp();
+        if (!_calm)
+        {
+            StudioPerformance.Frame(_lastTick, tick);
+        }
+
+        _lastTick = tick;
         _time = _clock.Elapsed.TotalMilliseconds;
         if (double.IsNaN(_heldAt) && _time >= (_calm ? 300 : Hold))
         {
@@ -297,17 +340,14 @@ internal sealed partial class BootIntro : Control
                 var pulse = !_calm && i == _progress ? 0.35 + (0.65 * (0.5 - (0.5 * Math.Cos(_time * Math.Tau / 1600)))) : 0.55;
                 using var glow = context.PushOpacity(lit ? 1 : pulse);
                 using var rotation = context.PushTransform(Matrix.CreateRotation(Math.PI / 4) * Matrix.CreateTranslation(x, y));
-                var gold = new SolidColorBrush(s_gold);
-                context.DrawRectangle(lit ? gold : null, new Pen(lit ? gold : s_dim), new Rect(-3, -3, 6, 6));
+                context.DrawRectangle(lit ? s_progressGold : null, lit ? s_progressLit : s_progressPending, new Rect(-3, -3, 6, 6));
             }
         }
 
         var textFade = 0.85 * s_ease.Ease(Unit((wait - 2500) / 600)) * move;
-        if (textFade > 0)
+        if (textFade > 0 && (_progress == 2 ? _preparing : _connecting) is { } caption)
         {
             using var alpha = context.PushOpacity(textFade);
-            var message = _progress == 2 ? _preparing : _connecting;
-            var caption = new FormattedText(message, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, Typeface.Default, 11.5, s_dim);
             context.DrawText(caption, new Point(center - (caption.Width / 2), wordBottom + 57));
         }
     }

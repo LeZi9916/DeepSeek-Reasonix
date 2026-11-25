@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Contracts.Diagnostics;
 using Reasonix.Studio.Contracts.Refusal;
 using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages;
@@ -135,12 +136,26 @@ public sealed partial class MainWindow : Window
         Projects.MarkedViewed += OnProjectViewed;
         NewSession.Click += (_, _) => OnNewRequested();
         Closed += OnClosed;
-        StartupIntro.Leaving += (_, _) => EnterStartupPage();
+        StartupIntro.Leaving += (_, _) =>
+        {
+            if (!SetupPanel.IsVisible && !SettingsPanel.IsVisible)
+            {
+                LayoutRoot.IsVisible = true;
+            }
+
+            EnterStartupPage();
+            if (!SetupPanel.IsVisible && !FirstRunCurtain.IsVisible && Composer.IsEffectivelyEnabled)
+            {
+                StudioPerformance.Record("startup.workspace-handoff", Program.BootStarted);
+            }
+        };
         FirstRunCurtain.Finished += (_, _) => FinishFirstRunCurtain();
 
         if (connectOnOpen)
         {
             StartupIntro.IsVisible = true;
+            LayoutRoot.IsVisible = false;
+            ComposerArea.IsEnabled = false;
             AddHandler(KeyDownEvent, (_, _) => StartupIntro.Skip(), RoutingStrategies.Tunnel);
             Opened += OnOpened;
         }
@@ -164,11 +179,13 @@ public sealed partial class MainWindow : Window
     /// <param name="state">The acknowledged state.</param><param name="previous">The outgoing streamed snapshot, if any.</param>
     private void PresentState(SessionState state, SessionState? previous)
     {
+        var started = StudioPerformance.Timestamp();
         RefreshGitAfterTurn(state.Running);
         UpdateMemorySuggestions(state.Running);
         Backdrop.SetBusy(state.Running);
         Conversation.Show(state);
         ShowComposerState(state, previous);
+        StudioPerformance.Record("session.ui-commit", started);
     }
 
     /// <summary>Keeps a refused question editable and presents the kernel's reason.</summary>
@@ -252,6 +269,16 @@ public sealed partial class MainWindow : Window
     private async Task OpenStartupSessionAsync()
     {
         var launch = await new SessionLauncher().LaunchAsync(_closing.Token).ConfigureAwait(true);
+        if (_closing.IsCancellationRequested)
+        {
+            if (launch.Engine is { } unused)
+            {
+                await unused.DisposeAsync().ConfigureAwait(true);
+            }
+
+            return;
+        }
+
         if (!launch.Started)
         {
             ShowProblem(launch.Problem ?? "这个会话没有启动。");
@@ -263,58 +290,70 @@ public sealed partial class MainWindow : Window
         _engine = launch.Engine;
         var engine = _engine!;
         _launchOwner ??= engine;
-        _ = RefreshTrayAsync();
         EnsureNavigation(_launchOwner);
-        _navigation!.Bind(engine);
-
-        // A card whose middle the page let go of asks for the whole output
-        // through this; the engine is what knows how to walk the kernel's pages.
         Conversation.ReadFullOutput = callId => _engine!.ReadFullOutputAsync(callId, _closing.Token);
 
         try
         {
-            // The status first, so the chrome names the session before any row
-            // arrives; then the transcript the session already holds, so a resumed
-            // window opens on its conversation rather than on an empty page.
-            var historyRead = engine.LoadHistoryAsync(_closing.Token);
-            var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-            if (status is not null && ReferenceEquals(_engine, engine))
+            using (StudioPerformance.Begin("startup.prepare"))
             {
-                CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? MessageCatalog.Get(MessageKey.Common.NewSession, Language) : status.Label;
-                ContextReadout.Text = ContextMeter.Readout(status.Used, status.Window, Conversation.Language);
+                var revision = engine.Generation.Revision;
+                var statusRead = engine.StatusAsync(_closing.Token);
+                var historyRead = engine.LoadHistoryAsync(_closing.Token);
+                var preferences = LoadStartupPreferencesAsync();
+                try
+                {
+                    await Task.WhenAll(statusRead, historyRead, preferences).ConfigureAwait(true);
+                }
+                catch (Exception error) when (statusRead.IsCompletedSuccessfully && preferences.IsCompletedSuccessfully && historyRead.IsFaulted && !_closing.IsCancellationRequested)
+                {
+                    ShowRefusal(error);
+                }
 
-                // The draft and the meter both need what only the status carries:
-                // the transcript the draft belongs to, and the window to draw
-                // usage against.
-                AdoptComposer(status);
-                AdoptSessionPath(status.SessionPath);
-                CaptureNavigation(status);
-                _navigation!.EnsureWatching(_activePane!);
-                engine.RestoreRunning(status.Running, engine.Generation.Revision);
-                _ = engine.IdentifyRuntimeAsync(status, _closing.Token);
+                if (_closing.IsCancellationRequested || !ReferenceEquals(_engine, engine))
+                {
+                    return;
+                }
+
+                var status = await statusRead.ConfigureAwait(true);
+                if (status is not null)
+                {
+                    CrumbTitle.Text = string.IsNullOrEmpty(status.Label) ? MessageCatalog.Get(MessageKey.Common.NewSession, Language) : status.Label;
+                    ContextReadout.Text = ContextMeter.Readout(status.Used, status.Window, Conversation.Language);
+                    engine.RestoreRunning(status.Running, revision);
+                    AdoptSessionPath(status.SessionPath);
+                    AdoptComposer(status);
+                    ComposerArea.IsEnabled = true;
+                    _navigation!.EnsureWatching(_activePane!);
+                    _ = engine.IdentifyRuntimeAsync(status, _closing.Token);
+                }
+                else
+                {
+                    _navigation!.Bind(engine);
+                }
+
+                ShowState(engine.State);
+                DrawHistoryRead();
+                if (!SetupPanel.IsVisible && !SettingsPanel.IsVisible)
+                {
+                    LayoutRoot.IsVisible = true;
+                }
+
+                StartupIntro.Progress(3);
+                StartupIntro.Complete();
+                Dispatcher.UIThread.Post(
+                    () =>
+                    {
+                        if (!_closing.IsCancellationRequested && ReferenceEquals(_engine, engine))
+                        {
+                            _ = RefreshTrayAsync();
+                            _ = LoadTreeAsync();
+                            _ = LoadQueueAsync();
+                        }
+                    },
+                    DispatcherPriority.Background);
             }
 
-            var treeRead = LoadTreeAsync();
-            var queueRead = LoadQueueAsync();
-            await historyRead.ConfigureAwait(true);
-            if (ReferenceEquals(_engine, engine))
-            {
-                Conversation.Show(engine.State);
-                ShowComposerState(engine.State);
-            }
-
-            // A line another window already queued is on screen before anything
-            // moves; the stream then says when to read it again. The tree is the
-            // same kind of read: the column shows what the kernel holds now.
-            await Task.WhenAll(treeRead, queueRead).ConfigureAwait(true);
-
-            // The stream is awaited last and never returns: it is the window's life.
-            if (ReferenceEquals(_engine, engine))
-            {
-                UpdateMemorySuggestions(engine.State.Running);
-            }
-
-            _ = FinishStartupAsync();
             var watching = _navigation?.Panes.FirstOrDefault(pane => ReferenceEquals(pane.Engine, engine))?.Watching ?? engine.StartAsync();
             await watching.ConfigureAwait(true);
         }
@@ -393,7 +432,7 @@ public sealed partial class MainWindow : Window
             pane.RunPresentation = (state.Revision, state.Items.Count, state.Running, waiting);
         }
 
-        if (ReferenceEquals(_engine, engine))
+        if (ReferenceEquals(_engine, engine) && ReferenceEquals(engine.State, state) && !ReferenceEquals(Conversation.State, state))
         {
             PresentState(state, Conversation.State);
         }

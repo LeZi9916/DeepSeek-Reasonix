@@ -1,3 +1,4 @@
+using Reasonix.Studio.Contracts.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -56,10 +57,15 @@ public sealed partial class KernelClient : Session.IKernelClient, IDisposable
     /// <returns>The status, or null when the kernel answered without one.</returns>
     public async Task<SessionStatus?> StatusAsync(CancellationToken cancellationToken = default)
     {
+        var request = StudioPerformance.Timestamp();
         using var response = await _http.GetAsync("/status", cancellationToken).ConfigureAwait(false);
+        StudioPerformance.Record("status.http-response", request);
         await EnsureAsync(response, cancellationToken).ConfigureAwait(false);
+        var decode = StudioPerformance.Timestamp();
         await using var body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-        return await JsonSerializer.DeserializeAsync<SessionStatus>(body, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var status = await JsonSerializer.DeserializeAsync<SessionStatus>(body, cancellationToken: cancellationToken).ConfigureAwait(false);
+        StudioPerformance.Record("status.body-and-decode", decode);
+        return status;
     }
 
     /// <summary>

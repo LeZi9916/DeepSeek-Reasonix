@@ -1,3 +1,4 @@
+using Reasonix.Studio.Contracts.Diagnostics;
 using Reasonix.Studio.Kernel.Boundary;
 using System;
 using System.Collections.Generic;
@@ -123,6 +124,7 @@ public static class HostLauncher
         timeout.CancelAfter(HandshakeTimeout);
 
         string? line;
+        var handshakeStarted = StudioPerformance.Timestamp();
         try
         {
             line = await process.StandardOutput.ReadLineAsync(timeout.Token).ConfigureAwait(false);
@@ -143,6 +145,7 @@ public static class HostLauncher
                     $"the kernel was still running but sent no handshake within {HandshakeTimeout.TotalSeconds:0} s"));
         }
 
+        StudioPerformance.Record("host.handshake", handshakeStarted);
         if (line is null)
         {
             // Nothing on stdout means the process is gone or said nothing: either

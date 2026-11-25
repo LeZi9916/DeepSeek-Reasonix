@@ -78,6 +78,7 @@ public sealed partial class NativeDomainTests
             await Task.Delay(70).ConfigureAwait(true);
             Assert.True(double.IsNaN(scene.DepartureTime));
             Assert.True(scene.IsVisible);
+            Assert.True(scene.IsHitTestVisible);
             scene.Complete();
             await WaitForMotionFrame(() => scene.DepartureTime >= 0).ConfigureAwait(true);
             await WaitForMotionFrame(() => !scene.IsVisible).ConfigureAwait(true);

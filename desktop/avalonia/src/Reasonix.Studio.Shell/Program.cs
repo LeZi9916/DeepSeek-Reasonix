@@ -1,4 +1,5 @@
 using Avalonia;
+using Reasonix.Studio.Contracts.Diagnostics;
 using Reasonix.Studio.Shell.Host;
 using System;
 
@@ -16,6 +17,12 @@ namespace Reasonix.Studio.Shell;
 /// </remarks>
 public static class Program
 {
+    /// <summary>Gets the process entry timestamp when tracing is active.</summary>
+    internal static long BootStarted
+    {
+        get; private set;
+    }
+
     /// <summary>
     /// Starts the Avalonia desktop lifetime for Reasonix Studio.
     /// </summary>
@@ -24,6 +31,8 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        using var performance = StudioPerformanceLog.Open();
+        BootStarted = StudioPerformance.Timestamp();
         var identity = InstanceActivation.Identity();
 
         using var claim = new SingleInstance(identity);

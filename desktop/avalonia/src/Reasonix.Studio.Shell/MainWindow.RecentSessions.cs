@@ -58,7 +58,7 @@ public sealed partial class MainWindow
                 : await owner.Pages.RemoteTreeAsync(machine, query, token).ConfigureAwait(true),
             async target =>
             {
-                await OpenTargetAsync(target).ConfigureAwait(true);
+                await NavigateAsync(target, null, refreshTree: false).ConfigureAwait(true);
                 if (_sidebarHost != target.Host || _sessionPath != target.SessionPath)
                 {
                     throw new InvalidOperationException(ErrorText.Text ?? string.Empty);

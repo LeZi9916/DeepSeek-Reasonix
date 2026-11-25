@@ -1,3 +1,4 @@
+using Reasonix.Studio.Contracts.Diagnostics;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
@@ -24,47 +25,30 @@ public sealed partial class SessionEngine
     /// <summary>Reads the newest transcript page without replacing a failed read with an empty page.</summary>
     /// <param name="cancellationToken">Cancels reading.</param>
     /// <returns>The acknowledged transcript window.</returns>
-    public async Task LoadHistoryAsync(CancellationToken cancellationToken = default)
+    public Task LoadHistoryAsync(CancellationToken cancellationToken = default)
     {
-        var ticket = _historyRead.NextGeneration();
-        SetHistory(History with
+        if (cancellationToken.IsCancellationRequested)
         {
-            Busy = true,
-            Failed = false,
-        });
-        try
-        {
-            var page = await _client.HistoryPageAsync(null, cancellationToken).ConfigureAwait(false);
-            var messages = page?.Messages ?? await _client.HistoryAsync(cancellationToken).ConfigureAwait(false);
-            if (ticket != _historyRead.Generation)
-            {
-                return;
-            }
-
-            if (page is not null)
-            {
-                ValidatePage(page);
-            }
-
-            _historyRead.Snapshot = page?.Snapshot ?? string.Empty;
-            _historyRead.Total = page?.Total ?? messages.Count;
-            _historyRead.Cursor = page?.NextCursor;
-            RestoreHistory(HistoryProjection.Restore(messages, page?.ToolContext ?? []), prepend: false);
-            SetHistory(new HistoryReadState { Initialized = true, HasMore = page?.HasMoreBefore ?? false, Earlier = page?.Start ?? 0 });
-            _ = RefreshPlanAsync(cancellationToken);
+            return Task.FromCanceled(cancellationToken);
         }
-        catch
+
+        lock (_historyRead)
         {
-            if (ticket == _historyRead.Generation)
+            if (_historyRead.Latest is { IsCompleted: false } pending)
             {
-                SetHistory(History with
-                {
-                    Busy = false,
-                    Failed = true,
-                });
+                return pending.WaitAsync(cancellationToken);
             }
 
-            throw;
+            var ticket = _historyRead.NextGeneration();
+            _historyRead.More = null;
+            var lifetime = _closing.Token;
+            _historyRead.Latest = Task.Run(() => ReadLatestAsync(ticket, lifetime));
+            SetHistory(History with
+            {
+                Busy = true,
+                Failed = false,
+            });
+            return _historyRead.Latest.WaitAsync(cancellationToken);
         }
     }
 
@@ -75,6 +59,11 @@ public sealed partial class SessionEngine
     {
         lock (_historyRead)
         {
+            if (_historyRead.Latest is { IsCompleted: false } latest)
+            {
+                return latest.WaitAsync(token);
+            }
+
             if (_historyRead.More is { IsCompleted: false } pending)
             {
                 return pending;
@@ -85,7 +74,18 @@ public sealed partial class SessionEngine
                 return Task.CompletedTask;
             }
 
-            return _historyRead.More = ReadEarlierAsync(token);
+            var generation = _historyRead.Generation;
+            var before = History.Earlier;
+            var cursor = _historyRead.Cursor;
+            var snapshot = _historyRead.Snapshot;
+            var total = _historyRead.Total;
+            _historyRead.More = Task.Run(() => ReadEarlierAsync(generation, before, cursor, snapshot, total, token));
+            SetHistory(History with
+            {
+                Busy = true,
+                Failed = false,
+            });
+            return _historyRead.More;
         }
     }
 
@@ -97,6 +97,11 @@ public sealed partial class SessionEngine
         lock (_sync)
         {
             if (Generation.Revision != revision)
+            {
+                return;
+            }
+
+            if (_state.Running == running && (running || (_state.ResponseWait is null && !_state.Items.Any(item => item is SayItem { Done: false }))))
             {
                 return;
             }
@@ -124,27 +129,67 @@ public sealed partial class SessionEngine
         }
     }
 
-    /// <summary>Reads an earlier window for the same immutable snapshot.</summary>
-    /// <param name="token">Cancels reading.</param><returns>The prepended history window.</returns>
-    private async Task ReadEarlierAsync(CancellationToken token)
+    /// <summary>Reads and projects one history window on a worker.</summary>
+    /// <param name="ticket">The transcript read generation.</param>
+    /// <param name="cancellationToken">Cancels the read.</param>
+    /// <returns>The acknowledged history read.</returns>
+    private async Task ReadLatestAsync(long ticket, CancellationToken cancellationToken)
     {
-        var generation = _historyRead.Generation;
-        var before = History.Earlier;
-        SetHistory(History with
+        try
         {
-            Busy = true,
-            Failed = false,
-        });
+            var page = await _client.HistoryPageAsync(null, cancellationToken).ConfigureAwait(false);
+            var messages = page?.Messages ?? await _client.HistoryAsync(cancellationToken).ConfigureAwait(false);
+            if (page is not null)
+            {
+                ValidatePage(page);
+            }
+
+            var started = StudioPerformance.Timestamp();
+            var rows = HistoryProjection.Restore(messages, page?.ToolContext ?? []);
+            StudioPerformance.Record("history.project", started);
+            lock (_historyRead)
+            {
+                if (ticket != _historyRead.Generation)
+                {
+                    return;
+                }
+
+                _historyRead.Snapshot = page?.Snapshot ?? string.Empty;
+                _historyRead.Total = page?.Total ?? messages.Count;
+                _historyRead.Cursor = page?.NextCursor;
+                RestoreHistory(rows, prepend: false);
+                SetHistory(new HistoryReadState { Initialized = true, HasMore = page?.HasMoreBefore ?? false, Earlier = page?.Start ?? 0 });
+            }
+
+            _ = RefreshPlanAsync(cancellationToken);
+        }
+        catch (Exception error)
+        {
+            FailHistory(ticket, error);
+            throw;
+        }
+    }
+
+    /// <summary>Reads an earlier window for the same immutable snapshot.</summary>
+    /// <param name="generation">The transcript read generation.</param>
+    /// <param name="before">Number of messages preceding the retained window.</param>
+    /// <param name="cursor">Opaque cursor for the preceding window.</param>
+    /// <param name="snapshot">Snapshot identity at the time of the request.</param>
+    /// <param name="total">Message count at the time of the request.</param>
+    /// <param name="token">Cancels reading.</param>
+    /// <returns>The acknowledged preceding page.</returns>
+    private async Task ReadEarlierAsync(long generation, int before, string cursor, string snapshot, int total, CancellationToken token)
+    {
         try
         {
             HistoryPage? page;
             try
             {
-                page = await _client.HistoryPageAsync(_historyRead.Cursor, token).ConfigureAwait(false);
+                page = await _client.HistoryPageAsync(cursor, token).ConfigureAwait(false);
             }
             catch (KernelRefusal error) when (error.Code == "history.snapshot_changed")
             {
-                await LoadHistoryAsync(token).ConfigureAwait(false);
+                await ReloadAfterSnapshotChangeAsync(generation, token).ConfigureAwait(false);
                 return;
             }
 
@@ -159,39 +204,79 @@ public sealed partial class SessionEngine
             }
 
             ValidatePage(page);
-            if (page.Snapshot != _historyRead.Snapshot)
+            if (page.Snapshot != snapshot)
             {
-                await LoadHistoryAsync(token).ConfigureAwait(false);
+                await ReloadAfterSnapshotChangeAsync(generation, token).ConfigureAwait(false);
                 return;
             }
 
-            if (page.End != before || page.Total != _historyRead.Total || page.Start >= page.End)
+            if (page.End != before || page.Total != total || page.Start >= page.End)
             {
                 throw new InvalidDataException("History page did not advance.");
             }
 
+            var started = StudioPerformance.Timestamp();
             var earlier = HistoryProjection.Restore(page.Messages, page.ToolContext);
-            if (generation != _historyRead.Generation)
+            StudioPerformance.Record("history.project", started);
+            lock (_historyRead)
             {
-                return;
-            }
+                if (generation != _historyRead.Generation)
+                {
+                    return;
+                }
 
-            _historyRead.Cursor = page.NextCursor;
-            RestoreHistory(earlier, prepend: true);
-            SetHistory(new HistoryReadState { Initialized = true, HasMore = page.HasMoreBefore, Earlier = page.Start });
+                _historyRead.Cursor = page.NextCursor;
+                RestoreHistory(earlier, prepend: true);
+                SetHistory(new HistoryReadState { Initialized = true, HasMore = page.HasMoreBefore, Earlier = page.Start });
+            }
         }
-        catch
+        catch (Exception error)
+        {
+            FailHistory(generation, error);
+            throw;
+        }
+    }
+
+    /// <summary>Loads a fresh head if the rejected cursor still belongs to the current transcript.</summary>
+    /// <param name="generation">The rejected read generation.</param>
+    /// <param name="token">Cancels the replacement read.</param>
+    /// <returns>The replacement read, when needed.</returns>
+    private Task ReloadAfterSnapshotChangeAsync(long generation, CancellationToken token)
+    {
+        lock (_historyRead)
+        {
+            return generation == _historyRead.Generation ? LoadHistoryAsync(token) : Task.CompletedTask;
+        }
+    }
+
+    /// <summary>Clears activity for a read that still owns the history window.</summary>
+    /// <param name="generation">The read generation.</param>
+    /// <param name="error">The read failure or cancellation.</param>
+    private void FailHistory(long generation, Exception error)
+    {
+        lock (_historyRead)
         {
             if (generation == _historyRead.Generation)
             {
                 SetHistory(History with
                 {
                     Busy = false,
-                    Failed = true,
+                    Failed = error is not OperationCanceledException,
                 });
             }
+        }
+    }
 
-            throw;
+    /// <summary>Invalidates pending reads when the host binds a different transcript.</summary>
+    private void ResetHistoryBinding()
+    {
+        lock (_historyRead)
+        {
+            _historyRead.NextGeneration();
+            _historyRead.Latest = null;
+            _historyRead.More = null;
+            _historyRead.Cursor = null;
+            SetHistory(new HistoryReadState());
         }
     }
 
@@ -276,6 +361,12 @@ public sealed partial class SessionEngine
 
         /// <summary>Gets or sets the snapshot's canonical message count.</summary>
         internal int Total
+        {
+            get; set;
+        }
+
+        /// <summary>Gets or sets the single outstanding newest-page read.</summary>
+        internal Task? Latest
         {
             get; set;
         }

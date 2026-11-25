@@ -21,6 +21,9 @@ internal sealed class SessionPaneState(SessionEngine engine, SessionStatus statu
         get; set;
     } = status;
 
+    /// <summary>Gets or sets a value indicating whether the host returned status for this binding.</summary>
+    internal bool StatusConfirmed { get; set; } = true;
+
     /// <summary>Gets the canonical remote machine, or empty for local.</summary>
     internal string Host => Engine.RemoteHost.Length > 0 ? Engine.RemoteHost : Engine.Runtime?.Host ?? string.Empty;
 

@@ -595,6 +595,7 @@ public sealed partial class SessionEngine : IAsyncDisposable
     public async Task ResumeAsync(string path, CancellationToken cancellationToken = default)
     {
         await _client.ResumeAsync(path, cancellationToken).ConfigureAwait(false);
+        ResetHistoryBinding();
         Generation = new();
         Publish(new SessionState());
         await LoadHistoryAsync(cancellationToken).ConfigureAwait(false);
@@ -613,6 +614,7 @@ public sealed partial class SessionEngine : IAsyncDisposable
     public async Task NewSessionAsync(CancellationToken cancellationToken = default)
     {
         await _client.NewSessionAsync(cancellationToken).ConfigureAwait(false);
+        ResetHistoryBinding();
         Generation = new();
         Publish(new SessionState());
         await LoadHistoryAsync(cancellationToken).ConfigureAwait(false);

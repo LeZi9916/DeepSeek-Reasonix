@@ -173,6 +173,12 @@ internal sealed partial class WindowSessionCoordinator(SessionEngine owner) : IA
                 var engine = target.Host.Length == 0
                     ? await owner.OpenProjectAsync(target.WorkspaceRoot, token, register, target.SessionPath, preset).ConfigureAwait(true)
                     : await owner.OpenRemoteProjectAsync(target.Host, target.WorkspaceRoot, token, target.SessionPath, preset).ConfigureAwait(true);
+                if (token.IsCancellationRequested)
+                {
+                    await engine.DisposeAsync().ConfigureAwait(true);
+                    token.ThrowIfCancellationRequested();
+                }
+
                 var known = _panes.FirstOrDefault(p => p.Engine.Runtime?.Id is { Length: > 0 } id && id == engine.Runtime?.Id);
                 if (known is not null)
                 {
@@ -181,6 +187,7 @@ internal sealed partial class WindowSessionCoordinator(SessionEngine owner) : IA
                 }
 
                 var pane = Capture(engine, new SessionStatus { WorkspaceRoot = engine.Runtime?.Root ?? target.WorkspaceRoot, SessionPath = engine.Runtime?.SessionPath ?? target.SessionPath, Label = target.SessionPath });
+                pane.StatusConfirmed = false;
                 var retire = blank ?? (atCapacity ? idle.FirstOrDefault() : null);
                 if (retire is not null && retire != pane)
                 {
@@ -206,6 +213,8 @@ internal sealed partial class WindowSessionCoordinator(SessionEngine owner) : IA
                         Label = target.SessionPath,
                         Running = false,
                     };
+                    pane.StatusRead++;
+                    pane.StatusConfirmed = false;
                     pane.ScrollAnchor = default;
                     pane.WorkbenchOpen = false;
                     pane.FilePath = null;

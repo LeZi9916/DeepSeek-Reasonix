@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Contracts.Diagnostics;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages.I18n;
@@ -9,6 +10,7 @@ using Reasonix.Studio.Pages.Rail;
 using Reasonix.Studio.Shell.Session;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -49,20 +51,24 @@ public sealed partial class MainWindow
     private Task NavigatePaneAsync(SessionPaneState pane) => NavigateAsync(new SessionOpenTarget(pane.Host, pane.Status.WorkspaceRoot, pane.Status.SessionPath), pane);
 
     /// <summary>Preserves the current page until the latest requested history is readable.</summary>
-    /// <param name="target">Canonical target.</param><param name="retained">Optional already open pane.</param><returns>The navigation result.</returns>
-    private async Task NavigateAsync(SessionOpenTarget target, SessionPaneState? retained)
+    /// <param name="target">Canonical target.</param>
+    /// <param name="retained">Optional already open pane.</param>
+    /// <param name="refreshTree">Whether navigation owns the sidebar refresh.</param>
+    /// <returns>The navigation result.</returns>
+    private async Task NavigateAsync(SessionOpenTarget target, SessionPaneState? retained, bool refreshTree = true)
     {
+        using var timing = StudioPerformance.Begin(target.SessionPath.Length == 0 ? "workspace.open" : "history.open");
         var identity = System.Text.Json.JsonSerializer.Serialize(target);
         var ticket = _switch.Begin(identity);
         NavigationProgress.IsVisible = true;
         try
         {
-            await OpenTargetCoreAsync(target, false, () => _switch.IsCurrent(ticket), retained).ConfigureAwait(true);
+            await OpenTargetCoreAsync(target, false, () => _switch.IsCurrent(ticket), retained, refreshTree: refreshTree).ConfigureAwait(true);
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested) { }
         catch (Exception error)
         {
-            if (_switch.IsCurrent(ticket))
+            if (!_closing.IsCancellationRequested && _switch.IsCurrent(ticket))
             {
                 if (error is Contracts.Refusal.IRefusal refusal && Pages.Session.SessionBoundaries.Of(refusal) == Pages.Session.SessionBoundary.TooLarge)
                 {
@@ -76,7 +82,7 @@ public sealed partial class MainWindow
         }
         finally
         {
-            if (_switch.IsCurrent(ticket))
+            if (!_closing.IsCancellationRequested && _switch.IsCurrent(ticket))
             {
                 NavigationProgress.IsVisible = false;
             }
@@ -102,7 +108,7 @@ public sealed partial class MainWindow
         _navigation.QueueChanged += OnQueueChanged;
         _navigation.TreeChanged += OnTreeChanged;
         _navigation.StreamFailed += ShowRefusal;
-        _navigation.RefreshParkedStatus = ReadPaneStatusAsync;
+        _navigation.RefreshParkedStatus = pane => ReadPaneStatusAsync(pane);
         _navigation.RefreshParkedHistory = pane => ReadPaneHistoryAsync(pane, true);
         _navigation.StartStreamScheduling();
         _navigation.StreamLimit = _workspacePreferences.LiveStreamLimit ?? 3;
@@ -197,6 +203,11 @@ public sealed partial class MainWindow
         try
         {
             var state = await engine.Pages.PeerStateAsync(_closing.Token).ConfigureAwait(true);
+            if (_closing.IsCancellationRequested || !ReferenceEquals(_engine, engine))
+            {
+                return;
+            }
+
             var next = new Dictionary<string, PeerTabMark>(StringComparer.Ordinal);
             if ((bool?)state?["enabled"] == true && state?["threads"] is JsonArray threads)
             {
@@ -228,14 +239,18 @@ public sealed partial class MainWindow
     /// <param name="target">Canonical target.</param><param name="register">Whether to register the project.</param>
     /// <param name="current">Checks the navigation ticket.</param><param name="retained">Optional already open pane.</param>
     /// <param name="animateSetupDeparture">Whether opening the workspace completes setup.</param>
+    /// <param name="refreshTree">Whether to schedule a general sidebar refresh.</param>
     /// <returns>The acknowledged navigation.</returns>
-    private async Task OpenTargetCoreAsync(SessionOpenTarget target, bool register, Func<bool>? current = null, SessionPaneState? retained = null, bool animateSetupDeparture = false)
+    private async Task OpenTargetCoreAsync(SessionOpenTarget target, bool register, Func<bool>? current = null, SessionPaneState? retained = null, bool animateSetupDeparture = false, bool refreshTree = true)
     {
-        if (_engine is not { } previous)
+        bool IsCurrent() => !_closing.IsCancellationRequested && (current is null || current());
+
+        if (_engine is not { } previous || !IsCurrent())
         {
             return;
         }
 
+        var started = StudioPerformance.Timestamp();
         EnsureNavigation(_launchOwner ?? previous);
         if (_activePane is null)
         {
@@ -245,7 +260,28 @@ public sealed partial class MainWindow
         }
 
         _navigation!.Focused = _activePane;
+        var openStarted = StudioPerformance.Timestamp();
         var pane = retained ?? await _navigation.OpenAsync(target, register, NewTaskPreset, _closing.Token).ConfigureAwait(true);
+        StudioPerformance.Record("navigation.runtime-open", openStarted);
+        if (!IsCurrent())
+        {
+            return;
+        }
+
+        var history = pane.Engine.History.Initialized ? Task.CompletedTask : pane.Engine.LoadHistoryAsync(_closing.Token);
+        var refreshStatus = pane.StatusConfirmed;
+        var status = refreshStatus ? Task.CompletedTask : ReadPaneStatusAsync(pane, required: true);
+        if (refreshStatus)
+        {
+            _navigation.EnsureWatching(pane);
+        }
+
+        await Task.WhenAll(history, status).ConfigureAwait(true);
+        if (!IsCurrent())
+        {
+            return;
+        }
+
         var title = Projects.SearchEntries.FirstOrDefault(entry => entry.Target.Host == target.Host && RailPresenter.Same(entry.Target.SessionPath, target.SessionPath)).Session?.Title;
         if (!string.IsNullOrWhiteSpace(title))
         {
@@ -255,32 +291,33 @@ public sealed partial class MainWindow
             };
         }
 
-        DrawPaneTabs();
-        _navigation!.EnsureWatching(pane);
-        if (!pane.Engine.History.Initialized)
+        await FocusPaneAsync(pane, animateSetupDeparture, IsCurrent, refreshStatus, refreshTree).ConfigureAwait(true);
+        if (started != 0 && IsCurrent())
         {
-            await pane.Engine.LoadHistoryAsync(_closing.Token).ConfigureAwait(true);
+            RequestAnimationFrame(_ =>
+            {
+                if (IsCurrent() && ReferenceEquals(_activePane, pane) && ConversationArea.IsEffectivelyVisible)
+                {
+                    StudioPerformance.Record("navigation.viewport-tick", started);
+                }
+            });
         }
-
-        if (_closing.IsCancellationRequested || (current is not null && !current()))
-        {
-            return;
-        }
-
-        await FocusPaneAsync(pane, animateSetupDeparture).ConfigureAwait(true);
     }
 
     /// <summary>Mounts a retained pane and independently reads its history and status.</summary>
     /// <param name="pane">Pane to focus.</param>
     /// <param name="animateSetupDeparture">Whether mounting this pane completes setup.</param>
+    /// <param name="current">Whether this navigation still owns the view.</param>
+    /// <param name="refreshStatus">Whether a retained status should refresh after the pane is usable.</param>
+    /// <param name="refreshTree">Whether to schedule a general sidebar refresh.</param>
     /// <returns>The mounted session.</returns>
-    private async Task FocusPaneAsync(SessionPaneState pane, bool animateSetupDeparture = false)
+    private async Task FocusPaneAsync(SessionPaneState pane, bool animateSetupDeparture, Func<bool> current, bool refreshStatus, bool refreshTree)
     {
         if (_engine is null || (ReferenceEquals(_activePane, pane) && _sessionPath == pane.Status.SessionPath))
         {
             if (animateSetupDeparture && SetupPanel.IsVisible)
             {
-                ReturnToConversation(animateSetupDeparture: true);
+                await ReturnToConversationAsync(animateSetupDeparture: true, current).ConfigureAwait(true);
             }
             else
             {
@@ -305,6 +342,7 @@ public sealed partial class MainWindow
         _navigation!.Focused = pane;
         pane.Unread = false;
         _sidebarHost = pane.Host;
+        _treeRead++;
         Conversation.DisclosureChoices = pane.DisclosureChoices;
         BindAnswerBoundary(pane);
         RememberUnreadSince(pane);
@@ -313,24 +351,59 @@ public sealed partial class MainWindow
         AdoptComposer(pane.Status);
         CrumbTitle.Text = pane.Status.Label.Length > 0 ? pane.Status.Label : MessageCatalog.Get("common.new_session", Language);
         ShowState(pane.Engine.State);
-        ReturnToConversation(animateSetupDeparture);
-        Conversation.RestoreAnchor(pane.ScrollAnchor, preferUnread: true);
-        DrawPaneTabs();
-        _ = MarkPaneViewedAsync(pane);
-        _navigation!.EnsureWatching(pane);
+        if (SettingsPanel.IsVisible || SetupPanel.IsVisible || SearchResultsPanel.IsVisible || !LayoutRoot.IsVisible)
+        {
+            await ReturnToConversationAsync(animateSetupDeparture, current).ConfigureAwait(true);
+        }
+        else
+        {
+            Composer.Focus();
+        }
 
-        await _navigation!.AcknowledgeReadAsync(pane, _closing.Token).ConfigureAwait(true);
-        if (!ReferenceEquals(_activePane, pane))
+        if (!current() || !ReferenceEquals(_activePane, pane))
         {
             return;
         }
 
-        var history = ReadPaneHistoryAsync(pane);
-        var status = ReadPaneStatusAsync(pane);
-        await Task.WhenAll(history, status, LoadTreeAsync(), LoadQueueAsync()).ConfigureAwait(true);
-        if (ReferenceEquals(_activePane, pane))
+        DrawHistoryRead();
+        Conversation.RestoreAnchor(pane.ScrollAnchor, preferUnread: true);
+        DrawPaneTabs();
+        _navigation!.EnsureWatching(pane);
+        Dispatcher.UIThread.Post(() => _ = RefreshFocusedPaneAsync(pane, current, refreshStatus, refreshTree), DispatcherPriority.Background);
+    }
+
+    /// <summary>Refreshes secondary workspace surfaces after the conversation can receive input.</summary>
+    /// <param name="pane">The mounted session.</param>
+    /// <param name="current">Whether this navigation still owns the view.</param>
+    /// <param name="refreshStatus">Whether the retained status should refresh.</param>
+    /// <param name="refreshTree">Whether navigation owns the sidebar refresh.</param>
+    /// <returns>The secondary refresh.</returns>
+    private async Task RefreshFocusedPaneAsync(SessionPaneState pane, Func<bool> current, bool refreshStatus, bool refreshTree)
+    {
+        if (!current() || !ReferenceEquals(_activePane, pane))
         {
-            await RestoreWorkbenchFocusAsync(pane).ConfigureAwait(true);
+            return;
+        }
+
+        try
+        {
+            await Task.WhenAll(
+                _navigation!.AcknowledgeReadAsync(pane, _closing.Token),
+                MarkPaneViewedAsync(pane),
+                refreshStatus ? ReadPaneStatusAsync(pane) : Task.CompletedTask,
+                refreshTree ? LoadTreeAsync() : Task.CompletedTask,
+                LoadQueueAsync(),
+                RestoreWorkbenchFocusAsync(pane)).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            if (current() && ReferenceEquals(_activePane, pane))
+            {
+                ShowRefusal(error);
+            }
         }
     }
 
@@ -377,10 +450,6 @@ public sealed partial class MainWindow
         try
         {
             await pane.Engine.LoadHistoryAsync(_closing.Token).ConfigureAwait(true);
-            if (ReferenceEquals(_activePane, pane))
-            {
-                ShowState(pane.Engine.State);
-            }
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested) { }
         catch (Exception error)
@@ -393,7 +462,13 @@ public sealed partial class MainWindow
     }
 
     /// <summary>Marshals history activity to the window dispatcher.</summary>
-    private void OnHistoryChanged() => Dispatcher.UIThread.Post(DrawHistoryRead);
+    private void OnHistoryChanged() => Dispatcher.UIThread.Post(() =>
+    {
+        if (!_closing.IsCancellationRequested)
+        {
+            DrawHistoryRead();
+        }
+    });
 
     /// <summary>Refreshes canonical status and metrics after relevant runtime events.</summary>
     /// <param name="engine">Owning runtime.</param><param name="frame">Accepted event.</param>
@@ -478,6 +553,8 @@ public sealed partial class MainWindow
             return;
         }
 
+        using var timing = StudioPerformance.Begin("history.earlier");
+        var started = StudioPerformance.Timestamp();
         var anchor = Conversation.ReadAnchor();
         try
         {
@@ -490,13 +567,18 @@ public sealed partial class MainWindow
                 await engine.LoadHistoryAsync(_closing.Token).ConfigureAwait(true);
             }
 
-            if (!ReferenceEquals(_engine, engine))
+            if (_closing.IsCancellationRequested || !ReferenceEquals(_engine, engine))
             {
                 return;
             }
 
-            Conversation.Show(engine.State);
-            Conversation.RestoreAnchor(anchor);
+            var state = engine.State;
+            if (!ReferenceEquals(Conversation.State, state))
+            {
+                PresentState(state, Conversation.State);
+            }
+
+            Conversation.RestoreAnchor(anchor, applied: started == 0 ? null : () => StudioPerformance.Record("history.anchor-restored", started));
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested) { }
         catch (Exception error)
@@ -546,16 +628,33 @@ public sealed partial class MainWindow
     }
 
     /// <summary>Rejects late status reads and updates only their owning pane.</summary>
-    /// <param name="pane">Owning pane.</param><returns>The independent status read.</returns>
-    private async Task ReadPaneStatusAsync(SessionPaneState pane)
+    /// <param name="pane">Owning pane.</param>
+    /// <param name="required">Whether opening the target depends on the status.</param>
+    /// <returns>The independent status read.</returns>
+    private async Task ReadPaneStatusAsync(SessionPaneState pane, bool required = false)
     {
+        if (_closing.IsCancellationRequested || (!required && !pane.StatusConfirmed))
+        {
+            return;
+        }
+
         var ticket = ++pane.StatusRead;
         var revision = pane.Engine.Generation.Revision;
         try
         {
             var status = await pane.Engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-            if (status is null || _closing.IsCancellationRequested || ticket != pane.StatusRead)
+            if (_closing.IsCancellationRequested || ticket != pane.StatusRead)
             {
+                return;
+            }
+
+            if (status is null)
+            {
+                if (required)
+                {
+                    throw new InvalidDataException("The workspace did not return session status.");
+                }
+
                 return;
             }
 
@@ -569,8 +668,9 @@ public sealed partial class MainWindow
             }
 
             pane.Status = status;
+            pane.StatusConfirmed = true;
             pane.Engine.RestoreRunning(status.Running, revision);
-            if (ReferenceEquals(_activePane, pane))
+            if (!required && ReferenceEquals(_activePane, pane))
             {
                 if (status.SessionPath != _sessionPath)
                 {
@@ -591,13 +691,16 @@ public sealed partial class MainWindow
                 DrawComposeMeters(pane.Engine.State);
             }
 
-            DrawPaneTabs();
-            ReconcilePaneStreams();
+            if (!required)
+            {
+                DrawPaneTabs();
+                ReconcilePaneStreams();
+            }
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested) { }
-        catch (Exception error)
+        catch (Exception error) when (!required)
         {
-            if (ReferenceEquals(_activePane, pane))
+            if (!_closing.IsCancellationRequested && ReferenceEquals(_activePane, pane))
             {
                 ShowRefusal(error);
             }

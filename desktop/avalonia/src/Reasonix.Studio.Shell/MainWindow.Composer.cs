@@ -75,27 +75,35 @@ public sealed partial class MainWindow
             ToolTip.SetTip(ProjectName, status.WorkspaceRoot);
         }
 
-        if (_engine is null)
+        if (_engine is not { } engine)
         {
             return;
         }
 
-        var draftKey = DraftStore.KeyFor(_engine.DraftHost, status.WorkspaceRoot, status.SessionPath);
+        var draftKey = DraftStore.KeyFor(engine.DraftHost, status.WorkspaceRoot, status.SessionPath);
         if (draftKey != DraftKey)
         {
             CloseComposerMenus();
             ClearAttachments();
         }
 
-        _composer.Bind(_engine, draftKey);
+        _composer.Bind(engine, draftKey);
         UpdateComposerPending();
         Composer.Text = _composer.ReadDraft();
         Composer.CaretIndex = Composer.Text?.Length ?? 0;
         DismissRefinement();
         _ = CloseSideQuestionAsync();
-        _ = LoadComposeTelemetryAsync();
-        _ = RefreshModelCatalogAsync();
-        _ = LoadGitAsync();
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                if (!_closing.IsCancellationRequested && ReferenceEquals(_engine, engine) && DraftKey == draftKey)
+                {
+                    _ = LoadComposeTelemetryAsync();
+                    _ = RefreshModelCatalogAsync();
+                    _ = LoadGitAsync();
+                }
+            },
+            DispatcherPriority.Background);
     }
 
     /// <summary>

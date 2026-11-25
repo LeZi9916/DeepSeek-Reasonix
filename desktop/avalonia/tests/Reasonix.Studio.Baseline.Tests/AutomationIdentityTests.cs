@@ -40,7 +40,7 @@ public sealed class AutomationIdentityTests
         var observed = await session.Dispatch(
             () =>
             {
-                var page = new MainWindow();
+                var page = new MainWindow(connectOnOpen: false);
                 page.Show();
 
                 var found = new GeometryExporter(GeometryComparerOptions.Studio).Export(page);

@@ -17,6 +17,7 @@ using Reasonix.Studio.Shell;
 using Reasonix.Studio.Shell.Workspace;
 using Reasonix.Studio.State.Transcript;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -57,11 +58,18 @@ public sealed partial class NativeDomainTests
     [Fact]
     public Task SidebarRepeatedPendingOpenWaitsForAcknowledgement() => SidebarNavigationOrderAsync(false, coalesced: true);
 
+    /// <summary>The transcript is usable while the sidebar refresh still waits on the host.</summary>
+    /// <returns>The mounted conversation and its delayed sidebar.</returns>
+    [Fact]
+    public Task SidebarRefreshDoesNotHoldConversationOpen() => SidebarNavigationOrderAsync(false, coalesced: true, deferTree: true);
+
     /// <summary>Drives real pointer events through the window with controllable HTTP completion.</summary>
     /// <param name="retry">Whether the first selected target is refused.</param><param name="retained">Whether the final target is an existing tab.</param>
     /// <param name="recent">Whether recent history locates a target hidden by the current sidebar scope.</param>
-    /// <param name="coalesced">Whether two callers await the same opening target.</param><returns>The navigation boundary check.</returns>
-    private static async Task SidebarNavigationOrderAsync(bool retry, bool retained = false, bool recent = false, bool coalesced = false)
+    /// <param name="coalesced">Whether two callers await the same opening target.</param>
+    /// <param name="deferTree">Whether the focused runtime has a pending sidebar read.</param>
+    /// <returns>The navigation boundary check.</returns>
+    private static async Task SidebarNavigationOrderAsync(bool retry, bool retained = false, bool recent = false, bool coalesced = false, bool deferTree = false)
     {
         var session = HeadlessUnitTestSession.StartNew(typeof(RasterBuilder));
         await session.Dispatch(
@@ -70,7 +78,9 @@ public sealed partial class NativeDomainTests
                 using var reads = new ReferenceReads();
                 using var http = new HttpClient(reads) { BaseAddress = new Uri("http://127.0.0.1:4000") };
                 var clients = new List<HttpClient>();
-                var exchanges = new List<string>();
+                var exchanges = new ConcurrentQueue<string>();
+                var treeRequested = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                var treeResponse = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 var slow = new TaskCompletionSource<HttpResponseMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
                 var requests = 0;
                 var tree = new[]
@@ -81,7 +91,7 @@ public sealed partial class NativeDomainTests
                 HttpResponseMessage Descriptor(string path) => JsonReply(new JsonObject { ["id"] = path == "/slow.jsonl" ? "r8" : "r9", ["base"] = path == "/slow.jsonl" ? "/rt/r8" : "/rt/r9", ["root"] = path == "/slow.jsonl" ? "/slow-project" : "/fast-project", ["sessionPath"] = path });
                 reads.Exchange = async request =>
                 {
-                    exchanges.Add(request.Method + " " + request.RequestUri!.PathAndQuery);
+                    exchanges.Enqueue(request.Method + " " + request.RequestUri!.PathAndQuery);
                     if (request.RequestUri!.AbsolutePath == "/tree")
                     {
                         if (request.RequestUri.Query.Contains("order=recent", StringComparison.Ordinal))
@@ -122,9 +132,9 @@ public sealed partial class NativeDomainTests
                     }
 
                     var paneReads = new ReferenceReads();
-                    paneReads.Exchange = request =>
+                    paneReads.Exchange = async request =>
                     {
-                        exchanges.Add(request.Method + " " + request.RequestUri!.PathAndQuery);
+                        exchanges.Enqueue(request.Method + " " + request.RequestUri!.PathAndQuery);
                         var path = request.RequestUri!.AbsolutePath;
                         HttpResponseMessage? response = null;
                         if (path == "/status")
@@ -145,10 +155,16 @@ public sealed partial class NativeDomainTests
                         }
                         else if (path == "/tree")
                         {
+                            if (deferTree)
+                            {
+                                treeRequested.TrySetResult();
+                                await treeResponse.Task;
+                            }
+
                             response = JsonReply(JsonSerializer.SerializeToNode(tree)!);
                         }
 
-                        return Task.FromResult(response);
+                        return response;
                     };
                     var paneHttp = new HttpClient(paneReads) { BaseAddress = http.BaseAddress };
                     clients.Add(paneHttp);
@@ -184,7 +200,15 @@ public sealed partial class NativeDomainTests
                         var repeated = window.OpenTargetAsync(target);
                         Assert.False(repeated.IsCompleted, "The second caller returned before the shared runtime was acknowledged.");
                         slow.SetResult(Descriptor("/slow.jsonl"));
-                        await Task.WhenAll(opening, repeated);
+                        await Task.WhenAll(opening, repeated).WaitAsync(TimeSpan.FromSeconds(4));
+                        if (deferTree)
+                        {
+                            await treeRequested.Task.WaitAsync(TimeSpan.FromSeconds(4));
+                            Assert.False(window.FindControl<Control>("NavigationProgress")!.IsVisible);
+                            Assert.Contains(window.FindControl<SessionPage>("Conversation")!.State.Items.OfType<UserItem>(), item => item.Text == "body /slow.jsonl");
+                            Assert.False(treeResponse.Task.IsCompleted);
+                        }
+
                         Assert.Equal(1, requests);
                         Assert.Equal("Slow session", window.FindControl<TextBlock>("CrumbTitle")!.Text);
                         return 0;
@@ -220,6 +244,8 @@ public sealed partial class NativeDomainTests
                     {
                         Click("Fast session");
                         await Wait(() => window.FindControl<TextBlock>("CrumbTitle")!.Text == "Fast session");
+                        await Wait(() => window.FindControl<ProjectRail>("Projects")!.GetVisualDescendants().OfType<Button>()
+                            .Any(button => AutomationProperties.GetAutomationId(button) == "action:session.open" && AutomationProperties.GetName(button) == "Slow session"));
                     }
 
                     Click("Slow session");
@@ -261,6 +287,7 @@ public sealed partial class NativeDomainTests
                 finally
                 {
                     window.Close();
+                    treeResponse.TrySetResult();
                     foreach (var client in clients)
                     {
                         client.Dispose();

@@ -96,7 +96,8 @@ public sealed partial class SessionPage
     /// <summary>Restores a reader's position after the virtual panel applies a projection.</summary>
     /// <param name="anchor">Row and position from before the change.</param>
     /// <param name="preferUnread">Whether a pane without a saved position opens at its unread boundary.</param>
-    public void RestoreAnchor((string? Id, double Offset, double Inset) anchor, bool preferUnread = false)
+    /// <param name="applied">Called after the scroll position is committed.</param>
+    public void RestoreAnchor((string? Id, double Offset, double Inset) anchor, bool preferUnread = false, Action? applied = null)
     {
         var version = _viewportVersion;
         var ticket = ++_anchorTicket;
@@ -121,6 +122,8 @@ public sealed partial class SessionPage
                 {
                     _scroll.Offset = _scroll.Offset.WithY(anchor.Offset);
                 }
+
+                applied?.Invoke();
             },
             DispatcherPriority.Loaded);
     }

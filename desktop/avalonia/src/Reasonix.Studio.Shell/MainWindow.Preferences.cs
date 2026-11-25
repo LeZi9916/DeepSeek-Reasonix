@@ -51,12 +51,15 @@ public sealed partial class MainWindow
 
         try
         {
-            await PrepareFirstRunAsync(engine.Pages).ConfigureAwait(true);
-
-            var look = await engine.Pages.AppearanceAsync(_closing.Token).ConfigureAwait(true);
-            var fold = await engine.Pages.FlagAsync(StudioSetting.FoldWork, _closing.Token).ConfigureAwait(true);
-            ApplyAppearance(look, fold);
-            await LoadPaletteAsync(engine.Pages).ConfigureAwait(true);
+            var onboarding = PrepareFirstRunAsync(engine.Pages);
+            var look = engine.Pages.AppearanceAsync(_closing.Token);
+            var fold = engine.Pages.FlagAsync(StudioSetting.FoldWork, _closing.Token);
+            var palette = LoadPaletteAsync(engine.Pages, deferBackdrop: true);
+            await Task.WhenAll(onboarding, look, fold, palette).ConfigureAwait(true);
+            if (!_closing.IsCancellationRequested)
+            {
+                ApplyAppearance(await look.ConfigureAwait(true), await fold.ConfigureAwait(true));
+            }
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
         {
@@ -169,7 +172,13 @@ public sealed partial class MainWindow
 
     /// <summary>Restores the existing session and draft after closing a full-window sheet.</summary>
     /// <param name="animateSetupDeparture">Whether setup completed or was skipped from its final step.</param>
-    private async void ReturnToConversation(bool animateSetupDeparture = false)
+    private void ReturnToConversation(bool animateSetupDeparture = false) => _ = ReturnToConversationAsync(animateSetupDeparture);
+
+    /// <summary>Awaits any sheet departure before revealing or focusing the composer.</summary>
+    /// <param name="animateSetupDeparture">Whether setup completed or was skipped from its final step.</param>
+    /// <param name="current">Whether the navigation initiating the departure is still current.</param>
+    /// <returns>The conversation reveal.</returns>
+    private async Task ReturnToConversationAsync(bool animateSetupDeparture, Func<bool>? current = null)
     {
         if (SettingsPanel.IsVisible && !await MayLeaveSettingsAsync().ConfigureAwait(true))
         {
@@ -178,6 +187,11 @@ public sealed partial class MainWindow
 
         var leavingSetup = animateSetupDeparture && SetupPanel.IsVisible;
         if (leavingSetup && !await PlaySetupDepartureAsync().ConfigureAwait(true))
+        {
+            return;
+        }
+
+        if (_closing.IsCancellationRequested || current?.Invoke() == false)
         {
             return;
         }

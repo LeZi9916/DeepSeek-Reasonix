@@ -5,12 +5,14 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using Reasonix.Studio.Controls;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell;
@@ -177,8 +179,9 @@ public sealed partial class MainWindow
 
     /// <summary>Reads the kernel's selection and applies it to both window theme variants.</summary>
     /// <param name="api">The connected kernel.</param>
+    /// <param name="deferBackdrop">Whether the caller needs only the selected palette before presenting.</param>
     /// <returns>The inventory for the picker.</returns>
-    private async Task<JsonArray> LoadPaletteAsync(StudioPageClient api)
+    private async Task<JsonArray> LoadPaletteAsync(StudioPageClient api, bool deferBackdrop = false)
     {
         var ticket = ++_paletteRead;
         var packs = await api.ThemesAsync(_closing.Token).ConfigureAwait(true);
@@ -199,20 +202,45 @@ public sealed partial class MainWindow
 
             Classes.Set("illustrated", active?["sky"] is not null || (bool?)active?["background"]?["image"] == true);
             Backdrop.SetBusy(Conversation.State.Running);
-            try
+            if (deferBackdrop)
             {
-                await Backdrop.ApplyAsync(active, api, _closing.Token).ConfigureAwait(true);
+                Dispatcher.UIThread.Post(() => _ = ApplyPaletteBackdropAsync(active, api, ticket), DispatcherPriority.Background);
             }
-            catch (Exception error) when (!_closing.IsCancellationRequested)
+            else
             {
-                if (ticket == _paletteRead)
-                {
-                    SettingsError.Text = DescribeError(error);
-                }
+                await ApplyPaletteBackdropAsync(active, api, ticket).ConfigureAwait(true);
             }
         }
 
         return packs;
+    }
+
+    /// <summary>Applies the selected palette's optional artwork.</summary>
+    /// <param name="active">The current palette.</param>
+    /// <param name="api">The palette owner.</param>
+    /// <param name="ticket">The palette read generation.</param>
+    /// <returns>The optional backdrop update.</returns>
+    private async Task ApplyPaletteBackdropAsync(JsonObject? active, StudioPageClient api, long ticket)
+    {
+        if (_closing.IsCancellationRequested || ticket != _paletteRead)
+        {
+            return;
+        }
+
+        try
+        {
+            await Backdrop.ApplyAsync(active, api, _closing.Token).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException) when (_closing.IsCancellationRequested)
+        {
+        }
+        catch (Exception error)
+        {
+            if (!_closing.IsCancellationRequested && ticket == _paletteRead)
+            {
+                SettingsError.Text = DescribeError(error);
+            }
+        }
     }
 
     /// <summary>Displays installed color previews and saves a selection through the kernel.</summary>

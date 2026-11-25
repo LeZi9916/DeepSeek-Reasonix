@@ -3,6 +3,7 @@ using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Reasonix.Studio.Contracts.Diagnostics;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Startup;
@@ -34,18 +35,6 @@ public sealed partial class MainWindow
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
         {
-        }
-    }
-
-    /// <summary>Lets the intro yield after the initial session and preferences are visible.</summary>
-    /// <returns>The preparation of the first workspace view.</returns>
-    private async Task FinishStartupAsync()
-    {
-        await LoadStartupPreferencesAsync().ConfigureAwait(true);
-        if (!_closing.IsCancellationRequested)
-        {
-            StartupIntro.Progress(3);
-            StartupIntro.Complete();
         }
     }
 
@@ -101,9 +90,10 @@ public sealed partial class MainWindow
     /// <summary>Records a completed or explicitly dismissed first-run curtain.</summary>
     private void FinishFirstRunCurtain()
     {
-        if (Composer.IsEffectivelyVisible)
+        if (Composer.IsEffectivelyVisible && Composer.IsEffectivelyEnabled)
         {
             Composer.Focus();
+            StudioPerformance.Record("startup.workspace-handoff", Program.BootStarted);
         }
 
         _ = MarkFirstRunWelcomedAsync();

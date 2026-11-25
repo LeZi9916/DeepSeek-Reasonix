@@ -1,3 +1,4 @@
+using Reasonix.Studio.Contracts.Diagnostics;
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -12,7 +13,9 @@ public sealed partial class KernelClient
     /// <returns>The acknowledged page or null when unsupported.</returns>
     public async Task<HistoryPage?> HistoryPageAsync(string? cursor = null, CancellationToken token = default)
     {
+        var request = StudioPerformance.Timestamp();
         using var reply = await _http.GetAsync("/history/page" + (string.IsNullOrEmpty(cursor) ? string.Empty : "?cursor=" + Uri.EscapeDataString(cursor)), HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+        StudioPerformance.Record("history.http-headers", request);
         try
         {
             await EnsureAsync(reply, token).ConfigureAwait(false);
@@ -22,7 +25,10 @@ public sealed partial class KernelClient
             return null;
         }
 
+        var decode = StudioPerformance.Timestamp();
         await using var body = await reply.Content.ReadAsStreamAsync(token).ConfigureAwait(false);
-        return await JsonSerializer.DeserializeAsync<HistoryPage>(body, cancellationToken: token).ConfigureAwait(false);
+        var page = await JsonSerializer.DeserializeAsync<HistoryPage>(body, cancellationToken: token).ConfigureAwait(false);
+        StudioPerformance.Record("history.body-and-decode", decode);
+        return page;
     }
 }

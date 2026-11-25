@@ -65,7 +65,7 @@ public sealed partial class MainWindow
     /// <returns>A task that completes once the column is drawn.</returns>
     private async Task LoadTreeAsync()
     {
-        if (_engine is null)
+        if (_closing.IsCancellationRequested || _engine is not { } engine)
         {
             return;
         }
@@ -74,8 +74,8 @@ public sealed partial class MainWindow
         try
         {
             var query = Projects.WindowFor(RailSearch.Text?.Trim() ?? string.Empty, HideLegacySessions);
-            var tree = await _engine.TreeAsync(query, _closing.Token).ConfigureAwait(true);
-            if (ticket == _treeRead)
+            var tree = await engine.TreeAsync(query, _closing.Token).ConfigureAwait(true);
+            if (!_closing.IsCancellationRequested && ticket == _treeRead && ReferenceEquals(_engine, engine))
             {
                 ShowTree(tree);
                 await LoadRemoteSidebarAsync(query, ticket).ConfigureAwait(true);
@@ -89,7 +89,10 @@ public sealed partial class MainWindow
         {
             // A tree that could not be read leaves the column as it was; the
             // transcript is what the window is for, and it keeps working.
-            ShowRefusal(error);
+            if (!_closing.IsCancellationRequested && ticket == _treeRead && ReferenceEquals(_engine, engine))
+            {
+                ShowRefusal(error);
+            }
         }
     }
 

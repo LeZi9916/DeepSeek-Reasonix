@@ -72,6 +72,50 @@ public sealed class HistoryPagingTests
         Assert.Equal(1, handler.LegacyReads);
     }
 
+    /// <summary>Concurrent readers share one history request and publish one snapshot.</summary>
+    /// <returns>The shared history read.</returns>
+    [Fact]
+    public async Task ConcurrentHistoryReadsPublishOnce()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new HistoryHandler { ReleasePage = release.Task };
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("http://127.0.0.1:4000") };
+        await using var engine = new SessionEngine(new KernelClient(http), new HistoryLiveTransport());
+        var publications = 0;
+        engine.Changed += _ => Interlocked.Increment(ref publications);
+
+        var first = engine.LoadHistoryAsync();
+        var second = engine.LoadHistoryAsync();
+        release.SetResult();
+        await Task.WhenAll(first, second);
+
+        Assert.Equal(1, handler.PageReads);
+        Assert.Equal(1, publications);
+        Assert.True(engine.History.Initialized);
+    }
+
+    /// <summary>Cancelling one wait leaves the shared history read available to another caller.</summary>
+    /// <returns>The completed read after its first waiter cancelled.</returns>
+    [Fact]
+    public async Task CancellingOneWaitKeepsTheSharedRead()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var handler = new HistoryHandler { ReleasePage = release.Task };
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("http://127.0.0.1:4000") };
+        await using var engine = new SessionEngine(new KernelClient(http), new HistoryLiveTransport());
+        using var cancellation = new CancellationTokenSource();
+        var cancelled = engine.LoadHistoryAsync(cancellation.Token);
+        var shared = engine.LoadHistoryAsync();
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelled);
+        Assert.False(shared.IsCompleted);
+
+        release.SetResult();
+        await shared;
+        Assert.Equal(1, handler.PageReads);
+        Assert.True(engine.History.Initialized);
+    }
+
     /// <summary>Delivers a live turn after the retained history snapshot.</summary>
     private sealed class HistoryLiveTransport : IEventTransport
     {
@@ -93,6 +137,9 @@ public sealed class HistoryPagingTests
     /// <summary>Serves canonical immutable history windows and typed refusals.</summary>
     private sealed class HistoryHandler : HttpMessageHandler
     {
+        /// <summary>Counts history-page requests.</summary>
+        private int _pageReads;
+
         /// <summary>Gets or initializes a value indicating whether the host lacks pagination.</summary>
         internal bool Legacy
         {
@@ -111,30 +158,38 @@ public sealed class HistoryPagingTests
             get; private set;
         }
 
+        /// <summary>Gets or initializes the gate delaying a page response.</summary>
+        internal Task ReleasePage { get; init; } = Task.CompletedTask;
+
+        /// <summary>Gets the number of history-page requests.</summary>
+        internal int PageReads => Volatile.Read(ref _pageReads);
+
         /// <inheritdoc/>
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             if (Fail)
             {
-                return Task.FromResult(Reply("{\"code\":\"history.unavailable\",\"error\":\"read failed\"}", HttpStatusCode.InternalServerError));
+                return Reply("{\"code\":\"history.unavailable\",\"error\":\"read failed\"}", HttpStatusCode.InternalServerError);
             }
 
             if (request.RequestUri!.AbsolutePath == "/history")
             {
                 LegacyReads++;
-                return Task.FromResult(Reply("[{\"role\":\"user\",\"content\":\"legacy question\",\"msgIndex\":0}]"));
+                return Reply("[{\"role\":\"user\",\"content\":\"legacy question\",\"msgIndex\":0}]");
             }
 
             Assert.Equal("/history/page", request.RequestUri.AbsolutePath);
             if (Legacy)
             {
-                return Task.FromResult(Reply("{\"code\":\"history.pagination_unsupported\",\"error\":\"not supported\"}", HttpStatusCode.NotFound));
+                return Reply("{\"code\":\"history.pagination_unsupported\",\"error\":\"not supported\"}", HttpStatusCode.NotFound);
             }
 
+            Interlocked.Increment(ref _pageReads);
+            await ReleasePage.WaitAsync(cancellationToken);
             var first = request.RequestUri.Query.Length == 0;
-            return Task.FromResult(Reply(first
+            return Reply(first
                 ? "{\"messages\":[{\"role\":\"tool\",\"toolCallId\":\"call-1\",\"content\":\"actual file contents\",\"msgIndex\":2},{\"role\":\"assistant\",\"content\":\"final reply\",\"msgIndex\":3}],\"toolContext\":[{\"messageIndex\":1,\"ordinal\":0,\"call\":{\"id\":\"call-1\",\"name\":\"read_file\",\"arguments\":\"{\\\"path\\\":\\\"a.md\\\"}\"}}],\"snapshot\":\"s1\",\"start\":2,\"end\":4,\"total\":4,\"hasMoreBefore\":true,\"nextCursor\":\"previous\"}"
-                : "{\"messages\":[{\"role\":\"user\",\"content\":\"question\",\"msgIndex\":0},{\"role\":\"assistant\",\"content\":\"\",\"toolCalls\":[{\"id\":\"call-1\",\"name\":\"read_file\",\"arguments\":\"{\\\"path\\\":\\\"a.md\\\"}\"}],\"msgIndex\":1}],\"toolContext\":[],\"snapshot\":\"s1\",\"start\":0,\"end\":2,\"total\":4,\"hasMoreBefore\":false}"));
+                : "{\"messages\":[{\"role\":\"user\",\"content\":\"question\",\"msgIndex\":0},{\"role\":\"assistant\",\"content\":\"\",\"toolCalls\":[{\"id\":\"call-1\",\"name\":\"read_file\",\"arguments\":\"{\\\"path\\\":\\\"a.md\\\"}\"}],\"msgIndex\":1}],\"toolContext\":[],\"snapshot\":\"s1\",\"start\":0,\"end\":2,\"total\":4,\"hasMoreBefore\":false}");
         }
 
         /// <summary>Creates a canonical JSON history response.</summary>

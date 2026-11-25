@@ -17,6 +17,11 @@ internal sealed class BootSky
     /// <summary>Time when the sky stops moving.</summary>
     internal const double Quiet = 1500;
 
+    /// <summary>Reuses the star inks at the exact alpha values used by the animation.</summary>
+    private static readonly IBrush[] s_starInk = Enumerable.Range(0, 256)
+        .Select(alpha => new SolidColorBrush(Color.FromArgb((byte)alpha, 226, 224, 240)).ToImmutable())
+        .ToArray();
+
     /// <summary>The positions and brightness of the stars for this launch.</summary>
     private readonly Star[] _stars;
 
@@ -165,6 +170,7 @@ internal sealed class BootSky
     /// <param name="time">The elapsed time.</param>
     private void DrawStars(DrawingContext context, Size size, Point impact, double time)
     {
+        var viewport = new Rect(size).Inflate(2);
         var zoom = Zoom(time);
         var previous = Zoom(time - 18);
         var dim = time >= Hit ? 0.45 + (0.2 * Unit((time - Hit) / 800)) : 1;
@@ -172,14 +178,21 @@ internal sealed class BootSky
         {
             var distance = new Point(star.X * size.Width, star.Y * size.Height) - impact;
             var at = impact + (distance * zoom);
+            var tail = zoom > 1.03 ? impact + (distance * previous) : at;
+            if ((at.X < viewport.X && tail.X < viewport.X) || (at.X > viewport.Right && tail.X > viewport.Right)
+                || (at.Y < viewport.Y && tail.Y < viewport.Y) || (at.Y > viewport.Bottom && tail.Y > viewport.Bottom))
+            {
+                continue;
+            }
+
             var brightness = star.Alpha * dim * (0.8 + (0.2 * Math.Sin((time / 420) + star.Wave)));
             if (zoom > 1.03)
             {
-                context.DrawLine(new Pen(Ink(236, 228, 214, brightness), star.Size, lineCap: PenLineCap.Round), impact + (distance * previous), at);
+                context.DrawLine(new Pen(Ink(236, 228, 214, brightness), star.Size, lineCap: PenLineCap.Round), tail, at);
             }
             else
             {
-                context.DrawEllipse(Ink(226, 224, 240, brightness), null, at, star.Size / 2, star.Size / 2);
+                context.DrawEllipse(s_starInk[(int)Math.Round(Unit(brightness) * 255)], null, at, star.Size / 2, star.Size / 2);
             }
         }
     }

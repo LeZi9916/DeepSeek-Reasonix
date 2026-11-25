@@ -28,14 +28,14 @@ public sealed class SessionLauncher
     /// <summary>
     /// Starts a kernel from a binary path.
     /// </summary>
-    private readonly Func<string, Task<LaunchedKernel>> _start;
+    private readonly Func<string, CancellationToken, Task<LaunchedKernel>> _start;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SessionLauncher"/> class that
     /// finds and starts the shipped kernel.
     /// </summary>
     public SessionLauncher()
-        : this(HostLauncher.Locate, binary => HostLauncher.StartAsync(binary, Arguments()))
+        : this(HostLauncher.Locate, (binary, token) => HostLauncher.StartAsync(binary, Arguments(), token))
     {
     }
 
@@ -49,9 +49,17 @@ public sealed class SessionLauncher
     /// Thrown when <paramref name="locate"/> or <paramref name="start"/> is null.
     /// </exception>
     public SessionLauncher(Func<string?> locate, Func<string, Task<LaunchedKernel>> start)
+        : this(locate, WithoutCancellation(start))
+    {
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="SessionLauncher"/> class with cancellable startup.</summary>
+    /// <param name="locate">Finds the host binary.</param>
+    /// <param name="start">Starts the host and awaits its handshake.</param>
+    private SessionLauncher(Func<string?> locate, Func<string, CancellationToken, Task<LaunchedKernel>> start)
     {
         _locate = locate ?? throw new ArgumentNullException(nameof(locate));
-        _start = start ?? throw new ArgumentNullException(nameof(start));
+        _start = start;
     }
 
     /// <summary>
@@ -75,7 +83,22 @@ public sealed class SessionLauncher
     /// The engine, or the reason there is none. A caller shows the reason; it never
     /// has to distinguish a missing binary from a kernel that would not start.
     /// </returns>
-    public async Task<SessionLaunch> LaunchAsync(CancellationToken cancellationToken = default)
+    public Task<SessionLaunch> LaunchAsync(CancellationToken cancellationToken = default) =>
+        Task.Run(() => LaunchCoreAsync(cancellationToken), cancellationToken);
+
+    /// <summary>Adapts an injected launcher whose handshake cannot be cancelled.</summary>
+    /// <param name="start">The injected launcher.</param>
+    /// <returns>The adapted launcher.</returns>
+    private static Func<string, CancellationToken, Task<LaunchedKernel>> WithoutCancellation(Func<string, Task<LaunchedKernel>> start)
+    {
+        ArgumentNullException.ThrowIfNull(start);
+        return (path, _) => start(path);
+    }
+
+    /// <summary>Locates the executable and opens its stdio handshake off the dispatcher.</summary>
+    /// <param name="cancellationToken">Cancels the handshake.</param>
+    /// <returns>The outcome of the host handshake.</returns>
+    private async Task<SessionLaunch> LaunchCoreAsync(CancellationToken cancellationToken)
     {
         var binary = _locate();
         if (binary is null)
@@ -87,8 +110,12 @@ public sealed class SessionLauncher
 
         try
         {
-            var kernel = await _start(binary).ConfigureAwait(false);
+            var kernel = await _start(binary, cancellationToken).ConfigureAwait(false);
             return new SessionLaunch(new SessionEngine(kernel), null);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception error)
         {
