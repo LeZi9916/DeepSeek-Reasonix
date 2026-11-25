@@ -15,6 +15,7 @@
       </ControlTemplate></Setter>
     </Style>
     <Style Selector="Button.ext-switch-tab">
+      <Setter Property="Background" Value="{DynamicResource RaisedClearBrush}"/>
       <Setter Property="Height" Value="25"/><Setter Property="Padding" Value="10,0"/><Setter Property="CornerRadius" Value="5"/>
     </Style>
     <Style Selector="Button.ext-switch-tab.active">

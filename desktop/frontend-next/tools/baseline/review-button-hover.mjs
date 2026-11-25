@@ -3,12 +3,23 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const output = process.env.STUDIO_MOTION_OUTPUT ?? fileURLToPath(new URL("../../../avalonia/bin/parity/button-hover/", import.meta.url));
-const review = fileURLToPath(new URL("../../../avalonia/reviews/button-hover/", import.meta.url));
+const tabs = process.argv.includes("--tabs");
+const kind = tabs ? "tab-hover" : "button-hover";
+const output = process.env.STUDIO_MOTION_OUTPUT ?? fileURLToPath(new URL(`../../../avalonia/bin/parity/${kind}/`, import.meta.url));
+const review = fileURLToPath(new URL(`../../../avalonia/reviews/${kind}/`, import.meta.url));
 const base = process.env.PERF_URL ?? "http://127.0.0.1:4399/perf.html";
 const viewport = { width: 1440, height: 900 };
 const phases = [["rest", "静止"], ["enter", "移入约 35 ms"], ["hover", "悬浮稳定"], ["exit", "移开约 35 ms"], ["restored", "恢复静止"]];
-const cases = [
+const cases = tabs ? [
+  ["session-tab", "未选中会话标签", '.ptab[aria-selected="false"]'],
+  ["session-current", "当前会话标签", '.ptab[aria-selected="true"]'],
+  ["rail-tab", "侧栏最近会话", '.rail [data-action="session.recent"]'],
+  ["file-tab", "工作台文件标签", ".workbench-tab", "workbench"],
+  ["browser-current", "当前浏览器标签", '.workbench-tab[aria-selected="true"]', "workbench"],
+  ["browser-tab", "未选中浏览器标签", '.workbench-tab[aria-selected="false"]', "workbench-two-browsers"],
+  ["settings-tab", "设置导航标签", '.prefs-nav button[aria-selected="false"]:not(:disabled)', "settings:ext"],
+  ["extension-tab", "扩展发现标签", '.mkt-tabs button[aria-selected="false"]', "settings:ext"],
+] : [
   ["chrome", "工作台入口", '.chrome [data-action="pane.view"][data-value="browser"]'],
   ["settings", "侧栏设置", ".studio-settings"],
   ["attach", "添加附件", ".compose .turntools > .studio-attach:first-child"],
@@ -29,26 +40,34 @@ try {
   for (const scheme of ["light", "dark"]) {
     const context = await browser.newContext({ viewport, colorScheme: scheme, deviceScaleFactor: 1 });
     const report = [];
-    for (const scene of ["conversation", "running", "workbench"]) {
+    if (tabs) await context.addInitScript(() => localStorage.setItem("rx-show-session-tabs", "on"));
+    for (const scene of new Set(cases.map(item => item[3] ?? "conversation"))) {
       const page = await context.newPage();
       const url = new URL(base);
-      url.search = new URLSearchParams({ pref: "zh", ws: "2", sess: "6", turns: "2", screen: scene === "workbench" ? scene : "conversation" });
+      url.search = new URLSearchParams({ pref: "zh", ws: "2", sess: "6", turns: "2", screen: scene.startsWith("workbench") ? "workbench" : scene === "running" ? "conversation" : scene });
+      if (tabs && scene === "conversation") url.searchParams.set("panes", "2");
       if (scene === "running") url.searchParams.set("running", "");
       await page.goto(url.href, { waitUntil: "networkidle" });
       await page.evaluate(() => document.fonts.ready);
       await page.addStyleTag({ content: "* { caret-color: transparent !important; }" });
-      if (scene === "conversation") {
+      if (!tabs && scene === "conversation") {
         await page.locator(".compose textarea").fill("Hover");
         await page.locator(".compose textarea").blur();
       }
-      if (scene === "workbench") {
+      if (scene.startsWith("workbench")) {
         await page.locator('[data-action-click="workbench.file"]').first().click();
         await page.locator('[data-action="workbench.new"]').click();
         await page.locator('[data-action="workbench.launch-browser"]').click();
+        if (scene === "workbench-two-browsers") {
+          await page.locator('[data-action="workbench.new"]').click();
+          await page.locator('[data-action="workbench.launch-browser"]').click();
+        }
       }
       for (const [stem, label, selector] of cases.filter(item => (item[3] ?? "conversation") === scene)) {
         let target = page.locator(selector);
-        if (stem === "file-tab") target = target.filter({ hasText: "README.md" }).first();
+        if (stem === "file-tab") target = target.filter({ hasText: "README.md" });
+        if (stem === "browser-tab") target = target.filter({ hasText: "浏览器" });
+        target = target.first();
         await target.waitFor();
         await page.mouse.move(700, 80);
         await page.waitForTimeout(150);
@@ -70,7 +89,7 @@ try {
             // Reading style starts transitions for the current pointer state.
             const transition = style.transition;
             if (time !== "finish" && node.matches(":hover") !== hover) throw new Error("Unexpected pointer state");
-            for (const animation of node.getAnimations().filter(animation => animation instanceof CSSTransition)) {
+            for (const animation of node.getAnimations({ subtree: true }).filter(animation => animation instanceof CSSTransition)) {
               if (time === "finish") animation.finish();
               else if (typeof time === "number") {
                 animation.pause();
@@ -104,7 +123,7 @@ async function compare(context, scheme) {
     }));
     return `<tbody><tr><th colspan="6">${label}</th></tr>${pair.join("")}</tbody>`;
   }));
-  await page.setViewportSize({ width: 1040, height: 1260 });
+  await page.setViewportSize({ width: 1040, height: tabs ? 900 : 1260 });
   await page.setContent(`<!doctype html><html lang="zh-CN"><meta charset="utf-8">
     <style>
       :root { color-scheme: ${scheme}; font: 14px system-ui; }
@@ -118,7 +137,7 @@ async function compare(context, scheme) {
       tbody th[scope=row] { text-align: left; font-weight: 400; }
       img { display: block; max-width: 100%; height: auto; margin: auto; }
     </style>
-    <h1>按钮悬浮与移开 · ${scheme === "dark" ? "深色" : "浅色"}</h1>
+    <h1>${tabs ? "选项卡" : "按钮"}悬浮与移开 · ${scheme === "dark" ? "深色" : "浅色"}</h1>
     <p>1440 × 900 · 1× · Electron 前端由 Chromium 渲染，Avalonia 由 Skia 渲染</p>
     <table><col style="width: 120px"><thead><tr><th>前端</th>${phases.map(([, label]) => `<th scope="col">${label}</th>`).join("")}</tr></thead>
     ${rows.join("")}</table></html>`);

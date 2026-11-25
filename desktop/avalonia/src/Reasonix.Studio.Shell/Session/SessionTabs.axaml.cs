@@ -153,7 +153,6 @@ internal sealed partial class SessionTabs : UserControl
             }
 
             var button = new Button { Classes = { "pane-tab" }, Content = content };
-            button.Classes.Set("current", ReferenceEquals(pane, active));
             AutomationProperties.SetAutomationId(button, "action:pane.activate");
             AutomationProperties.SetName(button, pane.Status.Label);
             ToolTip.SetTip(button, pane.Host.Length > 0 ? pane.Host + " · " + pane.Status.WorkspaceRoot : pane.Status.WorkspaceRoot);
@@ -175,13 +174,15 @@ internal sealed partial class SessionTabs : UserControl
             button.ContextFlyout = menu;
             var close = new Button { Content = "×" };
             close.Classes.Add("pane-close");
-            close.Classes.Set("current", ReferenceEquals(pane, active));
             AutomationProperties.SetAutomationId(close, "action:pane.close");
             AutomationProperties.SetName(close, MessageCatalog.Get("workbench.close_tab", language));
             close.Click += (_, _) => CloseRequested?.Invoke([pane]);
-            var group = new StackPanel { Orientation = Orientation.Horizontal, Classes = { "pane-tab-group" }, Children = { button, close } };
-            Tabs.Children.Add(group);
-            if (ReferenceEquals(pane, active))
+            var group = new StackPanel { Orientation = Orientation.Horizontal, Children = { button, close } };
+            var frame = new Border { Classes = { "pane-tab-frame" }, Child = group };
+            var current = ReferenceEquals(pane, active);
+            frame.Classes.Set("current", current);
+            Tabs.Children.Add(frame);
+            if (current)
             {
                 _activeGroup = group;
             }

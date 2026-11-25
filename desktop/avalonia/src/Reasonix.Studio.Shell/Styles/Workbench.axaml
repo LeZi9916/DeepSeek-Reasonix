@@ -125,7 +125,7 @@
   <Style Selector="workbench|WorkbenchHeaderTab"><Setter Property="Height" Value="34"/></Style>
   <Style Selector="workbench|WorkbenchHeaderTab.active"><Setter Property="Height" Value="35"/></Style>
   <Style Selector="Border.wb-tab-frame">
-    <Setter Property="BorderThickness" Value="1,1,1,0"/><Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="1,1,1,0"/><Setter Property="BorderBrush" Value="{DynamicResource BorderClearBrush}"/>
     <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/><Setter Property="CornerRadius" Value="10,10,0,0"/>
   </Style>
   <Style Selector="Window.motion Border.wb-tab-frame">
@@ -156,6 +156,7 @@
     <Setter Property="Width" Value="22"/><Setter Property="VerticalAlignment" Value="Stretch"/>
     <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="Opacity" Value="0.4"/>
   </Style>
+  <Style Selector="Button.wb-tab-close:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
   <Style Selector="workbench|WorkbenchHeaderTab:pointerover Button.wb-tab-close, workbench|WorkbenchHeaderTab.active Button.wb-tab-close, workbench|WorkbenchHeaderTab.dirty Button.wb-tab-close, Button.wb-tab-close:focus-visible"><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="workbench|WorkbenchHeaderTab.dirty Viewbox#CloseGlyph"><Setter Property="IsVisible" Value="False"/></Style>
   <Style Selector="workbench|WorkbenchHeaderTab Border#DirtyMark"><Setter Property="IsVisible" Value="False"/></Style>

@@ -40,6 +40,8 @@
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
       <SolidColorBrush x:Key="OverlayClearBrush" Color="{DynamicResource Overlay}" Opacity="0"/>
+      <SolidColorBrush x:Key="RaisedClearBrush" Color="{DynamicResource Raised}" Opacity="0"/>
+      <SolidColorBrush x:Key="BorderClearBrush" Color="{DynamicResource Border}" Opacity="0"/>
     </ResourceDictionary>
   </Window.Resources>
   <Window.Styles>

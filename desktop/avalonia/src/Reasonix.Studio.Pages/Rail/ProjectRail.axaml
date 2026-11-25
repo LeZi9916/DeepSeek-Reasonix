@@ -15,9 +15,10 @@
         </Border>
       </ControlTemplate></Setter>
     </Style>
-    <Style Selector="Button.rail-button:pointerover /template/ Border#Frame"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
-    <Style Selector="Button.rail-button:pressed /template/ Border#Frame"><Setter Property="Background" Value="{DynamicResource BorderBrush}"/></Style>
+    <Style Selector="Button.rail-button:not(.rail-tab):pointerover /template/ Border#Frame"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+    <Style Selector="Button.rail-button:not(.rail-tab):pressed /template/ Border#Frame"><Setter Property="Background" Value="{DynamicResource BorderBrush}"/></Style>
     <Style Selector="Button.rail-tab"><Setter Property="Height" Value="22"/><Setter Property="Padding" Value="8,0"/><Setter Property="CornerRadius" Value="5"/><Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+    <Style Selector="Window.motion Button.rail-tab"><Setter Property="Transitions" Value="{x:Null}"/></Style>
     <Style Selector="Button.rail-tab.selected"><Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
     <Style Selector="Button.rail-icon"><Setter Property="Width" Value="26"/><Setter Property="Height" Value="26"/><Setter Property="HorizontalContentAlignment" Value="Center"/></Style>
     <Style Selector="Button.session-more"><Setter Property="Height" Value="29"/><Setter Property="Margin" Value="3,2,9,5"/><Setter Property="Padding" Value="9,0"/><Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Left"/></Style>

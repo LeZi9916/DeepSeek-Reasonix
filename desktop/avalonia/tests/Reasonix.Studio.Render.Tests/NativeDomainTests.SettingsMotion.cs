@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Animation;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
@@ -10,6 +11,7 @@ using Avalonia.VisualTree;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Settings;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -126,13 +128,14 @@ public sealed partial class NativeDomainTests
     [Fact]
     public Task SettingsControlsCarryReferenceTransitions() =>
         WithSettingsAsync(
-            "settings-common",
+            "settings-controls",
             async (w, _) =>
             {
                 await WaitForSettingsFrame(() => w.Classes.Contains("motion")).ConfigureAwait(true);
+                w.RequestedThemeVariant = ThemeVariant.Dark;
                 var nav = w.FindControl<ListBox>("SettingsNav")!;
                 var item = nav.GetVisualDescendants().OfType<ListBoxItem>().First(container =>
-                    container.DataContext?.ToString() == MessageCatalog.Get("common.models", InterfaceLanguage.Zh));
+                    !container.IsSelected);
                 Assert.Contains(item.Transitions!.OfType<BrushTransition>(), transition => transition.Property == ListBoxItem.BackgroundProperty);
                 Assert.Contains(item.Transitions!.OfType<BrushTransition>(), transition => transition.Property == ListBoxItem.ForegroundProperty);
 
@@ -142,12 +145,26 @@ public sealed partial class NativeDomainTests
                 Assert.Contains(searchFrame.Transitions!.OfType<BrushTransition>(), transition => transition.Property == Border.BorderBrushProperty);
 
                 var choice = w.FindControl<StackPanel>("SettingsBody")!.GetVisualDescendants()
-                    .OfType<RadioButton>().First(radio => radio.Classes.Contains("segmented") && radio.IsChecked != true);
+                    .OfType<RadioButton>().First(radio => AutomationProperties.GetAutomationId(radio) == "action:appearance.esc-stop" && radio.IsChecked != true);
                 Assert.Contains(choice.Transitions!.OfType<BrushTransition>(), transition => transition.Property == TemplatedControl.BackgroundProperty);
                 Assert.Contains(choice.Transitions!.OfType<BrushTransition>(), transition => transition.Property == TemplatedControl.ForegroundProperty);
                 Assert.Contains(choice.Transitions!.OfType<TransformOperationsTransition>(), transition => transition.Property == Visual.RenderTransformProperty);
+                var paints = new List<Color>();
+                choice.PropertyChanged += (_, change) =>
+                {
+                    if (change.Property == TemplatedControl.BackgroundProperty && choice.Background is ISolidColorBrush brush)
+                    {
+                        paints.Add(brush.Color);
+                    }
+                };
+                Assert.Equal(0, Assert.IsAssignableFrom<ISolidColorBrush>(choice.Background).Opacity);
                 choice.IsChecked = true;
-                await WaitForSettingsFrame(() => choice.Background is ISolidColorBrush brush && brush.Color.A is > 10 and < 245).ConfigureAwait(true);
+                Assert.True(choice.IsAnimating(TemplatedControl.BackgroundProperty));
+                await WaitForSettingsFrame(() => !choice.IsAnimating(TemplatedControl.BackgroundProperty)).ConfigureAwait(true);
+                Assert.True(w.TryFindResource("RaisedBrush", w.ActualThemeVariant, out var raised));
+                Assert.Same(raised, choice.Background);
+                var expected = Assert.IsAssignableFrom<ISolidColorBrush>(raised).Color;
+                Assert.All(paints, paint => Assert.Equal(expected, paint));
             },
             allowMotion: true);
 
