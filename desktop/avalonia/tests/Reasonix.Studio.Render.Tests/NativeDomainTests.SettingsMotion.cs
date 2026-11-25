@@ -151,6 +151,25 @@ public sealed partial class NativeDomainTests
             },
             allowMotion: true);
 
+    /// <summary>Checks the settings search results' short reference entrance.</summary>
+    /// <returns>The search-results entrance check.</returns>
+    [Fact]
+    public Task SettingsSearchResultsEnterWithTheReferenceCardMotion() =>
+        WithSettingsAsync(
+            "settings-common",
+            async (w, _) =>
+            {
+                await WaitForSettingsFrame(() => w.Classes.Contains("motion")).ConfigureAwait(true);
+                var search = w.FindControl<TextBox>("SettingsSearch")!;
+                var panel = w.FindControl<Border>("SearchResultsPanel")!;
+                search.Text = "模型";
+                Dispatcher.UIThread.RunJobs();
+                await WaitForSettingsFrame(() => panel.IsVisible && panel.Opacity is > 0 and < 0.999 &&
+                    panel.RenderTransform!.Value.M32 > 0.4).ConfigureAwait(true);
+                await WaitForSettingsFrame(() => panel.Opacity == 1 && panel.RenderTransform!.Value.M32 == 0).ConfigureAwait(true);
+            },
+            allowMotion: true);
+
     /// <summary>Keeps section changes and page-index jumps still when motion is off.</summary>
     /// <returns>The reduced-motion check.</returns>
     [Fact]

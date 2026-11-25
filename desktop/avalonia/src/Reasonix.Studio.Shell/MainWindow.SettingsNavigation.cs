@@ -137,6 +137,8 @@ public sealed partial class MainWindow
             return;
         }
 
+        var wasVisible = SearchResultsPanel.IsVisible;
+
         var hits = new List<SettingHit>();
         foreach (var (id, key) in s_sections)
         {
@@ -172,6 +174,10 @@ public sealed partial class MainWindow
         NoSettingsHits.IsVisible = hits.Count == 0;
         NoSettingsHits.Text = MessageCatalog.Get("settings.no_matching_setting", Language);
         SearchResultsPanel.IsVisible = true;
+        if (!wasVisible)
+        {
+            EnterSearchResults();
+        }
     }
 
     /// <summary>Tests whether the local host exposes this setting.</summary>
