@@ -158,6 +158,7 @@ public sealed partial class MainWindow
     private void RebuildAttachments()
     {
         AttachmentStrip.Children.Clear();
+        var index = 0;
         foreach (var attachment in _attachments.ToArray())
         {
             var chip = new Border { Classes = { "attachment-chip" } };
@@ -232,7 +233,15 @@ public sealed partial class MainWindow
             row.Children.Add(remove);
             chip.Child = row;
             AttachmentStrip.Children.Add(chip);
+            if (_renderedAttachments.Add(attachment))
+            {
+                EnterAttachment(chip, index);
+            }
+
+            index++;
         }
+
+        _renderedAttachments.IntersectWith(_attachments);
 
         AttachmentArea.IsVisible = _attachments.Count > 0;
         UpdateAttachmentWarning();

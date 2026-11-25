@@ -72,6 +72,24 @@ public sealed partial class NativeDomainTests
             Assert.False(w.FindControl<StackPanel>("AttachmentArea")!.IsVisible);
         });
 
+    /// <summary>A new attachment chip replays the reference staggered card entrance.</summary>
+    /// <returns>The attachment entrance check.</returns>
+    [Fact]
+    public Task AttachmentChipEntersWithTheReferenceCardMotion() =>
+        WithSettingsAsync(
+            "conversation",
+            async (w, _) =>
+            {
+                await WaitForSettingsFrame(() => w.Classes.Contains("motion")).ConfigureAwait(true);
+                var add = typeof(MainWindow).GetMethod("AddPasteChip", BindingFlags.Instance | BindingFlags.NonPublic)!;
+                add.Invoke(w, [new string('x', 4001)]);
+                var chip = Assert.IsType<Border>(w.FindControl<WrapPanel>("AttachmentStrip")!.Children[0]);
+                await WaitForSettingsFrame(() => chip.Opacity is > 0 and < 0.999 &&
+                    chip.RenderTransform!.Value.M32 > 0.4).ConfigureAwait(true);
+                await WaitForSettingsFrame(() => chip.Opacity == 1 && chip.RenderTransform!.Value.M32 == 0).ConfigureAwait(true);
+            },
+            allowMotion: true);
+
     /// <summary>A refused drop keeps its reason and a retry action.</summary>
     /// <returns>The failure chip.</returns>
     [Fact]
