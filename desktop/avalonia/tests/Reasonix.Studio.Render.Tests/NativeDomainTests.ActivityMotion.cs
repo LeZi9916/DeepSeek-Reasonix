@@ -84,8 +84,11 @@ public sealed partial class NativeDomainTests
                 w.UpdateLayout();
                 Dispatcher.UIThread.RunJobs();
                 var settled = Header().GetVisualDescendants().OfType<Viewbox>().Single(icon => icon.Name == "StaticStatus");
-                await WaitForMotionFrame(() => settled.RenderTransform!.Value.M11 > 1.08).ConfigureAwait(true);
+                var glyph = Header().GetVisualDescendants().OfType<Viewbox>().Single(icon => icon.Name == "ToolKind");
+                await WaitForMotionFrame(() => glyph.RenderTransform!.Value.M11 < 0.95).ConfigureAwait(true);
                 CaptureMotionRegion(w, Header(), -4, 4, 760, 54, $"activity-pop-{scheme}-110");
+                await WaitForMotionFrame(() => settled.RenderTransform!.Value.M11 > 1.08).ConfigureAwait(true);
+                await WaitForMotionFrame(() => glyph.RenderTransform!.Value.M11 > 0.99).ConfigureAwait(true);
 
                 var failing = tool with
                 {

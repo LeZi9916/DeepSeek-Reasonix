@@ -1,6 +1,9 @@
 using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -115,6 +118,36 @@ public sealed partial class NativeDomainTests
                 await WaitForSettingsFrame(() => ring.IsVisible && ring.Opacity is > 0.6 and <= 0.66).ConfigureAwait(true);
                 CaptureMotionRegion(w, group, -10, 10, 900, 120, $"settings-landing-visible-{scheme}");
                 await WaitForSettingsFrame(() => !ring.IsVisible).ConfigureAwait(true);
+            },
+            allowMotion: true);
+
+    /// <summary>Checks the reference fade on the settings rail, search field and segmented choice.</summary>
+    /// <returns>The settings transition check.</returns>
+    [Fact]
+    public Task SettingsControlsCarryReferenceTransitions() =>
+        WithSettingsAsync(
+            "settings-common",
+            async (w, _) =>
+            {
+                await WaitForSettingsFrame(() => w.Classes.Contains("motion")).ConfigureAwait(true);
+                var nav = w.FindControl<ListBox>("SettingsNav")!;
+                var item = nav.GetVisualDescendants().OfType<ListBoxItem>().First(container =>
+                    container.DataContext?.ToString() == MessageCatalog.Get("common.models", InterfaceLanguage.Zh));
+                Assert.Contains(item.Transitions!.OfType<BrushTransition>(), transition => transition.Property == ListBoxItem.BackgroundProperty);
+                Assert.Contains(item.Transitions!.OfType<BrushTransition>(), transition => transition.Property == ListBoxItem.ForegroundProperty);
+
+                var search = w.FindControl<TextBox>("SettingsSearch")!;
+                var searchFrame = search.GetVisualDescendants().OfType<Border>().Single(border => border.Name == "PART_BorderElement");
+                Assert.Contains(searchFrame.Transitions!.OfType<BrushTransition>(), transition => transition.Property == Border.BackgroundProperty);
+                Assert.Contains(searchFrame.Transitions!.OfType<BrushTransition>(), transition => transition.Property == Border.BorderBrushProperty);
+
+                var choice = w.FindControl<StackPanel>("SettingsBody")!.GetVisualDescendants()
+                    .OfType<RadioButton>().First(radio => radio.Classes.Contains("segmented") && radio.IsChecked != true);
+                Assert.Contains(choice.Transitions!.OfType<BrushTransition>(), transition => transition.Property == TemplatedControl.BackgroundProperty);
+                Assert.Contains(choice.Transitions!.OfType<BrushTransition>(), transition => transition.Property == TemplatedControl.ForegroundProperty);
+                Assert.Contains(choice.Transitions!.OfType<TransformOperationsTransition>(), transition => transition.Property == Visual.RenderTransformProperty);
+                choice.IsChecked = true;
+                await WaitForSettingsFrame(() => choice.Background is ISolidColorBrush brush && brush.Color.A is > 10 and < 245).ConfigureAwait(true);
             },
             allowMotion: true);
 

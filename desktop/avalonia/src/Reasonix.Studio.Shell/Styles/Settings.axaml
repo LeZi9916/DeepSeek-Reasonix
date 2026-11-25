@@ -62,6 +62,17 @@
   <Style Selector="ListBox#SettingsNav ListBoxItem:selected">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
   </Style>
+  <Style Selector="Window.motion ListBox#SettingsNav ListBoxItem">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="Window.motion Path.settings-nav-glyph">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Stroke" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
   <Style Selector="ListBox#SettingsNav">
     <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
   </Style>
@@ -69,6 +80,12 @@
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource FocusBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+  <Style Selector="Window.motion TextBox#SettingsSearch /template/ Border#PART_BorderElement">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <BrushTransition Property="BorderBrush" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
   </Style>
   <Style Selector="ListBox#SettingsHits ListBoxItem">
     <Setter Property="Padding" Value="9,7"/><Setter Property="MinHeight" Value="0"/>
@@ -348,7 +365,7 @@
     <Setter Property="Padding" Value="9.75,0"/><Setter Property="Margin" Value="1,0"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
     <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
     <Setter Property="Template"><ControlTemplate>
-      <Border Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+      <Border Name="SegmentFrame" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
         <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
       </Border>
     </ControlTemplate></Setter>
@@ -356,6 +373,34 @@
   <Style Selector="RadioButton.segmented:checked">
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     <Setter Property="FontWeight" Value="Medium"/>
+  </Style>
+  <Style Selector="RadioButton.segmented:pointerover:not(:disabled)">
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="Window.motion RadioButton.segmented">
+    <Setter Property="RenderTransform" Value="scale(1)"/>
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="0.34,1.56,0.64,1"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="RadioButton.segmented /template/ Border#SegmentFrame">
+    <Setter Property="BoxShadow" Value="0 0 0 0 #00000000"/>
+  </Style>
+  <Style Selector="RadioButton.segmented:checked /template/ Border#SegmentFrame">
+    <Setter Property="BoxShadow" Value="0 1 2 0 #12000000"/>
+  </Style>
+  <Style Selector="Window.motion RadioButton.segmented /template/ Border#SegmentFrame">
+    <Setter Property="Transitions"><Transitions>
+      <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="Window.motion RadioButton.segmented:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.96)"/>
+    <Setter Property="Transitions"><Transitions>
+      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.06"/>
+    </Transitions></Setter>
   </Style>
   <Style Selector="TextBox.settings-input, ComboBox.settings-input">
     <Setter Property="MinHeight" Value="0"/>

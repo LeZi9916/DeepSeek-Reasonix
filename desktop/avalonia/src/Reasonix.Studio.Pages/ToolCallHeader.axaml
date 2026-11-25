@@ -40,11 +40,20 @@
         </Animation>
       </Style.Animations>
     </Style>
+    <Style Selector="Window.motion Viewbox#ToolKind.done">
+      <Style.Animations>
+        <Animation Duration="0:0:0.26">
+          <KeyFrame Cue="0%"><Setter Property="ScaleTransform.ScaleX" Value="1"/><Setter Property="ScaleTransform.ScaleY" Value="1"/></KeyFrame>
+          <KeyFrame Cue="38%" KeySpline="0.16,1,0.3,1"><Setter Property="ScaleTransform.ScaleX" Value="0.86"/><Setter Property="ScaleTransform.ScaleY" Value="0.86"/></KeyFrame>
+          <KeyFrame Cue="100%" KeySpline="0.16,1,0.3,1"><Setter Property="ScaleTransform.ScaleX" Value="1"/><Setter Property="ScaleTransform.ScaleY" Value="1"/></KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
   </UserControl.Styles>
   <StackPanel>
     <Button Name="Toggle" Classes="conversation-disclosure" Height="28" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
       <Grid Name="HeaderGrid" ColumnDefinitions="14,Auto,*,14,10" ColumnSpacing="9" Margin="10,0" VerticalAlignment="Center">
-        <Viewbox Name="ToolKind" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Name="ToolGlyph" Data="{StaticResource Glyph.edit}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        <Viewbox Name="ToolKind" Width="12" Height="12"><Viewbox.RenderTransform><ScaleTransform/></Viewbox.RenderTransform><Canvas Width="24" Height="24"><Path Name="ToolGlyph" Data="{StaticResource Glyph.edit}" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
         <TextBlock Name="ToolName" Grid.Column="1" FontSize="{DynamicResource StudioType12}" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}"/>
         <Grid Grid.Column="2" ColumnDefinitions="*,Auto" ColumnSpacing="9" HorizontalAlignment="Left">
           <TextBlock Name="Argument" FontSize="{DynamicResource StudioType11}" FontFamily="{DynamicResource StudioMonoFamily}" Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>

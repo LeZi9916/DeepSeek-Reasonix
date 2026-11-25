@@ -4,6 +4,7 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using System;
 using System.Collections.Specialized;
 using System.Threading;
@@ -58,6 +59,13 @@ internal sealed partial class ToolCallHeader
 
             _ = PlayActivityMotion(this, frames);
             return;
+        }
+
+        if (returned)
+        {
+            var kind = this.FindControl<Viewbox>("ToolKind")!;
+            kind.Classes.Set("done", true);
+            DispatcherTimer.RunOnce(() => kind.Classes.Set("done", false), TimeSpan.FromMilliseconds(260));
         }
 
         var pop = new Animation
