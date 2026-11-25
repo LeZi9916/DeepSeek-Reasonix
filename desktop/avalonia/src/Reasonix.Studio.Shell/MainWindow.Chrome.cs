@@ -110,7 +110,13 @@ public sealed partial class MainWindow
         InitializeWorkbench();
         InitializeWorkbenchActions();
         InitializeChromeViews();
-        LayoutRoot.SizeChanged += (_, _) => LayoutPanels();
+        LayoutRoot.SizeChanged += (_, _) =>
+        {
+            if (!_railMotionActive)
+            {
+                LayoutPanels();
+            }
+        };
         ThemeSwitch.Click += (_, _) =>
         {
             RequestedThemeVariant = ActualThemeVariant == ThemeVariant.Dark ? ThemeVariant.Light : ThemeVariant.Dark;
@@ -178,14 +184,18 @@ public sealed partial class MainWindow
     /// <summary>Opens or closes the workspace and leaves focus on the reachable toggle.</summary>
     private void ToggleRail()
     {
-        _railOpen = !Rail.IsVisible;
-        LayoutPanels();
-        if (Rail.IsVisible)
+        var opening = !Rail.IsVisible;
+        _railOpen = opening;
+        if (!StartRailMotion(opening))
         {
-            EnterView(Rail);
+            LayoutPanels();
+            if (opening)
+            {
+                EnterView(Rail);
+            }
         }
 
-        (Rail.IsVisible ? CollapseRail : ExpandRail).Focus();
+        (opening ? CollapseRail : ExpandRail).Focus();
     }
 
     /// <summary>Arranges the columns against the available logical viewport.</summary>
@@ -212,6 +222,7 @@ public sealed partial class MainWindow
         var iconWidth = icons ? NavigationRail.Width : 0;
         Rail.IsVisible = open;
         Rail.Width = _railWidth;
+        Rail.Opacity = open ? 1 : 0;
         Rail.Margin = new Thickness(iconWidth, 0, 0, 0);
         Rail.HorizontalAlignment = HorizontalAlignment.Left;
         Grid.SetColumnSpan(Rail, drawer ? 2 : 1);
