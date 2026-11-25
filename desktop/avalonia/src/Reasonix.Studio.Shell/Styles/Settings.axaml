@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:settings="using:Reasonix.Studio.Shell.Settings">
+        xmlns:ctl="using:Reasonix.Studio.Controls" xmlns:settings="using:Reasonix.Studio.Shell.Settings">
   <Styles.Resources>
+    <ctl:SpringEasing x:Key="SpringEasing"/>
     <ControlTheme x:Key="AgentSelectItem" TargetType="ComboBoxItem">
       <Setter Property="MinHeight" Value="28"/><Setter Property="Padding" Value="12,2"/>
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="Background" Value="Transparent"/>
@@ -382,7 +383,7 @@
     <Setter Property="Transitions"><Transitions>
       <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
       <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
-      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="0.34,1.56,0.64,1"/>
+      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="{StaticResource SpringEasing}"/>
     </Transitions></Setter>
   </Style>
   <Style Selector="RadioButton.segmented /template/ Border#SegmentFrame">
