@@ -166,7 +166,7 @@ public sealed partial class MainWindow
         SetupPanel.IsVisible = false;
         LayoutRoot.IsVisible = false;
         SettingsPanel.IsVisible = true;
-        EnterView(SettingsPanel, durationMs: 120, easing: new Avalonia.Animation.KeySpline(0, 0, 0.58, 1));
+        EnterView(SettingsPanel, durationMs: 120, easing: new Avalonia.Animation.KeySpline(0.16, 1, 0.3, 1));
         BackLabel.Text = MessageCatalog.Get(MessageKey.Settings.BackToWorkspace, Language);
         Avalonia.Automation.AutomationProperties.SetName(CloseSettings, BackLabel.Text);
         SettingsTitle.Text = MessageCatalog.Get(MessageKey.Common.Settings, Language);
@@ -203,6 +203,9 @@ public sealed partial class MainWindow
 
         SetupPanel.IsVisible = false;
         SettingsPanel.IsVisible = false;
+        CancelSettingsScroll();
+        ClearSettingsLanding();
+        StopSettingsColumn();
         LayoutRoot.IsVisible = true;
         if (leavingSetup)
         {
@@ -251,6 +254,8 @@ public sealed partial class MainWindow
         _unsavedSettingsSummary = null;
         StopAccountSettings();
         _shownSettings = section;
+        CancelSettingsScroll();
+        ClearSettingsLanding();
         var ticket = ++_settingsRead;
         var parent = section.Split(':')[0];
         SettingsHeadingBlock.IsVisible = true;
@@ -526,6 +531,7 @@ public sealed partial class MainWindow
             {
                 SettingsBody.Classes.Set("settings-card-footer", column.Children.LastOrDefault() is Border last && last.Classes.Contains("settings-card"));
                 IndexSettings(column);
+                EnterSettingsColumn();
             }
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)

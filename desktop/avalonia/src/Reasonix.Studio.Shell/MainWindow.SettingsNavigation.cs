@@ -78,6 +78,7 @@ public sealed partial class MainWindow
     {
         SettingsPanel.SizeChanged += (_, e) => SettingsPanel.Classes.Set("compact", e.NewSize.Width <= 760);
         SettingsNav.AddHandler(PointerWheelChangedEvent, ScrollCompactSettingsNav, RoutingStrategies.Tunnel);
+        SettingsScroller.PointerWheelChanged += (_, _) => CancelSettingsScroll();
         SettingsScroller.ScrollChanged += (_, _) => PinSettingsIndex();
         SettingsHeadingBlock.SizeChanged += (_, _) => PinSettingsIndex();
         SettingsSearch.TextChanged += (_, _) => ShowSettingsHits();

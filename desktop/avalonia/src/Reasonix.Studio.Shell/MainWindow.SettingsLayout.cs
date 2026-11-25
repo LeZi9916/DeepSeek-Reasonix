@@ -249,18 +249,22 @@ public sealed partial class MainWindow
         position.Y = Math.Max(0, SettingsScroller.Offset.Y - SettingsBody.Margin.Top - SettingsIndex.Bounds.Top);
     }
 
-    /// <summary>Moves keyboard focus to the setting and places it below the pinned index.</summary>
+    /// <summary>Moves keyboard focus to the setting and scrolls it below the pinned index.</summary>
     /// <param name="target">The mounted setting.</param>
     private void FocusSetting(Control target)
     {
         var field = target.Focusable ? target : target.GetVisualDescendants().OfType<Control>().FirstOrDefault(c => c.Focusable && c.IsEffectivelyEnabled);
-        field?.Focus();
-        SettingsScroller.UpdateLayout();
-        if (target.TranslatePoint(default, SettingsScroller) is { } at)
+        var bringIntoView = SettingsScroller.BringIntoViewOnFocusChange;
+        SettingsScroller.BringIntoViewOnFocusChange = false;
+        try
         {
-            var clearance = (SettingsIndex.IsVisible ? SettingsIndex.Bounds.Height : 0) + 16;
-            var offset = SettingsScroller.Offset;
-            SettingsScroller.Offset = new Vector(offset.X, offset.Y + at.Y - clearance);
+            field?.Focus();
         }
+        finally
+        {
+            SettingsScroller.BringIntoViewOnFocusChange = bringIntoView;
+        }
+
+        LandOnSetting(target);
     }
 }
