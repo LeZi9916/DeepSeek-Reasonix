@@ -241,6 +241,7 @@ public sealed partial class SessionPage : UserControl
             AnimateActivityChanges(previous);
             AnimatePromptEntrances(previous);
             AnimateNoticeEntrances(previous);
+            AnimateTextRowEntrances(previous);
         }
         else if (previous.Running != state.Running)
         {
@@ -310,7 +311,7 @@ public sealed partial class SessionPage : UserControl
             Padding = item is SayItem ? new Thickness(6, 0, 0, 0) : default,
         };
 
-        if (item is UserItem || (inActivity && item is ToolItem) || item is ApprovalItem || item is AskItem || item is NoticeItem)
+        if (item is UserItem || item is SayItem || (inActivity && item is ToolItem) || item is ApprovalItem || item is AskItem || item is NoticeItem)
         {
             row.Tag = item;
         }
