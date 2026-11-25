@@ -9,4 +9,8 @@
     <ProjectReference Include="..\Reasonix.Studio.State\Reasonix.Studio.State.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Reasonix.Studio.Baseline.Tests" />
+  </ItemGroup>
+
 </Project>

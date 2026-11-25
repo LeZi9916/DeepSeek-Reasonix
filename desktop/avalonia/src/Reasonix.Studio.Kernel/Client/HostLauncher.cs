@@ -18,6 +18,10 @@ namespace Reasonix.Studio.Kernel.Client;
 /// down the child's stdout rather than through a file or an environment variable,
 /// because either of those outlives the launch and is readable by more than the
 /// process that spawned it.
+///
+/// Stdin is the lease: the kernel leaves when this end of the pipe closes, which
+/// also happens when this process exits without running a close handler. The
+/// shell holds it for as long as it owns the launch.
 /// </remarks>
 public static class HostLauncher
 {
@@ -87,6 +91,7 @@ public static class HostLauncher
 
         var start = new ProcessStartInfo(binary)
         {
+            RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -111,6 +116,7 @@ public static class HostLauncher
             throw new InvalidOperationException($"the kernel at {binary} did not start");
         }
 
+        var lease = process.StandardInput;
         var diagnostics = new ProcessOutputPump(process.StandardError, retain: true);
 
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -124,6 +130,7 @@ public static class HostLauncher
         catch (OperationCanceledException)
         {
             diagnostics.Dispose();
+            lease.Dispose();
             Kill(process);
             if (cancellationToken.IsCancellationRequested)
             {
@@ -142,6 +149,7 @@ public static class HostLauncher
             // way there is no origin to load and no credential to carry.
             var exitCode = process.HasExited ? process.ExitCode : (int?)null;
             diagnostics.Dispose();
+            lease.Dispose();
             Kill(process);
             throw new InvalidOperationException(
                 exitCode is null
@@ -152,11 +160,16 @@ public static class HostLauncher
         if (!LaunchHandshake.TryParse(line, out var handshake, out var refusal))
         {
             diagnostics.Dispose();
+            lease.Dispose();
             Kill(process);
             throw new InvalidOperationException(refusal);
         }
 
-        return new LaunchedKernel(process, handshake!, [diagnostics, new ProcessOutputPump(process.StandardOutput, retain: false)]);
+        return new LaunchedKernel(
+            process,
+            handshake!,
+            [diagnostics, new ProcessOutputPump(process.StandardOutput, retain: false)],
+            lease);
     }
 
     /// <summary>

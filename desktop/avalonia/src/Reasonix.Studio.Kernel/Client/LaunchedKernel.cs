@@ -1,6 +1,7 @@
 using Reasonix.Studio.Kernel.Boundary;
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace Reasonix.Studio.Kernel.Client;
 
@@ -27,6 +28,9 @@ public sealed class LaunchedKernel : IDisposable
     /// <summary>Drains redirected output for the entire owned process lifetime.</summary>
     private readonly ProcessOutputPump[] _output;
 
+    /// <summary>The shell's end of the pipe that leases the kernel to it.</summary>
+    private readonly TextWriter? _lease;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="LaunchedKernel"/> class.
     /// </summary>
@@ -36,18 +40,19 @@ public sealed class LaunchedKernel : IDisposable
     /// Thrown when <paramref name="process"/> or <paramref name="handshake"/> is null.
     /// </exception>
     public LaunchedKernel(Process process, LaunchHandshake handshake)
-        : this(process, handshake, [])
+        : this(process, handshake, [], null)
     {
     }
 
     /// <summary>Initializes a new instance of the <see cref="LaunchedKernel"/> class with active output drains.</summary>
     /// <param name="process">Owned child.</param><param name="handshake">Validated announcement.</param>
-    /// <param name="output">Already running pipe drains.</param>
-    internal LaunchedKernel(Process process, LaunchHandshake handshake, ProcessOutputPump[] output)
+    /// <param name="output">Already running pipe drains.</param><param name="lease">The shell's end of the parent lease.</param>
+    internal LaunchedKernel(Process process, LaunchHandshake handshake, ProcessOutputPump[] output, TextWriter? lease)
     {
         _process = process ?? throw new ArgumentNullException(nameof(process));
         _handshake = handshake ?? throw new ArgumentNullException(nameof(handshake));
         _output = output;
+        _lease = lease;
     }
 
     /// <summary>
@@ -87,6 +92,9 @@ public sealed class LaunchedKernel : IDisposable
         }
     }
 
+    /// <summary>Gets the pipe whose close ends the kernel's lease.</summary>
+    internal TextWriter? Lease => _lease;
+
     /// <summary>
     /// Reads the cookie this launch arms the window with.
     /// </summary>
@@ -101,6 +109,15 @@ public sealed class LaunchedKernel : IDisposable
     /// </summary>
     public void Dispose()
     {
+        try
+        {
+            _lease?.Dispose();
+        }
+        catch (Exception)
+        {
+            // A lease the kernel already let go of is the outcome asked for.
+        }
+
         HostLauncher.Kill(_process);
         foreach (var output in _output)
         {
