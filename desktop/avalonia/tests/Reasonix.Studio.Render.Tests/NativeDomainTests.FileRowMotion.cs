@@ -1,8 +1,11 @@
 using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Shell.Workbench;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -42,6 +45,27 @@ public sealed partial class NativeDomainTests
                 var row = window.GetVisualDescendants().OfType<WorkspaceFileRow>().First();
                 Assert.Equal(1d, row.Opacity);
                 Assert.Equal(0d, row.RenderTransform?.Value.M32 ?? 0);
+                return Task.CompletedTask;
+            });
+
+    /// <summary>Checks the file row's reference 120ms background and ink fades.</summary>
+    /// <returns>The file-row hover transition check.</returns>
+    [Fact]
+    public Task WorkbenchFileRowsFadeHoverBackgroundAndInk() =>
+        WithSettingsAsync(
+            "conversation",
+            (window, _) =>
+            {
+                Navigate(window, "workbench");
+                var row = window.GetVisualDescendants().OfType<WorkspaceFileRow>().First();
+                var button = row.GetVisualDescendants().OfType<Button>().Single(item => item.Classes.Contains("workspace-file-row"));
+                var transitions = button.Transitions!.OfType<BrushTransition>().ToArray();
+                Assert.Equal(2, transitions.Length);
+                Assert.All(transitions, transition =>
+                {
+                    Assert.Equal(TimeSpan.FromMilliseconds(120), transition.Duration);
+                    Assert.IsType<SplineEasing>(transition.Easing);
+                });
                 return Task.CompletedTask;
             });
 }

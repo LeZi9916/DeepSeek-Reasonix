@@ -156,6 +156,7 @@
     <Setter Property="Height" Value="30"/><Setter Property="MinHeight" Value="0"/><Setter Property="MinWidth" Value="0"/>
     <Setter Property="FontFamily" Value="{DynamicResource WorkbenchMonoFamily}"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Medium"/>
     <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/><BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></Setter>
     <Setter Property="FocusAdorner"><Template><Border BorderBrush="{DynamicResource FocusBrush}" BorderThickness="2" IsHitTestVisible="False"/></Template></Setter>
     <Setter Property="Template"><ControlTemplate><Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
       <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/>
