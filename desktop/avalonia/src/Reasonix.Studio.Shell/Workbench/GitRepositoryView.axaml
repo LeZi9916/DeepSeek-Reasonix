@@ -8,7 +8,7 @@
      <Border Padding="6,5,10,5" AutomationProperties.AutomationId="class:workbench-explorer-head"><StackPanel Spacing="4">
       <Grid ColumnDefinitions="18,Auto,*" ColumnSpacing="6" Height="18">
       <Button Name="Fold" Classes="git-flat" Width="18" Height="18" AutomationProperties.AutomationId="action:workbench.section-fold">
-        <Viewbox Name="ChangesFoldIcon" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="M6 9l6 6 6-6" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+        <Viewbox Name="ChangesFoldIcon" Width="12" Height="12" RenderTransformOrigin="50%,50%"><Viewbox.RenderTransform><RotateTransform Angle="0"><RotateTransform.Transitions><Transitions><DoubleTransition Property="Angle" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></RotateTransform.Transitions></RotateTransform></Viewbox.RenderTransform><Canvas Width="24" Height="24"><Path Data="M6 9l6 6 6-6" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
       </Button>
       <Button Name="Board" Grid.Column="1" Tag="common.changes" MinHeight="0" Height="13" Classes="git-flat git-section-title" AutomationProperties.AutomationId="action:workbench.changes-page"/>
       <TextBlock Name="Count" Grid.Column="2" HorizontalAlignment="Right" FontSize="{DynamicResource StudioType12}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{DynamicResource FaintBrush}"/>
@@ -28,7 +28,7 @@
     <Grid ColumnDefinitions="*,Auto" Margin="12,4,10,0" Height="32">
      <Button Name="HistoryTitle" Classes="git-flat git-history-title" HorizontalAlignment="Left">
        <StackPanel Orientation="Horizontal" Spacing="8">
-         <Viewbox Name="HistoryFoldIcon" Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="M6 9l6 6 6-6" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+         <Viewbox Name="HistoryFoldIcon" Width="12" Height="12" RenderTransformOrigin="50%,50%"><Viewbox.RenderTransform><RotateTransform Angle="0"><RotateTransform.Transitions><Transitions><DoubleTransition Property="Angle" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></RotateTransform.Transitions></RotateTransform></Viewbox.RenderTransform><Canvas Width="24" Height="24"><Path Data="M6 9l6 6 6-6" Stroke="{DynamicResource FaintBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
          <TextBlock Name="HistoryLabel" VerticalAlignment="Center"/>
        </StackPanel>
      </Button>

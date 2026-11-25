@@ -152,7 +152,10 @@ public sealed partial class GitRepositoryView : SettingsFormView
         Fold.Click += (_, _) =>
         {
             Changes.IsVisible = !Changes.IsVisible;
-            ChangesFoldIcon.RenderTransform = new RotateTransform(Changes.IsVisible ? 0 : -90);
+            if (ChangesFoldIcon.RenderTransform is RotateTransform rotate)
+            {
+                SetFoldAngle(rotate, Changes.IsVisible ? 0 : -90);
+            }
         };
         Board.Click += (_, _) => ShowBoard();
         StageAll.Click += async (_, _) => await StageAsync(null).ConfigureAwait(true);
@@ -161,7 +164,11 @@ public sealed partial class GitRepositoryView : SettingsFormView
         HistoryTitle.Click += async (_, _) =>
         {
             HistoryScroll.IsVisible = !HistoryScroll.IsVisible;
-            HistoryFoldIcon.RenderTransform = new RotateTransform(HistoryScroll.IsVisible ? 0 : -90);
+            if (HistoryFoldIcon.RenderTransform is RotateTransform rotate)
+            {
+                SetFoldAngle(rotate, HistoryScroll.IsVisible ? 0 : -90);
+            }
+
             if (HistoryScroll.IsVisible)
             {
                 await RefreshAsync().ConfigureAwait(true);
@@ -591,5 +598,23 @@ public sealed partial class GitRepositoryView : SettingsFormView
             path is null ? null : () => _open(path),
             showMetadata: path is null);
         return view;
+    }
+
+    /// <summary>Sets a fold chevron angle, skipping the transition when motion is off.</summary>
+    /// <param name="transform">The chevron rotation.</param>
+    /// <param name="angle">The target angle.</param>
+    private void SetFoldAngle(RotateTransform transform, double angle)
+    {
+        var animated = TopLevel.GetTopLevel(this) is Window window && window.Classes.Contains("motion");
+        if (animated)
+        {
+            transform.Angle = angle;
+            return;
+        }
+
+        var transitions = transform.Transitions;
+        transform.Transitions = null;
+        transform.Angle = angle;
+        transform.Transitions = transitions;
     }
 }
