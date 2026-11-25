@@ -108,6 +108,14 @@ studio-native: studio-dotnet
 	go build -o desktop/avalonia/src/Reasonix.Studio.Shell/bin/Debug/net10.0/ ./cmd/reasonix-studio-host
 	dotnet run --no-build --project desktop/avalonia/src/Reasonix.Studio.Shell
 
+# Publish a distributable Avalonia shell for a RID: make studio-avalonia-publish RID=win-x64
+studio-avalonia-publish:
+	bash scripts/build-studio-avalonia.sh $(if $(RID),--rid $(RID),) $(if $(OUTPUT),--output $(OUTPUT),)
+
+# One-click frontend + backend build into a test-build directory, with verification.
+studio-test-build:
+	bash scripts/build-studio-test.sh $(if $(RID),--rid $(RID),) $(if $(DIR),--dir $(DIR),)
+
 studio-dotnet-test:
 	dotnet test desktop/avalonia/Reasonix.Studio.slnx -c Debug --no-build
 

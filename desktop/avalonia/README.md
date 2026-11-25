@@ -63,6 +63,36 @@ The CI matrix builds the same solution in Release and runs both test projects wi
 Warnings are errors, and `GenerateDocumentationFile` is on: a member without
 XML documentation fails the build rather than reaching review.
 
+### Publishing a distributable shell
+
+```sh
+make studio-avalonia-publish RID=win-x64        # or linux-x64, osx-arm64, ...
+bash scripts/build-studio-avalonia.sh --help    # all options
+```
+
+This runs `dotnet publish` on the shell project for one RID, self-contained by
+default, and cross-compiles the CGO-free Go kernel host into the same publish
+directory so `HostLauncher.Locate` finds it at startup. The default output is
+`desktop/avalonia/bin/publish/<RID>`; `--output`, `--configuration`,
+`--single-file`, `--no-self-contained` and `--no-restore` are available on the
+script. Test projects declare `IsPublishable=false`, so publishing the whole
+solution does not emit their artifacts either.
+
+### One-click test build
+
+```sh
+make studio-test-build RID=win-x64
+bash scripts/build-studio-test.sh --help
+```
+
+This builds both halves into one test-build directory —
+`desktop/avalonia/bin/test-build/<date>-<shortsha>/<platform>/` — matching the
+verification records already kept there. It publishes the Avalonia frontend
+self-contained, cross-compiles the Go kernel host beside it, builds the solution,
+runs both test projects with the host alongside their assemblies, and writes a
+`verification/` folder with the build/test logs and `validation.json`.
+`--skip-tests` builds without running the suites; `--dir` overrides the output.
+
 The workbench's **Browser** menu opens a manual system WebView. Workspace HTML, DOCX and XLSX files also offer previews. The Office renderer uses the same read-only view as the Electron frontend.
 
 After changing that view, run `node desktop/frontend-next/tools/build-native-office.mjs` with the frontend dependencies installed. The generated renderer is embedded in the Avalonia assembly so a .NET build can run independently of Node.

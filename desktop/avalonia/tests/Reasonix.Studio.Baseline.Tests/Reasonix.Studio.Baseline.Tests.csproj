@@ -4,6 +4,7 @@
     <RootNamespace>Reasonix.Studio.Baseline.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
   <ItemGroup>
