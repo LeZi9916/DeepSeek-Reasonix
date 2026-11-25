@@ -87,6 +87,10 @@
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="{DynamicResource RMd}"/>
     <Setter Property="Padding" Value="10,6,8,6"/>
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.18" Easing="0.16,1,0.3,1"/></Transitions></Setter>
+  </Style>
+  <Style Selector="Border.compose-queue-row:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
   </Style>
   <Style Selector="TextBlock.compose-queue-label, TextBlock.compose-queue-preview, TextBlock.compose-queue-reason">
     <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>

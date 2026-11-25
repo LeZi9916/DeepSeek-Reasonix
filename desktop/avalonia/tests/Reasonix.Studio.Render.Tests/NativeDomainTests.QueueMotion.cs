@@ -1,6 +1,10 @@
 using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Styling;
+using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json.Nodes;
@@ -62,5 +66,25 @@ public sealed partial class NativeDomainTests
                 var row = Assert.IsType<Border>(window.FindControl<StackPanel>("QueueStrip")!.Children[0]);
                 Assert.Equal(1d, row.Opacity);
                 Assert.Equal(0d, row.RenderTransform?.Value.M32 ?? 0);
+            });
+
+    /// <summary>Checks the queue row's reference 180ms hover background fade.</summary>
+    /// <returns>The queue hover transition check.</returns>
+    [Fact]
+    public Task QueueRowsFadeTheirHoverBackground() =>
+        WithSettingsAsync(
+            "conversation",
+            async (window, reads) =>
+            {
+                reads.Exchange = request => request.RequestUri!.AbsolutePath == "/inbox"
+                    ? Task.FromResult<HttpResponseMessage?>(JsonReply(JsonNode.Parse("""
+                        {"revision":1,"paused":false,"items":[{"id":"queue-hover","preview":"queued line","intent":"followup","state":"queued"}],"capacity":{}}
+                        """)!.AsObject()))
+                    : Task.FromResult<HttpResponseMessage?>(null);
+                await window.RefreshQueueAsync().ConfigureAwait(true);
+                var row = Assert.IsType<Border>(window.FindControl<StackPanel>("QueueStrip")!.Children[0]);
+                var transition = Assert.Single(row.Transitions!.OfType<BrushTransition>());
+                Assert.Equal(TimeSpan.FromMilliseconds(180), transition.Duration);
+                Assert.IsType<SplineEasing>(transition.Easing);
             });
 }
