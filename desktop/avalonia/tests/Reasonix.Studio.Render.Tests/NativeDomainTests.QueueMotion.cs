@@ -3,6 +3,7 @@ using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
 using System;
 using System.Linq;
 using System.Net;
@@ -86,5 +87,30 @@ public sealed partial class NativeDomainTests
                 var transition = Assert.Single(row.Transitions!.OfType<BrushTransition>());
                 Assert.Equal(TimeSpan.FromMilliseconds(180), transition.Duration);
                 Assert.IsType<SplineEasing>(transition.Easing);
+            });
+
+    /// <summary>Checks the queue action buttons' reference 120ms hover fades.</summary>
+    /// <returns>The queue action transition check.</returns>
+    [Fact]
+    public Task QueueActionButtonsFadeTheirHoverStates() =>
+        WithSettingsAsync(
+            "conversation",
+            async (window, reads) =>
+            {
+                reads.Exchange = request => request.RequestUri!.AbsolutePath == "/inbox"
+                    ? Task.FromResult<HttpResponseMessage?>(JsonReply(JsonNode.Parse("""
+                        {"revision":1,"paused":false,"items":[{"id":"queue-buttons","preview":"queued line","intent":"followup","state":"queued"}],"capacity":{}}
+                        """)!.AsObject()))
+                    : Task.FromResult<HttpResponseMessage?>(null);
+                await window.RefreshQueueAsync().ConfigureAwait(true);
+                var row = Assert.IsType<Border>(window.FindControl<StackPanel>("QueueStrip")!.Children[0]);
+                var button = row.GetVisualDescendants().OfType<Button>().First(item => item.Classes.Contains("compose-queue-action"));
+                var transitions = button.Transitions!.OfType<BrushTransition>().ToArray();
+                Assert.Equal(2, transitions.Length);
+                Assert.All(transitions, transition =>
+                {
+                    Assert.Equal(TimeSpan.FromMilliseconds(120), transition.Duration);
+                    Assert.IsType<SplineEasing>(transition.Easing);
+                });
             });
 }

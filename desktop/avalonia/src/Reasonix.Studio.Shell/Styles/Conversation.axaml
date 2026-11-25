@@ -110,6 +110,7 @@
     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/><BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></Setter>
   </Style>
   <Style Selector="Button.compose-queue-action:pointerover, Button.compose-queue-action:pressed">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
