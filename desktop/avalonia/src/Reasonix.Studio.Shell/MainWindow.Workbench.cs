@@ -10,6 +10,7 @@ using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Browser;
+using Reasonix.Studio.Shell.Workbench;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,9 +22,6 @@ namespace Reasonix.Studio.Shell;
 
 public sealed partial class MainWindow
 {
-    /// <summary>Unsaved editor buffers are scoped to the workspace that supplied the revision.</summary>
-    private readonly Dictionary<(string Root, string Path), FileBuffer> _fileBuffers = new();
-
     /// <summary>The kernel workspace backing the explorer.</summary>
     private string _workspaceRoot = string.Empty;
 
@@ -42,6 +40,8 @@ public sealed partial class MainWindow
     /// <summary>Wires the native workspace explorer, editor and save command.</summary>
     private void InitializeWorkbench()
     {
+        _terminal.Exited += code => SetFileBarTitle(WorkbenchTitle.Text + " · " + code, path: false);
+        _terminal.Failed += error => ReportWorkbenchError(error);
         InitializeBrowserSleep();
         BrowserAction.Header = MessageCatalog.Get(MessageKey.Workbench.Browser, Language);
         BrowserAction.Click += (_, _) => OpenManualBrowser();
@@ -233,7 +233,7 @@ public sealed partial class MainWindow
         FileErrorClose.Click += (_, _) =>
         {
             HideFileError();
-            if (SelectedWorkbenchDocument is { } path && _fileBuffers.TryGetValue((WorkspaceBufferScope, path), out var file))
+            if (SelectedWorkbenchDocument is { } path && _workbench.Buffers.TryGetValue((WorkspaceBufferScope, path), out var file))
             {
                 CloseFile((WorkspaceBufferScope, path), file);
             }
@@ -317,10 +317,10 @@ public sealed partial class MainWindow
     /// <param name="root">Workspace root from session status.</param>
     private void BindWorkspace(string root)
     {
-        var scope = BufferScopeFor(root);
-        if (_workspaceRoot == root && ReferenceEquals(_boundWorkspaceEngine, _engine))
+        var scope = _workbench.ScopeFor(_engine, root);
+        if (_workspaceRoot == root && ReferenceEquals(_workbench.BoundEngine, _engine))
         {
-            _workspaceBufferScope = scope;
+            _workbench.BufferScope = scope;
             return;
         }
 
@@ -335,8 +335,8 @@ public sealed partial class MainWindow
         SubagentRunHost.Content = null;
         ResetGit();
         _workspaceRoot = root;
-        _boundWorkspaceEngine = _engine;
-        _workspaceBufferScope = scope;
+        _workbench.BoundEngine = _engine;
+        _workbench.BufferScope = scope;
         ResetFileTree();
         UpdateWorkbenchCanvas(null, animate: false);
         _openFile = null;
@@ -437,10 +437,10 @@ public sealed partial class MainWindow
         FileCanvas.RowDefinitions[0].Height = new GridLength(40);
         FileMore.IsVisible = true;
         var key = (WorkspaceBufferScope, entry.Path);
-        var newlyOpened = animateTab && !_fileBuffers.ContainsKey(key);
+        var newlyOpened = animateTab && !_workbench.Buffers.ContainsKey(key);
         try
         {
-            if (!_fileBuffers.TryGetValue(key, out var buffer) || !buffer.Dirty)
+            if (!_workbench.Buffers.TryGetValue(key, out var buffer) || !buffer.Dirty)
             {
                 var info = await engine.Pages.PreviewInfoAsync(entry.Path, _closing.Token).ConfigureAwait(true);
                 if (ticket != _fileRead || _closing.IsCancellationRequested)
@@ -476,7 +476,7 @@ public sealed partial class MainWindow
                 }
 
                 buffer = new FileBuffer(file, (string?)info["kind"]);
-                _fileBuffers[key] = buffer;
+                _workbench.Buffers[key] = buffer;
             }
 
             _openFile = buffer;
@@ -793,32 +793,5 @@ public sealed partial class MainWindow
         FileErrorText.Text = DescribeError(error);
         FileErrorPanel.IsVisible = true;
         FileErrorRetry.Focus();
-    }
-
-    /// <summary>A text buffer and the revision it was read against.</summary>
-    /// <param name="file">File as read from the kernel.</param>
-    /// <param name="kind">Preview type selected by the kernel.</param>
-    private sealed class FileBuffer(WorkspaceFile file, string? kind)
-    {
-        /// <summary>Gets the kernel-declared preview type.</summary>
-        public string? Kind { get; } = kind;
-
-        /// <summary>Gets or sets the version used for the next save.</summary>
-        public WorkspaceFile Original { get; set; } = file;
-
-        /// <summary>Gets or sets the text in the editor.</summary>
-        public string Draft { get; set; } = file.Content;
-
-        /// <summary>Gets or sets a value indicating whether a write is in flight.</summary>
-        public bool Saving
-        {
-            get; set;
-        }
-
-        /// <summary>Gets a value indicating whether this buffer holds unsaved edits.</summary>
-        public bool Dirty => Draft != Original.Content;
-
-        /// <summary>Gets a value indicating whether a write can be requested.</summary>
-        public bool CanSave => !Saving && !Original.ReadOnly && Dirty;
     }
 }

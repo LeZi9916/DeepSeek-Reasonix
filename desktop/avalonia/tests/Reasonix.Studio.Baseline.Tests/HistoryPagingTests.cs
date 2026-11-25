@@ -49,7 +49,7 @@ public sealed class HistoryPagingTests
         Assert.Equal("actual file contents", call.Call.Output);
         await engine.LoadEarlierHistoryAsync();
         Assert.False(engine.History.HasMore);
-        Assert.Single(engine.State.Items.OfType<ToolItem>());
+        Assert.Same(call, Assert.Single(engine.State.Items.OfType<ToolItem>()));
         Assert.Equal("question", Assert.IsType<UserItem>(engine.State.Items[0]).Text);
         Assert.Equal("final reply", Assert.IsType<SayItem>(engine.State.Items[^1]).Text);
         Assert.Equal(0, handler.LegacyReads);

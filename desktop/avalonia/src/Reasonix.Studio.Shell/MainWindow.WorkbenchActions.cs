@@ -138,7 +138,7 @@ public sealed partial class MainWindow
         WorkbenchEmpty.IsVisible = empty && ExplorerPane.IsVisible;
         if (visible && (refreshContents || !WorkbenchStart.IsVisible))
         {
-            WorkbenchStart.Show(GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.ChangeCount), _fileBuffers.Keys.Where(key => key.Root == WorkspaceBufferScope).Select(key => key.Path).Reverse().Take(5), Language);
+            WorkbenchStart.Show(GitRepositories.Children.OfType<GitRepositoryView>().Sum(view => view.ChangeCount), _workbench.Buffers.Keys.Where(key => key.Root == WorkspaceBufferScope).Select(key => key.Path).Reverse().Take(5), Language);
         }
 
         WorkbenchStart.IsVisible = visible;

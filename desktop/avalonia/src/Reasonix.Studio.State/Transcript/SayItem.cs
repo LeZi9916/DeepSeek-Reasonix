@@ -21,17 +21,54 @@ public enum ThoughtCut
 /// </summary>
 public sealed record SayItem : TranscriptItem
 {
+    /// <summary>Materialized answer.</summary>
+    private string _text = string.Empty;
+
+    /// <summary>Materialized thought.</summary>
+    private string? _reasoning;
+
+    /// <summary>Open answer segments.</summary>
+    private LiveText? _answer;
+
+    /// <summary>Open thought segments.</summary>
+    private LiveText? _thought;
+
+    /// <summary>Gets a value indicating whether the answer contains a non-whitespace character.</summary>
+    public bool HasContent => (_answer?.HasContent ?? !string.IsNullOrWhiteSpace(_text))
+        || (_thought?.HasContent ?? !string.IsNullOrWhiteSpace(_reasoning));
+
     /// <summary>
     /// Gets the answer text.
     /// </summary>
-    public string Text { get; init; } = string.Empty;
+    public string Text
+    {
+        get
+        {
+            return _answer?.Value ?? _text;
+        }
+
+        init
+        {
+            _text = value;
+            _answer = null;
+        }
+    }
 
     /// <summary>
     /// Gets the reasoning text that preceded the answer.
     /// </summary>
     public string? Reasoning
     {
-        get; init;
+        get
+        {
+            return _thought?.Value ?? _reasoning;
+        }
+
+        init
+        {
+            _reasoning = value;
+            _thought = null;
+        }
     }
 
     /// <summary>
@@ -44,7 +81,18 @@ public sealed record SayItem : TranscriptItem
     /// </remarks>
     public bool Done
     {
-        get; init;
+        get;
+        init
+        {
+            field = value;
+            if (value)
+            {
+                _text = Text;
+                _reasoning = Reasoning;
+                _answer = null;
+                _thought = null;
+            }
+        }
     }
 
     /// <summary>Gets when this runtime observed the first reasoning delta, in Unix milliseconds.</summary>
@@ -75,5 +123,26 @@ public sealed record SayItem : TranscriptItem
     public ThoughtCut? Cut
     {
         get; init;
+    }
+
+    /// <summary>Appends one delta while sharing the older segments with previous snapshots.</summary>
+    /// <param name="text">Accepted delta.</param>
+    /// <param name="reasoning">Whether it belongs to thought.</param>
+    /// <returns>The updated message.</returns>
+    internal SayItem Append(string text, bool reasoning)
+    {
+        var next = this with
+        {
+        };
+        if (reasoning)
+        {
+            next._thought = LiveText.Append(_thought, _reasoning, text);
+        }
+        else
+        {
+            next._answer = LiveText.Append(_answer, _text, text);
+        }
+
+        return next;
     }
 }

@@ -35,7 +35,7 @@ public sealed partial class MainWindow
         DismissRefinement();
         var source = CancellationTokenSource.CreateLinkedTokenSource(_closing.Token);
         _refineCancellation = source;
-        var draft = _draftKey;
+        var draft = DraftKey;
         var text = Composer.Text;
         RefineCard.IsVisible = true;
         RefineText.Text = MessageCatalog.Get("composer.refining", Language);
@@ -45,7 +45,7 @@ public sealed partial class MainWindow
         try
         {
             var result = await engine.Pages.RefinePromptAsync(text, source.Token).ConfigureAwait(true);
-            if (source.IsCancellationRequested || engine != _engine || draft != _draftKey)
+            if (source.IsCancellationRequested || engine != _engine || draft != DraftKey)
             {
                 return;
             }
@@ -59,7 +59,7 @@ public sealed partial class MainWindow
         }
         catch (Exception error)
         {
-            if (engine == _engine && draft == _draftKey)
+            if (engine == _engine && draft == DraftKey)
             {
                 RefineText.Text = DescribeError(error);
             }
@@ -105,14 +105,14 @@ public sealed partial class MainWindow
         SideQuestion.Classes.Add("open");
         if (_sideApi != engine.Pages || _sideId is null)
         {
-            var draft = _draftKey;
+            var draft = DraftKey;
             SideQuestion.IsEnabled = false;
             try
             {
                 await TryAnswerAsync(async () =>
                 {
                     var id = await engine.Pages.OpenSideAsync(_closing.Token).ConfigureAwait(true);
-                    if (engine != _engine || draft != _draftKey || !SideCard.IsVisible)
+                    if (engine != _engine || draft != DraftKey || !SideCard.IsVisible)
                     {
                         await engine.Pages.CloseSideAsync(id, _closing.Token).ConfigureAwait(true);
                         return;
@@ -146,20 +146,20 @@ public sealed partial class MainWindow
         AskSide.IsEnabled = false;
         SideAnswer.Text = string.Empty;
         QuoteSide.IsEnabled = false;
-        var draft = _draftKey;
+        var draft = DraftKey;
         var completed = false;
         try
         {
             var progress = new Progress<string>(text =>
             {
-                if (!completed && !source.IsCancellationRequested && draft == _draftKey && _sideId == id)
+                if (!completed && !source.IsCancellationRequested && draft == DraftKey && _sideId == id)
                 {
                     SideAnswer.Text += text;
                 }
             });
             var answer = await api.AskSideAsync(id, SideInput.Text, progress, source.Token).ConfigureAwait(true);
             completed = true;
-            if (!source.IsCancellationRequested && draft == _draftKey && _sideId == id)
+            if (!source.IsCancellationRequested && draft == DraftKey && _sideId == id)
             {
                 SideAnswer.Text = answer;
                 SideInput.Text = string.Empty;
@@ -171,7 +171,7 @@ public sealed partial class MainWindow
         }
         catch (Exception error)
         {
-            if (draft == _draftKey && _sideId == id)
+            if (draft == DraftKey && _sideId == id)
             {
                 SideAnswer.Text = DescribeError(error);
             }

@@ -9,6 +9,7 @@ using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.Composer;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Host;
+using Reasonix.Studio.Shell.Settings;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -20,15 +21,6 @@ namespace Reasonix.Studio.Shell;
 
 public sealed partial class MainWindow
 {
-    /// <summary>Sections in reference-frontend navigation order.</summary>
-    private static readonly (string Id, string Title)[] s_sections =
-    {
-        ("common", "settings.common"), ("model", "common.models"), ("session", "settings.agent_behaviour"),
-        ("tools", "settings.permissions_and_safety"), ("ext", "ext.extension"), ("display", "settings.conversation_display"),
-        ("controls", "settings.controls_and_performance"), ("appearance", "settings.appearance"), ("storage", "settings.data"),
-        ("network", "usage.connections"), ("account", "settings.account_and_about"),
-    };
-
     /// <summary>The appearance the host returned or acknowledged.</summary>
     private JsonObject _look = new();
 
@@ -96,7 +88,7 @@ public sealed partial class MainWindow
         InitializeSettingsSearch();
         SettingsNav.SelectionChanged += async (_, _) =>
         {
-            if (!_selectingSetting && SettingsNav.SelectedItem is SectionEntry entry)
+            if (!_settings.Selecting && SettingsNav.SelectedItem is SectionEntry entry)
             {
                 await ShowSectionAsync(entry.Id).ConfigureAwait(true);
             }
@@ -190,8 +182,8 @@ public sealed partial class MainWindow
             return;
         }
 
-        _unsavedSettings = null;
-        _unsavedSettingsSummary = null;
+        _settings.Dirty = null;
+        _settings.Changes = null;
         StopAccountSettings();
         SearchResultsPanel.IsVisible = false;
         _settingsRead++;
@@ -219,19 +211,19 @@ public sealed partial class MainWindow
     private void FilterPreferences()
     {
         var previous = (SettingsNav.SelectedItem as SectionEntry)?.Id ?? "common";
-        var sections = s_sections.Select(s => new SectionEntry(
+        var sections = SettingsNavigation.Sections.Select(s => new SectionEntry(
             s.Id,
             MessageCatalog.Get(s.Title, Language),
             this.FindResource("Glyph." + s.Id) as Geometry,
-            Format.Count(BlockCount(s.Id), Language))).ToArray();
-        _selectingSetting = true;
+            Format.Count(SettingsNavigation.BlockCount(s.Id), Language))).ToArray();
+        _settings.Selecting = true;
         try
         {
             SettingsNav.ItemsSource = sections;
         }
         finally
         {
-            _selectingSetting = false;
+            _settings.Selecting = false;
         }
 
         SettingsNav.SelectedItem = sections.First(s => s.Id == previous);
@@ -245,20 +237,20 @@ public sealed partial class MainWindow
     {
         if (!await MayLeaveSettingsAsync().ConfigureAwait(true))
         {
-            SelectSettingsNav(_shownSettings.Split(':')[0]);
+            SelectSettingsNav(_settings.Section.Split(':')[0]);
             return;
         }
 
-        _unsavedSettings = null;
-        _unsavedSettingsSummary = null;
+        _settings.Dirty = null;
+        _settings.Changes = null;
         StopAccountSettings();
-        _shownSettings = section;
+        _settings.Section = section;
         CancelSettingsScroll();
         ClearSettingsLanding();
         var ticket = ++_settingsRead;
         var parent = section.Split(':')[0];
         SettingsHeadingBlock.IsVisible = true;
-        SettingsHeading.Text = MessageCatalog.Get(parent == "usage" ? "app.usage" : s_sections.First(s => s.Id == parent).Title, Language);
+        SettingsHeading.Text = MessageCatalog.Get(parent == "usage" ? "app.usage" : SettingsNavigation.Sections.First(s => s.Id == parent).Title, Language);
         SettingsDescription.Text = SectionDescription(parent);
         SettingsDescription.IsVisible = SettingsDescription.Text.Length > 0;
         SettingsUsual.Text = MessageCatalog.Get("settings.page_usual", Language);
@@ -354,7 +346,7 @@ public sealed partial class MainWindow
                     };
                     serviceView.Show(providers, Language, api, _closing.Token, _workspacePreferences.ProviderOrder, MayLeaveSettingsAsync, DescribeError);
                     services.Children.Add(new Settings.SettingsGroup("common.model_services", null, serviceView, Language, scope: "settings.rebuilds_the_runtime"));
-                    _unsavedSettings = () => serviceView.HasChanges;
+                    _settings.Dirty = () => serviceView.HasChanges;
                     await FlagControlAsync(services, StudioSetting.ProviderHealth, "models.automatically_check_connections_and_balances").ConfigureAwait(true);
                     var uses = Card(column, "models.uses_and_context");
                     var usage = new Settings.ModelUsageView();
@@ -420,8 +412,8 @@ public sealed partial class MainWindow
                     });
                     if (ticket == _settingsRead)
                     {
-                        _unsavedSettings = () => presets.HasChanges;
-                        _unsavedSettingsSummary = presets.Changes;
+                        _settings.Dirty = () => presets.HasChanges;
+                        _settings.Changes = presets.Changes;
                     }
 
                     await Task.WhenAll(
@@ -438,7 +430,7 @@ public sealed partial class MainWindow
                     personaView.Open(api, activePersona, Language, () => ShowSectionAsync("session"), DescribeError, _closing.Token);
                     if (ticket == _settingsRead)
                     {
-                        _unsavedSettings = () => personaView.HasChanges;
+                        _settings.Dirty = () => personaView.HasChanges;
                     }
 
                     await Task.WhenAll(
@@ -493,7 +485,7 @@ public sealed partial class MainWindow
                     await proxy.OpenAsync(api, Language, DescribeError, _closing.Token).ConfigureAwait(true);
                     if (TopLevel.GetTopLevel(proxy) == this)
                     {
-                        _unsavedSettings = () => proxy.HasChanges;
+                        _settings.Dirty = () => proxy.HasChanges;
                     }
 
                     var remotes = await api.RemoteHostsAsync(_closing.Token).ConfigureAwait(true);
@@ -515,8 +507,8 @@ public sealed partial class MainWindow
                             _closing.Token);
                         if (TopLevel.GetTopLevel(book) == this)
                         {
-                            var proxyDirty = _unsavedSettings;
-                            _unsavedSettings = () => book.HasChanges || proxyDirty?.Invoke() == true;
+                            var proxyDirty = _settings.Dirty;
+                            _settings.Dirty = () => book.HasChanges || proxyDirty?.Invoke() == true;
                         }
                     }
 

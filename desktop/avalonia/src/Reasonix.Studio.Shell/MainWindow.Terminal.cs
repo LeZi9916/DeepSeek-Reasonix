@@ -3,21 +3,16 @@ using Avalonia.Interactivity;
 using AvaloniaTerminal;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
+using Reasonix.Studio.Shell.Workbench;
 using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell;
 
 public sealed partial class MainWindow
 {
-    /// <summary>The currently attached terminal view; the PTY itself belongs to the kernel.</summary>
-    private CancellationTokenSource? _terminalView;
-
-    /// <summary>The PTY currently shown or awaiting explicit close.</summary>
-    private string? _terminalId;
+    /// <summary>Owns the terminal stream attached to the workbench.</summary>
+    private readonly WorkbenchTerminal _terminal = new();
 
     /// <summary>Shows live PTYs and offers to start a shell only on an explicit selection.</summary>
     /// <param name="sender">The terminal navigation item.</param>
@@ -83,7 +78,7 @@ public sealed partial class MainWindow
     /// <param name="e">The click.</param>
     private void ConfirmTerminalClose(object? sender, RoutedEventArgs e)
     {
-        if (_engine is null || _terminalId is not { } id)
+        if (_engine is null || _terminal.Id is not { } id)
         {
             return;
         }
@@ -94,7 +89,7 @@ public sealed partial class MainWindow
         var confirm = new MenuItem { Header = MessageCatalog.Get(MessageKey.Terminal.CloseAndEnd, Language) };
         confirm.Click += async (_, _) =>
         {
-            if (ReferenceEquals(_engine, engine) && _terminalId == id && await TryAnswerAsync(() => engine.Pages.CloseTerminalAsync(id, _closing.Token)).ConfigureAwait(true) && ReferenceEquals(_engine, engine) && _terminalId == id)
+            if (ReferenceEquals(_engine, engine) && _terminal.Id == id && await TryAnswerAsync(() => engine.Pages.CloseTerminalAsync(id, _closing.Token)).ConfigureAwait(true) && ReferenceEquals(_engine, engine) && _terminal.Id == id)
             {
                 ReleasePreview();
                 FileEditor.IsVisible = true;
@@ -108,9 +103,7 @@ public sealed partial class MainWindow
     /// <summary>Detaches the view without ending the user's kernel-owned process.</summary>
     private void DetachTerminal()
     {
-        _terminalView?.Cancel();
-        _terminalView = null;
-        _terminalId = null;
+        _terminal.Detach();
         EndTerminal.IsVisible = false;
         TerminalSurface.IsVisible = false;
         TerminalSurface.Content = null;
@@ -138,87 +131,10 @@ public sealed partial class MainWindow
         PreviewFile.IsVisible = false;
         TerminalSurface.Content = terminal;
         TerminalSurface.IsVisible = true;
-        _terminalId = id;
         EndTerminal.IsVisible = true;
         SetFileBarTitle(MessageCatalog.Get(MessageKey.Workbench.Terminal, Language), path: false);
         terminal.Focus();
 
-        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(_closing.Token);
-        _terminalView = lifetime;
-        var token = lifetime.Token;
-        var input = Channel.CreateUnbounded<TerminalUpdate>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
-        model.UserInput += (_, args) => input.Writer.TryWrite(new TerminalUpdate(Encoding.UTF8.GetString(args.Data.Span), 0, 0));
-        model.SizeChanged += (_, args) => input.Writer.TryWrite(new TerminalUpdate(null, args.Cols, args.Rows));
-        var sending = SendTerminalInputAsync(id, api, input.Reader, lifetime);
-        try
-        {
-            await foreach (var frame in api.TerminalOutputAsync(id, token).ConfigureAwait(true))
-            {
-                if (frame.Kind is "replay" or "out" && frame.Data is { Length: > 0 } data)
-                {
-                    model.Feed(Convert.FromBase64String(data));
-                }
-                else if (frame.Kind == "exit")
-                {
-                    SetFileBarTitle(WorkbenchTitle.Text + " · " + frame.Code, path: false);
-                    break;
-                }
-            }
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-        }
-        catch (Exception error)
-        {
-            ReportWorkbenchError(error);
-        }
-        finally
-        {
-            await lifetime.CancelAsync().ConfigureAwait(true);
-            input.Writer.TryComplete();
-            await sending.ConfigureAwait(true);
-            if (_terminalView == lifetime)
-            {
-                _terminalView = null;
-            }
-        }
+        await _terminal.AttachAsync(id, api, model, _closing.Token).ConfigureAwait(true);
     }
-
-    /// <summary>Preserves keystroke ordering even across slow HTTP acknowledgements.</summary>
-    /// <param name="id">Terminal id.</param>
-    /// <param name="api">Owning session.</param>
-    /// <param name="input">Emulator input queue.</param>
-    /// <param name="lifetime">The active view lifetime.</param>
-    /// <returns>The input pump.</returns>
-    private async Task SendTerminalInputAsync(string id, StudioPageClient api, ChannelReader<TerminalUpdate> input, CancellationTokenSource lifetime)
-    {
-        try
-        {
-            await foreach (var update in input.ReadAllAsync(lifetime.Token).ConfigureAwait(true))
-            {
-                if (update.Text is { } text)
-                {
-                    await api.TerminalInputAsync(id, text, lifetime.Token).ConfigureAwait(true);
-                }
-                else
-                {
-                    await api.TerminalSizeAsync(id, update.Cols, update.Rows, lifetime.Token).ConfigureAwait(true);
-                }
-            }
-        }
-        catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
-        {
-        }
-        catch (Exception error)
-        {
-            ReportWorkbenchError(error);
-            await lifetime.CancelAsync().ConfigureAwait(true);
-        }
-    }
-
-    /// <summary>An input or viewport change in user-event order.</summary>
-    /// <param name="Text">Typed text, or null for a resize.</param>
-    /// <param name="Cols">New column count.</param>
-    /// <param name="Rows">New row count.</param>
-    private sealed record TerminalUpdate(string? Text, int Cols, int Rows);
 }

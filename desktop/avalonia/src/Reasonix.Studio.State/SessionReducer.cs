@@ -97,7 +97,7 @@ public sealed partial class SessionReducer
             throw new ArgumentNullException(nameof(state));
         }
 
-        var payload = JsonSerializer.Deserialize<Event>(frame.Payload.GetRawText());
+        var payload = frame.Payload.Deserialize<Event>();
         if (payload is null)
         {
             return state;
@@ -115,6 +115,14 @@ public sealed partial class SessionReducer
 
         var sealedState = payload.DecisionReceipt is { } receipt ? PromptDecisions.Receipt(state, receipt) : state;
         var next = payload.Kind == "notice" && payload.Code == "decision_receipt" ? sealedState : Apply(sealedState, payload);
+        if (next.IsRestored != frame.IsReplay)
+        {
+            next = next with
+            {
+                IsRestored = frame.IsReplay,
+            };
+        }
+
         if (ReferenceEquals(next.Items, state.Items))
         {
             return next;
@@ -123,7 +131,7 @@ public sealed partial class SessionReducer
         // Streaming text grows a row without changing the transcript's
         // composition, so it must not bump the revision: everything derived from
         // the cards would otherwise recompute hundreds of times per answer.
-        if (payload.Kind is "text" or "reasoning")
+        if (ReferenceEquals(sealedState.Items, state.Items) && payload.Kind is ("text" or "reasoning"))
         {
             return next;
         }
@@ -611,17 +619,15 @@ public sealed partial class SessionReducer
                 };
 
             case "reasoning":
-                return state with
-                {
-                    Doing = "composer.thinking",
-                    Items = _text.Append(state.Items, payload.Reasoning + payload.Text, reasoning: true, payload.Source),
-                };
-
             case "text":
+                var reasoning = payload.Kind == "reasoning";
+                var text = reasoning ? payload.Reasoning + payload.Text : payload.Text;
+                var rows = _text.Append(state.Items, text, reasoning, payload.Source, out var index);
                 return state with
                 {
-                    Doing = "composer.answering",
-                    Items = _text.Append(state.Items, payload.Text, reasoning: false, payload.Source),
+                    Doing = reasoning ? "composer.thinking" : "composer.answering",
+                    Items = rows,
+                    StreamingRow = index,
                 };
 
             case "tool_dispatch":

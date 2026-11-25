@@ -259,7 +259,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        var draft = _draftKey;
+        var draft = DraftKey;
         var ticket = (engine, draft, ComposerEdit.Plan);
         if (!BeginComposerEdit(ticket))
         {
@@ -272,7 +272,7 @@ public sealed partial class MainWindow
         {
             await engine.Pages.SetPlanAsync(mode == "plan", _closing.Token).ConfigureAwait(true);
             var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-            if (status is not null && engine == _engine && draft == _draftKey)
+            if (status is not null && engine == _engine && draft == DraftKey)
             {
                 ShowComposeStatus(status);
                 ModePanel.Show(status.Plan, Language);
@@ -283,7 +283,7 @@ public sealed partial class MainWindow
         }
         catch (Exception error)
         {
-            if (engine == _engine && draft == _draftKey)
+            if (engine == _engine && draft == DraftKey)
             {
                 ShowRefusal(error);
             }
@@ -331,10 +331,10 @@ public sealed partial class MainWindow
     /// <returns>The current task state, if still mounted.</returns>
     private async Task<SessionStatus?> ApplyApprovalAsync(Reasonix.Studio.Kernel.Session.SessionEngine engine, string mode)
     {
-        var draft = _draftKey;
+        var draft = DraftKey;
         await engine.Pages.SetApprovalModeAsync(mode, _closing.Token).ConfigureAwait(true);
         var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-        if (engine != _engine || draft != _draftKey)
+        if (engine != _engine || draft != DraftKey)
         {
             return null;
         }
@@ -375,12 +375,12 @@ public sealed partial class MainWindow
             return;
         }
 
-        var draft = _draftKey;
+        var draft = DraftKey;
         BranchPopup.Anchor = ComposeBranch;
         try
         {
             var branches = await engine.Pages.GitBranchesAsync(_closing.Token).ConfigureAwait(true);
-            if (engine != _engine || draft != _draftKey)
+            if (engine != _engine || draft != DraftKey)
             {
                 return;
             }
@@ -436,7 +436,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        var ticket = (engine, _draftKey, ComposerEdit.Branch);
+        var ticket = (engine, DraftKey, ComposerEdit.Branch);
         if (!BeginComposerEdit(ticket))
         {
             return;
@@ -445,7 +445,7 @@ public sealed partial class MainWindow
         BranchPanel.SetPending(reference);
         try
         {
-            var attachments = _attachments
+            var attachments = _composer.Attachments
                 .Where(chip => chip.SourcePath.Length > 0)
                 .Select(chip => chip.SourcePath)
                 .Distinct(StringComparer.Ordinal)
@@ -482,7 +482,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        var ticket = (engine, _draftKey, ComposerEdit.Branch);
+        var ticket = (engine, DraftKey, ComposerEdit.Branch);
         if (!BeginComposerEdit(ticket))
         {
             return;

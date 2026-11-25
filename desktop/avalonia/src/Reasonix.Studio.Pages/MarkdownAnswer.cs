@@ -23,18 +23,38 @@ public static class MarkdownAnswer
     /// <param name="source">Markdown from the conversation.</param>
     public static void Show(SelectableTextBlock text, string source)
     {
-        var start = text.SelectionStart;
-        var end = text.SelectionEnd;
-        var document = Markdown.Parse(source, s_pipeline);
-        if (document.Count == 0 || (document.Count == 1 && document[0] is ParagraphBlock { Inline.FirstChild: LiteralInline literal }
-            && literal.NextSibling is null && literal.Content.ToString() == source))
+        var document = Parse(source);
+        if (document.Count == 0)
         {
             text.Text = source;
+            return;
+        }
+
+        ShowParsed(text, document, source.AsSpan());
+    }
+
+    /// <summary>Parses Markdown independently of any Avalonia control.</summary>
+    /// <param name="source">Markdown from the conversation.</param>
+    /// <returns>The document used for block and inline rendering.</returns>
+    internal static MarkdownDocument Parse(string source) => Markdown.Parse(source, s_pipeline);
+
+    /// <summary>Paints a parsed block while preserving the selected range.</summary>
+    /// <param name="text">Selectable destination.</param><param name="block">Parsed block.</param>
+    /// <param name="source">Original block text.</param>
+    internal static void ShowParsed(SelectableTextBlock text, Block block, ReadOnlySpan<char> source)
+    {
+        var start = text.SelectionStart;
+        var end = text.SelectionEnd;
+        var paragraph = block is MarkdownDocument { Count: 1 } document ? document[0] : block;
+        if (paragraph is ParagraphBlock { Inline.FirstChild: LiteralInline literal }
+            && literal.NextSibling is null && literal.Content.AsSpan().SequenceEqual(source))
+        {
+            text.Text = source.ToString();
         }
         else
         {
             var runs = new InlineCollection();
-            Blocks(document, runs);
+            BlockRuns(block, runs);
             text.Inlines = runs;
         }
 
@@ -69,27 +89,34 @@ public static class MarkdownAnswer
                 runs.Add(new Run(list.IsOrdered ? (first + index - 1).ToString(CultureInfo.InvariantCulture) + ". " : "•  "));
             }
 
-            switch (block)
-            {
-                case HeadingBlock heading:
-                    var title = new Bold { FontSize = Math.Max(15, 24 - (heading.Level * 2)) };
-                    Inlines(heading.Inline, title.Inlines);
-                    runs.Add(title);
-                    break;
-                case CodeBlock code:
-                    runs.Add(new Run(code.Lines.ToString()) { [!TextBlock.FontFamilyProperty] = StudioTypography.Resource("StudioMonoFamily") });
-                    break;
-                case QuoteBlock quote:
-                    runs.Add(new Run("│  "));
-                    Blocks(quote, runs);
-                    break;
-                case ContainerBlock nested:
-                    Blocks(nested, runs);
-                    break;
-                case LeafBlock leaf:
-                    Inlines(leaf.Inline, runs);
-                    break;
-            }
+            BlockRuns(block, runs);
+        }
+    }
+
+    /// <summary>Writes one block without rebuilding a document around it.</summary>
+    /// <param name="block">Parsed block.</param><param name="runs">Native destination.</param>
+    private static void BlockRuns(Block block, InlineCollection runs)
+    {
+        switch (block)
+        {
+            case HeadingBlock heading:
+                var title = new Bold { FontSize = Math.Max(15, 24 - (heading.Level * 2)) };
+                Inlines(heading.Inline, title.Inlines);
+                runs.Add(title);
+                break;
+            case CodeBlock code:
+                runs.Add(new Run(code.Lines.ToString()) { [!TextBlock.FontFamilyProperty] = StudioTypography.Resource("StudioMonoFamily") });
+                break;
+            case QuoteBlock quote:
+                runs.Add(new Run("│  "));
+                Blocks(quote, runs);
+                break;
+            case ContainerBlock nested:
+                Blocks(nested, runs);
+                break;
+            case LeafBlock leaf:
+                Inlines(leaf.Inline, runs);
+                break;
         }
     }
 
@@ -130,6 +157,10 @@ public static class MarkdownAnswer
                             NavigateUri = uri,
                             Padding = new Thickness(0),
                             MinHeight = 0,
+                            [TextBlock.TextDecorationsProperty] = new TextDecorationCollection
+                            {
+                                new TextDecoration { Location = TextDecorationLocation.Underline },
+                            },
                         };
                         ToolTip.SetTip(button, uri.AbsoluteUri);
                         runs.Add(new InlineUIContainer { Child = button });

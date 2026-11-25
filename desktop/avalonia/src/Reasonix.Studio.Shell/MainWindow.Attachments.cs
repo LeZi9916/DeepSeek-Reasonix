@@ -4,6 +4,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
+using Reasonix.Studio.Shell.Composer;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,9 +15,6 @@ namespace Reasonix.Studio.Shell;
 
 public sealed partial class MainWindow
 {
-    /// <summary>References riding with the next turn, separate from the typed line.</summary>
-    private readonly List<AttachmentChip> _attachments = [];
-
     /// <summary>Adds host-issued references as chips instead of text tokens.</summary>
     /// <param name="references">References returned by the drop or paste route.</param>
     private void AddAttachments(IEnumerable<DroppedReference> references)
@@ -27,23 +25,23 @@ public sealed partial class MainWindow
             var name = Path.GetFileName(path);
             if (string.IsNullOrWhiteSpace(reference.Ref))
             {
-                if (string.IsNullOrEmpty(reference.Error) || path.Length == 0 || _attachments.Any(chip => chip.SourcePath == path && chip.Error.Length > 0))
+                if (string.IsNullOrEmpty(reference.Error) || path.Length == 0 || _composer.Attachments.Any(chip => chip.SourcePath == path && chip.Error.Length > 0))
                 {
                     continue;
                 }
 
-                _attachments.Add(new AttachmentChip(string.Empty, name.Length == 0 ? MessageCatalog.Get("common.files", Language) : name, path, IsPicture(path), reference.Error));
+                _composer.Attachments.Add(new AttachmentChip(string.Empty, name.Length == 0 ? MessageCatalog.Get("common.files", Language) : name, path, IsPicture(path), reference.Error));
                 continue;
             }
 
             var token = reference.Ref.Trim();
-            if (_attachments.Any(chip => chip.Token == token))
+            if (_composer.Attachments.Any(chip => chip.Token == token))
             {
                 continue;
             }
 
-            _attachments.RemoveAll(chip => chip.SourcePath == path && chip.Error.Length > 0);
-            _attachments.Add(new AttachmentChip(token, name.Length == 0 ? token : name, path, IsPicture(path)));
+            _composer.Attachments.RemoveAll(chip => chip.SourcePath == path && chip.Error.Length > 0);
+            _composer.Attachments.Add(new AttachmentChip(token, name.Length == 0 ? token : name, path, IsPicture(path)));
         }
 
         RebuildAttachments();
@@ -53,13 +51,13 @@ public sealed partial class MainWindow
     /// <param name="reference">The host-issued token.</param>
     private void AddAttachmentReference(string reference)
     {
-        if (string.IsNullOrWhiteSpace(reference) || _attachments.Any(chip => chip.Token == reference))
+        if (string.IsNullOrWhiteSpace(reference) || _composer.Attachments.Any(chip => chip.Token == reference))
         {
             return;
         }
 
         var name = Path.GetFileName(reference);
-        _attachments.Add(new AttachmentChip(reference, name.Length == 0 ? reference : name, reference, true));
+        _composer.Attachments.Add(new AttachmentChip(reference, name.Length == 0 ? reference : name, reference, true));
         RebuildAttachments();
     }
 
@@ -77,7 +75,7 @@ public sealed partial class MainWindow
         var label = name.Length == 0
             ? MessageCatalog.Get("composer.quoting_a_reply", Language)
             : MessageCatalog.Get("composer.quote_name", Language, ("name", name));
-        _attachments.Add(new AttachmentChip(string.Empty, label, source, false, QuoteBody: text, QuoteSource: source));
+        _composer.Attachments.Add(new AttachmentChip(string.Empty, label, source, false, QuoteBody: text, QuoteSource: source));
         RebuildAttachments();
     }
 
@@ -90,7 +88,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        _attachments.Add(new AttachmentChip(string.Empty, MessageCatalog.Get("composer.pasted_text", Language), string.Empty, false, PasteBody: text));
+        _composer.Attachments.Add(new AttachmentChip(string.Empty, MessageCatalog.Get("composer.pasted_text", Language), string.Empty, false, PasteBody: text));
         RebuildAttachments();
     }
 
@@ -104,13 +102,13 @@ public sealed partial class MainWindow
             return;
         }
 
-        var at = _attachments.IndexOf(attachment);
+        var at = _composer.Attachments.IndexOf(attachment);
         if (at < 0)
         {
             return;
         }
 
-        _attachments[at] = attachment with
+        _composer.Attachments[at] = attachment with
         {
             Saving = true,
             SaveError = string.Empty,
@@ -119,10 +117,10 @@ public sealed partial class MainWindow
         try
         {
             var kept = await _engine.Pages.KeepTextAsync(attachment.PasteBody, _closing.Token).ConfigureAwait(true);
-            at = _attachments.IndexOf(attachment);
+            at = _composer.Attachments.IndexOf(attachment);
             if (at >= 0)
             {
-                _attachments[at] = attachment with
+                _composer.Attachments[at] = attachment with
                 {
                     Saving = false,
                     KeptPath = kept.Path,
@@ -135,10 +133,10 @@ public sealed partial class MainWindow
         }
         catch (Exception error)
         {
-            at = _attachments.IndexOf(attachment);
+            at = _composer.Attachments.IndexOf(attachment);
             if (at >= 0)
             {
-                _attachments[at] = attachment with
+                _composer.Attachments[at] = attachment with
                 {
                     Saving = false,
                     SaveError = DescribeError(error),
@@ -159,7 +157,7 @@ public sealed partial class MainWindow
     {
         AttachmentStrip.Children.Clear();
         var index = 0;
-        foreach (var attachment in _attachments.ToArray())
+        foreach (var attachment in _composer.Attachments.ToArray())
         {
             var chip = new Border { Classes = { "attachment-chip" } };
             if (attachment.SourcePath.Length > 0 || attachment.Token.Length > 0)
@@ -207,7 +205,7 @@ public sealed partial class MainWindow
                 restore.Click += (_, _) =>
                 {
                     var body = attachment.PasteBody;
-                    _attachments.Remove(attachment);
+                    _composer.Attachments.Remove(attachment);
                     RebuildAttachments();
                     InsertPastedText(body);
                 };
@@ -227,7 +225,7 @@ public sealed partial class MainWindow
             ToolTip.SetTip(remove, MessageCatalog.Get("common.remove", Language));
             remove.Click += (_, _) =>
             {
-                _attachments.Remove(attachment);
+                _composer.Attachments.Remove(attachment);
                 RebuildAttachments();
             };
             row.Children.Add(remove);
@@ -241,9 +239,9 @@ public sealed partial class MainWindow
             index++;
         }
 
-        _renderedAttachments.IntersectWith(_attachments);
+        _renderedAttachments.IntersectWith(_composer.Attachments);
 
-        AttachmentArea.IsVisible = _attachments.Count > 0;
+        AttachmentArea.IsVisible = _composer.Attachments.Count > 0;
         UpdateAttachmentWarning();
     }
 
@@ -262,16 +260,16 @@ public sealed partial class MainWindow
             var refs = await _engine.Pages.DropAsync([attachment.SourcePath], _closing.Token).ConfigureAwait(true);
             if (refs.Any(reference => !string.IsNullOrWhiteSpace(reference.Ref)))
             {
-                _attachments.Remove(attachment);
+                _composer.Attachments.Remove(attachment);
                 AddAttachments(refs);
                 return;
             }
 
             var error = refs.Select(reference => reference.Error).FirstOrDefault(value => !string.IsNullOrEmpty(value)) ?? MessageCatalog.Get("composer.could_not_add_retry", Language);
-            var at = _attachments.IndexOf(attachment);
+            var at = _composer.Attachments.IndexOf(attachment);
             if (at >= 0)
             {
-                _attachments[at] = attachment with
+                _composer.Attachments[at] = attachment with
                 {
                     Error = error,
                 };
@@ -282,10 +280,10 @@ public sealed partial class MainWindow
         }
         catch (Exception error)
         {
-            var at = _attachments.IndexOf(attachment);
+            var at = _composer.Attachments.IndexOf(attachment);
             if (at >= 0)
             {
-                _attachments[at] = attachment with
+                _composer.Attachments[at] = attachment with
                 {
                     Error = DescribeError(error),
                 };
@@ -298,7 +296,7 @@ public sealed partial class MainWindow
     /// <summary>Warns when a picture rides with a model that does not read images.</summary>
     private void UpdateAttachmentWarning()
     {
-        var pictures = _attachments.Any(chip => chip.Image && chip.Error.Length == 0);
+        var pictures = _composer.Attachments.Any(chip => chip.Image && chip.Error.Length == 0);
         AttachmentWarning.IsVisible = pictures && !_composerStatus.Vision;
         AttachmentWarning.Text = AttachmentWarning.IsVisible
             ? MessageCatalog.Get("composer.this_model_does_not_read", Language)
@@ -310,7 +308,7 @@ public sealed partial class MainWindow
     /// <returns>The submit text.</returns>
     private string ComposeSubmitText(string line)
     {
-        var parts = _attachments
+        var parts = _composer.Attachments
             .Where(chip => chip.Error.Length == 0)
             .Select(chip => chip.QuoteBody.Length > 0 ? QuoteBlock(chip) : chip.KeptPointer.Length > 0 ? chip.KeptPointer : chip.PasteBody.Length > 0 ? chip.PasteBody : chip.Token)
             .Where(part => part.Length > 0)
@@ -344,7 +342,7 @@ public sealed partial class MainWindow
     /// <summary>Drops attachments with the draft that owned them.</summary>
     private void ClearAttachments()
     {
-        _attachments.Clear();
+        _composer.Attachments.Clear();
         RebuildAttachments();
     }
 
@@ -375,31 +373,4 @@ public sealed partial class MainWindow
     /// <returns>Whether the reference is a picture.</returns>
     private bool IsPicture(string path) =>
         Path.GetExtension(path).ToLowerInvariant() is ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".bmp";
-
-    /// <summary>One reference held above the prompt.</summary>
-    /// <param name="Token">The host-issued token, empty for a failed drop.</param>
-    /// <param name="Name">The visible basename.</param>
-    /// <param name="SourcePath">The native path retry uses.</param>
-    /// <param name="Image">Whether this reference is a picture.</param>
-    /// <param name="Error">Why the drop was refused, empty for a ready chip.</param>
-    /// <param name="QuoteBody">Selected text for a quote chip, empty for an attachment.</param>
-    /// <param name="QuoteSource">File the quoted text came from.</param>
-    /// <param name="PasteBody">Long pasted text held out of the box, empty otherwise.</param>
-    /// <param name="KeptPath">Host file holding the paste, empty until saved.</param>
-    /// <param name="KeptPointer">Text that points the model at the saved file.</param>
-    /// <param name="Saving">Whether a save-as-file request is in flight.</param>
-    /// <param name="SaveError">Why saving the paste failed.</param>
-    private sealed record AttachmentChip(
-        string Token,
-        string Name,
-        string SourcePath,
-        bool Image,
-        string Error = "",
-        string QuoteBody = "",
-        string QuoteSource = "",
-        string PasteBody = "",
-        string KeptPath = "",
-        string KeptPointer = "",
-        bool Saving = false,
-        string SaveError = "");
 }

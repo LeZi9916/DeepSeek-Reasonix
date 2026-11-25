@@ -275,9 +275,9 @@ public sealed partial class MainWindow
         var primary = OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
         if (SettingsPanel.IsVisible || SetupPanel.IsVisible)
         {
-            if (e.Key == Key.Escape && _leaveDecision is not null)
+            if (e.Key == Key.Escape && _settings.IsConfirming)
             {
-                _leaveDecision.TrySetResult(false);
+                _settings.ResolveConfirmation(false);
                 e.Handled = true;
             }
             else if (e.Key == Key.Escape && SearchResultsPanel.IsVisible)

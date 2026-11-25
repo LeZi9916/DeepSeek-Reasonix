@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Host;
+using Reasonix.Studio.Shell.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +38,7 @@ public sealed partial class MainWindow
     /// <returns>Localized description.</returns>
     private string SectionDescription(string id)
     {
-        var count = BlockCount(id);
+        var count = SettingsNavigation.BlockCount(id);
         var items = count == 0 ? string.Empty : MessageCatalog.Get("settings.n_items", Language, ("n", Format.Count(count, Language)));
         return s_descriptions.TryGetValue(id, out var key)
             ? MessageCatalog.Get(key, Language) + "\u2002·\u2002" + items
@@ -158,31 +159,31 @@ public sealed partial class MainWindow
     private void IndexSettings(StackPanel column)
     {
         var targets = column.GetLogicalDescendants().OfType<Control>()
-            .Where(c => c.Tag is string key && s_destinations.Values.Any(keys => keys.Contains(key, StringComparer.Ordinal)))
-            .Where(c => _shownSettings != "network" || c.Tag is "common.network" or "settings.remote" or "remote.phone_access")
+            .Where(c => c.Tag is string key && SettingsNavigation.Destinations.Values.Any(keys => keys.Contains(key, StringComparer.Ordinal)))
+            .Where(c => _settings.Section != "network" || c.Tag is "common.network" or "settings.remote" or "remote.phone_access")
             .DistinctBy(c => c.Tag).ToArray();
-        if (_shownSettings is "ext" or "ext:market")
+        if (_settings.Section is "ext" or "ext:market")
         {
             IndexExtensionSettings();
             return;
         }
 
-        if (_shownSettings == "storage")
+        if (_settings.Section == "storage")
         {
             IndexDataSettings(targets);
             return;
         }
 
-        if (_shownSettings.StartsWith("session", StringComparison.Ordinal))
+        if (_settings.Section.StartsWith("session", StringComparison.Ordinal))
         {
-            targets = targets.Where(target => s_destinations["session"].Contains((string)target.Tag!, StringComparer.Ordinal) && target.Tag is not "persona.system_persona")
-                .OrderBy(target => Array.IndexOf(s_destinations["session"], (string)target.Tag!))
+            targets = targets.Where(target => SettingsNavigation.Destinations["session"].Contains((string)target.Tag!, StringComparer.Ordinal) && target.Tag is not "persona.system_persona")
+                .OrderBy(target => Array.IndexOf(SettingsNavigation.Destinations["session"], (string)target.Tag!))
                 .ToArray();
         }
 
-        if (_shownSettings is "display" or "model" or "tools" or "controls" or "account")
+        if (_settings.Section is "display" or "model" or "tools" or "controls" or "account")
         {
-            targets = targets.OrderBy(target => Array.IndexOf(s_destinations[_shownSettings], (string)target.Tag!)).ToArray();
+            targets = targets.OrderBy(target => Array.IndexOf(SettingsNavigation.Destinations[_settings.Section], (string)target.Tag!)).ToArray();
         }
 
         SettingsLinks.Children.Clear();
@@ -227,7 +228,7 @@ public sealed partial class MainWindow
             AutomationProperties.SetAutomationId(link, "action:settings.page-index");
             link.Click += async (_, _) =>
             {
-                if (_shownSettings != section)
+                if (_settings.Section != section)
                 {
                     await ShowSectionAsync(section).ConfigureAwait(true);
                 }

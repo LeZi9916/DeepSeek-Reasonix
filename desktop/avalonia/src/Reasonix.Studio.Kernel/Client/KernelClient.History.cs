@@ -12,7 +12,7 @@ public sealed partial class KernelClient
     /// <returns>The acknowledged page or null when unsupported.</returns>
     public async Task<HistoryPage?> HistoryPageAsync(string? cursor = null, CancellationToken token = default)
     {
-        using var reply = await _http.GetAsync("/history/page" + (string.IsNullOrEmpty(cursor) ? string.Empty : "?cursor=" + Uri.EscapeDataString(cursor)), token).ConfigureAwait(false);
+        using var reply = await _http.GetAsync("/history/page" + (string.IsNullOrEmpty(cursor) ? string.Empty : "?cursor=" + Uri.EscapeDataString(cursor)), HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
         try
         {
             await EnsureAsync(reply, token).ConfigureAwait(false);

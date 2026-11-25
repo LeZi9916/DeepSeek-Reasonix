@@ -63,7 +63,7 @@ public sealed partial class MainWindow
             engine.IsRemote ? null : () => OpenExternalOfficeAsync(engine, entry),
             OpenOfficeSettingAsync);
         var version = (string?)info["version"] ?? string.Empty;
-        _fileBuffers[(WorkspaceBufferScope, entry.Path)] = new FileBuffer(new WorkspaceFile(entry.Path, string.Empty, version, ReadOnly: true), "office");
+        _workbench.Buffers[(WorkspaceBufferScope, entry.Path)] = new FileBuffer(new WorkspaceFile(entry.Path, string.Empty, version, ReadOnly: true), "office");
         _openFile = null;
         SetReadOnlyBadge(null);
         ShowPreview(preview);

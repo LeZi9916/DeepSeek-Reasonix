@@ -14,8 +14,38 @@ public sealed partial class SessionPage
     /// <summary>The device-local default when the reader has not touched a disclosure.</summary>
     private TranscriptFolding _folding = new();
 
+    /// <summary>Disclosure choices of the pane currently mounted.</summary>
+    private TranscriptDisclosureChoices _choices = new();
+
     /// <summary>Gets or sets the choices retained by the pane mounted in this window.</summary>
-    public TranscriptDisclosureChoices DisclosureChoices { get; set; } = new();
+    public TranscriptDisclosureChoices DisclosureChoices
+    {
+        get
+        {
+            return _choices;
+        }
+
+        set
+        {
+            if (ReferenceEquals(_choices, value))
+            {
+                return;
+            }
+
+            _choices = value;
+            _viewportVersion++;
+            _state = new();
+            _viewportRows.Clear();
+            _rows.ClearRecent();
+            _forms.Clear();
+            _locations.Clear();
+            _indices.Clear();
+            _skipMountEntrance = true;
+            _replySelection.Clear();
+            _newAnswerAt = null;
+            _scroll.Offset = default;
+        }
+    }
 
     /// <summary>Applies the same defaults shown in the settings preview.</summary>
     /// <param name="folding">The chosen local defaults.</param>
@@ -24,7 +54,7 @@ public sealed partial class SessionPage
         if (_folding != folding)
         {
             _folding = folding;
-            Rebuild(_state.Items);
+            Rebuild(_state.Items, recreate: true);
         }
     }
 
@@ -72,11 +102,16 @@ public sealed partial class SessionPage
             return;
         }
 
+        if (_viewportRows.Any(entry => entry.Decoration == RowKind.Activity && entry.Children.Count > InlineChildren))
+        {
+            Rebuild(items);
+        }
+
         foreach (var group in _rows.GetVisualDescendants().OfType<ActivityDisclosure>())
         {
             if (group.Tag is IReadOnlyList<TranscriptItem> work && FoldChoice(TranscriptPart.Activity, work[0].Id) is null)
             {
-                group.SetOpen(work.Any(row => _liveWork.Contains(row.Id) || row is ToolItem { Running: true }));
+                group.SetOpen(ActivityOpen(work, ActivityTally.Of(work)));
             }
         }
     }

@@ -13,7 +13,7 @@ internal static class HistoryProjection
     /// <summary>Restores messages while retaining dispatches crossing the page boundary.</summary>
     /// <param name="messages">Canonical page.</param><param name="context">Earlier tool dispatches.</param>
     /// <returns>The restored transcript rows.</returns>
-    internal static IReadOnlyList<TranscriptItem> Restore(IReadOnlyList<HistoryMessage> messages, IReadOnlyList<HistoryToolContext> context)
+    internal static List<TranscriptItem> Restore(IReadOnlyList<HistoryMessage> messages, IReadOnlyList<HistoryToolContext> context)
     {
         var items = new List<TranscriptItem>();
         var calls = new Dictionary<string, int>(StringComparer.Ordinal);

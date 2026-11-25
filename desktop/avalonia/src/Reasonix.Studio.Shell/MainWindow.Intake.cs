@@ -186,7 +186,7 @@ public sealed partial class MainWindow
     /// <param name="e">The click.</param>
     private async void OnPickFiles(object? sender, RoutedEventArgs e)
     {
-        var draft = _draftKey;
+        var draft = DraftKey;
         try
         {
             var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -213,7 +213,7 @@ public sealed partial class MainWindow
         e.Handled = true;
         if (e.DataTransfer.TryGetFiles() is { } files)
         {
-            await InsertFilesAsync(files, _draftKey).ConfigureAwait(true);
+            await InsertFilesAsync(files, DraftKey).ConfigureAwait(true);
         }
     }
 
@@ -229,7 +229,7 @@ public sealed partial class MainWindow
         }
 
         e.Handled = true;
-        var draft = _draftKey;
+        var draft = DraftKey;
         try
         {
             if (await clipboard.TryGetFilesAsync().ConfigureAwait(true) is { Length: > 0 } paths)
@@ -243,17 +243,17 @@ public sealed partial class MainWindow
                     using var bytes = new MemoryStream();
                     bitmap.Save(bytes, PngBitmapEncoderOptions.Default);
                     bytes.Position = 0;
-                    if (draft == _draftKey && !_closing.IsCancellationRequested)
+                    if (draft == DraftKey && !_closing.IsCancellationRequested)
                     {
                         var pasted = await _engine.Pages.PasteImageAsync(bytes, _closing.Token).ConfigureAwait(true);
-                        if (draft == _draftKey && pasted.Ref is { Length: > 0 } reference)
+                        if (draft == DraftKey && pasted.Ref is { Length: > 0 } reference)
                         {
                             AddAttachmentReference(reference);
                         }
                     }
                 }
             }
-            else if (draft == _draftKey && !_closing.IsCancellationRequested && Composer.IsKeyboardFocusWithin)
+            else if (draft == DraftKey && !_closing.IsCancellationRequested && Composer.IsKeyboardFocusWithin)
             {
                 if (await clipboard.TryGetTextAsync().ConfigureAwait(true) is { Length: > 0 } text && IsLongPaste(text))
                 {
@@ -280,7 +280,7 @@ public sealed partial class MainWindow
     /// <returns>The completed drop.</returns>
     private async Task InsertFilesAsync(IEnumerable<IStorageItem> files, string? draft)
     {
-        if (_engine is null || _closing.IsCancellationRequested || draft != _draftKey)
+        if (_engine is null || _closing.IsCancellationRequested || draft != DraftKey)
         {
             return;
         }
@@ -294,7 +294,7 @@ public sealed partial class MainWindow
         try
         {
             var refs = await _engine.Pages.DropAsync(paths, _closing.Token).ConfigureAwait(true);
-            if (_closing.IsCancellationRequested || draft != _draftKey)
+            if (_closing.IsCancellationRequested || draft != DraftKey)
             {
                 return;
             }

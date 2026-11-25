@@ -55,8 +55,18 @@ public sealed partial class SessionPage
                 _messageRail.ShowViewport(_scroll);
             }
         };
-        _messageRail.JumpRequested += JumpToTranscriptRow;
-        _scroll.PointerWheelChanged += (_, _) => CancelRailJump();
+        _messageRail.JumpRequested += id =>
+        {
+            if (Locate(id) is { } row)
+            {
+                JumpToTranscriptRow(row);
+            }
+        };
+        _scroll.PointerWheelChanged += (_, _) =>
+        {
+            _anchorTicket++;
+            CancelRailJump();
+        };
         _scroll.DetachedFromVisualTree += (_, _) => CancelRailJump();
     }
 
@@ -149,7 +159,7 @@ public sealed partial class SessionPage
         CancelRailJump();
         _messageLanding.Clear();
         _messageRail.SetMarks(
-            _drawn.Where(row => row.Tag is UserItem).Select(row => ((UserItem)row.Tag!, row)).ToArray(),
+            _state.Items.OfType<UserItem>().ToArray(),
             Language);
         QueueRailMeasure();
     }
@@ -167,8 +177,22 @@ public sealed partial class SessionPage
             () =>
             {
                 _railMeasureQueued = false;
-                _messageRail.MeasureMarks(_scroll);
+                _messageRail.MeasureMarks(_scroll, MarkPosition);
             },
             DispatcherPriority.Loaded);
+    }
+
+    /// <summary>Gets the measured position of a message or a viewport-relative estimate.</summary>
+    /// <param name="id">Canonical message identity.</param>
+    /// <returns>Fraction along the complete scroll extent.</returns>
+    private double MarkPosition(string id)
+    {
+        var extent = _scroll.Extent.Height;
+        if (_viewportRows.Count <= LargeTranscriptThreshold && extent > 0 && _realized.TryGetValue(id, out var row) && row.TranslatePoint(default, _scroll) is { } point)
+        {
+            return (point.Y + _scroll.Offset.Y) / extent;
+        }
+
+        return _locations.GetValueOrDefault(id) / (double)Math.Max(1, _viewportRows.Count - 1);
     }
 }

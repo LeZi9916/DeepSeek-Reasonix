@@ -135,7 +135,7 @@ public sealed partial class MainWindow
         TurnCostText.IsVisible = SessionCostText.IsVisible && state.Metrics.Turn.Any(amount => amount.Amount > 0);
         TurnCostText.Text = MessageCatalog.Get("composer.this_turn", Language) + " " + (_hideAmounts ? "•••" : Format.MoneyList(state.Metrics.Turn.Select(amount => ((decimal)amount.Amount, amount.Currency)), Language));
         DrawTariff();
-        WorkspaceStatus.Show(_sidebarHost, _composeIsolated, _queue?.Items.Count ?? 0, Language);
+        WorkspaceStatus.Show(_sidebarHost, _composeIsolated, _composer.Queue?.Items.Count ?? 0, Language);
         if (state.Running && !_composePulse.IsEnabled)
         {
             _composePulse.Start();

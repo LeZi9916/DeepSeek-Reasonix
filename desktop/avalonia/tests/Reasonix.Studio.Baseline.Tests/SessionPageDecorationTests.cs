@@ -122,6 +122,78 @@ public sealed class SessionPageDecorationTests
         Assert.Contains(texts, text => text.Contains("the answer", System.StringComparison.Ordinal));
     }
 
+    /// <summary>Only viewport rows are created, and Find can realize the last row by identity.</summary>
+    /// <returns>The rendered interaction.</returns>
+    [Fact]
+    public async Task ALongTranscriptRealizesOnlyTheViewport()
+    {
+        var session = HeadlessUnitTestSession.StartNew(typeof(App));
+        await session.Dispatch(
+            () =>
+            {
+                var page = new SessionPage();
+                var window = new Window { Width = 800, Height = 640, Content = page };
+                window.Show();
+                try
+                {
+                    var items = Enumerable.Range(0, 5000)
+                        .Select(i => (TranscriptItem)new UserItem { Id = $"row-{i}", Text = $"message {i}" })
+                        .ToArray();
+                    page.Show(new SessionState { Items = items });
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.InRange(page.GetVisualDescendants().OfType<UserMessage>().Count(), 1, 120);
+
+                    Assert.Equal((1, 1), page.FindMatch("message 4999", 0));
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), block => block.Text == "message 4999");
+                    Assert.InRange(page.GetVisualDescendants().OfType<UserMessage>().Count(), 1, 120);
+                }
+                finally
+                {
+                    window.Close();
+                }
+            },
+            default);
+    }
+
+    /// <summary>A large folded activity does not realize its children and can still reveal a remote match.</summary>
+    /// <returns>The rendered interaction.</returns>
+    [Fact]
+    public async Task ALongActivityRealizesItsMembersIndependently()
+    {
+        var session = HeadlessUnitTestSession.StartNew(typeof(App));
+        await session.Dispatch(
+            () =>
+            {
+                var page = new SessionPage();
+                var window = new Window { Width = 800, Height = 640, Content = page };
+                window.Show();
+                try
+                {
+                    var rows = Enumerable.Range(0, 1000)
+                        .Select(i => (TranscriptItem)new ToolItem
+                        {
+                            Id = $"tool-{i}",
+                            Call = new Tool { ID = $"call-{i}", Name = $"fixture-{i}" },
+                        })
+                        .ToArray();
+                    page.Show(new SessionState { Items = rows });
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.Empty(page.GetVisualDescendants().OfType<ToolCallHeader>());
+
+                    Assert.Equal((1, 1), page.FindMatch("fixture-999", 0));
+                    Dispatcher.UIThread.RunJobs();
+                    Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), block => block.Text == "fixture-999");
+                    Assert.InRange(page.GetVisualDescendants().OfType<ToolCallHeader>().Count(), 1, 120);
+                }
+                finally
+                {
+                    window.Close();
+                }
+            },
+            default);
+    }
+
     /// <summary>
     /// Renders one state in a real headless window and reads the text it drew.
     /// </summary>

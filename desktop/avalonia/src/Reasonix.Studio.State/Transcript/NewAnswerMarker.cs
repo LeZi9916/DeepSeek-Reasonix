@@ -43,7 +43,7 @@ public static class NewAnswerMarker
 
         for (var i = lastTurn + 1; i < items.Count; i++)
         {
-            if (items[i] is SayItem say && (!string.IsNullOrWhiteSpace(say.Text) || !string.IsNullOrWhiteSpace(say.Reasoning)))
+            if (items[i] is SayItem { HasContent: true })
             {
                 return i == 0 ? -1 : i;
             }

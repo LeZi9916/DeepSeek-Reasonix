@@ -173,6 +173,21 @@ public sealed class TranscriptDecorationTests
         Assert.False(lanes[0].IsDelegateGroup);
     }
 
+    /// <summary>Splits a long ordinary stretch without copying every prefix.</summary>
+    [Fact]
+    public void ALongOrdinaryLaneAllocatesLinearly()
+    {
+        var rows = Enumerable.Range(0, 5000).Select(i => (TranscriptItem)Say("answer", i.ToString(System.Globalization.CultureInfo.InvariantCulture))).ToArray();
+        _ = TranscriptLanes.Split(rows[..1]);
+
+        var before = System.GC.GetAllocatedBytesForCurrentThread();
+        var lane = Assert.Single(TranscriptLanes.Split(rows));
+        var allocated = System.GC.GetAllocatedBytesForCurrentThread() - before;
+
+        Assert.Equal(rows, lane.Rows);
+        Assert.InRange(allocated, 0, 512_000);
+    }
+
     /// <summary>Uses the first authored turn after the cutoff, before its response.</summary>
     [Fact]
     public void TheUnreadLineGoesBeforeTheFirstUnseenTurn()

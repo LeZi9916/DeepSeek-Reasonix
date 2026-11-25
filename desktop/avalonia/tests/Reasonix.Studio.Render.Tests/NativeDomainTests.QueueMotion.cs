@@ -4,6 +4,9 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Contracts.Events;
+using Reasonix.Studio.State;
+using Reasonix.Studio.State.Transcript;
 using System;
 using System.Linq;
 using System.Net;
@@ -49,6 +52,40 @@ public sealed partial class NativeDomainTests
                 Assert.Equal(0d, second.RenderTransform?.Value.M32 ?? 0);
             },
             allowMotion: true);
+
+    /// <summary>Text deltas preserve the mounted queue and preceding conversation rows.</summary>
+    /// <returns>The queue and transcript identities after a streamed update.</returns>
+    [Fact]
+    public Task StreamedTextKeepsTheQueueAndEarlierRowsMounted() =>
+        WithSettingsAsync(
+            "conversation",
+            async (window, reads) =>
+            {
+                reads.Exchange = request => request.RequestUri!.AbsolutePath == "/inbox"
+                    ? Task.FromResult<HttpResponseMessage?>(JsonReply(JsonNode.Parse("""
+                        {"revision":1,"paused":false,"items":[{"id":"queued","preview":"follow-up","intent":"followup","state":"queued"}],"capacity":{}}
+                        """)!.AsObject()))
+                    : Task.FromResult<HttpResponseMessage?>(null);
+                var user = new UserItem { Id = "original", Text = "question" };
+                var reducer = new SessionReducer(new IdSequence());
+                Assert.True(WireFrame.TryParse("""{"kind":"text","text":"first","seq":1}""", out var first));
+                var start = new SessionState { Items = new[] { user }, Running = true };
+                var state = reducer.Reduce(start, first);
+                window.ShowState(state);
+                await window.RefreshQueueAsync().ConfigureAwait(true);
+                window.UpdateLayout();
+
+                var strip = window.FindControl<StackPanel>("QueueStrip")!;
+                var queued = Assert.Single(strip.Children);
+                var preceding = window.GetVisualDescendants().OfType<Border>().Single(row => ReferenceEquals(row.Tag, user));
+                Assert.True(WireFrame.TryParse("""{"kind":"text","text":" next","seq":2}""", out var second));
+                window.ShowState(reducer.Reduce(state, second));
+                window.UpdateLayout();
+
+                Assert.Same(queued, Assert.Single(strip.Children));
+                Assert.Same(preceding, window.GetVisualDescendants().OfType<Border>().Single(row => ReferenceEquals(row.Tag, user)));
+                Assert.Contains(window.GetVisualDescendants().OfType<SelectableTextBlock>(), text => text.Text == "first next");
+            });
 
     /// <summary>Keeps queue rows at their final pose when motion is off.</summary>
     /// <returns>The reduced-motion queue check.</returns>

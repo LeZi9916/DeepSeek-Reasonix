@@ -119,6 +119,12 @@ internal sealed partial class AnswerCard : UserControl
         var quoteMore = this.FindControl<MenuItem>("QuoteMore")!;
         quoteMore.Header = MessageCatalog.Get(MessageKey.Composer.SideQuoteLabel, language);
         quoteMore.Click += (_, _) => quote(SelectedPassage());
+        AttachedToVisualTree += (_, _) => PresentMarkdown();
+        DetachedFromVisualTree += (_, _) =>
+        {
+            _markdownMount++;
+            _markdownSelection = null;
+        };
         Update(item, language);
     }
 
@@ -198,7 +204,7 @@ internal sealed partial class AnswerCard : UserControl
         if (_source != item.Text)
         {
             _source = item.Text;
-            _answerCaret.Target = ShowMarkdown(item.Text);
+            PresentMarkdown();
         }
 
         _answerCaret.Classes.Set("live", !item.Done && _source.Length > 0);

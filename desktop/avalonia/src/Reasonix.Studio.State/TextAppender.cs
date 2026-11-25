@@ -1,5 +1,6 @@
 using Reasonix.Studio.State.Transcript;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Reasonix.Studio.State;
 
@@ -53,36 +54,7 @@ public sealed class TextAppender
         bool reasoning,
         string? source = null)
     {
-        if (items is null)
-        {
-            throw new System.ArgumentNullException(nameof(items));
-        }
-
-        // Answer text ends the thought in front of it: a model that has started
-        // answering is no longer thinking, and a running clock would keep counting.
-        var working = reasoning ? items : SealThought(items);
-        var at = OpenSayIndex(working);
-        var next = new List<TranscriptItem>(working);
-
-        if (at >= 0 && next[at] is SayItem open)
-        {
-            next[at] = reasoning
-                ? open with
-                {
-                    Reasoning = (open.Reasoning ?? string.Empty) + text,
-                }
-                : open with
-                {
-                    Text = open.Text + text,
-                };
-            return next;
-        }
-
-        var id = _ids.Next();
-        next.Add(reasoning
-            ? new SayItem { Id = id, Reasoning = text, Source = source, ThoughtStartedAt = _clock() }
-            : new SayItem { Id = id, Text = text, Source = source });
-        return next;
+        return Append(items, text, reasoning, source, out _);
     }
 
     /// <summary>
@@ -110,13 +82,12 @@ public sealed class TextAppender
         var now = _clock();
         var elapsed = System.Math.Max(0, now - (open.ThoughtStartedAt ?? now));
 
-        var next = new List<TranscriptItem>(items);
-        next[at] = open with
+        return items.ToImmutableList().SetItem(at, open with
         {
+            Reasoning = open.Reasoning,
             ThoughtMs = elapsed,
             ThoughtStartedAt = null,
-        };
-        return next;
+        });
     }
 
     /// <summary>
@@ -166,6 +137,34 @@ public sealed class TextAppender
         }
 
         return next ?? items;
+    }
+
+    /// <summary>Appends text and reports the canonical row that changed.</summary>
+    /// <param name="items">Transcript before the delta.</param><param name="text">Accepted delta.</param>
+    /// <param name="reasoning">Whether the delta is thought.</param><param name="source">Model source.</param>
+    /// <param name="index">The changed row position.</param><returns>The new transcript.</returns>
+    internal IReadOnlyList<TranscriptItem> Append(IReadOnlyList<TranscriptItem> items, string text, bool reasoning, string? source, out int index)
+    {
+        if (items is null)
+        {
+            throw new System.ArgumentNullException(nameof(items));
+        }
+
+        // Answer text ends the thought in front of it: a model that has started
+        // answering is no longer thinking, and a running clock would keep counting.
+        var working = reasoning ? items : SealThought(items);
+        var at = OpenSayIndex(working);
+        var rows = working.ToImmutableList();
+        index = at >= 0 ? at : rows.Count;
+        if (at >= 0 && rows[at] is SayItem open)
+        {
+            return rows.SetItem(at, open.Append(text, reasoning));
+        }
+
+        var id = _ids.Next();
+        return rows.Add(reasoning
+            ? new SayItem { Id = id, Reasoning = text, Source = source, ThoughtStartedAt = _clock() }
+            : new SayItem { Id = id, Text = text, Source = source });
     }
 
     /// <summary>

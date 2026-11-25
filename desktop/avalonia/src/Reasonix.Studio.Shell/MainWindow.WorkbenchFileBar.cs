@@ -4,6 +4,7 @@ using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
+using Reasonix.Studio.Shell.Workbench;
 
 namespace Reasonix.Studio.Shell;
 

@@ -198,9 +198,9 @@ public sealed partial class MainWindow
                 return;
             }
 
-            if (restored is not null && _fileBuffers.TryGetValue((WorkspaceBufferScope, restored), out var buffer) && !buffer.Dirty && !buffer.Saving)
+            if (restored is not null && _workbench.Buffers.TryGetValue((WorkspaceBufferScope, restored), out var buffer) && !buffer.Dirty && !buffer.Saving)
             {
-                _fileBuffers.Remove((WorkspaceBufferScope, restored));
+                _workbench.Buffers.Remove((WorkspaceBufferScope, restored));
                 if (ReferenceEquals(buffer, _openFile))
                 {
                     await OpenEntryAsync(new FileEntry(restored, false)).ConfigureAwait(true);

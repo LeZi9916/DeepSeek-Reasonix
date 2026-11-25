@@ -49,7 +49,11 @@ public sealed partial class NativeDomainTests
             var overlay = page.GetVisualDescendants().OfType<Canvas>().Single(canvas => canvas.Name == "ReplySelectionLayer");
             var toolbar = overlay.FindControl<Border>("Toolbar")!;
             var scroll = page.GetVisualDescendants().OfType<ScrollViewer>().First();
-            var reply = page.GetVisualDescendants().OfType<SelectableTextBlock>().Where(text => text.Name == "Answer").ElementAt(8);
+            Assert.Equal((9, 22), page.FindMatch(passage, 8));
+            window.UpdateLayout();
+            var reply = page.GetVisualDescendants().OfType<Border>()
+                .Single(row => row.Tag is SayItem { Id: "a8" })
+                .GetVisualDescendants().OfType<SelectableTextBlock>().Single(text => text.Name == "Answer");
             var rect = reply.TextLayout.HitTestTextRange(0, 14).First();
             var at = reply.TranslatePoint(rect.TopLeft, scroll)!.Value;
             scroll.Offset = new Vector(0, scroll.Offset.Y + at.Y - (below ? 24 : 230));

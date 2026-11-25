@@ -60,8 +60,14 @@ internal sealed class SessionPaneState(SessionEngine engine, SessionStatus statu
         get; set;
     }
 
+    /// <summary>Gets or sets the last runtime status projected into the rail and tabs.</summary>
+    internal (long Revision, int Count, bool Running, bool Waiting)? RunPresentation
+    {
+        get; set;
+    }
+
     /// <summary>Gets or sets the reader's retained transcript position.</summary>
-    internal double ScrollOffset
+    internal (string? Id, double Offset, double Inset) ScrollAnchor
     {
         get; set;
     }

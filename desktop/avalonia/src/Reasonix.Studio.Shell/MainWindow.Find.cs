@@ -47,6 +47,7 @@ public sealed partial class MainWindow
     private void CloseFindBar()
     {
         FindBar.IsVisible = false;
+        Conversation.CancelFind();
         Composer.Focus();
     }
 

@@ -16,48 +16,21 @@ namespace Reasonix.Studio.Shell;
 
 public sealed partial class MainWindow
 {
-    /// <summary>Retained visual state for each independently running conversation.</summary>
-    private readonly Dictionary<SessionEngine, WorkbenchPresentation> _workbenchStates = [];
-
-    /// <summary>Stable editor namespaces owned by each retained runtime.</summary>
-    private readonly Dictionary<SessionEngine, string> _workbenchKeys = [];
-
-    /// <summary>The active buffer namespace, including remote host and runtime.</summary>
-    private string _workspaceBufferScope = string.Empty;
-
-    /// <summary>The runtime whose workbench is mounted.</summary>
-    private SessionEngine? _boundWorkspaceEngine;
+    /// <summary>Owns workspace presentation and retained file buffers.</summary>
+    private readonly WorkbenchSession _workbench = new();
 
     /// <summary>Gets the active runtime's stable editor-buffer namespace.</summary>
-    private string WorkspaceBufferScope => _workspaceBufferScope.Length > 0 ? _workspaceBufferScope : _workspaceRoot;
-
-    /// <summary>Separates identical paths on different machines and in different runtimes.</summary>
-    /// <param name="root">Canonical workspace.</param>
-    /// <returns>The editor buffer identity.</returns>
-    private string BufferScopeFor(string root)
-    {
-        if (_engine is not { } engine)
-        {
-            return root;
-        }
-
-        if (!_workbenchKeys.ContainsKey(engine))
-        {
-            _workbenchKeys[engine] = Guid.NewGuid().ToString("N");
-        }
-
-        return JsonSerializer.Serialize(new[] { engine.RemoteHost, root, _workbenchKeys[engine] });
-    }
+    private string WorkspaceBufferScope => _workbench.BufferScope.Length > 0 ? _workbench.BufferScope : _workspaceRoot;
 
     /// <summary>Retains widgets without cancelling a background runtime's work.</summary>
     private void CaptureWorkbenchPresentation()
     {
-        if (_boundWorkspaceEngine is not { } engine)
+        if (_workbench.BoundEngine is not { } engine)
         {
             return;
         }
 
-        _workbenchStates[engine] = new WorkbenchPresentation
+        _workbench.Capture(engine, new WorkbenchPresentation
         {
             Root = _workspaceRoot,
             Open = WorkbenchPanel.IsVisible,
@@ -74,7 +47,7 @@ public sealed partial class MainWindow
             SubagentRun = SubagentRunHost.IsVisible ? SubagentRunHost.Content as SubagentRunView : null,
             JobOutput = BackgroundJobHost.IsVisible ? BackgroundJobHost.Content as BackgroundJobOutputView : null,
             BrowserVisible = ManualBrowserHost.IsVisible,
-            Terminal = _terminalId,
+            Terminal = _terminal.Id,
             Folders = new Dictionary<string, WorkspaceListing>(_fileDirectories, StringComparer.Ordinal),
             Collapsed = new HashSet<string>(_fileCollapsed, StringComparer.Ordinal),
             Explorer = ExplorerPane.IsVisible,
@@ -84,7 +57,7 @@ public sealed partial class MainWindow
             GitApi = _gitApi,
             GitLifetime = _gitLifetime,
             Repositories = GitRepositories.Children.OfType<GitRepositoryView>().ToArray(),
-        };
+        });
         _gitLifetime = null;
         _gitApi = null;
         _gitSurface = null;
@@ -99,7 +72,7 @@ public sealed partial class MainWindow
         _subagentRuns.Clear();
         _showHiddenFiles = _workspacePreferences.ShowHiddenFiles;
         _fullWorkbench = false;
-        if (_engine is not { } engine || !_workbenchStates.TryGetValue(engine, out var state) || state.Root != _workspaceRoot)
+        if (_engine is not { } engine || !_workbench.TryRead(engine, out var state) || state.Root != _workspaceRoot)
         {
             return;
         }
@@ -134,7 +107,7 @@ public sealed partial class MainWindow
     /// <param name="pane">The active conversation.</param><returns>The selected file read, if any.</returns>
     private async Task RestoreWorkbenchFocusAsync(SessionPaneState pane)
     {
-        if (!_workbenchStates.TryGetValue(pane.Engine, out var state) || !state.Open || state.Root != pane.Status.WorkspaceRoot)
+        if (!_workbench.TryRead(pane.Engine, out var state) || !state.Open || state.Root != pane.Status.WorkspaceRoot)
         {
             return;
         }
@@ -192,12 +165,12 @@ public sealed partial class MainWindow
     /// <summary>Releases cached widget lifetimes when the owning window closes.</summary>
     private void ReleaseWorkbenchPresentations()
     {
-        foreach (var engine in _workbenchStates.Keys.ToArray())
+        foreach (var engine in _workbench.Runtimes())
         {
             ReleaseWorkbenchFor(engine);
         }
 
-        if (_boundWorkspaceEngine is { } active)
+        if (_workbench.BoundEngine is { } active)
         {
             ReleaseWorkbenchFor(active);
         }
@@ -213,15 +186,9 @@ public sealed partial class MainWindow
     /// <param name="engine">The closed runtime.</param>
     private void ReleaseWorkbenchFor(SessionEngine engine)
     {
-        var pages = new List<Browser.ManualWebPreview>();
-        if (_workbenchStates.Remove(engine, out var state))
-        {
-            state.GitLifetime?.Cancel();
-            state.GitLifetime?.Dispose();
-            pages.AddRange(state.Browsers);
-        }
+        var pages = _workbench.Release(engine).ToList();
 
-        if (ReferenceEquals(_boundWorkspaceEngine, engine))
+        if (ReferenceEquals(_workbench.BoundEngine, engine))
         {
             pages.AddRange(_browserPages);
             _browserPages.Clear();
@@ -231,7 +198,7 @@ public sealed partial class MainWindow
             HideSubagentRun();
             SubagentRunHost.Content = null;
             _subagentRuns.Clear();
-            _boundWorkspaceEngine = null;
+            _workbench.BoundEngine = null;
             ResetGit();
         }
 
@@ -239,141 +206,6 @@ public sealed partial class MainWindow
         {
             page.ClosePage();
             ManualBrowserHost.Release(page);
-        }
-
-        _workbenchKeys.Remove(engine);
-    }
-
-    /// <summary>Visual state owned by one runtime, separate from its canonical workspace data.</summary>
-    private sealed class WorkbenchPresentation
-    {
-        /// <summary>Gets or initializes the project owning this visual state.</summary>
-        internal string Root { get; init; } = string.Empty;
-
-        /// <summary>Gets or initializes a value indicating whether the workbench is open.</summary>
-        internal bool Open
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes a value indicating whether the workbench fills the pane.</summary>
-        internal bool Expanded
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes a value indicating whether hidden files are listed.</summary>
-        internal bool Hidden
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes the selected file path.</summary>
-        internal string? File
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes a value indicating whether source editing is selected.</summary>
-        internal bool Source
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes a value indicating whether the file diff is selected.</summary>
-        internal bool Diff
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes a value indicating whether the start surface is selected.</summary>
-        internal bool Launcher
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes the retained browser visual.</summary>
-        internal Control? Browser
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes a value indicating whether the browser is selected.</summary>
-        internal bool BrowserVisible
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes the selected kernel PTY identity.</summary>
-        internal string? Terminal
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes the acknowledged directory listings.</summary>
-        internal Dictionary<string, WorkspaceListing> Folders { get; init; } = [];
-
-        /// <summary>Gets or initializes the folded explorer paths.</summary>
-        internal HashSet<string> Collapsed { get; init; } = [];
-
-        /// <summary>Gets or initializes a value indicating whether the explorer is visible.</summary>
-        internal bool Explorer
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes the explorer scroll position.</summary>
-        internal Vector ExplorerOffset
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes the file caret position.</summary>
-        internal int Caret
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes the selected Git surface.</summary>
-        internal (string Title, Control View)? Git
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes the repository runtime client.</summary>
-        internal StudioPageClient? GitApi
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or sets the retained repository widget lifetime.</summary>
-        internal CancellationTokenSource? GitLifetime
-        {
-            get; set;
-        }
-
-        /// <summary>Gets or initializes the retained repository widgets.</summary>
-        internal GitRepositoryView[] Repositories { get; init; } = [];
-
-        /// <summary>Gets or initializes the independently open browser pages.</summary>
-        internal Browser.ManualWebPreview[] Browsers { get; init; } = [];
-
-        /// <summary>Gets or initializes the independently open background job tabs.</summary>
-        internal BackgroundJobOutputView[] Jobs { get; init; } = [];
-
-        /// <summary>Gets or initializes the child execution records open in this conversation.</summary>
-        internal SubagentRunView[] Agents { get; init; } = [];
-
-        /// <summary>Gets or initializes the selected child execution record.</summary>
-        internal SubagentRunView? SubagentRun
-        {
-            get; init;
-        }
-
-        /// <summary>Gets or initializes the active background job view.</summary>
-        internal BackgroundJobOutputView? JobOutput
-        {
-            get; init;
         }
     }
 }

@@ -87,7 +87,7 @@ public sealed partial class MainWindow
     private async Task LoadAnalysisAsync(bool quiet = false)
     {
         var ticket = ++_analysisRead;
-        var draft = _draftKey;
+        var draft = DraftKey;
         if (!quiet)
         {
             AnalysisContent.Children.Clear();
@@ -101,7 +101,7 @@ public sealed partial class MainWindow
         try
         {
             var trace = await engine.Pages.TrajectoryAsync(_closing.Token).ConfigureAwait(true);
-            if (ticket != _analysisRead || draft != _draftKey || _closing.IsCancellationRequested || !ReferenceEquals(engine, _engine))
+            if (ticket != _analysisRead || draft != DraftKey || _closing.IsCancellationRequested || !ReferenceEquals(engine, _engine))
             {
                 return;
             }
@@ -117,7 +117,7 @@ public sealed partial class MainWindow
         }
         catch (Exception error)
         {
-            if (!quiet && ticket == _analysisRead && draft == _draftKey && AnalysisPanel.IsVisible)
+            if (!quiet && ticket == _analysisRead && draft == DraftKey && AnalysisPanel.IsVisible)
             {
                 ShowRefusal(error);
             }

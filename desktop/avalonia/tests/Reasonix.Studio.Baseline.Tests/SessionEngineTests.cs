@@ -1,8 +1,12 @@
+using Avalonia.Headless;
+using Avalonia.Threading;
 using Reasonix.Studio.Contracts.Events;
 using Reasonix.Studio.Contracts.Queue;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Kernel.Events;
 using Reasonix.Studio.Kernel.Session;
+using Reasonix.Studio.Shell;
+using Reasonix.Studio.Shell.Session;
 using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
 using System;
@@ -25,8 +29,42 @@ namespace Reasonix.Studio.Baseline.Tests;
 /// assembly — ordering, folding, and the restored transcript — not that a listener
 /// answers. The pieces on either end are held by their own cases.
 /// </remarks>
+[Collection(HeadlessCollection.Name)]
 public sealed class SessionEngineTests
 {
+    /// <summary>The engine folds every delta while the dispatcher retains at most the latest pending draw.</summary>
+    /// <returns>The accepted snapshots and the coalesced presentation.</returns>
+    [Fact]
+    public async Task StreamPresentationCoalescesAndDropsClosedRuntimeCallbacks()
+    {
+        var session = HeadlessUnitTestSession.StartNew(typeof(App));
+        await session.Dispatch(
+            async () =>
+            {
+                var frames = Enumerable.Range(1, 128).Select(i => $$"""{"kind":"text","text":"x","seq":{{i}}}""").ToArray();
+                await using var engine = Engine(new FakeClient(), new FakeTransport(frames));
+                var shown = new List<SessionState>();
+                using var publication = new PanePublication(engine, (_, snapshot) => shown.Add(snapshot));
+                await engine.StartAsync().ConfigureAwait(true);
+                var deadline = DateTime.UtcNow.AddSeconds(2);
+                while ((shown.Count == 0 || !ReferenceEquals(engine.State, shown[^1])) && DateTime.UtcNow < deadline)
+                {
+                    await Task.Delay(10).ConfigureAwait(true);
+                }
+
+                Assert.InRange(shown.Count, 1, 16);
+                Assert.Same(engine.State, shown[^1]);
+                Assert.Equal(new string('x', 128), Assert.Single(engine.State.Items.OfType<SayItem>()).Text);
+
+                engine.RestoreRunning(false, engine.Generation.Revision);
+                var draws = shown.Count;
+                publication.Dispose();
+                Dispatcher.UIThread.RunJobs();
+                Assert.Equal(draws, shown.Count);
+            },
+            default);
+    }
+
     /// <summary>Reopens the canonical plan and reads subsequent advances without reconstructing tool arguments.</summary>
     /// <returns>The HTTP and stream integration.</returns>
     [Fact]

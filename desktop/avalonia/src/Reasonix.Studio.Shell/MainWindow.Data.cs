@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Host;
+using Reasonix.Studio.Shell.Settings;
 using System;
 using System.Globalization;
 using System.Linq;
@@ -77,7 +78,7 @@ public sealed partial class MainWindow
         memories.Open(api, Language, await api.MemoriesAsync(token).ConfigureAwait(true), await api.MemoryPolicyAsync(token).ConfigureAwait(true), DescribeError, token);
         if (TopLevel.GetTopLevel(memories) == this)
         {
-            _unsavedSettings = () => memories.HasChanges;
+            _settings.Dirty = () => memories.HasChanges;
         }
 
         await AddUsageAsync(usageCard, api).ConfigureAwait(true);
@@ -181,7 +182,7 @@ public sealed partial class MainWindow
         label.Margin = new Thickness(0, 0, 8, 6);
         label.VerticalAlignment = VerticalAlignment.Center;
         SettingsLinks.Children.Add(label);
-        foreach (var key in s_destinations["storage"])
+        foreach (var key in SettingsNavigation.Destinations["storage"])
         {
             var target = targets.FirstOrDefault(c => Equals(c.Tag, key));
             var button = DataButton(DataLabel(key), 26);

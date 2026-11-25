@@ -26,7 +26,7 @@ public sealed partial class SessionPage
         var before = previous.Items.Where(item => item is UserItem or SayItem)
             .Select(item => item.Id)
             .ToHashSet(StringComparer.Ordinal);
-        foreach (var row in _drawn.OfType<Border>())
+        foreach (var row in Drawn.OfType<Border>())
         {
             var id = row.Tag switch
             {

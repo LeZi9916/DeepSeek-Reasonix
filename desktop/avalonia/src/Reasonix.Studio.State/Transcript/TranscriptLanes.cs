@@ -46,45 +46,34 @@ public static class TranscriptLanes
         System.ArgumentNullException.ThrowIfNull(items);
 
         var lanes = new List<TranscriptLane>();
-        var at = 0;
-        while (at < items.Count)
+        var ordinary = new List<TranscriptItem>();
+        for (var at = 0; at < items.Count;)
         {
             var end = at;
             while (end < items.Count && items[end] is ToolItem tool && IsDelegation(tool.Call))
             {
-                end += 1;
+                end++;
             }
 
-            if (end - at >= 2)
+            if (end - at < 2)
             {
-                lanes.Add(new TranscriptLane(Delegates(items, at, end), System.Array.Empty<TranscriptItem>()));
-                at = end;
+                ordinary.Add(items[at++]);
                 continue;
             }
 
-            // Either this row is not a delegate, or it is the only delegate in
-            // its run; both cases take one row into the ordinary run, which is
-            // where the loop's next pass continues from.
-            var take = 1;
-            var ordinary = new List<TranscriptItem>(take);
-            for (var i = at; i < at + take; i++)
+            if (ordinary.Count > 0)
             {
-                ordinary.Add(items[i]);
+                lanes.Add(new TranscriptLane([], ordinary));
+                ordinary = [];
             }
 
-            var last = lanes.Count > 0 ? lanes[lanes.Count - 1] : null;
-            if (last is { Delegates.Count: 0 } run)
-            {
-                var joined = new List<TranscriptItem>(run.Rows);
-                joined.AddRange(ordinary);
-                lanes[lanes.Count - 1] = new TranscriptLane(System.Array.Empty<ToolItem>(), joined);
-            }
-            else
-            {
-                lanes.Add(new TranscriptLane(System.Array.Empty<ToolItem>(), ordinary));
-            }
+            lanes.Add(new TranscriptLane(Delegates(items, at, end), []));
+            at = end;
+        }
 
-            at += take;
+        if (ordinary.Count > 0)
+        {
+            lanes.Add(new TranscriptLane([], ordinary));
         }
 
         return lanes;

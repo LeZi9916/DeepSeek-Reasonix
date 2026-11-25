@@ -24,7 +24,7 @@ internal sealed partial class MessageRail : UserControl
     private readonly DispatcherTimer _closer = new() { Interval = TimeSpan.FromMilliseconds(200) };
 
     /// <summary>The text and mounted position associated with a mark.</summary>
-    private (UserItem Item, Control Row)[] _marks = [];
+    private UserItem[] _marks = [];
 
     /// <summary>The measured heights of the individual marks along the track.</summary>
     private double[] _positions = [];
@@ -70,7 +70,7 @@ internal sealed partial class MessageRail : UserControl
     }
 
     /// <summary>Raised when a rail mark requests a jump to its message.</summary>
-    internal event Action<Control>? JumpRequested;
+    internal event Action<string>? JumpRequested;
 
     /// <summary>Raised with the updated stars of a saved conversation.</summary>
     internal event Action<string, int[]>? BookmarksChanged;
@@ -147,9 +147,9 @@ internal sealed partial class MessageRail : UserControl
     /// <summary>Associates the rail with the current transcript rows.</summary>
     /// <param name="marks">User messages and their mounted rows.</param>
     /// <param name="language">The shell's language.</param>
-    internal void SetMarks((UserItem Item, Control Row)[] marks, InterfaceLanguage language)
+    internal void SetMarks(UserItem[] marks, InterfaceLanguage language)
     {
-        var sameMarks = marks.Length == _marks.Length && marks.Select(mark => mark.Item.Id).SequenceEqual(_marks.Select(mark => mark.Item.Id));
+        var sameMarks = marks.Length == _marks.Length && marks.Select(mark => mark.Id).SequenceEqual(_marks.Select(mark => mark.Id));
         if (!sameMarks)
         {
             _positions = [];
@@ -165,19 +165,18 @@ internal sealed partial class MessageRail : UserControl
 
     /// <summary>Measures the marks against the scrolled transcript.</summary>
     /// <param name="scroll">The viewport of the transcript.</param>
-    internal void MeasureMarks(ScrollViewer scroll)
+    /// <param name="position">Measures or estimates a mark by its row identity.</param>
+    internal void MeasureMarks(ScrollViewer scroll, Func<string, double> position)
     {
         if (!IsVisible || Bounds.Height <= 0)
         {
             return;
         }
 
-        var height = Math.Max(1, scroll.Extent.Height);
         var positions = new double[_marks.Length];
         for (var index = 0; index < _marks.Length; index++)
         {
-            var point = _marks[index].Row.TranslatePoint(default, scroll);
-            positions[index] = Place(point is { } p ? (p.Y + scroll.Offset.Y) / height : index / (double)(_marks.Length - 1));
+            positions[index] = Place(position(_marks[index].Id));
         }
 
         if (_positions.Length != positions.Length || _positions.Where((top, index) => Math.Abs(top - positions[index]) >= 0.25).Any())
@@ -261,7 +260,7 @@ internal sealed partial class MessageRail : UserControl
         line.Classes.Add("message-line");
         var button = new Button { Content = line, Width = 26, Height = clustered ? span + 8 : 12 };
         button.Classes.Add("message-mark");
-        var text = _marks[first].Item.Text;
+        var text = _marks[first].Text;
         var label = clustered
             ? MessageCatalog.Get("chat.jump_to_questions_a_to", _language, ("a", Number(first + 1)), ("b", Number(last + 1)))
             : MessageCatalog.Get("chat.jump_to_what_you_said", _language, ("text", text[..Math.Min(40, text.Length)]));

@@ -46,12 +46,10 @@ public sealed partial class SessionEngine
                 ValidatePage(page);
             }
 
-            _historyRead.Messages = messages.ToArray();
-            _historyRead.Context = page?.ToolContext ?? [];
             _historyRead.Snapshot = page?.Snapshot ?? string.Empty;
             _historyRead.Total = page?.Total ?? messages.Count;
             _historyRead.Cursor = page?.NextCursor;
-            RestoreHistory(false);
+            RestoreHistory(HistoryProjection.Restore(messages, page?.ToolContext ?? []), prepend: false);
             SetHistory(new HistoryReadState { Initialized = true, HasMore = page?.HasMoreBefore ?? false, Earlier = page?.Start ?? 0 });
             _ = RefreshPlanAsync(cancellationToken);
         }
@@ -172,10 +170,14 @@ public sealed partial class SessionEngine
                 throw new InvalidDataException("History page did not advance.");
             }
 
-            _historyRead.Messages = page.Messages.Concat(_historyRead.Messages).ToArray();
-            _historyRead.Context = page.ToolContext.Concat(_historyRead.Context).DistinctBy(c => c.Call.Id).ToArray();
+            var earlier = HistoryProjection.Restore(page.Messages, page.ToolContext);
+            if (generation != _historyRead.Generation)
+            {
+                return;
+            }
+
             _historyRead.Cursor = page.NextCursor;
-            RestoreHistory(true);
+            RestoreHistory(earlier, prepend: true);
             SetHistory(new HistoryReadState { Initialized = true, HasMore = page.HasMoreBefore, Earlier = page.Start });
         }
         catch
@@ -194,18 +196,34 @@ public sealed partial class SessionEngine
     }
 
     /// <summary>Restores retained canonical messages without losing live interaction rows.</summary>
+    /// <param name="page">The rows projected from the newly fetched messages.</param>
     /// <param name="prepend">Whether the existing snapshot and all newer live rows must be preserved.</param>
-    private void RestoreHistory(bool prepend)
+    private void RestoreHistory(List<TranscriptItem> page, bool prepend)
     {
-        var items = HistoryProjection.Restore(_historyRead.Messages, _historyRead.Context).ToList();
+        var items = page;
         SessionState next;
         lock (_sync)
         {
             if (prepend)
             {
-                var current = _state.Items.ToDictionary(item => item.Id);
-                var known = items.Select(item => item.Id).ToHashSet();
-                items = items.Select(item => current.GetValueOrDefault(item.Id, item)).Concat(_state.Items.Where(item => !known.Contains(item.Id))).ToList();
+                var preceding = new Dictionary<string, int>(items.Count, StringComparer.Ordinal);
+                for (var i = 0; i < items.Count; i++)
+                {
+                    preceding[items[i].Id] = i;
+                }
+
+                foreach (var current in _state.Items)
+                {
+                    if (preceding.TryGetValue(current.Id, out var prior))
+                    {
+                        // The later page already owns the tool result for the earlier dispatch.
+                        items[prior] = current;
+                    }
+                    else
+                    {
+                        items.Add(current);
+                    }
+                }
             }
             else
             {
@@ -221,6 +239,7 @@ public sealed partial class SessionEngine
             {
                 Items = items,
                 EnteredThrough = items.Count,
+                IsRestored = true,
                 Revision = _state.Revision + 1,
             };
             _state = next;
@@ -245,12 +264,6 @@ public sealed partial class SessionEngine
 
         /// <summary>Gets the current read generation atomically.</summary>
         internal long Generation => Interlocked.Read(ref _generation);
-
-        /// <summary>Gets or sets canonical messages retained across page reads.</summary>
-        internal IReadOnlyList<HistoryMessage> Messages { get; set; } = [];
-
-        /// <summary>Gets or sets dispatches retained across page boundaries.</summary>
-        internal HistoryToolContext[] Context { get; set; } = [];
 
         /// <summary>Gets or sets the kernel's immutable snapshot identity.</summary>
         internal string Snapshot { get; set; } = string.Empty;

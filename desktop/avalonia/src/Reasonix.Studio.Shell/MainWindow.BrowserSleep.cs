@@ -29,7 +29,7 @@ public sealed partial class MainWindow
 
         _browserSweep.Start();
         var now = DateTimeOffset.UtcNow;
-        foreach (var page in _browserPages.Concat(_workbenchStates.Values.SelectMany(state => state.Browsers)).Distinct())
+        foreach (var page in _browserPages.Concat(_workbench.BrowserPages()).Distinct())
         {
             page.SleepWhenIdle(now);
         }

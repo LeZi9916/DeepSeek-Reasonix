@@ -56,6 +56,12 @@ internal sealed partial class ActivityDisclosure : UserControl
         };
     }
 
+    /// <summary>Gets or sets the callback that materializes the expanded body.</summary>
+    internal Action? BeforeOpen
+    {
+        get; set;
+    }
+
     /// <summary>Applies the disclosure default without animation.</summary>
     /// <param name="value">Whether the body is expanded.</param>
     internal void SetOpen(bool value) => SetOpen(value, animate: false);
@@ -72,6 +78,11 @@ internal sealed partial class ActivityDisclosure : UserControl
     /// <param name="animate">Whether the reader toggled the row.</param>
     private void SetOpen(bool value, bool animate)
     {
+        if (value)
+        {
+            BeforeOpen?.Invoke();
+        }
+
         _body.SetExpanded(value, animate);
         this.FindControl<Button>("Toggle")!.Classes.Set("open", value);
         var toggle = this.FindControl<Button>("Toggle")!;

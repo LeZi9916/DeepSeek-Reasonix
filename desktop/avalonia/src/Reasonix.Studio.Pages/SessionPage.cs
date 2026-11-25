@@ -2,10 +2,12 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Events;
 using Reasonix.Studio.Controls;
@@ -33,7 +35,7 @@ public sealed partial class SessionPage : UserControl
     /// <summary>
     /// The column every row is drawn in.
     /// </summary>
-    private readonly StackPanel _rows;
+    private readonly ViewportItems _rows;
 
     /// <summary>Open forms retain unsent selections across unrelated stream events.</summary>
     private readonly Dictionary<string, QuestionForm> _forms = new(StringComparer.Ordinal);
@@ -45,9 +47,6 @@ public sealed partial class SessionPage : UserControl
 
     /// <summary>Retains the provider wait below the transcript when rows are rebuilt.</summary>
     private readonly ModelResponseWaitView _responseWait = new();
-
-    /// <summary>The reading column shared by the transcript and the provider wait.</summary>
-    private readonly StackPanel _flow;
 
     /// <summary>Tracks the reader's submitted messages alongside the transcript.</summary>
     private readonly MessageRail _messageRail = new() { IsVisible = false };
@@ -62,15 +61,12 @@ public sealed partial class SessionPage : UserControl
     private readonly ContentControl _historyHeader = new();
 
     /// <summary>
-    /// The rows as they stand, in the order they were drawn, so a streamed chunk can
-    /// extend the last one instead of rebuilding the list.
-    /// </summary>
-    private readonly List<Control> _drawn = new List<Control>();
-
-    /// <summary>
     /// The state the page is showing.
     /// </summary>
     private SessionState _state = new SessionState();
+
+    /// <summary>Whether the next projection mounts an already existing pane.</summary>
+    private bool _skipMountEntrance;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SessionPage"/> class.
@@ -78,23 +74,19 @@ public sealed partial class SessionPage : UserControl
     public SessionPage()
     {
         UseLayoutRounding = false;
-        _rows = new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            Spacing = 0,
-        };
-        _flow = new StackPanel
+        _rows = new ViewportItems(Realize)
         {
             Margin = new Thickness(24, 0, 24, 36),
             [!MaxWidthProperty] = StudioTypography.Resource("Column"),
-            Children = { _rows, _responseWait },
+            ItemsSource = _viewportRows,
+            ItemsPanel = new FuncTemplate<Panel?>(() => new VirtualizingStackPanel { CacheLength = _viewportRows.Count <= LargeTranscriptThreshold ? 0.5 : 0.1 }),
         };
 
         _scroll = new ScrollViewer
         {
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            Content = _flow,
+            Content = _rows,
             Margin = new Thickness(0, 0, 6, 0),
         };
         _scroll.Classes.Add("conversation-scroll");
@@ -104,12 +96,6 @@ public sealed partial class SessionPage : UserControl
             if (e.OffsetDelta != default || e.ViewportDelta != default)
             {
                 _replySelection.Clear();
-            }
-
-            var previousEnd = _scroll.ScrollBarMaximum.Y - e.ExtentDelta.Y + e.ViewportDelta.Y;
-            if (e.ExtentDelta.Y > 0 && _scroll.Offset.Y >= previousEnd - 2)
-            {
-                _scroll.ScrollToEnd();
             }
         };
         Grid.SetRow(_scroll, 1);
@@ -131,7 +117,7 @@ public sealed partial class SessionPage : UserControl
         };
         AttachedToVisualTree += (_, _) => RefreshBackgroundTools();
         DetachedFromVisualTree += (_, _) => _backgroundClock.Stop();
-        ActualThemeVariantChanged += (_, _) => Rebuild(_state.Items);
+        ActualThemeVariantChanged += (_, _) => Rebuild(_state.Items, recreate: true);
     }
 
     /// <summary>
@@ -209,14 +195,14 @@ public sealed partial class SessionPage : UserControl
         {
             Language = language;
             FoldsTurnWork = fold;
-            Rebuild(_state.Items);
+            Rebuild(_state.Items, recreate: true);
             _responseWait.Show(_state.ResponseWait, Language);
         }
     }
 
     /// <summary>Sets the reading inset inside the full-width scroll viewport.</summary>
     /// <param name="inset">Symmetric horizontal flow padding.</param>
-    public void SetReadingInset(double inset) => _flow.Margin = new Thickness(inset, 0, inset, 36);
+    public void SetReadingInset(double inset) => _rows.Margin = new Thickness(inset, 0, inset, 36);
 
     /// <summary>
     /// Shows one state.
@@ -230,18 +216,35 @@ public sealed partial class SessionPage : UserControl
             throw new ArgumentNullException(nameof(state));
         }
 
+        var following = (_scroll.ScrollBarMaximum.Y > 0 || state.Running)
+            && _scroll.Offset.Y >= _scroll.ScrollBarMaximum.Y - 2;
         var previous = _state;
         _state = state;
-        if (MoveNewAnswerLine() || _rows.Children.Count == 0
-            || (!ReferenceEquals(previous.Items, state.Items) && !UpdateAnswers(previous.Items, state.Items)))
+        var animate = !_skipMountEntrance && !state.IsRestored && previous.EnteredThrough == state.EnteredThrough;
+        _skipMountEntrance = false;
+        if (MoveNewAnswerLine() || _viewportRows.Count == 0
+            || (!ReferenceEquals(previous.Items, state.Items) && !UpdateAnswers(previous, state)))
         {
-            var activityCounts = VisibleActivityCounts(previous);
+            _previousActivityCounts = VisibleActivityCounts(previous);
             Rebuild(state.Items);
-            AnimateActivityCounts(activityCounts);
-            AnimateActivityChanges(previous);
-            AnimatePromptEntrances(previous);
-            AnimateNoticeEntrances(previous);
-            AnimateTextRowEntrances(previous);
+            var version = _viewportVersion;
+            Dispatcher.UIThread.Post(
+                () =>
+                {
+                    if (version == _viewportVersion)
+                    {
+                        _previousActivityCounts = null;
+                        if (animate)
+                        {
+                            AnimateActivityGroupEntrances(previous);
+                            AnimateActivityChanges(previous);
+                            AnimatePromptEntrances(previous);
+                            AnimateNoticeEntrances(previous);
+                            AnimateTextRowEntrances(previous);
+                        }
+                    }
+                },
+                DispatcherPriority.Loaded);
         }
         else if (previous.Running != state.Running)
         {
@@ -249,6 +252,10 @@ public sealed partial class SessionPage : UserControl
         }
 
         _responseWait.Show(state.ResponseWait, Language);
+        if (following && (!ReferenceEquals(previous.Items, state.Items) || previous.ResponseWait != state.ResponseWait))
+        {
+            FollowEnd();
+        }
     }
 
     /// <summary>
@@ -316,6 +323,7 @@ public sealed partial class SessionPage : UserControl
             row.Tag = item;
         }
 
+        RegisterRow(item.Id, row);
         AutomationProperties.SetAutomationId(row, "class:call");
         return row;
     }
@@ -327,6 +335,7 @@ public sealed partial class SessionPage : UserControl
     {
         if (args.Source is Visual visual && !_replySelection.ContainsToolbar(visual))
         {
+            CancelFind();
             _replySelection.Clear();
         }
     }
@@ -747,77 +756,5 @@ public sealed partial class SessionPage : UserControl
 
         button.Click += (_, _) => Answered?.Invoke(new ApprovalVerdict(id, allow, session, persist));
         return button;
-    }
-
-    /// <summary>
-    /// Draws every row from scratch.
-    /// </summary>
-    /// <param name="items">The rows to draw.</param>
-    private void Rebuild(IReadOnlyList<TranscriptItem> items)
-    {
-        if (_forms.Count > 0)
-        {
-            var open = items.OfType<AskItem>().Where(ask => ask.Answered is null).Select(ask => ask.Ask.ID).ToHashSet();
-            foreach (var id in _forms.Keys.Where(id => !open.Contains(id)).ToArray())
-            {
-                _forms.Remove(id);
-            }
-        }
-
-        var held = _scroll.Offset;
-        _rows.Children.Clear();
-        _drawn.Clear();
-        _backgroundTools.Clear();
-        _backgroundClock.Stop();
-        GatherLiveWork(items);
-
-        if (items.Count == 0)
-        {
-            _rows.Children.Add(new TextBlock
-            {
-                Text = MessageCatalog.Get(MessageKey.Composer.DescribeATaskQuestionOr, Language),
-                [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
-                Opacity = 0.55,
-            });
-            RefreshMessageRail();
-            return;
-        }
-
-        DrawRows(items);
-        RefreshBackgroundTools();
-        RefreshMessageRail();
-        _scroll.Offset = held;
-    }
-
-    /// <summary>
-    /// Updates answer text without disturbing the selection or the surrounding cards.
-    /// </summary>
-    /// <param name="previous">The rows already mounted.</param>
-    /// <param name="next">The rows from the reducer.</param>
-    /// <returns>Whether the existing controls still represent every row.</returns>
-    private bool UpdateAnswers(IReadOnlyList<TranscriptItem> previous, IReadOnlyList<TranscriptItem> next)
-    {
-        if (previous.Count != next.Count || _drawn.Count != next.Count)
-        {
-            return false;
-        }
-
-        for (var i = 0; i < next.Count; i++)
-        {
-            if (ReferenceEquals(previous[i], next[i]))
-            {
-                continue;
-            }
-
-            if (previous[i] is not SayItem before || next[i] is not SayItem after || before.Id != after.Id
-                || _drawn[i] is not Border { Child: AnswerCard answer })
-            {
-                return false;
-            }
-
-            answer.Update(after, Language);
-        }
-
-        return true;
     }
 }

@@ -53,7 +53,7 @@ public sealed partial class MainWindow
 
                     await engine.Pages.WorkspaceActionAsync("sessions/remove", new JsonObject { ["path"] = row.Path }, _closing.Token).ConfigureAwait(true);
                     var root = pane?.Status.WorkspaceRoot ?? Projects.SearchEntries.FirstOrDefault(entry => entry.Target.Host.Length == 0 && entry.Session.Path == row.Path).Target?.WorkspaceRoot ?? row.WorkspaceRoot;
-                    DraftStore.Write(_drafts, DraftStore.KeyFor(pane?.Engine.DraftHost ?? engine.DraftHost, root, row.Path), string.Empty);
+                    _composer.WriteDraft(DraftStore.KeyFor(pane?.Engine.DraftHost ?? engine.DraftHost, root, row.Path), string.Empty);
                 }
                 else
                 {

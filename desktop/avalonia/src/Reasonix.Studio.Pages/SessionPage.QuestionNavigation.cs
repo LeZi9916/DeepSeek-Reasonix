@@ -1,6 +1,5 @@
 using Avalonia;
-using Avalonia.Controls;
-using Avalonia.VisualTree;
+using Reasonix.Studio.State.Transcript;
 using System.Linq;
 
 namespace Reasonix.Studio.Pages;
@@ -11,21 +10,26 @@ public sealed partial class SessionPage
     /// <param name="next">Whether to move down the transcript.</param>
     public void MoveBetweenUserMessages(bool next)
     {
-        var scroll = this.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-        if (scroll is null)
+        var anchor = ReadAnchor();
+        var start = anchor.Id is { } id ? _indices.GetValueOrDefault(id) : 0;
+        var authored = _state.Items.OfType<UserItem>();
+        var target = next
+            ? authored.FirstOrDefault(row => Candidate(row, forward: true))
+            : authored.LastOrDefault(row => Candidate(row, forward: false));
+        if (target is not null && Locate(target.Id)?.TranslatePoint(default, _scroll) is { } point)
         {
-            return;
+            _scroll.Offset = _scroll.Offset.WithY(_scroll.Offset.Y + point.Y - 12);
         }
 
-        var messages = this.GetVisualDescendants().OfType<UserMessage>()
-            .Select(message => (Message: message, Y: message.TranslatePoint(default, scroll)?.Y))
-            .Where(item => item.Y is not null)
-            .OrderBy(item => item.Y)
-            .ToArray();
-        var target = next ? messages.FirstOrDefault(item => item.Y > 12) : messages.LastOrDefault(item => item.Y < -12);
-        if (target.Y is double y)
+        bool Candidate(UserItem row, bool forward)
         {
-            scroll.Offset = new Vector(scroll.Offset.X, scroll.Offset.Y + y - 12);
+            if (_realized.TryGetValue(row.Id, out var control) && control.TranslatePoint(default, _scroll) is { } point)
+            {
+                return forward ? point.Y > 12 : point.Y < -12;
+            }
+
+            var position = _indices.GetValueOrDefault(row.Id);
+            return forward ? position > start : position < start;
         }
     }
 }

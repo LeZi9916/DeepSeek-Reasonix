@@ -83,7 +83,7 @@ internal sealed partial class MessageRail
 
         var mark = _segments[slot].First;
         Heading.Text = MessageCatalog.Get("chat.your_message_n", _language, ("n", Number(mark + 1)));
-        Excerpt.Text = _marks[mark].Item.Text;
+        Excerpt.Text = _marks[mark].Text;
         Peek.IsVisible = true;
         PlaceOverlay(Peek, _positions[mark], 44);
         Peek.Classes.Add("shown");
@@ -112,7 +112,7 @@ internal sealed partial class MessageRail
         for (var mark = first; mark <= last; mark++)
         {
             var index = mark;
-            var text = _marks[index].Item.Text;
+            var text = _marks[index].Text;
             var row = new Grid { ColumnDefinitions = new ColumnDefinitions("22,*"), ColumnSpacing = 8 };
             var number = new TextBlock
             {
@@ -188,13 +188,13 @@ internal sealed partial class MessageRail
 
     /// <summary>Jumps to the actual mounted row of a rail mark.</summary>
     /// <param name="index">The chosen mark.</param>
-    private void Jump(int index) => JumpRequested?.Invoke(_marks[index].Row);
+    private void Jump(int index) => JumpRequested?.Invoke(_marks[index].Id);
 
     /// <summary>Toggles the star of a question whose log position is known.</summary>
     /// <param name="index">The chosen mark.</param>
     private void Star(int index)
     {
-        if (_marks[index].Item.MsgIndex is not int position)
+        if (_marks[index].MsgIndex is not int position)
         {
             return;
         }
@@ -222,7 +222,7 @@ internal sealed partial class MessageRail
     {
         var (first, last, button, _) = _segments[slot];
         var starred = _stars.TryGetValue(_scope, out var stars)
-            && Enumerable.Range(first, last - first + 1).Any(index => _marks[index].Item.MsgIndex is int position && stars.Contains(position));
+            && Enumerable.Range(first, last - first + 1).Any(index => _marks[index].MsgIndex is int position && stars.Contains(position));
         button.Classes.Set("starred", starred);
     }
 }

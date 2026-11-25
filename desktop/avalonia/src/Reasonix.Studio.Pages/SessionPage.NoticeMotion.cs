@@ -24,7 +24,7 @@ public sealed partial class SessionPage
         }
 
         var before = previous.Items.OfType<NoticeItem>().Select(notice => notice.Id).ToHashSet(StringComparer.Ordinal);
-        foreach (var row in _drawn.OfType<Border>())
+        foreach (var row in Drawn.OfType<Border>())
         {
             if (row.Tag is not NoticeItem notice || before.Contains(notice.Id))
             {

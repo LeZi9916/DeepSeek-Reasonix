@@ -19,6 +19,18 @@ public sealed record SessionState
     /// </summary>
     public IReadOnlyList<TranscriptItem> Items { get; init; } = System.Array.Empty<TranscriptItem>();
 
+    /// <summary>Gets the position of the latest streamed text row, within this revision.</summary>
+    public int? StreamingRow
+    {
+        get; init;
+    }
+
+    /// <summary>Gets a value indicating whether the snapshot came from stored or replayed events.</summary>
+    public bool IsRestored
+    {
+        get; init;
+    }
+
     /// <summary>Gets the live phases reported by child-run trackers, keyed by call id.</summary>
     public IReadOnlyDictionary<string, string> SubagentPhases
     {

@@ -11,6 +11,9 @@ namespace Reasonix.Studio.Pages;
 
 public sealed partial class SessionPage
 {
+    /// <summary>Retains the outgoing count transform until the next layout.</summary>
+    private Dictionary<string, ActivityDisclosure>? _previousActivityCounts;
+
     /// <summary>Records count presentation before a live update remounts the transcript.</summary>
     /// <param name="previous">The outgoing session state.</param>
     /// <returns>The visible groups that can continue their count motion.</returns>
@@ -21,22 +24,22 @@ public sealed partial class SessionPage
                 .ToDictionary(group => ((IReadOnlyList<TranscriptItem>)group.Tag!)[0].Id, StringComparer.Ordinal)
             : null;
 
-    /// <summary>Rolls changed counts and preserves in-flight motion after a same-count update.</summary>
-    /// <param name="previous">The visible counts from the same turn.</param>
-    private void AnimateActivityCounts(Dictionary<string, ActivityDisclosure>? previous)
+    /// <summary>Transfers the displayed count when a replacement header attaches.</summary>
+    /// <param name="id">The group identity.</param><param name="disclosure">The replacement header.</param>
+    private void BindActivityCount(string id, ActivityDisclosure disclosure)
     {
-        if (previous is null || previous.Count == 0)
+        if (_previousActivityCounts is not { } counts || !counts.Remove(id, out var prior))
         {
             return;
         }
 
-        foreach (var group in _rows.GetVisualDescendants().OfType<ActivityDisclosure>())
+        void Transfer(object? sender, Avalonia.VisualTreeAttachmentEventArgs args)
         {
-            if (group.IsEffectivelyVisible && group.Tag is IReadOnlyList<TranscriptItem> work && previous.TryGetValue(work[0].Id, out var prior))
-            {
-                group.ContinueCountMotion(prior);
-            }
+            disclosure.AttachedToVisualTree -= Transfer;
+            disclosure.ContinueCountMotion(prior);
         }
+
+        disclosure.AttachedToVisualTree += Transfer;
     }
 
     /// <summary>Checks whether this update continues a mounted live turn that allows motion.</summary>
@@ -73,7 +76,7 @@ public sealed partial class SessionPage
     {
         var before = previous.Items.OfType<ToolItem>().ToDictionary(tool => tool.Id, StringComparer.Ordinal);
         var order = 0;
-        foreach (var row in _drawn)
+        foreach (var row in Drawn)
         {
             if (row is not Border { Tag: ToolItem tool, Child: ToolCallHeader header } || !row.IsEffectivelyVisible)
             {

@@ -20,7 +20,7 @@ public sealed partial class MainWindow
         var current = WorkbenchStart.IsVisible || BackgroundJobHost.IsVisible || SubagentRunHost.IsVisible || (ManualBrowserHost.IsVisible && !BackToEditor.IsVisible)
             ? null
             : SelectedWorkbenchDocument;
-        foreach (var (key, buffer) in _fileBuffers.Where(pair => pair.Key.Root == WorkspaceBufferScope))
+        foreach (var (key, buffer) in _workbench.Buffers.Where(pair => pair.Key.Root == WorkspaceBufferScope))
         {
             var group = new WorkbenchHeaderTab(Path.GetFileName(key.Path), "File", current == key.Path, Language) { Tag = key.Path };
             group.ColorFile(key.Path);
@@ -40,7 +40,7 @@ public sealed partial class MainWindow
                 if (!buffer.Dirty && !buffer.Saving)
                 {
                     if (await group.LeaveAsync(_motionLifetime.Token).ConfigureAwait(true)
-                        && !buffer.Dirty && _fileBuffers.TryGetValue(key, out var currentBuffer) && ReferenceEquals(buffer, currentBuffer))
+                        && !buffer.Dirty && _workbench.Buffers.TryGetValue(key, out var currentBuffer) && ReferenceEquals(buffer, currentBuffer))
                     {
                         CloseFile(key, buffer);
                     }
@@ -97,7 +97,7 @@ public sealed partial class MainWindow
                 {
                     ReleasePreview();
                     FileCanvas.RowDefinitions[0].Height = new GridLength(40);
-                    if (_fileBuffers.LastOrDefault(pair => pair.Key.Root == WorkspaceBufferScope) is { Value: not null } last)
+                    if (_workbench.Buffers.LastOrDefault(pair => pair.Key.Root == WorkspaceBufferScope) is { Value: not null } last)
                     {
                         await OpenEntryAsync(new FileEntry(last.Key.Path, false)).ConfigureAwait(true);
                         if (last.Value.Dirty)
@@ -213,7 +213,7 @@ public sealed partial class MainWindow
     /// <param name="file">The buffer confirmed by the reader.</param>
     private void CloseFile((string Root, string Path) key, FileBuffer file)
     {
-        if (file.Saving || !_fileBuffers.Remove(key))
+        if (file.Saving || !_workbench.Buffers.Remove(key))
         {
             return;
         }

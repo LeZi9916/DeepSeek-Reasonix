@@ -3,15 +3,46 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
-using Markdig;
 using Markdig.Syntax;
 using Reasonix.Studio.Controls;
+using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Pages;
 
 internal sealed partial class AnswerCard
 {
+    /// <summary>Offsets of the last painted content, keyed weakly to each native block.</summary>
+    private readonly ConditionalWeakTable<SelectableTextBlock, BlockPaint> _blockPaint = new();
+
+    /// <summary>Source last applied to the native blocks.</summary>
+    private string _paintedSource = string.Empty;
+
+    /// <summary>Whether an active parse loop owns the newest pending source.</summary>
+    private bool _parsingMarkdown;
+
+    /// <summary>Changes whenever the card leaves its current mount.</summary>
+    private long _markdownMount;
+
+    /// <summary>Applies the most recent deferred selection after the answer is ready.</summary>
+    private Action? _markdownSelection;
+
+    /// <summary>Registers a selection action for the current answer.</summary>
+    /// <param name="select">The selection to perform against native text.</param>
+    internal void WhenMarkdownReady(Action select)
+    {
+        if (_paintedSource == _source)
+        {
+            select();
+        }
+        else
+        {
+            _markdownSelection = select;
+        }
+    }
+
     /// <summary>Retains selectable blocks while the parsed Markdown shape is stable.</summary>
     /// <typeparam name="T">The required native block.</typeparam>
     /// <param name="panel">Owning block container.</param>
@@ -52,20 +83,30 @@ internal sealed partial class AnswerCard
 
     /// <summary>Projects block spacing without inserting selectable empty lines into the message.</summary>
     /// <param name="source">The original Markdown.</param>
+    /// <param name="document">The parsed Markdown.</param>
     /// <returns>The last visible text block in the parsed Markdown.</returns>
-    private SelectableTextBlock ShowMarkdown(string source)
+    private SelectableTextBlock ShowMarkdown(string source, MarkdownDocument document)
     {
         var blocks = this.FindControl<StackPanel>("AnswerBlocks")!;
-        var document = Markdown.Parse(source);
+        var canReuse = !source.Contains("]:", StringComparison.Ordinal) && !_paintedSource.Contains("]:", StringComparison.Ordinal);
         if (document.Count <= 1)
         {
             Trim(blocks, 1);
-            MarkdownAnswer.Show(_answer, source);
+            if (document.Count == 0)
+            {
+                _blockPaint.Remove(_answer);
+                _answer.Text = source;
+            }
+            else
+            {
+                Paint(_answer, document[0], source, canReuse);
+            }
+
+            _paintedSource = source;
             return _answer;
         }
 
-        var first = document[0];
-        MarkdownAnswer.Show(_answer, source[first.Span.Start..(first.Span.End + 1)]);
+        Paint(_answer, document[0], source, canReuse);
         var blockIndex = 1;
         var last = _answer;
         foreach (var block in document.Skip(1))
@@ -83,12 +124,17 @@ internal sealed partial class AnswerCard
                     var bullet = ChildAt(row, 0, ReadingText);
                     index++;
                     bullet.Text = list.IsOrdered ? index.ToString(System.Globalization.CultureInfo.InvariantCulture) + "." : "•";
-                    bullet.Bind(TextBlock.ForegroundProperty, StudioTypography.Resource("FaintBrush"));
+                    if (bullet.Foreground is null || bullet.Tag is null)
+                    {
+                        bullet.Bind(TextBlock.ForegroundProperty, StudioTypography.Resource("FaintBrush"));
+                        bullet.Tag = true;
+                    }
+
                     var content = ChildAt(row, 1, ReadingText);
                     var leaf = entry.FirstOrDefault();
                     if (leaf is not null)
                     {
-                        MarkdownAnswer.Show(content, source[leaf.Span.Start..(entry.Span.End + 1)]);
+                        Paint(content, entry, source, canReuse);
                         last = content;
                     }
 
@@ -101,7 +147,7 @@ internal sealed partial class AnswerCard
             {
                 var text = ChildAt(blocks, blockIndex, ReadingText);
                 text.Margin = new Thickness(0, gap, 0, 0);
-                MarkdownAnswer.Show(text, source[block.Span.Start..(block.Span.End + 1)]);
+                Paint(text, block, source, canReuse);
                 last = text;
             }
 
@@ -109,7 +155,90 @@ internal sealed partial class AnswerCard
         }
 
         Trim(blocks, blockIndex);
+        _paintedSource = source;
         return last;
+    }
+
+    /// <summary>Updates a block whose content or parsed type changed.</summary>
+    /// <param name="text">Native destination.</param><param name="block">Parsed block.</param>
+    /// <param name="source">Canonical Markdown.</param><param name="canReuse">Whether parsing is local to the block.</param>
+    private void Paint(SelectableTextBlock text, Block block, string source, bool canReuse)
+    {
+        var start = Math.Clamp(block.Span.Start, 0, source.Length);
+        var length = Math.Clamp(block.Span.End - start + 1, 0, source.Length - start);
+        var span = source.AsSpan(start, length);
+        var stamp = _blockPaint.GetOrCreateValue(text);
+        var kind = block.GetType();
+        if (!canReuse || stamp.Kind != kind || stamp.Start > _paintedSource.Length - stamp.Length
+            || !span.SequenceEqual(_paintedSource.AsSpan(stamp.Start, stamp.Length)))
+        {
+            MarkdownAnswer.ShowParsed(text, block, span);
+        }
+
+        stamp.Kind = kind;
+        stamp.Start = start;
+        stamp.Length = length;
+    }
+
+    /// <summary>Queues large parses while small blocks can be painted in one layout pass.</summary>
+    private void PresentMarkdown()
+    {
+        if (_paintedSource == _source)
+        {
+            return;
+        }
+
+        if (_source.Length <= 2048)
+        {
+            ApplyMarkdown(_source, MarkdownAnswer.Parse(_source));
+        }
+        else if (!_parsingMarkdown)
+        {
+            _ = ParseNewestMarkdownAsync();
+        }
+    }
+
+    /// <summary>Parses one snapshot at a time and publishes data only to its current mount.</summary>
+    /// <returns>The asynchronous render loop.</returns>
+    private async Task ParseNewestMarkdownAsync()
+    {
+        _parsingMarkdown = true;
+        try
+        {
+            while (_paintedSource != _source)
+            {
+                var source = _source;
+                var mount = _markdownMount;
+                var document = await Task.Run(() => MarkdownAnswer.Parse(source)).ConfigureAwait(true);
+                if (mount != _markdownMount)
+                {
+                    break;
+                }
+
+                if (_source == source)
+                {
+                    ApplyMarkdown(source, document);
+                }
+            }
+        }
+        finally
+        {
+            _parsingMarkdown = false;
+            if (TopLevel.GetTopLevel(this) is not null && _paintedSource != _source)
+            {
+                PresentMarkdown();
+            }
+        }
+    }
+
+    /// <summary>Publishes a parsed answer and any deferred selection request.</summary>
+    /// <param name="source">Current answer source.</param><param name="document">Parsed answer.</param>
+    private void ApplyMarkdown(string source, MarkdownDocument document)
+    {
+        _answerCaret.Target = ShowMarkdown(source, document);
+        var select = _markdownSelection;
+        _markdownSelection = null;
+        select?.Invoke();
     }
 
     /// <summary>Reads the current independent reading size.</summary>
@@ -131,4 +260,26 @@ internal sealed partial class AnswerCard
     /// <returns>The reader's selected passage.</returns>
     private string SelectedPassage() => this.FindControl<StackPanel>("AnswerBlocks")!.GetVisualDescendants()
         .OfType<SelectableTextBlock>().FirstOrDefault(text => !string.IsNullOrEmpty(text.SelectedText))?.SelectedText ?? _source;
+
+    /// <summary>The previous source span painted into a selectable block.</summary>
+    private sealed class BlockPaint
+    {
+        /// <summary>Gets or sets the parsed block type.</summary>
+        internal Type? Kind
+        {
+            get; set;
+        }
+
+        /// <summary>Gets or sets the start of the previous source span.</summary>
+        internal int Start
+        {
+            get; set;
+        }
+
+        /// <summary>Gets or sets the length of the previous source span.</summary>
+        internal int Length
+        {
+            get; set;
+        }
+    }
 }

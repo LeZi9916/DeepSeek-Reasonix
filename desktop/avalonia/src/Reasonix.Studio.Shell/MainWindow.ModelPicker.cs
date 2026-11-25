@@ -78,12 +78,12 @@ public sealed partial class MainWindow
             return;
         }
 
-        var draft = _draftKey;
+        var draft = DraftKey;
         await TryAnswerAsync(async () =>
         {
             var models = await engine.Pages.ModelsAsync(_closing.Token).ConfigureAwait(true);
             var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-            if (engine != _engine || draft != _draftKey || _closing.IsCancellationRequested)
+            if (engine != _engine || draft != DraftKey || _closing.IsCancellationRequested)
             {
                 return;
             }
@@ -212,7 +212,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        var draft = _draftKey;
+        var draft = DraftKey;
         var status = await RunComposerEditAsync(engine, ComposerEdit.Model, () => engine.Pages.SetModelAsync(reference, _closing.Token)).ConfigureAwait(true);
         if (status is null)
         {
@@ -222,7 +222,7 @@ public sealed partial class MainWindow
         await TryAnswerAsync(async () =>
         {
             await RefreshModelCatalogAsync().ConfigureAwait(true);
-            if (engine == _engine && draft == _draftKey)
+            if (engine == _engine && draft == DraftKey)
             {
                 ModelPicker.Refresh(_modelCatalog, _composerStatus, Language);
                 await LoadComposeTelemetryAsync().ConfigureAwait(true);
@@ -239,7 +239,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        var draft = _draftKey;
+        var draft = DraftKey;
         var status = await RunComposerEditAsync(engine, ComposerEdit.Effort, () => engine.Pages.SetEffortAsync(level, _closing.Token)).ConfigureAwait(true);
         if (status is null)
         {
@@ -249,7 +249,7 @@ public sealed partial class MainWindow
         await TryAnswerAsync(async () =>
         {
             await RefreshModelCatalogAsync().ConfigureAwait(true);
-            if (engine == _engine && draft == _draftKey)
+            if (engine == _engine && draft == DraftKey)
             {
                 ModelPicker.Refresh(_modelCatalog, _composerStatus, Language);
             }

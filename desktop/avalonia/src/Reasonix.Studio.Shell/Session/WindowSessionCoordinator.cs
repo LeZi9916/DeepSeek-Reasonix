@@ -1,6 +1,8 @@
+using Reasonix.Studio.Contracts.Events;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages.Rail;
+using Reasonix.Studio.State;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +13,7 @@ namespace Reasonix.Studio.Shell.Session;
 
 /// <summary>Owns the window's runtime engines independently of which one is focused.</summary>
 /// <param name="owner">The owning local host connection.</param>
-internal sealed class WindowSessionCoordinator(SessionEngine owner) : IAsyncDisposable
+internal sealed partial class WindowSessionCoordinator(SessionEngine owner) : IAsyncDisposable
 {
     /// <summary>The live panes retained independently of focus.</summary>
     private readonly List<SessionPaneState> _panes = [];
@@ -24,6 +26,27 @@ internal sealed class WindowSessionCoordinator(SessionEngine owner) : IAsyncDisp
 
     /// <summary>Idle panes eligible for retirement only after a replacement is actually mounted.</summary>
     private readonly Dictionary<SessionPaneState, SessionPaneState> _retireAfterRead = [];
+
+    /// <summary>The presentation subscriptions owned by the coordinator.</summary>
+    private readonly Dictionary<SessionEngine, PanePublication> _publications = [];
+
+    /// <summary>Delivers coalesced snapshots on the UI dispatcher.</summary>
+    internal event Action<SessionEngine, SessionState>? StatePresented;
+
+    /// <summary>Delivers accepted frames for window-level effects.</summary>
+    internal event Action<SessionEngine, WireFrame>? FrameReceived;
+
+    /// <summary>Reports a gap that needs a history refresh.</summary>
+    internal event Action<SessionEngine>? HistoryInvalidated;
+
+    /// <summary>Reports a history read transition.</summary>
+    internal event Action? HistoryChanged;
+
+    /// <summary>Reports that the queue needs to be read.</summary>
+    internal event Action? QueueChanged;
+
+    /// <summary>Reports that the workspace tree needs to be read.</summary>
+    internal event Action? TreeChanged;
 
     /// <summary>Raised when an explicit tab limit folds a settled pane.</summary>
     internal event Action<string>? Folded;
@@ -49,6 +72,17 @@ internal sealed class WindowSessionCoordinator(SessionEngine owner) : IAsyncDisp
     /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
+        _parkedPaneReads.Stop();
+        await _streamsClosing.CancelAsync().ConfigureAwait(true);
+        var watchers = _panes.Select(pane => pane.Watching).OfType<Task>().ToArray();
+        await Task.WhenAll(watchers).ConfigureAwait(true);
+        _streamsClosing.Dispose();
+
+        foreach (var runtime in _publications.Keys.ToArray())
+        {
+            Unbind(runtime);
+        }
+
         foreach (var pane in _panes.Where(p => !ReferenceEquals(p.Engine, owner)))
         {
             await pane.Engine.DisposeAsync().ConfigureAwait(false);
@@ -172,7 +206,7 @@ internal sealed class WindowSessionCoordinator(SessionEngine owner) : IAsyncDisp
                         Label = target.SessionPath,
                         Running = false,
                     };
-                    pane.ScrollOffset = 0;
+                    pane.ScrollAnchor = default;
                     pane.WorkbenchOpen = false;
                     pane.FilePath = null;
                     pane.Unread = false;
@@ -213,7 +247,9 @@ internal sealed class WindowSessionCoordinator(SessionEngine owner) : IAsyncDisp
             await owner.Pages.CloseRuntimeAsync(runtime.Id, token).ConfigureAwait(true);
         }
 
+        pane.StreamCancellation?.Cancel();
         _panes.Remove(pane);
+        Unbind(pane.Engine);
         if (ReferenceEquals(pane.Engine, owner))
         {
             await owner.StopWatchingAsync().ConfigureAwait(true);
@@ -225,4 +261,53 @@ internal sealed class WindowSessionCoordinator(SessionEngine owner) : IAsyncDisp
 
         Closed?.Invoke(pane);
     }
+
+    /// <summary>Wires each runtime once independently of focus.</summary>
+    /// <param name="engine">Runtime entering the window.</param>
+    internal void Bind(SessionEngine engine)
+    {
+        if (_publications.ContainsKey(engine))
+        {
+            return;
+        }
+
+        _publications.Add(engine, new PanePublication(engine, (runtime, state) => StatePresented?.Invoke(runtime, state)));
+        engine.FrameReceived += OnFrame;
+        engine.HistoryInvalidated += OnGap;
+        engine.HistoryChanged += OnHistory;
+        engine.QueueChanged += OnQueue;
+        engine.TreeChanged += OnTree;
+    }
+
+    /// <summary>Releases all subscriptions for the runtime.</summary>
+    /// <param name="engine">Runtime leaving the window.</param>
+    private void Unbind(SessionEngine engine)
+    {
+        if (_publications.Remove(engine, out var publication))
+        {
+            publication.Dispose();
+            engine.FrameReceived -= OnFrame;
+            engine.HistoryInvalidated -= OnGap;
+            engine.HistoryChanged -= OnHistory;
+            engine.QueueChanged -= OnQueue;
+            engine.TreeChanged -= OnTree;
+        }
+    }
+
+    /// <summary>Forwards an accepted frame.</summary>
+    /// <param name="engine">Originating runtime.</param><param name="frame">Accepted frame.</param>
+    private void OnFrame(SessionEngine engine, WireFrame frame) => FrameReceived?.Invoke(engine, frame);
+
+    /// <summary>Forwards a history gap.</summary>
+    /// <param name="engine">Originating runtime.</param>
+    private void OnGap(SessionEngine engine) => HistoryInvalidated?.Invoke(engine);
+
+    /// <summary>Forwards history activity.</summary>
+    private void OnHistory() => HistoryChanged?.Invoke();
+
+    /// <summary>Forwards an inbox change.</summary>
+    private void OnQueue() => QueueChanged?.Invoke();
+
+    /// <summary>Forwards a workspace tree change.</summary>
+    private void OnTree() => TreeChanged?.Invoke();
 }

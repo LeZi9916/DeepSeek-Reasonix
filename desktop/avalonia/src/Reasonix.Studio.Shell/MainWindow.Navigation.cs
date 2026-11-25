@@ -95,6 +95,17 @@ public sealed partial class MainWindow
         }
 
         _navigation = new WindowSessionCoordinator(owner) { Limit = _workspacePreferences.OpenSessionLimit };
+        _navigation.StatePresented += OnChanged;
+        _navigation.FrameReceived += OnPaneFrame;
+        _navigation.HistoryChanged += OnHistoryChanged;
+        _navigation.HistoryInvalidated += OnPaneGap;
+        _navigation.QueueChanged += OnQueueChanged;
+        _navigation.TreeChanged += OnTreeChanged;
+        _navigation.StreamFailed += ShowRefusal;
+        _navigation.RefreshParkedStatus = ReadPaneStatusAsync;
+        _navigation.RefreshParkedHistory = pane => ReadPaneHistoryAsync(pane, true);
+        _navigation.StartStreamScheduling();
+        _navigation.StreamLimit = _workspacePreferences.LiveStreamLimit ?? 3;
         _navigation.Closed += pane =>
         {
             ReleaseWorkbenchFor(pane.Engine);
@@ -118,7 +129,6 @@ public sealed partial class MainWindow
                 await MarkPaneViewedAsync(pane).ConfigureAwait(true);
             }
         };
-        InitializePaneStreams();
         EarlierHistory.Click += async (_, _) => await ReadEarlierHistoryAsync().ConfigureAwait(true);
         Projects.NavigateRequested += async target => await OpenTargetAsync(target).ConfigureAwait(true);
         PaneTabs.FocusRequested += async pane => await NavigatePaneAsync(pane).ConfigureAwait(true);
@@ -141,12 +151,7 @@ public sealed partial class MainWindow
         Conversation.DisclosureChoices = _activePane.DisclosureChoices;
         BindAnswerBoundary(_activePane);
         _navigation.Focused = _activePane;
-        engine.HistoryChanged -= OnHistoryChanged;
-        engine.HistoryChanged += OnHistoryChanged;
-        engine.FrameReceived -= OnPaneFrame;
-        engine.FrameReceived += OnPaneFrame;
-        engine.HistoryInvalidated -= OnPaneGap;
-        engine.HistoryInvalidated += OnPaneGap;
+        _navigation.Bind(engine);
         DrawPaneTabs();
         _ = RefreshPeerMarksAsync();
     }
@@ -251,7 +256,7 @@ public sealed partial class MainWindow
         }
 
         DrawPaneTabs();
-        EnsurePaneWatching(pane);
+        _navigation!.EnsureWatching(pane);
         if (!pane.Engine.History.Initialized)
         {
             await pane.Engine.LoadHistoryAsync(_closing.Token).ConfigureAwait(true);
@@ -289,7 +294,7 @@ public sealed partial class MainWindow
         SaveDraft();
         if (_activePane is { } previous)
         {
-            previous.ScrollOffset = Conversation.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault()?.Offset.Y ?? 0;
+            previous.ScrollAnchor = Conversation.ReadAnchor();
             previous.WorkbenchOpen = WorkbenchPanel.IsVisible;
             previous.FilePath = SelectedWorkbenchDocument;
         }
@@ -297,6 +302,7 @@ public sealed partial class MainWindow
         _launchOwner ??= _engine;
         _engine = pane.Engine;
         _activePane = pane;
+        _navigation!.Focused = pane;
         pane.Unread = false;
         _sidebarHost = pane.Host;
         Conversation.DisclosureChoices = pane.DisclosureChoices;
@@ -308,9 +314,10 @@ public sealed partial class MainWindow
         CrumbTitle.Text = pane.Status.Label.Length > 0 ? pane.Status.Label : MessageCatalog.Get("common.new_session", Language);
         ShowState(pane.Engine.State);
         ReturnToConversation(animateSetupDeparture);
+        Conversation.RestoreAnchor(pane.ScrollAnchor, preferUnread: true);
         DrawPaneTabs();
         _ = MarkPaneViewedAsync(pane);
-        EnsurePaneWatching(pane);
+        _navigation!.EnsureWatching(pane);
 
         await _navigation!.AcknowledgeReadAsync(pane, _closing.Token).ConfigureAwait(true);
         if (!ReferenceEquals(_activePane, pane))
@@ -323,46 +330,8 @@ public sealed partial class MainWindow
         await Task.WhenAll(history, status, LoadTreeAsync(), LoadQueueAsync()).ConfigureAwait(true);
         if (ReferenceEquals(_activePane, pane))
         {
-            var scroll = Conversation.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-            if (scroll is not null)
-            {
-                scroll.Offset = new Vector(0, pane.ScrollOffset);
-            }
-
             await RestoreWorkbenchFocusAsync(pane).ConfigureAwait(true);
         }
-    }
-
-    /// <summary>Starts each runtime subscription once, before its history can race with live arrivals.</summary>
-    /// <param name="pane">The retained pane.</param>
-    private void EnsurePaneWatching(SessionPaneState pane)
-    {
-        if (ReferenceEquals(pane, _activePane))
-        {
-            pane.WatchedAt = DateTimeOffset.UtcNow;
-        }
-
-        if (pane.WatchBound)
-        {
-            ReconcilePaneStreams();
-            return;
-        }
-
-        pane.WatchBound = true;
-        _ = pane.Engine.EnsureTreeWatching();
-        pane.Engine.Changed -= OnChanged;
-        pane.Engine.Changed += OnChanged;
-        pane.Engine.QueueChanged -= OnQueueChanged;
-        pane.Engine.QueueChanged += OnQueueChanged;
-        pane.Engine.TreeChanged -= OnTreeChanged;
-        pane.Engine.TreeChanged += OnTreeChanged;
-        pane.Engine.HistoryChanged -= OnHistoryChanged;
-        pane.Engine.HistoryChanged += OnHistoryChanged;
-        pane.Engine.FrameReceived -= OnPaneFrame;
-        pane.Engine.FrameReceived += OnPaneFrame;
-        pane.Engine.HistoryInvalidated -= OnPaneGap;
-        pane.Engine.HistoryInvalidated += OnPaneGap;
-        ReconcilePaneStreams();
     }
 
     /// <summary>Clears unread state through the owning host after the reader views a pane.</summary>
@@ -428,41 +397,54 @@ public sealed partial class MainWindow
 
     /// <summary>Refreshes canonical status and metrics after relevant runtime events.</summary>
     /// <param name="engine">Owning runtime.</param><param name="frame">Accepted event.</param>
-    private void OnPaneFrame(SessionEngine engine, Contracts.Events.WireFrame frame) => Dispatcher.UIThread.Post(() =>
+    private void OnPaneFrame(SessionEngine engine, Contracts.Events.WireFrame frame)
     {
-        var pane = _navigation?.Panes.FirstOrDefault(p => ReferenceEquals(p.Engine, engine));
-        if (pane is null || _closing.IsCancellationRequested)
+        var kind = frame.Kind;
+        var status = kind is "usage" or "turn_started" or "turn_done" or "approval_request" or "ask_request";
+        var compaction = kind == "notice" && frame.Payload.ValueKind == System.Text.Json.JsonValueKind.Object
+            && frame.Payload.TryGetProperty("code", out var code) && code.ValueKind == JsonValueKind.String && code.GetString() is "compacted" or "compact_declined" or "compact_failed";
+        var backgroundJob = StartsBackgroundJob(frame);
+        if (!status && !compaction && !backgroundJob && kind != "inbox_changed")
         {
             return;
         }
 
-        if (frame.Kind == "turn_done" && !ReferenceEquals(_activePane, pane))
+        Dispatcher.UIThread.Post(() =>
         {
-            pane.Unread = true;
-            DrawPaneTabs();
-        }
-        else if (frame.Kind == "turn_done" && IsActive && ConversationArea.IsEffectivelyVisible)
-        {
-            _ = MarkPaneViewedAsync(pane);
-        }
+            var pane = _navigation?.Panes.FirstOrDefault(p => ReferenceEquals(p.Engine, engine));
+            if (pane is null || _closing.IsCancellationRequested)
+            {
+                return;
+            }
 
-        if (frame.Kind == "notice" && frame.Payload.TryGetProperty("code", out var code) && code.GetString() is "compacted" or "compact_declined" or "compact_failed")
-        {
-            _compactOperations.Remove(engine);
-        }
+            if (kind == "turn_done" && !ReferenceEquals(_activePane, pane))
+            {
+                pane.Unread = true;
+                DrawPaneTabs();
+            }
+            else if (kind == "turn_done" && IsActive && ConversationArea.IsEffectivelyVisible)
+            {
+                _ = MarkPaneViewedAsync(pane);
+            }
 
-        if (frame.Kind is "usage" or "turn_started" or "turn_done" or "approval_request" or "ask_request"
-            || (frame.Kind == "inbox_changed" && pane.Status?.Jobs is { Length: > 0 })
-            || StartsBackgroundJob(frame))
-        {
-            _ = ReadPaneStatusAsync(pane);
-        }
+            if (compaction)
+            {
+                _compactOperations.Remove(engine);
+            }
 
-        if (ReferenceEquals(_engine, engine) && frame.Kind is "usage" or "turn_done")
-        {
-            _ = LoadComposeTelemetryAsync();
-        }
-    });
+            if (status
+                || (kind == "inbox_changed" && pane.Status?.Jobs is { Length: > 0 })
+                || backgroundJob)
+            {
+                _ = ReadPaneStatusAsync(pane);
+            }
+
+            if (ReferenceEquals(_engine, engine) && kind is "usage" or "turn_done")
+            {
+                _ = LoadComposeTelemetryAsync();
+            }
+        });
+    }
 
     /// <summary>Refreshes canonical history after an unrecoverable event gap.</summary>
     /// <param name="engine">Owning runtime.</param>
@@ -496,9 +478,7 @@ public sealed partial class MainWindow
             return;
         }
 
-        var scroll = Conversation.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-        var height = scroll?.Extent.Height ?? 0;
-        var offset = scroll?.Offset ?? default;
+        var anchor = Conversation.ReadAnchor();
         try
         {
             if (engine.History.HasMore)
@@ -516,11 +496,7 @@ public sealed partial class MainWindow
             }
 
             Conversation.Show(engine.State);
-            Dispatcher.UIThread.RunJobs();
-            if (scroll is not null)
-            {
-                scroll.Offset = offset.WithY(offset.Y + Math.Max(0, scroll.Extent.Height - height));
-            }
+            Conversation.RestoreAnchor(anchor);
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested) { }
         catch (Exception error)

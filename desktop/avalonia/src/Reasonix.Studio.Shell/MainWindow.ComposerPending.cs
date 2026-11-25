@@ -34,7 +34,7 @@ public sealed partial class MainWindow
     /// <param name="edit">The control's setting identity.</param>
     /// <returns>Whether another edit of this kind still awaits readback.</returns>
     private bool IsComposerEditPending(ComposerEdit edit) =>
-        _engine is { } engine && _pendingComposerEdits.Contains((engine, _draftKey, edit));
+        _engine is { } engine && _pendingComposerEdits.Contains((engine, DraftKey, edit));
 
     /// <summary>Marks a newly requested change without blocking the other composer controls.</summary>
     /// <param name="ticket">The conversation and setting that initiated the change.</param>
@@ -65,7 +65,7 @@ public sealed partial class MainWindow
     /// <returns>The confirmed status of the active conversation.</returns>
     private async Task<SessionStatus?> RunComposerEditAsync(SessionEngine engine, ComposerEdit edit, Func<Task> write)
     {
-        var draft = _draftKey;
+        var draft = DraftKey;
         var ticket = (engine, draft, edit);
         if (!BeginComposerEdit(ticket))
         {
@@ -78,13 +78,13 @@ public sealed partial class MainWindow
             await TryAnswerAsync(async () =>
             {
                 await write().ConfigureAwait(true);
-                if (engine != _engine || draft != _draftKey)
+                if (engine != _engine || draft != DraftKey)
                 {
                     return;
                 }
 
                 var status = await engine.StatusAsync(_closing.Token).ConfigureAwait(true);
-                if (status is not null && engine == _engine && draft == _draftKey)
+                if (status is not null && engine == _engine && draft == DraftKey)
                 {
                     confirmed = status;
                     ShowComposeStatus(status);

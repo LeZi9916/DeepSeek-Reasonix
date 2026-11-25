@@ -9,6 +9,7 @@ using Reasonix.Studio.Controls;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Pages.Composer;
 using Reasonix.Studio.Pages.I18n;
+using Reasonix.Studio.Shell.Composer;
 using Reasonix.Studio.Shell.Host;
 using Reasonix.Studio.State;
 using System;
@@ -29,35 +30,28 @@ namespace Reasonix.Studio.Shell;
 public sealed partial class MainWindow
 {
     /// <summary>
-    /// Where unsent lines are kept between launches.
-    /// </summary>
-    private readonly IDraftStorage _drafts = FileDrafts.Default();
-
-    /// <summary>
     /// The key that sends, as this machine last chose it.
     /// </summary>
     private SendShortcut _shortcut = SendShortcutStore.Load();
-
-    /// <summary>
-    /// The draft key of the conversation on screen, or empty before one is known.
-    /// </summary>
-    private string _draftKey = string.Empty;
 
     /// <summary>
     /// The context window the kernel last reported, which the meter draws against.
     /// </summary>
     private long _window;
 
-    /// <summary>
-    /// The queue as the kernel last held it, or null before the first read.
-    /// </summary>
-    private QueueSnapshot? _queue;
+    /// <summary>The inputs already projected into the queue strip.</summary>
+    private (QueueSnapshot? Queue, bool Running, InterfaceLanguage Language, bool Narrow)? _shownQueue;
 
     /// <summary>Gets or sets a value indicating whether messages during a run are queued.</summary>
     internal bool QueueDuringRun
     {
         get; set;
     }
+
+    /// <summary>
+    /// Gets the draft key of the conversation on screen, or empty before one is known.
+    /// </summary>
+    private string DraftKey => _composer.DraftKey;
 
     /// <summary>
     /// Gets the language this window draws its own labels in.
@@ -87,15 +81,15 @@ public sealed partial class MainWindow
         }
 
         var draftKey = DraftStore.KeyFor(_engine.DraftHost, status.WorkspaceRoot, status.SessionPath);
-        if (draftKey != _draftKey)
+        if (draftKey != DraftKey)
         {
             CloseComposerMenus();
-            _draftKey = draftKey;
             ClearAttachments();
         }
 
+        _composer.Bind(_engine, draftKey);
         UpdateComposerPending();
-        Composer.Text = DraftStore.Read(_drafts, _draftKey);
+        Composer.Text = _composer.ReadDraft();
         Composer.CaretIndex = Composer.Text?.Length ?? 0;
         DismissRefinement();
         _ = CloseSideQuestionAsync();
@@ -110,25 +104,9 @@ public sealed partial class MainWindow
     /// <returns>A task that completes once the strip is redrawn.</returns>
     internal async Task RefreshQueueAsync()
     {
-        if (_engine is null)
+        if (_engine is { } engine && await _composer.ReadQueueAsync(engine, _closing.Token).ConfigureAwait(true)
+            && ReferenceEquals(engine, _engine))
         {
-            return;
-        }
-
-        try
-        {
-            _queue = await _engine.QueueAsync(_closing.Token).ConfigureAwait(true);
-            DrawQueue(Conversation.State);
-        }
-        catch (OperationCanceledException)
-        {
-            // Closing is the outcome asked for.
-        }
-        catch (Exception)
-        {
-            // A queue that could not be read draws as nothing; the next move
-            // brings another frame and another read.
-            _queue = null;
             DrawQueue(Conversation.State);
         }
     }
@@ -145,19 +123,50 @@ public sealed partial class MainWindow
     /// </summary>
     private void SaveDraft()
     {
-        DraftStore.Write(_drafts, _draftKey, Composer.Text ?? string.Empty);
+        _composer.WriteDraft(DraftKey, Composer.Text ?? string.Empty);
     }
 
     /// <summary>
     /// Redraws the status line from the state the conversation now holds.
     /// </summary>
     /// <param name="state">The state the fold produced.</param>
-    private void ShowComposerState(SessionState state)
+    /// <param name="previous">The outgoing streamed snapshot, if any.</param>
+    private void ShowComposerState(SessionState state, SessionState? previous = null)
     {
-        ShowSidebarState(state);
-        ShowPlanStrip(state);
-        Subagents.Show(state, Language);
-        UpdateProcessChip();
+        var rowsChanged = previous is null || state.Revision != previous.Revision || state.Items.Count != previous.Items.Count;
+        var runChanged = previous is null || state.Running != previous.Running;
+        if (rowsChanged || runChanged || previous?.Terminal != state.Terminal)
+        {
+            ShowSidebarState(state);
+        }
+
+        if (rowsChanged || runChanged || !ReferenceEquals(previous?.Plan, state.Plan))
+        {
+            ShowPlanStrip(state);
+        }
+
+        if (rowsChanged || !ReferenceEquals(previous?.SubagentPhases, state.SubagentPhases))
+        {
+            Subagents.Show(state, Language);
+            UpdateProcessChip();
+        }
+
+        if (rowsChanged || runChanged || previous?.Doing != state.Doing || previous?.RunSince != state.RunSince
+            || previous?.Metrics != state.Metrics || previous?.OutLive != state.OutLive)
+        {
+            ShowComposerRunFeedback(state);
+        }
+
+        if (previous?.Metrics != state.Metrics || previous?.ContextUsed != state.ContextUsed)
+        {
+            DrawComposeMeters(state);
+        }
+
+        if (!runChanged)
+        {
+            return;
+        }
+
         var running = state.Running;
         ComposeSurface.Classes.Set("running", running);
         ComposeBranch.IsEnabled = !running;
@@ -171,8 +180,6 @@ public sealed partial class MainWindow
         // starts from too.
         var intent = SendKey.IntentFor(running, QueueDuringRun ? SendKey.Intent.FollowUp : SendKey.Intent.Steer);
         var shortcutHint = SendKey.Hint(_shortcut, running, Language, intent);
-        ShowComposerRunFeedback(state);
-        DrawComposeMeters(state);
         Composer.PlaceholderText = _workspacePreferences.ShowComposerPlaceholder
             ? MessageCatalog.Get(running ? MessageKey.Composer.YouCanKeepTypingWhile : MessageKey.Composer.DescribeATaskQuestionOr, Language)
             : string.Empty;
@@ -204,9 +211,16 @@ public sealed partial class MainWindow
     /// <param name="state">The state the conversation now holds.</param>
     private void DrawQueue(SessionState state)
     {
+        var input = (_composer.Queue, state.Running, Language, ComposerArea.Classes.Contains("narrow-policy"));
+        if (_shownQueue == input)
+        {
+            return;
+        }
+
+        _shownQueue = input;
         QueueStrip.Children.Clear();
 
-        var rows = QueuePresenter.Rows(_queue, state.Running, Language);
+        var rows = QueuePresenter.Rows(_composer.Queue, state.Running, Language);
         QueueScroll.IsVisible = rows.Count > 0;
         var current = rows.Select(row => row.Id).ToHashSet(StringComparer.Ordinal);
         foreach (var row in rows)
@@ -224,7 +238,7 @@ public sealed partial class MainWindow
         // A queue the kernel paused keeps its lines and dispatches nothing. The
         // release is offered once, above the list, because every line waits on
         // the same answer.
-        if (rows.Count > 0 && QueuePresenter.OffersRelease(_queue))
+        if (rows.Count > 0 && QueuePresenter.OffersRelease(_composer.Queue))
         {
             QueueStrip.Children.Insert(0, Action(MessageKey.Composer.Release, ReleaseQueueAsync));
         }

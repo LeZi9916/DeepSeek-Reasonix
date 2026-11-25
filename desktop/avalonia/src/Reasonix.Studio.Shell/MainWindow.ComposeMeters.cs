@@ -32,7 +32,7 @@ public sealed partial class MainWindow
     private async Task LoadComposeTelemetryAsync()
     {
         var engine = _engine;
-        var draft = _draftKey;
+        var draft = DraftKey;
         var ticket = ++_composeMeterRead;
         if (!ReferenceEquals(_composeMeterOwner, engine))
         {
@@ -103,7 +103,7 @@ public sealed partial class MainWindow
             try
             {
                 var context = await engine.Pages.ContextAsync(_closing.Token).ConfigureAwait(true);
-                if (ticket == _composeMeterRead && engine == _engine && draft == _draftKey)
+                if (ticket == _composeMeterRead && engine == _engine && draft == DraftKey)
                 {
                     _composeContext = context;
                     DrawComposeMeters(Conversation.State);
@@ -123,7 +123,7 @@ public sealed partial class MainWindow
             try
             {
                 var wallet = await engine.Pages.BalanceAsync(_closing.Token).ConfigureAwait(true);
-                if (ticket == _composeMeterRead && engine == _engine && draft == _draftKey)
+                if (ticket == _composeMeterRead && engine == _engine && draft == DraftKey)
                 {
                     _composeWallet = wallet;
                     DrawComposeWallet();

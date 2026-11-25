@@ -4,26 +4,35 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
+using Reasonix.Studio.State;
+using Reasonix.Studio.State.Transcript;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Reasonix.Studio.Pages;
 
 public sealed partial class SessionPage
 {
-    /// <summary>The activity groups that have already entered.</summary>
-    private readonly HashSet<string> _activityGroupsEntered = new(StringComparer.Ordinal);
-
-    /// <summary>Plays the reference card entrance when an activity group first mounts.</summary>
-    /// <param name="group">The new activity group.</param>
-    private void EnterActivityGroup(ActivityDisclosure group)
+    /// <summary>Plays activity entrances caused by newly arrived rows in the viewport.</summary>
+    /// <param name="previous">The state before those rows arrived.</param>
+    private void AnimateActivityGroupEntrances(SessionState previous)
     {
-        void Attached(object? sender, VisualTreeAttachmentEventArgs args)
+        if (TopLevel.GetTopLevel(this) is not Window window || !window.Classes.Contains("motion"))
         {
-            group.AttachedToVisualTree -= Attached;
-            if (TopLevel.GetTopLevel(group) is not Window window || !window.Classes.Contains("motion"))
+            return;
+        }
+
+        var groups = _rows.GetVisualDescendants().OfType<ActivityDisclosure>()
+            .Where(group => group.IsEffectivelyVisible && group.Tag is IReadOnlyList<TranscriptItem>);
+        var known = previous.Items.Select(row => row.Id).ToHashSet(StringComparer.Ordinal);
+        foreach (var group in groups)
+        {
+            var rows = (IReadOnlyList<TranscriptItem>)group.Tag!;
+            if (known.Contains(rows[0].Id))
             {
-                return;
+                continue;
             }
 
             group.RenderTransform = new TranslateTransform();
@@ -45,9 +54,7 @@ public sealed partial class SessionPage
                     },
                 },
             };
-            _ = animation.RunAsync(group);
+            _ = PlayPromptMotion(group, animation);
         }
-
-        group.AttachedToVisualTree += Attached;
     }
 }

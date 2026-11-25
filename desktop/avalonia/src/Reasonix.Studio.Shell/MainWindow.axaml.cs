@@ -9,6 +9,7 @@ using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages;
 using Reasonix.Studio.Pages.Composer;
 using Reasonix.Studio.Pages.I18n;
+using Reasonix.Studio.Shell.Composer;
 using Reasonix.Studio.Shell.Session;
 using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
@@ -34,10 +35,8 @@ public sealed partial class MainWindow : Window
     /// </summary>
     private readonly CancellationTokenSource _closing = new CancellationTokenSource();
 
-    /// <summary>
-    /// Serialises submits, so pressing send twice does not interleave two lines.
-    /// </summary>
-    private readonly SemaphoreSlim _sending = new SemaphoreSlim(1, 1);
+    /// <summary>Owns the draft, attachments, queue and submission lifetime.</summary>
+    private readonly ComposerSession _composer;
 
     /// <summary>
     /// Whether opening this window starts a kernel beside it.
@@ -89,7 +88,7 @@ public sealed partial class MainWindow : Window
         IDraftStorage? drafts = null,
         Host.WorkspacePreferences? workspacePreferences = null)
     {
-        _drafts = drafts ?? (connectOnOpen ? Host.FileDrafts.Default() : new Host.MemoryDrafts());
+        _composer = new ComposerSession(drafts ?? (connectOnOpen ? Host.FileDrafts.Default() : new Host.MemoryDrafts()));
         _systemAllowsMotion = systemAllowsMotion ?? SystemAllowsMotionAsync;
         InitializeComponent();
         _engine = engine;
@@ -159,11 +158,18 @@ public sealed partial class MainWindow : Window
     /// </remarks>
     public void ShowState(SessionState state)
     {
+        PresentState(state, previous: null);
+    }
+
+    /// <summary>Projects an acknowledged state and any changes from the last streamed snapshot.</summary>
+    /// <param name="state">The acknowledged state.</param><param name="previous">The outgoing streamed snapshot, if any.</param>
+    private void PresentState(SessionState state, SessionState? previous)
+    {
         RefreshGitAfterTurn(state.Running);
         UpdateMemorySuggestions(state.Running);
         Backdrop.SetBusy(state.Running);
         Conversation.Show(state);
-        ShowComposerState(state);
+        ShowComposerState(state, previous);
     }
 
     /// <summary>Keeps a refused question editable and presents the kernel's reason.</summary>
@@ -259,9 +265,8 @@ public sealed partial class MainWindow : Window
         var engine = _engine!;
         _launchOwner ??= engine;
         _ = RefreshTrayAsync();
-        engine!.Changed += OnChanged;
-        engine.QueueChanged += OnQueueChanged;
-        engine.TreeChanged += OnTreeChanged;
+        EnsureNavigation(_launchOwner);
+        _navigation!.Bind(engine);
 
         // A card whose middle the page let go of asks for the whole output
         // through this; the engine is what knows how to walk the kernel's pages.
@@ -285,7 +290,7 @@ public sealed partial class MainWindow : Window
                 AdoptComposer(status);
                 AdoptSessionPath(status.SessionPath);
                 CaptureNavigation(status);
-                EnsurePaneWatching(_activePane!);
+                _navigation!.EnsureWatching(_activePane!);
                 engine.RestoreRunning(status.Running, engine.Generation.Revision);
                 _ = engine.IdentifyRuntimeAsync(status, _closing.Token);
             }
@@ -338,18 +343,17 @@ public sealed partial class MainWindow : Window
         // The line on screen is the person's last unsent words; it is written
         // before the window tears anything down.
         SaveDraft();
+        _settings.ResolveConfirmation(false);
 
         CancelWorkbenchDismissal();
         _motionLifetime.Cancel();
         _runClock?.Stop();
         ResetGit();
+        DetachTerminal();
         ReleaseWorkbenchPresentations();
         await _closing.CancelAsync().ConfigureAwait(true);
         if (_engine is not null)
         {
-            _engine.Changed -= OnChanged;
-            _engine.QueueChanged -= OnQueueChanged;
-            _engine.TreeChanged -= OnTreeChanged;
             if (_navigation is not null)
             {
                 await _navigation.DisposeAsync().ConfigureAwait(true);
@@ -362,38 +366,38 @@ public sealed partial class MainWindow : Window
             _engine = null;
         }
 
-        await _sending.WaitAsync().ConfigureAwait(true);
-        _sending.Dispose();
+        await _composer.DisposeAsync().ConfigureAwait(true);
         _closing.Dispose();
         _motionLifetime.Dispose();
     }
 
-    /// <summary>
-    /// Draws a state the conversation produced.
-    /// </summary>
-    /// <param name="state">The state to draw.</param>
-    /// <remarks>
-    /// The fold happens on the stream's own loop, so the draw is marshalled: a view
-    /// touches its controls only where it may, and that decision belongs here rather
-    /// than in the engine.
-    /// </remarks>
-    private void OnChanged(SessionState state)
+    /// <summary>Draws the current state acknowledged by a retained runtime.</summary>
+    /// <param name="engine">Owning runtime.</param><param name="state">Snapshot to show.</param>
+    private void OnChanged(SessionEngine engine, SessionState state)
     {
-        Dispatcher.UIThread.Post(() =>
+        if (_closing.IsCancellationRequested)
         {
-            var pane = _navigation?.Panes.FirstOrDefault(p => ReferenceEquals(p.Engine.State, state));
-            if (pane is not null)
+            return;
+        }
+
+        var pane = _navigation?.Panes.FirstOrDefault(p => ReferenceEquals(p.Engine, engine));
+        if (pane is not null && (pane.RunPresentation?.Revision != state.Revision
+            || pane.RunPresentation?.Count != state.Items.Count || pane.RunPresentation?.Running != state.Running))
+        {
+            var waiting = state.Items.Any(i => i is ApprovalItem { Open: true } or AskItem { Answered: null, Outcome: null });
+            if (pane.RunPresentation?.Waiting != waiting || pane.RunPresentation?.Running != state.Running)
             {
-                var waiting = state.Items.Any(i => i is ApprovalItem { Open: true } or AskItem { Answered: null, Outcome: null });
                 Projects.ShowRun(pane.Host, pane.Status.SessionPath, waiting ? "halt" : state.Running ? "running" : string.Empty, state.Running);
                 DrawPaneTabs();
             }
 
-            if (ReferenceEquals(_engine?.State, state))
-            {
-                ShowState(state);
-            }
-        });
+            pane.RunPresentation = (state.Revision, state.Items.Count, state.Running, waiting);
+        }
+
+        if (ReferenceEquals(_engine, engine))
+        {
+            PresentState(state, Conversation.State);
+        }
     }
 
     /// <summary>
@@ -501,7 +505,7 @@ public sealed partial class MainWindow : Window
     /// </remarks>
     private async Task SubmitAsync()
     {
-        if (_engine is null)
+        if (_engine is not { } engine || _closing.IsCancellationRequested)
         {
             return;
         }
@@ -514,19 +518,19 @@ public sealed partial class MainWindow : Window
 
         // One send at a time: two submits in flight would interleave, and the second
         // would be a follow-up the person never meant to queue.
-        if (!await _sending.WaitAsync(0).ConfigureAwait(true))
+        if (!_composer.TryBeginSend())
         {
             return;
         }
 
-        var draft = _draftKey;
+        var draft = DraftKey;
         var steer = Conversation.State.Running && !QueueDuringRun;
         var submit = ComposeSubmitText(line);
         Composer.IsReadOnly = true;
         try
         {
-            await _engine.SendAsync(line, submit, steer, _closing.Token).ConfigureAwait(true);
-            if (draft == _draftKey)
+            await _composer.SendAsync(engine, draft, line, submit, steer, _closing.Token).ConfigureAwait(true);
+            if (draft == DraftKey && ReferenceEquals(engine, _engine))
             {
                 if (Composer.Text == line)
                 {
@@ -536,12 +540,7 @@ public sealed partial class MainWindow : Window
                 ClearAttachments();
             }
 
-            if (DraftStore.Read(_drafts, draft) == line)
-            {
-                DraftStore.Write(_drafts, draft, string.Empty);
-            }
-
-            if (draft == _draftKey)
+            if (draft == DraftKey && ReferenceEquals(engine, _engine))
             {
                 await RefreshQueueAsync().ConfigureAwait(true);
             }
@@ -551,7 +550,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception error)
         {
-            if (draft == _draftKey)
+            if (draft == DraftKey && ReferenceEquals(engine, _engine))
             {
                 ShowRefusal(error);
             }
@@ -559,7 +558,7 @@ public sealed partial class MainWindow : Window
         finally
         {
             Composer.IsReadOnly = false;
-            _sending.Release();
+            _composer.EndSend();
         }
     }
 

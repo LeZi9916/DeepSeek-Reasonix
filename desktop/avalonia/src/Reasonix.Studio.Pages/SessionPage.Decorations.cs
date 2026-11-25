@@ -15,144 +15,14 @@ namespace Reasonix.Studio.Pages;
 
 public sealed partial class SessionPage
 {
-    /// <summary>Draws transcript lanes in their original order.</summary>
-    /// <param name="items">The rows to draw.</param>
-    private void DrawRows(IReadOnlyList<TranscriptItem> items)
-    {
-        foreach (var lane in TranscriptLanes.Split(items))
-        {
-            if (lane.IsDelegateGroup)
-            {
-                AddRaw(DelegateGroup(lane.Delegates));
-            }
-            else
-            {
-                DrawOrdinary(lane.Rows);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Draws the ordinary rows of one lane, gathering a stretch of settled work
-    /// under one activity group.
-    /// </summary>
-    /// <param name="rows">The lane's rows.</param>
-    /// <remarks>
-    /// A group is a run of work between two pieces of prose: it starts after the
-    /// last answer and ends at the next one. Reading it that way rather than by a
-    /// fixed size is what keeps one turn's work together however many calls it
-    /// made, and keeps two turns from sharing a head.
-    ///
-    /// When the reader has asked for a turn's work to fold, each turn's
-    /// intermediates go under one line first, and what is inside that line is
-    /// drawn exactly as it would be inline — the setting decides where the work
-    /// starts closed, never how it is drawn.
-    /// </remarks>
-    private void DrawOrdinary(IReadOnlyList<TranscriptItem> rows)
-    {
-        if (!FoldsTurnWork)
-        {
-            DrawInline(rows);
-            return;
-        }
-
-        foreach (var segment in TurnSegment.Split(rows))
-        {
-            if (segment.Lead is { } lead)
-            {
-                AddProseRow(lead);
-            }
-
-            if (segment.HasWork)
-            {
-                AddRaw(WorkFold(segment.Work));
-            }
-
-            DrawInline(segment.Tail);
-        }
-    }
-
-    /// <summary>
-    /// Draws rows as they are, with consecutive work gathered under one activity
-    /// group.
-    /// </summary>
-    /// <param name="rows">The rows to draw.</param>
-    private void DrawInline(IReadOnlyList<TranscriptItem> rows)
-    {
-        var work = new List<TranscriptItem>();
-        foreach (var row in rows)
-        {
-            if (row is SayItem or UserItem)
-            {
-                Flush(work);
-                AddProseRow(row);
-                continue;
-            }
-
-            work.Add(row);
-        }
-
-        Flush(work);
-    }
-
-    /// <summary>Draws a user or answer row following its transcript separator.</summary>
-    /// <param name="row">The transcript row.</param>
-    private void AddProseRow(TranscriptItem row)
-    {
-        var control = RowOf(row);
-        if (row.Id == _newAnswerAt)
-        {
-            AddRaw(new NewAnswerLine(Language));
-            if (row is UserItem)
-            {
-                control.Margin = default;
-            }
-        }
-        else if (row is UserItem && _drawn.Count > 0)
-        {
-            AddRaw(new Border { Height = 1, Background = Brush("BorderBrush"), Margin = new Thickness(0, 32, 0, 12) });
-        }
-
-        AddRow(control);
-    }
-
-    /// <summary>
-    /// Draws the work gathered so far, as one group when there is any of it.
-    /// </summary>
-    /// <param name="work">The rows gathered; cleared as they are drawn.</param>
-    private void Flush(List<TranscriptItem> work)
-    {
-        if (work.Count == 0)
-        {
-            return;
-        }
-
-        var answer = (_drawn.LastOrDefault() as Border)?.Child as AnswerCard;
-        var group = ActivityGroup(work);
-        if (answer is not null)
-        {
-            answer.SetActivity(group);
-        }
-        else
-        {
-            AddRaw(group);
-        }
-
-        work.Clear();
-    }
-
     /// <summary>
     /// Draws one turn's intermediate work under a single line.
     /// </summary>
     /// <param name="work">The turn's intermediate rows.</param>
+    /// <param name="first">Whether the group starts the column.</param>
+    /// <param name="headerOnly">Whether the panel owns the children.</param>
     /// <returns>The fold, open or closed by the reader's own choice.</returns>
-    /// <remarks>
-    /// The body is built whether the fold is open or not, and only its visibility
-    /// changes. That is not an optimisation: rebuilding it on open would throw
-    /// away the text a reader had selected, and a jump to a row inside a closed
-    /// fold would find nothing to land on.
-    /// </remarks>
-    private Control WorkFold(IReadOnlyList<TranscriptItem> work)
+    private Control WorkFold(IReadOnlyList<TranscriptItem> work, bool first, bool headerOnly)
     {
         var tally = ActivityTally.Of(work);
         var words = work.Count(row => row is SayItem);
@@ -208,7 +78,7 @@ public sealed partial class SessionPage
             Spacing = 8,
             IsVisible = DisclosureChoices.WorkOpen,
         };
-        foreach (var row in work)
+        foreach (var row in DisclosureChoices.WorkOpen && !headerOnly ? work : [])
         {
             if (row.Id == _newAnswerAt)
             {
@@ -216,60 +86,85 @@ public sealed partial class SessionPage
             }
 
             var control = RowOf(row);
-            _drawn.Add(control);
             body.Children.Add(control);
         }
 
         var group = new StackPanel { Spacing = 6 };
         group.Children.Add(head);
-        group.Children.Add(body);
+        if (!headerOnly)
+        {
+            group.Children.Add(body);
+        }
 
         return new Border
         {
             Child = group,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            Margin = new Thickness(0, _drawn.Count == 0 ? 0 : 8, 0, 0),
+            Margin = new Thickness(0, first ? 0 : 8, 0, 0),
         };
     }
 
     /// <summary>Draws work under a disclosure that follows the call lifecycle.</summary>
     /// <param name="work">The canonical rows in this activity.</param>
+    /// <param name="headerOnly">Whether the panel owns the children.</param>
     /// <returns>The mounted disclosure and its retained body.</returns>
-    private Control ActivityGroup(IReadOnlyList<TranscriptItem> work)
+    private Control ActivityGroup(IReadOnlyList<TranscriptItem> work, bool headerOnly = false)
     {
         var tally = ActivityTally.Of(work);
         var id = work[0].Id;
-        var open = FoldChoice(TranscriptPart.Activity, id) ?? _folding.StartsOpen(
-            TranscriptPart.Activity,
-            live: !tally.Settled || work.Any(row => _liveWork.Contains(row.Id)),
-            changed: work.OfType<ToolItem>().Any(tool => TranscriptFolding.ChangedFile(tool.Call)));
-        var body = new StackPanel { Name = "ActivityBody", Spacing = 2, IsVisible = open, Margin = new Thickness(19, 2, 0, 2) };
-        foreach (var row in work)
-        {
-            var control = RowOf(row, inActivity: true);
-            _drawn.Add(control);
-            body.Children.Add(control);
-        }
-
+        var open = ActivityOpen(work, tally);
+        var body = new StackPanel { Name = "ActivityBody", Spacing = 2, Margin = new Thickness(19, 2, 0, 2) };
         var disclosure = new ActivityDisclosure(
             body,
             MessageCatalog.Get("chat.count_actions", Language, ("count", Format.Count(tally.Calls, Language))),
             open,
             tally.Failed > 0 ? "ErrInkBrush" : tally.Running > 0 ? "NetBrush" : "OkInkBrush",
-            value => RememberFold(TranscriptPart.Activity, id, value),
+            value =>
+            {
+                RememberFold(TranscriptPart.Activity, id, value);
+                if (headerOnly)
+                {
+                    Rebuild(_state.Items);
+                }
+            },
             MessageCatalog.Get("chat.activity", Language))
         {
-            Tag = work.ToArray(),
+            Tag = work,
         };
-        disclosure.SetCountDetails(tally.Calls, ActivityDetails(tally));
-        disclosure.ConfigureLive(work.OfType<ToolItem>().LastOrDefault(tool => tool.Running), tally.Running, tally.Failed > 0, Language);
-        if (_activityGroupsEntered.Add(id))
+        if (!headerOnly)
         {
-            EnterActivityGroup(disclosure);
+            disclosure.BeforeOpen = () =>
+            {
+                if (body.Children.Count == 0)
+                {
+                    foreach (var row in work)
+                    {
+                        var current = _indices.TryGetValue(row.Id, out var index) ? _state.Items[index] : row;
+                        body.Children.Add(RowOf(current, inActivity: true));
+                    }
+                }
+            };
+            if (open || work.Any(row => row is NoticeItem or ApprovalItem or AskItem))
+            {
+                disclosure.BeforeOpen();
+            }
         }
 
+        disclosure.SetCountDetails(tally.Calls, ActivityDetails(tally));
+        BindActivityCount(id, disclosure);
+        disclosure.ConfigureLive(work.OfType<ToolItem>().LastOrDefault(tool => tool.Running), tally.Running, tally.Failed > 0, Language);
         return disclosure;
     }
+
+    /// <summary>Determines the activity expansion from the same facts used by its header.</summary>
+    /// <param name="work">Group members.</param><param name="tally">Current tool lifecycle counts.</param>
+    /// <returns>Whether the group is open.</returns>
+    private bool ActivityOpen(IReadOnlyList<TranscriptItem> work, ActivityTally tally) =>
+        work.Any(row => row is ApprovalItem { Open: true } or AskItem { Answered: null, Outcome: null })
+        || (FoldChoice(TranscriptPart.Activity, work[0].Id) ?? _folding.StartsOpen(
+            TranscriptPart.Activity,
+            live: !tally.Settled || work.Any(row => _liveWork.Contains(row.Id)),
+            changed: work.OfType<ToolItem>().Any(tool => TranscriptFolding.ChangedFile(tool.Call))));
 
     /// <summary>Lets grouped reads follow the same step default as individual calls.</summary>
     /// <param name="reads">The grouped canonical reads.</param><returns>The retained reads disclosure.</returns>
@@ -312,8 +207,10 @@ public sealed partial class SessionPage
     /// Draws delegates sent out side by side as one group of their own.
     /// </summary>
     /// <param name="delegates">The delegate rows, in the order they were sent.</param>
+    /// <param name="first">Whether the group starts the column.</param>
+    /// <param name="headerOnly">Whether the panel owns the children.</param>
     /// <returns>The group.</returns>
-    private Control DelegateGroup(IReadOnlyList<ToolItem> delegates)
+    private Control DelegateGroup(IReadOnlyList<ToolItem> delegates, bool first, bool headerOnly)
     {
         var running = delegates.Count(delegateRow => delegateRow.Running);
         var failed = delegates.Count(delegateRow => !delegateRow.Running && !string.IsNullOrEmpty(delegateRow.Call.Err));
@@ -335,55 +232,26 @@ public sealed partial class SessionPage
         };
 
         var body = new StackPanel { Spacing = 4 };
-        foreach (var delegateRow in delegates)
+        foreach (var delegateRow in headerOnly ? [] : delegates)
         {
             var control = RowOf(delegateRow);
-            _drawn.Add(control);
             body.Children.Add(control);
         }
 
         var group = new StackPanel { Spacing = 6 };
         group.Children.Add(head);
-        group.Children.Add(body);
+        if (!headerOnly)
+        {
+            group.Children.Add(body);
+        }
 
         return new Border
         {
             Background = Brush("RaisedBrush"),
             CornerRadius = new CornerRadius(10),
             Padding = new Thickness(12, 10, 12, 10),
-            Margin = new Thickness(0, _drawn.Count == 0 ? 0 : 8, 0, 0),
+            Margin = new Thickness(0, first ? 0 : 8, 0, 0),
             Child = group,
         };
-    }
-
-    /// <summary>
-    /// Adds a decoration to the column without counting it as a transcript row.
-    /// </summary>
-    /// <param name="control">The decoration.</param>
-    /// <remarks>
-    /// A decoration is not one of the rows, so it must not shift the index a
-    /// streamed chunk extends: <c>_drawn</c> is the row list, and a separator in
-    /// it would make every later row's text land one row early.
-    /// </remarks>
-    private void AddRaw(Control control)
-    {
-        _rows.Children.Add(control);
-    }
-
-    /// <summary>
-    /// Adds one transcript row, keeping it in the row list a streamed chunk
-    /// extends.
-    /// </summary>
-    /// <param name="control">The row's control.</param>
-    /// <remarks>
-    /// A row joins <c>_drawn</c> whether it sits in the column directly or inside
-    /// a group, because <c>UpdateText</c> addresses a still-arriving answer by its
-    /// position among the rows. Letting a group host the control without
-    /// registering it would put every later chunk one row early.
-    /// </remarks>
-    private void AddRow(Control control)
-    {
-        _drawn.Add(control);
-        _rows.Children.Add(control);
     }
 }

@@ -28,7 +28,7 @@ public sealed partial class SessionPage
         var before = previous.Items.Where(item => item is ApprovalItem or AskItem)
             .Select(item => item is ApprovalItem approval ? approval.Approval.ID : ((AskItem)item).Ask.ID)
             .ToHashSet(StringComparer.Ordinal);
-        foreach (var row in _drawn.OfType<Border>())
+        foreach (var row in Drawn.OfType<Border>())
         {
             var id = row.Tag switch
             {

@@ -75,10 +75,27 @@ public sealed partial class SessionPage
                 FoldChoice(TranscriptPart.Output, tool.Id) ?? _folding.StartsOpen(TranscriptPart.Output),
                 open => RememberFold(TranscriptPart.Steps, tool.Id, open),
                 open => RememberFold(TranscriptPart.Output, tool.Id, open));
-            if (header.BackgroundJobId is not null)
+            if (header.BackgroundJobId is { } jobId)
             {
                 header.BackgroundOutputRequested += OpenBackgroundToolOutput;
-                _backgroundTools.Add(header);
+                header.AttachedToVisualTree += (_, _) =>
+                {
+                    _backgroundTools.Add(header);
+                    var job = _backgroundJobs.GetValueOrDefault(jobId);
+                    header.ShowBackgroundJob(job);
+                    if (job?.Status == "running")
+                    {
+                        _backgroundClock.Start();
+                    }
+                };
+                header.DetachedFromVisualTree += (_, _) =>
+                {
+                    _backgroundTools.Remove(header);
+                    if (_backgroundTools.Count == 0)
+                    {
+                        _backgroundClock.Stop();
+                    }
+                };
             }
 
             return header;

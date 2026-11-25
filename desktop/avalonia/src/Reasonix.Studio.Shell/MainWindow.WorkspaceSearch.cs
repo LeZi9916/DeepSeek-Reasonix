@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Pages.Rail;
+using Reasonix.Studio.Shell.Settings;
 using Reasonix.Studio.Shell.Workspace;
 using System;
 using System.Collections.Generic;
@@ -109,7 +110,7 @@ public sealed partial class MainWindow
             entries.Add(new WorkspaceSearchHit("sessions", session.Title.Length > 0 ? session.Title : session.Name, string.Join(" · ", new[] { project, target.Host, SessionAge.Readout(session.LastActiveAt, DateTimeOffset.Now, Language) }.Where(text => text.Length > 0)), () => Projects.Navigate(target), Identity: "s:" + System.Text.Json.JsonSerializer.Serialize(new[] { target.Host, target.SessionPath })));
         }
 
-        foreach (var (section, labels) in s_destinations)
+        foreach (var (section, labels) in SettingsNavigation.Destinations)
         {
             foreach (var key in labels.Where(SettingAvailable))
             {
