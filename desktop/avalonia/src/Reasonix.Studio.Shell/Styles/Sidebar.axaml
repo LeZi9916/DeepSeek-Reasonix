@@ -19,4 +19,17 @@
     </ControlTemplate></Setter>
   </Style>
   <Style Selector="Button.rail-settings:pointerover /template/ Border"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  <Style Selector="Button#NewSession">
+    <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+  </Style>
+  <Style Selector="Window.motion Button#NewSession">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <BrushTransition Property="BorderBrush" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="Button#NewSession:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
 </Styles>

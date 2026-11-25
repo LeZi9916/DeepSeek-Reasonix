@@ -574,8 +574,8 @@
           <Button Name="CollapseRail" Classes="icon" Grid.Column="1" AutomationProperties.AutomationId="action:chrome.rail"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.collapse}"/></Canvas></Viewbox></Button>
         </Grid>
         <Button Name="NewSession" Grid.Row="1" Margin="10,8,9,0" Height="32" Padding="12,0"
-                Background="{DynamicResource RaisedBrush}" Foreground="{DynamicResource TextBrush}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="10" FontSize="{DynamicResource StudioType13}"
+                Foreground="{DynamicResource TextBrush}"
+                BorderThickness="1" CornerRadius="10" FontSize="{DynamicResource StudioType13}"
                 FontWeight="Medium" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch"
                 AutomationProperties.AutomationId="action:session.new">
           <Button.Template><ControlTemplate>
