@@ -218,6 +218,7 @@ internal sealed partial class BackgroundJobChip : UserControl
         Rows.Children.Clear();
         _controls.Clear();
         _elapsed.Clear();
+        var current = _jobs.Select(job => job.Id).ToHashSet(StringComparer.Ordinal);
         var running = _jobs.Where(job => job.Status == "running").ToArray();
         var ended = _jobs.Where(job => job.Status != "running").ToArray();
         AddSection(running, true, language);
@@ -245,6 +246,8 @@ internal sealed partial class BackgroundJobChip : UserControl
         {
             _clock.Stop();
         }
+
+        _jobRendered.IntersectWith(current);
     }
 
     /// <summary>Displays the canonical running or ended jobs in the attached card.</summary>
@@ -332,7 +335,11 @@ internal sealed partial class BackgroundJobChip : UserControl
                 AddLine(MessageCatalog.Get("panels.exit_code", language, ("code", Format.Count(code, language))), 11, code == 0 ? "FaintBrush" : "ErrInkBrush");
             }
 
-            Rows.Children.Add(new Border { Classes = { "job-deck-row" }, Child = row, CornerRadius = new CornerRadius(7), Padding = new Thickness(8) });
+            Rows.Children.Add(new Border { Tag = job.Id, Classes = { "job-deck-row" }, Child = row, CornerRadius = new CornerRadius(7), Padding = new Thickness(8) });
+            if (_jobRendered.Add(job.Id))
+            {
+                EnterJobRow((Border)Rows.Children[^1]);
+            }
 
             void AddLine(string? text, int size, string ink)
             {
