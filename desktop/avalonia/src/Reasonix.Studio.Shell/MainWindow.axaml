@@ -39,6 +39,7 @@
           <SolidColorBrush x:Key="CacheMeterHoverInkBrush" Color="{DynamicResource Text}"/>
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
+      <SolidColorBrush x:Key="OverlayClearBrush" Color="{DynamicResource Overlay}" Opacity="0"/>
     </ResourceDictionary>
   </Window.Resources>
   <Window.Styles>
@@ -103,6 +104,7 @@
       <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
     <Style Selector="Window.motion Button.icon:not(.rail-settings):not(.rail-shortcuts)">
+      <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}" />
       <Setter Property="RenderTransform" Value="scale(1)" />
       <Setter Property="Transitions"><Transitions>
         <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
@@ -304,8 +306,8 @@
                     <Grid Name="ComposeFooter" Grid.Row="4" ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="*,0,0" Margin="8,6,8,8" ColumnSpacing="2">
                       <WrapPanel Name="ComposeTools" Orientation="Horizontal" ItemSpacing="2" LineSpacing="2" VerticalAlignment="Center">
                         <Button Name="Attach" Classes="compose-tool compose-icon"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}" Stroke="{Binding #Attach.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
-                        <Button Name="SideQuestion" Classes="compose-tool compose-icon" AutomationProperties.AutomationId="action:side.toggle"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.session}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
-                        <Button Name="RefinePrompt" Classes="compose-tool compose-icon" AutomationProperties.AutomationId="action:prompt.refine"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.fresh}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
+                        <Button Name="SideQuestion" Classes="compose-tool compose-icon" AutomationProperties.AutomationId="action:side.toggle"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.session}" Stroke="{Binding #SideQuestion.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
+                        <Button Name="RefinePrompt" Classes="compose-tool compose-icon" AutomationProperties.AutomationId="action:prompt.refine"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.fresh}" Stroke="{Binding #RefinePrompt.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
                         <Button Name="PlanMode" BorderThickness="1" Classes="compose-tool compose-pill compose-plan" AutomationProperties.AutomationId="action:plan.mode"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.agent}" Stroke="{Binding #PlanMode.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="PlanModeLabel" Text="Agent" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Classes="compose-plan-chevron" Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
                         <Button Name="ComposeBranch" BorderThickness="1" Classes="compose-tool compose-pill compose-branch"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.branch}" Stroke="{Binding #ComposeBranch.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="ComposeBranchLabel" Text="main" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
                         <Button Name="ApprovalMode" BorderThickness="1" Classes="compose-tool compose-pill compose-policy" AutomationProperties.AutomationId="action:chrome.policy"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Name="ApprovalShield" Data="{StaticResource Glyph.tools}" Stroke="{Binding #ApprovalMode.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>

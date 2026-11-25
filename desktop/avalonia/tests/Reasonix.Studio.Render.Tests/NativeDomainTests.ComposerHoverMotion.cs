@@ -150,27 +150,32 @@ public sealed partial class NativeDomainTests
                     : null;
                 var surface = (Control?)presenter ?? button;
                 var property = standardTemplate ? Avalonia.Controls.Presenters.ContentPresenter.BackgroundProperty : Button.BackgroundProperty;
-                var resting = ColorOfSurface();
-                var samples = new List<Color>();
+                var resting = Paint();
+                var samples = new List<(Color Color, double Opacity)>();
                 surface.PropertyChanged += (_, change) =>
                 {
                     if (change.Property == property)
                     {
-                        samples.Add(ColorOfSurface());
+                        samples.Add(Paint());
                     }
                 };
 
                 window.MouseMove(button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window)!.Value);
-                await WaitForMotionFrame(() => ColorOfSurface() != resting && !surface.IsAnimating(property)).ConfigureAwait(true);
-                var hovered = ColorOfSurface();
+                await WaitForMotionFrame(() => Paint() != resting && !surface.IsAnimating(property)).ConfigureAwait(true);
+                var hovered = Paint();
                 Assert.Contains(samples, value => value != resting && value != hovered);
+
+                Assert.All(samples, paint => Assert.Equal(hovered.Color, paint.Color));
 
                 samples.Clear();
                 window.MouseMove(new Point(600, 140));
-                await WaitForMotionFrame(() => ColorOfSurface() == resting && !surface.IsAnimating(property)).ConfigureAwait(true);
+                await WaitForMotionFrame(() => Paint() == resting && !surface.IsAnimating(property)).ConfigureAwait(true);
                 Assert.Contains(samples, value => value != resting && value != hovered);
 
-                Color ColorOfSurface() => (surface.GetValue(property) as ISolidColorBrush)?.Color ?? Colors.Transparent;
+                Assert.All(samples, paint => Assert.Equal(hovered.Color, paint.Color));
+
+                (Color Color, double Opacity) Paint() =>
+                    surface.GetValue(property) is ISolidColorBrush brush ? (brush.Color, brush.Opacity) : (Colors.Transparent, 0);
             },
             allowMotion: true);
 }

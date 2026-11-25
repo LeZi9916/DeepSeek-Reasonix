@@ -177,6 +177,8 @@
   <Color x:Key="ErrInk">#AF362E</Color>
   <SolidColorBrush x:Key="ErrInkBrush" Color="{StaticResource ErrInk}" />
   <x:String x:Key="token:--err-ink">rgb(175, 54, 46)</x:String>
+  <SolidColorBrush x:Key="StopHoverBrush" Color="#DE483D" Opacity="0.20" />
+  <SolidColorBrush x:Key="StopHoverInkBrush" Color="#CF4036" />
   <!-- token face-code -->
   <Color x:Key="FaceCode">#F9F7F3</Color>
   <SolidColorBrush x:Key="FaceCodeBrush" Color="{StaticResource FaceCode}" />
@@ -697,6 +699,8 @@
   <Color x:Key="ErrInk">#F1786D</Color>
   <SolidColorBrush x:Key="ErrInkBrush" Color="{StaticResource ErrInk}" />
   <x:String x:Key="token:--err-ink">rgb(241, 120, 109)</x:String>
+  <SolidColorBrush x:Key="StopHoverBrush" Color="#FF7D71" Opacity="0.20" />
+  <SolidColorBrush x:Key="StopHoverInkBrush" Color="#FF8E81" />
   <!-- token face-code -->
   <Color x:Key="FaceCode">#0A0E15</Color>
   <SolidColorBrush x:Key="FaceCodeBrush" Color="{StaticResource FaceCode}" />

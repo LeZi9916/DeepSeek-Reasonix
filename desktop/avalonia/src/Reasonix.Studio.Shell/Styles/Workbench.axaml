@@ -126,7 +126,7 @@
   <Style Selector="workbench|WorkbenchHeaderTab.active"><Setter Property="Height" Value="35"/></Style>
   <Style Selector="Border.wb-tab-frame">
     <Setter Property="BorderThickness" Value="1,1,1,0"/><Setter Property="BorderBrush" Value="Transparent"/>
-    <Setter Property="Background" Value="Transparent"/><Setter Property="CornerRadius" Value="10,10,0,0"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/><Setter Property="CornerRadius" Value="10,10,0,0"/>
   </Style>
   <Style Selector="Window.motion Border.wb-tab-frame">
     <Setter Property="Transitions"><Transitions>
