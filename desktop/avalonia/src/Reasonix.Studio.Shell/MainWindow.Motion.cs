@@ -173,7 +173,6 @@ public sealed partial class MainWindow
             {
                 CancelWelcomeEntrance();
                 ComposerRunTokens.CancelFeedback();
-                _sendSheenMotion?.Cancel();
                 _viewMotion?.Cancel.Cancel();
                 _workbenchCanvasFade?.Cancel();
                 _setupDeparture?.Cancel();

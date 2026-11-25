@@ -232,7 +232,7 @@ public sealed partial class MainWindow
         QuickLinksFrame.Width = Math.Min(260, _railWidth - 20);
         if (!open)
         {
-            QuickLinksPopup.IsOpen = false;
+            CloseQuickLinks();
         }
 
         AnalysisPanel.Margin = room.Width <= 1120 ? new Thickness(20, 0) : new Thickness(0, 0, 10, 0);
@@ -294,7 +294,12 @@ public sealed partial class MainWindow
             return;
         }
 
-        if (e.Key == Key.F && e.KeyModifiers == primary)
+        if (e.Key == Key.Escape && QuickLinksPopup.IsOpen)
+        {
+            DismissQuickLinks();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F && e.KeyModifiers == primary)
         {
             OpenFind();
         }

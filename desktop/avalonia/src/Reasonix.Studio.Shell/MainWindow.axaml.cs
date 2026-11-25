@@ -106,7 +106,6 @@ public sealed partial class MainWindow : Window
         CrumbTitle.Text = MessageCatalog.Get(MessageKey.Common.NewSession, Language);
         InitializeChrome();
         InitializeIntake();
-        InitializeSendSheen();
         InitializePreferences();
         InitializePlanStrip();
         InitializeNavigation();

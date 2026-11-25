@@ -151,7 +151,7 @@ public sealed partial class MainWindow
     /// <summary>Opens the settings sheet and focuses its search box.</summary>
     private void OpenPreferences()
     {
-        QuickLinksPopup.IsOpen = false;
+        CloseQuickLinks();
         CloseComposerMenus();
         DisarmStop();
         SetupPanel.IsVisible = false;

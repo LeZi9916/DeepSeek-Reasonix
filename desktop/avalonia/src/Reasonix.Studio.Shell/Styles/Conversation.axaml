@@ -44,7 +44,7 @@
   </Style>
   <Style Selector="StackPanel.compose-area TextBlock"><Setter Property="FontFamily" Value="{DynamicResource ConversationUiFamily}"/><Setter Property="FontWeight" Value="Medium"/></Style>
   <Style Selector="Button.compose-tool TextBlock, Button.compose-context TextBlock, Button.compose-changes TextBlock"><Setter Property="ClipToBounds" Value="False"/></Style>
-  <Style Selector="Button.compose-tool TextBlock"><Setter Property="LineHeight" Value="{DynamicResource StudioType12}"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+  <Style Selector="Button.compose-tool TextBlock"><Setter Property="LineHeight" Value="{DynamicResource StudioType12}"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/></Style>
   <Style Selector="Button.compose-model TextBlock#ModelLabel"><Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
   <Style Selector="Button.compose-plan, Button.compose-branch, Button.compose-policy"><Setter Property="BorderBrush" Value="Transparent"/><Setter Property="CornerRadius" Value="999"/></Style>
   <Style Selector="Button.compose-icon"><Setter Property="Width" Value="28"/><Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="7"/></Style>
@@ -55,29 +55,44 @@
   </Style>
   <Style Selector="Button.compose-pill"><Setter Property="CornerRadius" Value="999"/></Style>
   <Style Selector="Window.motion Button.compose-tool">
-    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></Setter>
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/>
+      <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/>
+    </Transitions></Setter>
   </Style>
   <Style Selector="Button.compose-changes TextBlock"><Setter Property="FontFeatures" Value="tnum"/></Style>
   <Style Selector="Button.compose-changes TextBlock, Button.compose-context TextBlock"><Setter Property="LineHeight" Value="{DynamicResource StudioType11}"/><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="FontSize" Value="{DynamicResource StudioType11}"/></Style>
   <Style Selector="Button.compose-context"><Setter Property="CornerRadius" Value="5"/><Setter Property="FontSize" Value="{DynamicResource StudioType11}"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="Padding" Value="6,0"/><Setter Property="Height" Value="25"/></Style>
   <Style Selector="Button.compose-context TextBlock"><Setter Property="FontFeatures" Value="tnum"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
-  <Style Selector="Button.compose-context TextBlock.compose-reading"><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
+  <Style Selector="Button.compose-context TextBlock.compose-reading"><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+  <Style Selector="Button#ContextToggle"><Setter Property="Foreground" Value="{DynamicResource ContextMeterInkBrush}"/></Style>
+  <Style Selector="Window.motion Button.compose-context"><Setter Property="Transitions" Value="{x:Null}"/></Style>
+  <Style Selector="Button#SpeedToggle:pointerover, Button#CacheToggle:pointerover">
+    <Setter Property="Background" Value="{DynamicResource MeterHoverBrush}"/>
+  </Style>
+  <Style Selector="Button#SpeedToggle:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+  <Style Selector="Button#CacheToggle:pointerover"><Setter Property="Foreground" Value="{DynamicResource CacheMeterHoverInkBrush}"/></Style>
+  <Style Selector="Button#ContextToggle:pointerover">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource ContextMeterHoverInkBrush}"/>
+  </Style>
   <Style Selector="Button.compose-policy TextBlock"><Setter Property="FontSize" Value="{DynamicResource StudioType11}"/><Setter Property="LineHeight" Value="{DynamicResource StudioType11}"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
   <Style Selector="Button.compose-policy.risk TextBlock"><Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/><Setter Property="FontWeight" Value="Medium"/></Style>
   <Style Selector="Button.compose-context Path.context-arc"><Setter Property="Stroke" Value="{DynamicResource ComposeContextProgressBrush}"/></Style>
   <Style Selector="Button.compose-context.high Path.context-arc"><Setter Property="Stroke" Value="{DynamicResource WarnBrush}"/></Style>
   <Style Selector="Button.compose-context.high TextBlock.compose-reading"><Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/></Style>
-  <Style Selector="Button.compose-tool:pointerover, Button.compose-changes:pointerover, Button.compose-context:pointerover, Button.compose-tool.open"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
-  <Style Selector="Button.compose-tool:pressed"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
-  <Style Selector="Button.compose-send"><Setter Property="Background" Value="{DynamicResource TextBrush}"/><Setter Property="Foreground" Value="{DynamicResource PageBrush}"/></Style>
-  <Style Selector="Button.compose-send Path"><Setter Property="Stroke" Value="{DynamicResource PageBrush}"/><Setter Property="StrokeThickness" Value="2"/></Style>
-  <Style Selector="Button.compose-send TextBlock"><Setter Property="Foreground" Value="{DynamicResource PageBrush}"/><Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="LineHeight" Value="{DynamicResource StudioType13}"/></Style>
-  <Style Selector="Button.compose-send:disabled"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource GhostBrush}"/></Style>
-  <Style Selector="Button.compose-send:pointerover:not(:disabled)"><Setter Property="Background" Value="{DynamicResource SendHoverBrush}"/></Style>
-  <Style Selector="Button.compose-send:disabled Path"><Setter Property="Stroke" Value="{DynamicResource GhostBrush}"/></Style>
-  <Style Selector="Window.motion Button.compose-send">
-    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/><BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></Setter>
+  <Style Selector="Button.compose-tool:pointerover:not(:disabled), Button.compose-changes:pointerover:not(:disabled), Button.compose-tool.open">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
   </Style>
+  <Style Selector="Button.compose-tool:pressed"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  <Style Selector="Button.compose-send"><Setter Property="Background" Value="{DynamicResource AccentBrush}"/><Setter Property="Foreground" Value="{DynamicResource AccentFgBrush}"/></Style>
+  <Style Selector="Button.compose-send TextBlock"><Setter Property="FontSize" Value="{DynamicResource StudioType13}"/><Setter Property="LineHeight" Value="{DynamicResource StudioType13}"/></Style>
+  <Style Selector="Button.compose-send:disabled"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource GhostBrush}"/></Style>
+  <Style Selector="ctl|StudioComposer.running Button.compose-send:not(:disabled)"><Setter Property="Background" Value="{DynamicResource TextBrush}"/><Setter Property="Foreground" Value="{DynamicResource SurfaceBrush}"/></Style>
+  <Style Selector="Button.compose-send:pointerover:not(:disabled)"><Setter Property="Background" Value="{DynamicResource SendHoverBrush}"/><Setter Property="Foreground" Value="{DynamicResource SendHoverInkBrush}"/></Style>
+  <Style Selector="ctl|StudioComposer.running Button.compose-send:pointerover:not(:disabled)"><Setter Property="Background" Value="{DynamicResource SteerHoverBrush}"/><Setter Property="Foreground" Value="{DynamicResource SteerHoverInkBrush}"/></Style>
+  <Style Selector="Window.motion Button.compose-send"><Setter Property="Transitions" Value="{x:Null}"/></Style>
   <Style Selector="Button.compose-stop"><Setter Property="Background" Value="{DynamicResource Compose.stop-wash}"/><Setter Property="Foreground" Value="{DynamicResource ErrInkBrush}"/></Style>
   <Style Selector="TextBox.compose-input, TextBox.compose-input:focus, TextBox.compose-input:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="CaretBrush" Value="{DynamicResource TextBrush}"/></Style>
   <Style Selector="TextBox.compose-input /template/ Border#PART_BorderElement, TextBox.compose-input:focus /template/ Border#PART_BorderElement, TextBox.compose-input:pointerover /template/ Border#PART_BorderElement"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
@@ -149,7 +164,11 @@
   <Style Selector="Button.workspace-quick-link:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
   <Style Selector="Window.motion Button.workspace-quick-link">
     <Setter Property="RenderTransform" Value="scale(1)"/>
-    <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.06"/></Transitions></Setter>
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.06" Easing="0.25,0.1,0.25,1"/>
+    </Transitions></Setter>
   </Style>
   <Style Selector="Window.motion Button.workspace-quick-link:pressed">
     <Setter Property="RenderTransform" Value="scale(0.94)"/>
@@ -170,12 +189,7 @@
       <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/>
       <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/>
       <DoubleTransition Property="Opacity" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
-      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/>
     </Transitions></Setter>
-  </Style>
-  <Style Selector="Window.motion Button.compose-plan:pointerover, Window.motion Button.compose-branch:pointerover, Window.motion Button.compose-model:pointerover, Window.motion Button.compose-effort:pointerover">
-    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-    <Setter Property="RenderTransform" Value="translateY(-1px)"/>
   </Style>
   <Style Selector="Window.motion composer|ComposerPendingSweep.pending">
     <Style.Animations><Animation Duration="0:0:1.1" IterationCount="Infinite">

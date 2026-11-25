@@ -20,8 +20,24 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries><ResourceInclude Source="avares://Reasonix.Studio.Pages/Rail/WorkspaceMenu.axaml"/></ResourceDictionary.MergedDictionaries>
       <ResourceDictionary.ThemeDictionaries>
-        <ResourceDictionary x:Key="Light"><SolidColorBrush x:Key="ComposeMaskBrush" Color="{DynamicResource Ghost}"/><SolidColorBrush x:Key="ComposeContextProgressBrush" Color="#858981"/><SolidColorBrush x:Key="ComposeContextHoleBrush" Color="{DynamicResource Surface}"/></ResourceDictionary>
-        <ResourceDictionary x:Key="Dark"><SolidColorBrush x:Key="ComposeMaskBrush" Color="{DynamicResource Muted}"/><SolidColorBrush x:Key="ComposeContextProgressBrush" Color="{DynamicResource Accent}"/><SolidColorBrush x:Key="ComposeContextHoleBrush" Color="{DynamicResource Raised}"/></ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="ComposeMaskBrush" Color="{DynamicResource Ghost}"/>
+          <SolidColorBrush x:Key="ComposeContextProgressBrush" Color="#858981"/>
+          <SolidColorBrush x:Key="ComposeContextHoleBrush" Color="{DynamicResource Surface}"/>
+          <SolidColorBrush x:Key="MeterHoverBrush" Color="{DynamicResource Text}" Opacity="0.07"/>
+          <SolidColorBrush x:Key="ContextMeterInkBrush" Color="{DynamicResource Ghost}"/>
+          <SolidColorBrush x:Key="ContextMeterHoverInkBrush" Color="{DynamicResource Muted}"/>
+          <SolidColorBrush x:Key="CacheMeterHoverInkBrush" Color="{DynamicResource Ghost}"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="ComposeMaskBrush" Color="{DynamicResource Muted}"/>
+          <SolidColorBrush x:Key="ComposeContextProgressBrush" Color="{DynamicResource Accent}"/>
+          <SolidColorBrush x:Key="ComposeContextHoleBrush" Color="{DynamicResource Raised}"/>
+          <SolidColorBrush x:Key="MeterHoverBrush" Color="{DynamicResource Text}" Opacity="0.07"/>
+          <SolidColorBrush x:Key="ContextMeterInkBrush" Color="{DynamicResource Muted}"/>
+          <SolidColorBrush x:Key="ContextMeterHoverInkBrush" Color="{DynamicResource Text}"/>
+          <SolidColorBrush x:Key="CacheMeterHoverInkBrush" Color="{DynamicResource Text}"/>
+        </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>
   </Window.Resources>
@@ -86,17 +102,22 @@
       <Setter Property="HorizontalContentAlignment" Value="Center" />
       <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
-    <Style Selector="Window.motion Button.icon">
+    <Style Selector="Window.motion Button.icon:not(.rail-settings):not(.rail-shortcuts)">
       <Setter Property="RenderTransform" Value="scale(1)" />
-      <Setter Property="Transitions">
-        <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.06" /></Transitions>
-      </Setter>
+      <Setter Property="Transitions"><Transitions>
+        <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.06" Easing="0.25,0.1,0.25,1"/>
+      </Transitions></Setter>
     </Style>
     <Style Selector="Window.motion Button.icon:pressed">
       <Setter Property="RenderTransform" Value="scale(0.94)" />
     </Style>
-    <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource OverlayBrush}" />
+    <Style Selector="Button.icon:pointerover:not(:disabled)">
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+    <Style Selector="Button.icon:pointerover:not(:disabled) /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     </Style>
     <Style Selector="Button.chrome-view.active-view">
       <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
@@ -112,7 +133,7 @@
     <Grid Name="MainArea" Grid.Column="1" RowDefinitions="48,Auto,*">
       <ctl:StudioChrome Name="TitleChrome">
         <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-          <Button Name="ExpandRail" Classes="icon" IsVisible="False" Margin="0,0,8,0"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.expand}"/></Canvas></Viewbox></Button>
+          <Button Name="ExpandRail" Classes="icon" IsVisible="False" Margin="0,0,8,0"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{Binding #ExpandRail.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.expand}"/></Canvas></Viewbox></Button>
           <ctl:StudioCrumb Grid.Column="1" Height="19" ClipToBounds="True">
             <Grid ColumnDefinitions="16,Auto,Auto,Auto,Auto,*">
               <Button Name="OpenProject" Classes="icon" Width="16" Height="16" CornerRadius="0"
@@ -134,7 +155,7 @@
             <StackPanel Name="ChromeActions" Orientation="Horizontal" Spacing="4">
             <Button Name="FindButton" Classes="icon" HorizontalAlignment="Left" AutomationProperties.AutomationId="action:transcript.find">
               <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
-                <Path Data="{StaticResource Glyph.search}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.4" StrokeLineCap="Round"/>
+                <Path Data="{StaticResource Glyph.search}" Stroke="{Binding #FindButton.Foreground}" StrokeThickness="1.4" StrokeLineCap="Round"/>
               </Canvas></Viewbox>
             </Button>
             <workspace:WorkspaceChromeStatus Name="WorkspaceStatus" HorizontalAlignment="Left"/>
@@ -142,7 +163,7 @@
               <ContentControl Name="ThemeGlyph" Width="16" Height="16" HorizontalContentAlignment="Center">
                 <Viewbox Width="16" Height="16">
                   <Canvas Width="24" Height="24">
-                    <Path Name="ThemeShape" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.4"
+                    <Path Name="ThemeShape" Stroke="{Binding #ThemeSwitch.Foreground}" StrokeThickness="1.4"
                           StrokeLineCap="Round" StrokeJoin="Round" />
                   </Canvas>
                 </Viewbox>
@@ -282,12 +303,12 @@
                     </TextBox>
                     <Grid Name="ComposeFooter" Grid.Row="4" ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="*,0,0" Margin="8,6,8,8" ColumnSpacing="2">
                       <WrapPanel Name="ComposeTools" Orientation="Horizontal" ItemSpacing="2" LineSpacing="2" VerticalAlignment="Center">
-                        <Button Name="Attach" Classes="compose-tool compose-icon"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
+                        <Button Name="Attach" Classes="compose-tool compose-icon"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}" Stroke="{Binding #Attach.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
                         <Button Name="SideQuestion" Classes="compose-tool compose-icon" AutomationProperties.AutomationId="action:side.toggle"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.session}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
                         <Button Name="RefinePrompt" Classes="compose-tool compose-icon" AutomationProperties.AutomationId="action:prompt.refine"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.fresh}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
-                        <Button Name="PlanMode" BorderThickness="1" Classes="compose-tool compose-pill compose-plan" AutomationProperties.AutomationId="action:plan.mode"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.agent}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="PlanModeLabel" Text="Agent" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Classes="compose-plan-chevron" Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
-                        <Button Name="ComposeBranch" BorderThickness="1" Classes="compose-tool compose-pill compose-branch"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.branch}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="ComposeBranchLabel" Text="main" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
-                        <Button Name="ApprovalMode" BorderThickness="1" Classes="compose-tool compose-pill compose-policy" AutomationProperties.AutomationId="action:chrome.policy"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Name="ApprovalShield" Data="{StaticResource Glyph.tools}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
+                        <Button Name="PlanMode" BorderThickness="1" Classes="compose-tool compose-pill compose-plan" AutomationProperties.AutomationId="action:plan.mode"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.agent}" Stroke="{Binding #PlanMode.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="PlanModeLabel" Text="Agent" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Classes="compose-plan-chevron" Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
+                        <Button Name="ComposeBranch" BorderThickness="1" Classes="compose-tool compose-pill compose-branch"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.branch}" Stroke="{Binding #ComposeBranch.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="ComposeBranchLabel" Text="main" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
+                        <Button Name="ApprovalMode" BorderThickness="1" Classes="compose-tool compose-pill compose-policy" AutomationProperties.AutomationId="action:chrome.policy"><StackPanel Orientation="Horizontal" Spacing="4"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Name="ApprovalShield" Data="{StaticResource Glyph.tools}" Stroke="{Binding #ApprovalMode.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
                           <Path Name="ApprovalWarningIcon" IsVisible="False" Data="M10.3 4.1 2.4 18a1.9 1.9 0 0 0 1.7 2.9h15.8a1.9 1.9 0 0 0 1.7-2.9L13.7 4.1a2 2 0 0 0-3.4 0Z M12 9v4 M12 17h.01"
                                 Stroke="{DynamicResource WarnInkBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/>
                         </Canvas></Viewbox><ctl:StudioLineText Name="ApprovalModeLabel" Text="询问" Classes="compose-tool-label" VerticalAlignment="Center"/><Viewbox Classes="compose-policy-chevron" Width="11" Margin="1,0,0,0" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
@@ -297,12 +318,12 @@
                           <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"><Viewbox Name="ModelMark" Width="14" Height="14" IsVisible="False"><Canvas Width="24" Height="24"><Path Name="ModelMarkPath" Data="{StaticResource Compose.deepseek}" Fill="#4D6BFE"/></Canvas></Viewbox><Border Name="ModelInitial" Width="14" Height="14" CornerRadius="4" IsVisible="False" VerticalAlignment="Center"><TextBlock Name="ModelInitialText" FontSize="{DynamicResource StudioType9}" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ctl:StudioLineText Name="ModelLabel" ClipToBounds="True" LineHeight="{DynamicResource ComposeModelLineHeight}" FontSize="{DynamicResource StudioType13}" FontWeight="Medium" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/><Viewbox Classes="compose-compact-model-chevron" Width="10" Height="10"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel>
                         </Button>
                         <Border Name="EffortSeparator" Width="1" Height="12" Background="{DynamicResource HairBrush}" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                        <Button Name="EffortButton" Classes="compose-tool compose-effort" Padding="6,0,8,0" BorderThickness="0"><StackPanel Orientation="Horizontal" Spacing="6"><StackPanel Orientation="Horizontal" Spacing="3"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.model}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="EffortLabel" FontSize="{DynamicResource StudioType13}" FontWeight="Normal" LineHeight="{DynamicResource StudioType13}" VerticalAlignment="Center"/></StackPanel><Viewbox Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
+                        <Button Name="EffortButton" Classes="compose-tool compose-effort" Padding="6,0,8,0" BorderThickness="0"><StackPanel Orientation="Horizontal" Spacing="6"><StackPanel Orientation="Horizontal" Spacing="3"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.model}" Stroke="{Binding #EffortButton.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="EffortLabel" FontSize="{DynamicResource StudioType13}" FontWeight="Normal" LineHeight="{DynamicResource StudioType13}" VerticalAlignment="Center"/></StackPanel><Viewbox Width="11" Height="11"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.down}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></StackPanel></Button>
                       </StackPanel>
                       <Grid Name="NarrowComposeControls" Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*" Margin="0,2,0,0" IsVisible="False"/>
                       <Grid Name="NarrowRunningModel" Grid.Row="3" Grid.ColumnSpan="4" Margin="0,2,0,0" IsVisible="False"/>
                       <Button Name="Stop" Grid.RowSpan="2" Grid.Column="2" Classes="compose-tool compose-stop" Width="32" Height="32" IsVisible="False" CornerRadius="16" Margin="4,0,0,0"><PathIcon Width="15" Height="15" Data="M5 5H19V19H5Z"/></Button>
-                      <Button Name="Send" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Grid.RowSpan="2" Grid.Column="3" Classes="compose-tool compose-send" Width="32" Height="32" Margin="4,0,0,0" CornerRadius="16" Padding="0" AutomationProperties.AutomationId="action:session.send"><Grid ClipToBounds="True"><Border Name="SendSheen" Width="96" HorizontalAlignment="Center" IsHitTestVisible="False" Opacity="0"><Border.Background><LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%"><GradientStop Color="#00FFFFFF" Offset="0.34"/><GradientStop Color="#5CFFFFFF" Offset="0.5"/><GradientStop Color="#00FFFFFF" Offset="0.66"/></LinearGradientBrush></Border.Background><Border.RenderTransform><TranslateTransform X="96"/></Border.RenderTransform></Border><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="18" Height="18"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.arrow}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="SendIntent" IsVisible="False" VerticalAlignment="Center"/></StackPanel></Grid></Button>
+                      <Button Name="Send" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Grid.RowSpan="2" Grid.Column="3" Classes="compose-tool compose-send" Width="32" Height="32" Margin="4,0,0,0" CornerRadius="16" Padding="0" AutomationProperties.AutomationId="action:session.send"><Grid ClipToBounds="True"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="18" Height="18"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.arrow}" Stroke="{Binding #Send.Foreground}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="SendIntent" Foreground="{Binding #Send.Foreground}" IsVisible="False" VerticalAlignment="Center"/></StackPanel></Grid></Button>
                     </Grid>
                     <ctl:ComposerSweep Grid.RowSpan="5" BorderThickness="1" CornerRadius="{DynamicResource RLg}" Ink="{DynamicResource Focus}" IsHitTestVisible="False" Opacity="0"/>
                     <composer:ModelPicker Name="ModelPicker" Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
@@ -337,7 +358,7 @@
                   </ctl:StudioHoverCard>
                   <ctl:StudioHoverCard Name="CacheHover" Grid.Column="1" Gap="7" CardWidth="360" PinOnClick="True"
                                        HiddenTransform="{StaticResource MeterCardHiddenTransform}" RevealEasing="{StaticResource MeterCardEaseOut}">
-                    <ctl:StudioHoverCard.Anchor><Button Name="CacheToggle" Classes="compose-context" AutomationProperties.AutomationId="action:metrics.details"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.bolt}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="CacheLabel"/><ctl:StudioLineText Name="CacheText" Classes="compose-reading" Text="—"/></StackPanel></Button></ctl:StudioHoverCard.Anchor>
+                    <ctl:StudioHoverCard.Anchor><Button Name="CacheToggle" Classes="compose-context" AutomationProperties.AutomationId="action:metrics.details"><StackPanel Orientation="Horizontal" Spacing="5"><Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Data="{StaticResource Compose.bolt}" Stroke="{Binding #CacheToggle.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox><ctl:StudioLineText Name="CacheLabel"/><ctl:StudioLineText Name="CacheText" Classes="compose-reading" Text="—"/></StackPanel></Button></ctl:StudioHoverCard.Anchor>
                     <ctl:StudioHoverCard.Card><metrics:SessionOverviewCard Name="CacheDetails"/></ctl:StudioHoverCard.Card>
                   </ctl:StudioHoverCard>
                   <ctl:StudioHoverCard Name="ContextHover" Grid.Column="2" Gap="7" CardWidth="360" PinOnClick="True"
@@ -581,7 +602,7 @@
               <TextBlock Text="STUDIO" FontSize="{DynamicResource StudioType11}" FontWeight="SemiBold" LineHeight="11" VerticalAlignment="Center" LetterSpacing="1.2" Foreground="{DynamicResource MutedBrush}"/>
             </Border>
           </StackPanel>
-          <Button Name="CollapseRail" Classes="icon" Grid.Column="1" AutomationProperties.AutomationId="action:chrome.rail"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.collapse}"/></Canvas></Viewbox></Button>
+          <Button Name="CollapseRail" Classes="icon" Grid.Column="1" AutomationProperties.AutomationId="action:chrome.rail"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{Binding #CollapseRail.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.collapse}"/></Canvas></Viewbox></Button>
         </Grid>
         <Button Name="NewSession" Grid.Row="1" Margin="10,8,9,0" Height="32" Padding="12,0"
                 Foreground="{DynamicResource TextBrush}"
@@ -611,8 +632,8 @@
             <Border Grid.ColumnSpan="2" Height="1" VerticalAlignment="Top" Margin="4,-7,4,0" Background="{DynamicResource HairBrush}"/>
             <Button Name="OpenSettings" Classes="icon rail-settings" Width="NaN" Height="32" FontWeight="Medium" AutomationProperties.AutomationId="action:chrome.settings"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="10,0" />
-            <Button Name="OpenAccount" Classes="icon" Grid.Column="1" Tag="action:sidebar.tools">
-              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round" Data="m18 15-6-6-6 6"/></Canvas></Viewbox>
+            <Button Name="OpenAccount" Classes="icon rail-shortcuts" Grid.Column="1" Tag="action:sidebar.tools">
+              <Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Stroke="{Binding #OpenAccount.Foreground}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round" Data="m18 15-6-6-6 6"/></Canvas></Viewbox>
             </Button>
         </Grid>
 
@@ -620,7 +641,7 @@
     </ctl:StudioRail>
     <workspace:WorkspaceNavigationRail Name="NavigationRail" IsVisible="False" />
     <Popup Name="QuickLinksPopup" PlacementTarget="{Binding #WorkspaceFooter}" Placement="TopEdgeAlignedLeft"
-           VerticalOffset="-6" PlacementConstraintAdjustment="SlideX" ShouldUseOverlayLayer="True" IsLightDismissEnabled="True">
+           VerticalOffset="-6" PlacementConstraintAdjustment="SlideX" ShouldUseOverlayLayer="True" IsLightDismissEnabled="False">
       <Border Name="QuickLinksFrame" Width="260" CornerRadius="15" Padding="10" BorderThickness="1"
               BorderBrush="{DynamicResource BorderBrush}" Background="{DynamicResource FloatBrush}" BoxShadow="0 12 24 0 #20000000">
         <StackPanel Name="QuickLinksRows"/>

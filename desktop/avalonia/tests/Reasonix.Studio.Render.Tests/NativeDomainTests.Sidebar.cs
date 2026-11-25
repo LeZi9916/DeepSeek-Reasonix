@@ -11,7 +11,6 @@ using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Tree;
 using Reasonix.Studio.Pages.Rail;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -84,13 +83,13 @@ public sealed partial class NativeDomainTests
         Assert.Contains(w.FindControl<Button>("OpenSettings")!.GetVisualDescendants(), c => c is Avalonia.Controls.Shapes.Path);
     });
 
-    /// <summary>Observes the settings button background through a real pointer entry and exit.</summary>
-    /// <param name="motion">Whether hover transitions are enabled.</param>
+    /// <summary>Checks the footer button’s immediate Electron hover colours.</summary>
+    /// <param name="motion">Whether the window allows visual effects.</param>
     /// <returns>The mounted settings button interaction.</returns>
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public Task SidebarSettingsHoverRespectsMotion(bool motion) => WithSettingsAsync(
+    public Task SidebarSettingsUsesImmediateReferenceHover(bool motion) => WithSettingsAsync(
         "conversation",
         async (window, _) =>
         {
@@ -101,25 +100,20 @@ public sealed partial class NativeDomainTests
             Assert.True(window.TryFindResource("OverlayBrush", window.ActualThemeVariant, out var overlay));
             var highlighted = Assert.IsAssignableFrom<ISolidColorBrush>(overlay).Color;
             Assert.NotEqual(rest, highlighted);
-            var samples = new List<Color>();
-            surface.PropertyChanged += (_, args) =>
-            {
-                if (args.Property == Border.BackgroundProperty)
-                {
-                    samples.Add(ColorOfSurface());
-                }
-            };
+            var icon = button.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single();
+            var restingInk = Assert.IsAssignableFrom<ISolidColorBrush>(icon.Stroke).Color;
+            Assert.True(window.TryFindResource("TextBrush", window.ActualThemeVariant, out var text));
+            var hoverInk = Assert.IsAssignableFrom<ISolidColorBrush>(text).Color;
 
             var outside = new Point(500, 160);
             window.MouseMove(outside);
             window.MouseMove(button.TranslatePoint(new Point(16, 16), window)!.Value);
-            await WaitForSettingsFrame(() => ColorOfSurface() == highlighted).ConfigureAwait(true);
-            Assert.Equal(motion, samples.Any(color => color != rest && color != highlighted));
+            Assert.Equal(highlighted, ColorOfSurface());
+            Assert.Equal(hoverInk, Assert.IsAssignableFrom<ISolidColorBrush>(icon.Stroke).Color);
 
-            samples.Clear();
             window.MouseMove(outside);
-            await WaitForSettingsFrame(() => ColorOfSurface() == rest).ConfigureAwait(true);
-            Assert.Equal(motion, samples.Any(color => color != rest && color != highlighted));
+            Assert.Equal(rest, ColorOfSurface());
+            Assert.Equal(restingInk, Assert.IsAssignableFrom<ISolidColorBrush>(icon.Stroke).Color);
 
             button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await WaitForSettingsFrame(() => window.FindControl<Control>("SettingsPanel")!.IsVisible).ConfigureAwait(true);
@@ -127,6 +121,63 @@ public sealed partial class NativeDomainTests
             Color ColorOfSurface() => Assert.IsAssignableFrom<ISolidColorBrush>(surface.Background).Color;
         },
         allowMotion: motion);
+
+    /// <summary>Keeps the quick links open across pointer movement within their footer and popup.</summary>
+    /// <returns>The native footer hover and click interaction.</returns>
+    [Fact]
+    public Task SidebarQuickLinksStayOpenUntilThePointerLeavesBothSurfaces() => WithSettingsAsync(
+        "conversation",
+        async (window, _) =>
+        {
+            var settings = window.FindControl<Button>("OpenSettings")!;
+            var popup = window.FindControl<Avalonia.Controls.Primitives.Popup>("QuickLinksPopup")!;
+            var menu = window.FindControl<Border>("QuickLinksFrame")!;
+            var opens = 0;
+            var closes = 0;
+            popup.Opened += (_, _) => opens++;
+            popup.Closed += (_, _) => closes++;
+            window.UpdateLayout();
+            var trigger = settings.TranslatePoint(new Point(18, 16), window)!.Value;
+
+            window.MouseMove(trigger);
+            await WaitForSettingsFrame(() => popup.IsOpen).ConfigureAwait(true);
+            window.MouseMove(trigger + new Vector(1, 0));
+            await Task.Delay(400).ConfigureAwait(true);
+            Assert.True(popup.IsOpen);
+            Assert.True(settings.IsPointerOver);
+            Assert.Equal(1, opens);
+            Assert.Equal(0, closes);
+
+            var item = window.FindControl<StackPanel>("QuickLinksRows")!.Children.OfType<Button>().First();
+            await WaitForSettingsFrame(() => item.Bounds.Width > 0).ConfigureAwait(true);
+            window.MouseMove(item.TranslatePoint(new Point(18, 10), window)!.Value);
+            await Task.Delay(220).ConfigureAwait(true);
+            Assert.True(menu.IsPointerOver);
+            Assert.True(popup.IsOpen);
+
+            window.MouseMove(new Point(620, 160));
+            await Task.Delay(60).ConfigureAwait(true);
+            window.MouseMove(trigger);
+            await Task.Delay(220).ConfigureAwait(true);
+            Assert.True(popup.IsOpen);
+            Assert.Equal(1, opens);
+
+            var composer = window.FindControl<TextBox>("Composer")!;
+            var draft = composer.TranslatePoint(new Point(40, 10), window)!.Value;
+            window.MouseDown(draft, Avalonia.Input.MouseButton.Left);
+            window.MouseUp(draft, Avalonia.Input.MouseButton.Left);
+            Assert.False(popup.IsOpen);
+            Assert.True(composer.IsFocused);
+            Assert.Equal(1, closes);
+
+            window.MouseMove(trigger);
+            await WaitForSettingsFrame(() => popup.IsOpen).ConfigureAwait(true);
+            window.MouseDown(trigger, Avalonia.Input.MouseButton.Left);
+            window.MouseUp(trigger, Avalonia.Input.MouseButton.Left);
+            await WaitForSettingsFrame(() => window.FindControl<Control>("SettingsPanel")!.IsVisible).ConfigureAwait(true);
+            Assert.False(popup.IsOpen);
+            Assert.Equal(2, closes);
+        });
 
     /// <summary>Scopes and session menus use canonical unread, pin and archive state.</summary>
     /// <returns>The row actions and footer navigation.</returns>

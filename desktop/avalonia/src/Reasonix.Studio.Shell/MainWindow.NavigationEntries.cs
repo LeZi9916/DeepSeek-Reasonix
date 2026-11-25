@@ -16,30 +16,64 @@ namespace Reasonix.Studio.Shell;
 
 public sealed partial class MainWindow
 {
+    /// <summary>Delays opening and bridges the gap between footer and shortcuts.</summary>
+    private readonly DispatcherTimer _quickLinksHover = new();
+
     /// <summary>Connects the icon column and the sidebar's ordered shortcut menu.</summary>
     private void InitializeNavigationEntries()
     {
         NavigationRail.Requested += async id => await GoToDestinationAsync(id).ConfigureAwait(true);
-        var timer = new DispatcherTimer();
         var opening = false;
-        timer.Tick += (_, _) =>
+        _quickLinksHover.Tick += (_, _) =>
         {
-            timer.Stop();
-            QuickLinksPopup.IsOpen = opening && OpenAccount.IsEffectivelyVisible;
+            _quickLinksHover.Stop();
+            if (opening)
+            {
+                QuickLinksPopup.IsOpen = WorkspaceFooter.IsPointerOver && OpenAccount.IsEffectivelyVisible;
+            }
+            else if (!WorkspaceFooter.IsPointerOver && !QuickLinksFrame.IsPointerOver && !QuickLinksFrame.IsKeyboardFocusWithin)
+            {
+                CloseQuickLinks();
+            }
         };
         WorkspaceFooter.PointerEntered += (_, e) =>
         {
-            if (e.Pointer.Type == PointerType.Mouse && OpenAccount.IsVisible && !QuickLinksPopup.IsOpen)
+            if (e.Pointer.Type == PointerType.Mouse)
             {
-                Schedule(true);
+                _quickLinksHover.Stop();
+                if (OpenAccount.IsVisible && !QuickLinksPopup.IsOpen)
+                {
+                    Schedule(true);
+                }
             }
         };
         WorkspaceFooter.PointerExited += (_, _) => Schedule(false);
-        QuickLinksFrame.PointerEntered += (_, _) => timer.Stop();
+        QuickLinksFrame.PointerEntered += (_, _) => _quickLinksHover.Stop();
         QuickLinksFrame.PointerExited += (_, _) => Schedule(false);
+        QuickLinksPopup.Opened += (_, _) => OpenAccount.Classes.Add("expanded");
+        QuickLinksPopup.Closed += (_, _) =>
+        {
+            _quickLinksHover.Stop();
+            OpenAccount.Classes.Remove("expanded");
+        };
+        Deactivated += (_, _) => CloseQuickLinks();
+        Closed += (_, _) => CloseQuickLinks();
+        AddHandler(
+            PointerPressedEvent,
+            (_, e) =>
+            {
+                if (QuickLinksPopup.IsOpen && e.Source is Visual source
+                    && !ReferenceEquals(source, WorkspaceFooter) && !WorkspaceFooter.IsVisualAncestorOf(source)
+                    && !ReferenceEquals(source, QuickLinksFrame) && !QuickLinksFrame.IsVisualAncestorOf(source))
+                {
+                    CloseQuickLinks();
+                }
+            },
+            RoutingStrategies.Tunnel,
+            handledEventsToo: true);
         OpenAccount.Click += (_, _) =>
         {
-            timer.Stop();
+            _quickLinksHover.Stop();
             QuickLinksPopup.IsOpen = !QuickLinksPopup.IsOpen;
         };
         OpenAccount.KeyDown += (_, e) =>
@@ -50,7 +84,7 @@ public sealed partial class MainWindow
             }
 
             e.Handled = true;
-            timer.Stop();
+            _quickLinksHover.Stop();
             QuickLinksPopup.IsOpen = true;
             Dispatcher.UIThread.Post(() =>
             {
@@ -62,8 +96,12 @@ public sealed partial class MainWindow
         {
             if (e.Key == Key.Escape)
             {
-                CloseAndFocus();
+                DismissQuickLinks();
                 e.Handled = true;
+            }
+            else if (e.Key == Key.Tab)
+            {
+                DismissQuickLinks();
             }
             else if (e.Key is Key.Up or Key.Down or Key.Home or Key.End)
             {
@@ -88,21 +126,32 @@ public sealed partial class MainWindow
 
         void Schedule(bool open)
         {
-            timer.Stop();
+            _quickLinksHover.Stop();
             if (!open && QuickLinksFrame.IsKeyboardFocusWithin)
             {
                 return;
             }
 
             opening = open;
-            timer.Interval = TimeSpan.FromMilliseconds(open ? 160 : 180);
-            timer.Start();
+            _quickLinksHover.Interval = TimeSpan.FromMilliseconds(open ? 160 : 180);
+            _quickLinksHover.Start();
         }
+    }
 
-        void CloseAndFocus()
+    /// <summary>Dismisses the footer menu and cancels a pending hover request.</summary>
+    private void CloseQuickLinks()
+    {
+        _quickLinksHover.Stop();
+        QuickLinksPopup.IsOpen = false;
+    }
+
+    /// <summary>Returns keyboard focus to the trigger when dismissing from inside the list.</summary>
+    private void DismissQuickLinks()
+    {
+        var hadFocus = QuickLinksFrame.IsKeyboardFocusWithin;
+        CloseQuickLinks();
+        if (hadFocus)
         {
-            timer.Stop();
-            QuickLinksPopup.IsOpen = false;
             OpenAccount.Focus();
         }
     }
@@ -126,7 +175,7 @@ public sealed partial class MainWindow
             AutomationProperties.SetAutomationId(button, item.Id == "files" ? "action:files.open" : "action:settings.section");
             button.Click += async (_, _) =>
             {
-                QuickLinksPopup.IsOpen = false;
+                CloseQuickLinks();
                 await GoToDestinationAsync(item.Id).ConfigureAwait(true);
             };
             QuickLinksRows.Children.Add(button);

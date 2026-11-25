@@ -11,20 +11,25 @@
     <Setter Property="Template"><ControlTemplate>
       <Border Name="SettingsButtonSurface" Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
         <Grid ColumnDefinitions="15,*" ColumnSpacing="8">
-          <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.common}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
+          <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.common}" Stroke="{TemplateBinding Foreground}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
           <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" VerticalContentAlignment="Center" TextElement.FontFamily="{TemplateBinding FontFamily}"
                             TextElement.FontSize="{DynamicResource StudioType13}" TextElement.FontWeight="Medium"/>
         </Grid>
       </Border>
     </ControlTemplate></Setter>
   </Style>
-  <Style Selector="Window.motion Button.rail-settings /template/ Border#SettingsButtonSurface">
-    <Setter Property="Transitions">
-      <Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/></Transitions>
-    </Setter>
+  <Style Selector="Window.motion Button.rail-settings, Window.motion Button.rail-shortcuts">
+    <Setter Property="Transitions" Value="{x:Null}"/>
   </Style>
-  <Style Selector="Button.rail-settings:pointerover /template/ Border#SettingsButtonSurface">
+  <Style Selector="Window.motion Button.rail-shortcuts /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Transitions" Value="{x:Null}"/>
+  </Style>
+  <Style Selector="Button.rail-settings:pointerover:not(:disabled) /template/ Border#SettingsButtonSurface">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
+  <Style Selector="Button.rail-shortcuts.expanded">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
   </Style>
   <Style Selector="Button#NewSession">
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>

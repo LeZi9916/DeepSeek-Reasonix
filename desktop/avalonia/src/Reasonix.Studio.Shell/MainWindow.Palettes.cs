@@ -29,6 +29,13 @@ public sealed partial class MainWindow
         ("synKeyword", "SynKey"), ("synString", "SynStr"), ("synNumber", "SynNum"), ("synFunction", "SynFn"),
     ];
 
+    /// <summary>Maps the Electron composer’s brightness filter to the theme paint it affects.</summary>
+    private static readonly (string Source, string Hover)[] s_sendHoverColors =
+    [
+        ("Accent", "SendHoverBrush"), ("AccentFg", "SendHoverInkBrush"),
+        ("Text", "SteerHoverBrush"), ("Surface", "SteerHoverInkBrush"),
+    ];
+
     /// <summary>The override owned by the active kernel theme.</summary>
     private ResourceDictionary? _palette;
 
@@ -68,6 +75,14 @@ public sealed partial class MainWindow
                 }
             }
 
+            foreach (var (source, hover) in s_sendHoverColors)
+            {
+                if (colors.TryGetResource(source, variant, out var value) && value is Color color)
+                {
+                    colors[hover] = new SolidColorBrush(Color.FromArgb(color.A, Brightened(color.R), Brightened(color.G), Brightened(color.B)));
+                }
+            }
+
             if (pack["sky"] is not null || (bool?)pack["background"]?["image"] == true)
             {
                 foreach (var (field, slot) in new[] { ("rail", "ArtworkRailBrush"), ("chrome", "ArtworkChromeBrush"), ("side", "ArtworkSideBrush"), ("compose", "ArtworkComposeBrush") })
@@ -90,6 +105,8 @@ public sealed partial class MainWindow
         }
 
         return result;
+
+        static byte Brightened(byte channel) => (byte)Math.Min(255, Math.Round(channel * 1.18, MidpointRounding.AwayFromZero));
     }
 
     /// <summary>Draws the sidebar, page and accent of one pack in the current scheme.</summary>
