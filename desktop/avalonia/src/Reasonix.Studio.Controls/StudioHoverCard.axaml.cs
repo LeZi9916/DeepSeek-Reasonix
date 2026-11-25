@@ -292,9 +292,12 @@ public sealed partial class StudioHoverCard : UserControl
         using var lifetime = new CancellationTokenSource();
         _reveal = lifetime;
         var duration = this.TryFindResource("TLine", out var value) && value is TimeSpan time ? time : TimeSpan.FromMilliseconds(120);
+
+        // RunAsync removes its animation before the popup settles.
         var animation = new Animation
         {
             Duration = duration * Math.Abs(to - from),
+            FillMode = FillMode.Forward,
             Easing = RevealEasing ?? (ScaleFromAnchor ? new SplineEasing(0.16, 1, 0.3, 1) : new CubicEaseOut()),
             Children = { new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, from) } }, new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, to) } } },
         };

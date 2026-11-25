@@ -91,6 +91,50 @@ public sealed partial class NativeDomainTests
         },
         allowMotion: true);
 
+    /// <summary>Checks that the native popup preserves the last painted opacity until it closes.</summary>
+    /// <param name="name">The metric card and trigger prefix.</param>
+    /// <returns>The opacity samples captured across the two hover transitions.</returns>
+    [Theory]
+    [InlineData("Speed")]
+    [InlineData("Cache")]
+    [InlineData("Context")]
+    public Task ComposerMetricHoverDoesNotFlashAtFadeEndpoints(string name) => WithSettingsAsync(
+        "conversation",
+        async (window, reads) =>
+        {
+            await WaitForMotionFrame(() => window.Classes.Contains("motion")).ConfigureAwait(true);
+            window.AdoptComposer(reads.Read<SessionStatus>("/status"));
+            window.UpdateLayout();
+            var hover = window.FindControl<StudioHoverCard>(name + "Hover")!;
+            hover.Resources["TLine"] = TimeSpan.FromMilliseconds(240);
+            var trigger = window.FindControl<Button>(name + "Toggle")!;
+            var frame = hover.FindControl<Border>("Frame")!;
+            var popup = hover.FindControl<Popup>("Surface")!;
+            var inside = trigger.TranslatePoint(new Point(10, 10), window)!.Value;
+            var outside = new Point(600, 100);
+            var samples = new System.Collections.Generic.List<double>();
+            frame.PropertyChanged += (_, change) =>
+            {
+                if (change.Property == Visual.OpacityProperty && popup.IsOpen)
+                {
+                    samples.Add(frame.Opacity);
+                }
+            };
+
+            window.MouseMove(outside);
+            window.MouseMove(inside);
+            await WaitForMotionFrame(() => frame.Opacity == 1 && !frame.IsAnimating(Visual.OpacityProperty)).ConfigureAwait(true);
+            Assert.Contains(samples, value => value is > 0 and < 1);
+            Assert.Equal(samples.Order().ToArray(), samples.ToArray());
+
+            samples.Clear();
+            window.MouseMove(outside);
+            await WaitForMotionFrame(() => !popup.IsOpen).ConfigureAwait(true);
+            Assert.Contains(samples, value => value is > 0 and < 1);
+            Assert.Equal(samples.OrderDescending().ToArray(), samples.ToArray());
+        },
+        allowMotion: true);
+
     /// <summary>A session with no billed requests does not acquire an empty cost chip.</summary>
     /// <returns>The initial ledger reading.</returns>
     [Fact]
