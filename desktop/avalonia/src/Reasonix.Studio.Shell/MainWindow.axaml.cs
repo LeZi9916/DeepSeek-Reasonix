@@ -595,13 +595,7 @@ public sealed partial class MainWindow : Window
     /// </remarks>
     private void ShowRefusal(Exception error)
     {
-        ErrorBar.IsVisible = true;
-        ErrorText.Text = DescribeError(error);
-        if (!ErrorBar.IsEffectivelyVisible)
-        {
-            GlobalErrorText.Text = ErrorText.Text;
-            GlobalError.IsVisible = true;
-        }
+        ShowErrorBar(DescribeError(error));
     }
 
     /// <summary>Dismisses a refusal shown outside the active conversation surface.</summary>

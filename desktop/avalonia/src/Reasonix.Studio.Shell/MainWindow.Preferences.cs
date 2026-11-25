@@ -88,8 +88,7 @@ public sealed partial class MainWindow
                 var refusal = await new AvaloniaHost(this).OpenWorkspaceAsync(_workspaceRoot).ConfigureAwait(true);
                 if (refusal is not null)
                 {
-                    ErrorText.Text = refusal.Error;
-                    ErrorBar.IsVisible = true;
+                    ShowErrorBar(refusal.Error ?? string.Empty);
                 }
             }
         };
