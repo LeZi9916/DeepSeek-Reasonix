@@ -263,6 +263,11 @@ public sealed partial class SessionPage
         };
         disclosure.SetCountDetails(tally.Calls, ActivityDetails(tally));
         disclosure.ConfigureLive(work.OfType<ToolItem>().LastOrDefault(tool => tool.Running), tally.Running, tally.Failed > 0, Language);
+        if (_activityGroupsEntered.Add(id))
+        {
+            EnterActivityGroup(disclosure);
+        }
+
         return disclosure;
     }
 

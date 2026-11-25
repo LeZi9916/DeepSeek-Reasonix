@@ -94,6 +94,7 @@ The reference is the checked-in `frontend-next` application, including its final
 | Settings control motion | `SettingsNav`, `SettingsSearch`, segmented choices | Rail items fade background and ink over 120ms, the search field fades its border and fill over 120ms, and segmented choices fade background, ink and shadow over 120ms with the reference spring press scale (120ms release, 60ms press) | `SettingsControlsCarryReferenceTransitions` |
 | Settings search results | `SearchResultsPanel` | Opening the settings search results replays the reference `m-card` entrance: opacity 0 plus a 6px lift over 120ms; subsequent query updates do not re-enter | `SettingsSearchResultsEnterWithTheReferenceCardMotion` |
 | Tool settle glyph | `ToolCallHeader` | A completed call scales its tool glyph 1 → .86 → 1 over 260ms ease-out, while the status mark keeps its 160ms pop | `ActivityMotionFollowsLiveToolTransitions` |
+| Activity group entrance | `SessionPage` activity disclosure | A newly mounted activity group replays the reference `.ag` card entrance: opacity 0 plus a 6px lift over 180ms; existing groups stay still and reduced motion shows the final pose | `ActivityGroupEntersWithTheReferenceCardMotion`, `ActivityGroupHonorsReducedMotion` |
 
 Visual evidence is linked from `index.html`. Main-page reports retain previously recorded unmatched-node and adjacent chrome/conversation findings. The new metric frame report enforces 0.5 DIP; existing glyph gates retain one pixel of raster tolerance.
 
