@@ -11,6 +11,7 @@ using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Tree;
 using Reasonix.Studio.Pages.Rail;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -82,6 +83,50 @@ public sealed partial class NativeDomainTests
         Assert.Equal(30, ControlAt<Button>(w, "action:session.open").Bounds.Height);
         Assert.Contains(w.FindControl<Button>("OpenSettings")!.GetVisualDescendants(), c => c is Avalonia.Controls.Shapes.Path);
     });
+
+    /// <summary>Observes the settings button background through a real pointer entry and exit.</summary>
+    /// <param name="motion">Whether hover transitions are enabled.</param>
+    /// <returns>The mounted settings button interaction.</returns>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public Task SidebarSettingsHoverRespectsMotion(bool motion) => WithSettingsAsync(
+        "conversation",
+        async (window, _) =>
+        {
+            await WaitForSettingsFrame(() => window.Classes.Contains("motion") == motion).ConfigureAwait(true);
+            var button = window.FindControl<Button>("OpenSettings")!;
+            var surface = button.GetVisualDescendants().OfType<Border>().First();
+            var rest = ColorOfSurface();
+            Assert.True(window.TryFindResource("OverlayBrush", window.ActualThemeVariant, out var overlay));
+            var highlighted = Assert.IsAssignableFrom<ISolidColorBrush>(overlay).Color;
+            Assert.NotEqual(rest, highlighted);
+            var samples = new List<Color>();
+            surface.PropertyChanged += (_, args) =>
+            {
+                if (args.Property == Border.BackgroundProperty)
+                {
+                    samples.Add(ColorOfSurface());
+                }
+            };
+
+            var outside = new Point(500, 160);
+            window.MouseMove(outside);
+            window.MouseMove(button.TranslatePoint(new Point(16, 16), window)!.Value);
+            await WaitForSettingsFrame(() => ColorOfSurface() == highlighted).ConfigureAwait(true);
+            Assert.Equal(motion, samples.Any(color => color != rest && color != highlighted));
+
+            samples.Clear();
+            window.MouseMove(outside);
+            await WaitForSettingsFrame(() => ColorOfSurface() == rest).ConfigureAwait(true);
+            Assert.Equal(motion, samples.Any(color => color != rest && color != highlighted));
+
+            button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await WaitForSettingsFrame(() => window.FindControl<Control>("SettingsPanel")!.IsVisible).ConfigureAwait(true);
+
+            Color ColorOfSurface() => Assert.IsAssignableFrom<ISolidColorBrush>(surface.Background).Color;
+        },
+        allowMotion: motion);
 
     /// <summary>Scopes and session menus use canonical unread, pin and archive state.</summary>
     /// <returns>The row actions and footer navigation.</returns>

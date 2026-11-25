@@ -196,7 +196,8 @@ public sealed partial class MainWindow
             if (!WorkbenchPanel.IsVisible)
             {
                 CancelWorkbenchDismissal();
-                _workbenchDockEntrance?.Cancel();
+                CancelWorkbenchEntrance();
+                SetWorkbenchPose(1, 0);
             }
         };
         FileEditor.TextChanged += (_, _) =>
@@ -368,7 +369,9 @@ public sealed partial class MainWindow
     /// <param name="animate">Whether to play the opening motion.</param>
     private void RevealWorkbench(bool animate)
     {
-        var opening = !WorkbenchPanel.IsVisible || _workbenchDismiss is not null;
+        var reopening = _workbenchDismiss is not null;
+        var opening = !WorkbenchPanel.IsVisible || reopening;
+        var prior = reopening ? (WorkbenchPanel.Width, WorkbenchPanel.Opacity, Offset: ReadWorkbenchOffset()) : default;
         CancelWorkbenchDismissal();
         ShowAnalysis(false);
         WorkbenchPanel.IsVisible = true;
@@ -376,14 +379,11 @@ public sealed partial class MainWindow
         LayoutWorkbench();
         if (opening && animate && Classes.Contains("motion"))
         {
-            if (double.IsNaN(WorkbenchPanel.Width))
-            {
-                EnterView(WorkbenchPanel, slideX: 24, durationMs: 200, easing: new Avalonia.Animation.KeySpline(0.2, 0, 0, 1));
-            }
-            else
-            {
-                _ = EnterWorkbenchDockAsync();
-            }
+            var docked = !double.IsNaN(WorkbenchPanel.Width);
+            var width = reopening ? prior.Width : 0;
+            var opacity = reopening ? prior.Opacity : docked ? 1 : 0;
+            var offset = reopening ? prior.Offset : docked ? 0 : 24;
+            _ = EnterWorkbenchAsync(width, opacity, offset);
         }
     }
 
@@ -392,9 +392,9 @@ public sealed partial class MainWindow
     {
         var room = LayoutRoot.Bounds.Width - LayoutRoot.ColumnDefinitions[0].Width.Value;
         var overlay = _fullWorkbench || room <= 640;
-        if (overlay)
+        if (overlay && _workbenchEntrance is { Docked: true } entrance)
         {
-            _workbenchDockEntrance?.Cancel();
+            entrance.Lifetime.Cancel();
         }
 
         UpdateWorkbenchHeader();

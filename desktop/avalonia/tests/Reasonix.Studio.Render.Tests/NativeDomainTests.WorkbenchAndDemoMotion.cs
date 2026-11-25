@@ -7,6 +7,7 @@ using Avalonia.Layout;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Reasonix.Studio.Kernel.Client;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
@@ -52,6 +53,84 @@ public sealed partial class NativeDomainTests
                 await WaitForMotionFrame(() => !panel.IsVisible).ConfigureAwait(true);
                 Assert.True(w.FindControl<TextBox>("Composer")!.IsFocused);
                 CaptureMotionRegion(w, root, (int)anchor.X - 5, 5 - (int)anchor.Y, 440, 140, $"workbench-out-{scheme}-final");
+            },
+            allowMotion: true);
+
+    /// <summary>Reverses a visible exit from its current position and settles before hiding.</summary>
+    /// <param name="width">The window width for docked or overlay layout.</param>
+    /// <returns>The workbench reversal and exit regression.</returns>
+    [Theory]
+    [InlineData(1440)]
+    [InlineData(760)]
+    public Task WorkbenchReversesItsSlideWithoutFlashing(int width) =>
+        WithSettingsAsync(
+            "conversation",
+            async (window, _) =>
+            {
+                window.Width = width;
+                window.UpdateLayout();
+                var root = window.FindControl<Grid>("LayoutRoot")!;
+                await WaitForMotionFrame(() => window.Classes.Contains("motion") && root.Bounds.Width == width).ConfigureAwait(true);
+                var panel = window.FindControl<Border>("WorkbenchPanel")!;
+                var toggle = window.FindControl<Button>("ViewSwitch")!;
+                var entersAsDock = width == 1440;
+                if (!entersAsDock)
+                {
+                    toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    window.FindControl<Button>("FullWorkbench")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert.True(double.IsNaN(panel.Width));
+                    toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    await WaitForMotionFrame(() => !panel.IsVisible).ConfigureAwait(true);
+                }
+
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                var opening = new List<double>();
+                var openingProperty = entersAsDock ? Layoutable.WidthProperty : Visual.OpacityProperty;
+                panel.PropertyChanged += ObserveOpening;
+                await WaitForMotionFrame(() => panel.IsVisible && panel.Opacity == 1 && panel.Bounds.Width > 100
+                    && !panel.IsAnimating(Layoutable.WidthProperty) && !panel.IsAnimating(Visual.OpacityProperty)).ConfigureAwait(true);
+                panel.PropertyChanged -= ObserveOpening;
+                Assert.Contains(opening, amount => amount > 0 && amount < (entersAsDock ? panel.Width : 1));
+                Assert.Equal(opening.Order().ToArray(), opening.ToArray());
+
+                void ObserveOpening(object? sender, AvaloniaPropertyChangedEventArgs change)
+                {
+                    if (change.Property == openingProperty)
+                    {
+                        opening.Add(entersAsDock ? panel.Width : panel.Opacity);
+                    }
+                }
+
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await WaitForMotionFrame(() => panel.Opacity is > 0.2 and < 0.8).ConfigureAwait(true);
+                var opacity = panel.Opacity;
+                var offset = panel.RenderTransform!.Value.M31;
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.Equal(opacity, panel.Opacity, 2);
+                Assert.Equal(offset, panel.RenderTransform!.Value.M31, 2);
+                await WaitForMotionFrame(() => panel.Opacity == 1 && panel.RenderTransform!.Value.M31 == 0).ConfigureAwait(true);
+
+                var samples = new List<double>();
+                panel.PropertyChanged += (_, change) =>
+                {
+                    if (change.Property == Visual.OpacityProperty && panel.IsVisible)
+                    {
+                        samples.Add(panel.Opacity);
+                    }
+                };
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await WaitForMotionFrame(() => !panel.IsVisible).ConfigureAwait(true);
+                Assert.Contains(samples, amount => amount is > 0 and < 1);
+                Assert.Equal(samples.OrderDescending().ToArray(), samples.ToArray());
+                Assert.True(window.FindControl<TextBox>("Composer")!.IsFocused);
+
+                window.Classes.Remove("motion");
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.True(panel.IsVisible);
+                Assert.Equal(1, panel.Opacity);
+                Assert.Equal(0, panel.RenderTransform!.Value.M31);
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.False(panel.IsVisible);
             },
             allowMotion: true);
 

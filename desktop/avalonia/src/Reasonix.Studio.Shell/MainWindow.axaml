@@ -26,6 +26,21 @@
     </ResourceDictionary>
   </Window.Resources>
   <Window.Styles>
+    <Style Selector="Window.motion Button">
+      <Setter Property="Transitions"><Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.075"/>
+      </Transitions></Setter>
+    </Style>
+    <Style Selector="Window.motion Button /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Transitions"><Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      </Transitions></Setter>
+    </Style>
     <Style Selector="Window.motion notices|CopyNotice.arriving">
       <Style.Animations><Animation Duration="0:0:0.18" Easing="0.16,1,0.3,1">
         <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/><Setter Property="TranslateTransform.Y" Value="6"/></KeyFrame>
@@ -79,11 +94,6 @@
     </Style>
     <Style Selector="Window.motion Button.icon:pressed">
       <Setter Property="RenderTransform" Value="scale(0.94)" />
-    </Style>
-    <Style Selector="Window.motion Button.icon /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Transitions">
-        <Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1" /></Transitions>
-      </Setter>
     </Style>
     <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource OverlayBrush}" />

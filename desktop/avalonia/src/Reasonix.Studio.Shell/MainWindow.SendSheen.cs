@@ -18,19 +18,16 @@ public sealed partial class MainWindow
     /// <summary>Plays the reference send sheen once across the button.</summary>
     internal void PlaySendSheen()
     {
-        if (!Send.IsEnabled || !Classes.Contains("motion") || SendSheen.RenderTransform is not TranslateTransform transform)
+        if (!Send.IsEnabled || !Classes.Contains("motion") || _closing.IsCancellationRequested
+            || SendSheen.RenderTransform is not TranslateTransform transform)
         {
             return;
         }
 
-        _sendSheenMotion?.Cancel();
-        var lifetime = new CancellationTokenSource();
-        _sendSheenMotion = lifetime;
-        SendSheen.Opacity = 1;
-        transform.X = 96;
         var animation = new Animation
         {
             Duration = TimeSpan.FromMilliseconds(700),
+            FillMode = FillMode.Forward,
             Easing = new SplineEasing(0.16, 1, 0.3, 1),
             Children =
             {
@@ -46,6 +43,49 @@ public sealed partial class MainWindow
                 },
             },
         };
+        BeginSendSheen(animation, transform, opacity: 1, offset: 96);
+    }
+
+    /// <summary>Retires a visible sheen at its current location on pointer exit.</summary>
+    private void ExitSendSheen()
+    {
+        if (_sendSheenMotion is null || _closing.IsCancellationRequested || SendSheen.RenderTransform is not TranslateTransform transform)
+        {
+            return;
+        }
+
+        if (!Classes.Contains("motion"))
+        {
+            _sendSheenMotion.Cancel();
+            return;
+        }
+
+        var opacity = SendSheen.Opacity;
+        var animation = new Animation
+        {
+            Duration = TimeSpan.FromMilliseconds(120),
+            Easing = new SplineEasing(0.16, 1, 0.3, 1),
+            FillMode = FillMode.Forward,
+            Children =
+            {
+                new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, opacity) } },
+                new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 0d) } },
+            },
+        };
+        BeginSendSheen(animation, transform, opacity, transform.X);
+    }
+
+    /// <summary>Replaces the running sheen without allowing its cleanup to overwrite the next pose.</summary>
+    /// <param name="animation">The requested animation.</param><param name="transform">The sheen translation.</param>
+    /// <param name="opacity">Initial opacity.</param><param name="offset">Initial offset.</param>
+    private void BeginSendSheen(Animation animation, TranslateTransform transform, double opacity, double offset)
+    {
+        var previous = _sendSheenMotion;
+        var lifetime = CancellationTokenSource.CreateLinkedTokenSource(_motionLifetime.Token);
+        _sendSheenMotion = lifetime;
+        previous?.Cancel();
+        SendSheen.Opacity = opacity;
+        transform.X = offset;
         _ = PlayAsync(animation, transform, lifetime);
     }
 
@@ -77,5 +117,9 @@ public sealed partial class MainWindow
     }
 
     /// <summary>Wires the reference hover sheen on the send control.</summary>
-    private void InitializeSendSheen() => Send.PointerEntered += (_, _) => PlaySendSheen();
+    private void InitializeSendSheen()
+    {
+        Send.PointerEntered += (_, _) => PlaySendSheen();
+        Send.PointerExited += (_, _) => ExitSendSheen();
+    }
 }

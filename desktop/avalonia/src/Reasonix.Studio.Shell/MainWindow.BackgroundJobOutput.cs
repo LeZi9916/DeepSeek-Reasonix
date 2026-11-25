@@ -30,7 +30,7 @@ public sealed partial class MainWindow
         {
             view = new BackgroundJobOutputView(engine.Pages, job, Language)
             {
-                OpeningDock = () => _workbenchDockEntrance is not null,
+                OpeningDock = () => _workbenchEntrance is { Docked: true },
                 StopRequested = () => ReferenceEquals(_engine, engine) ? CancelBackgroundJobsAsync([job.Id]) : Task.CompletedTask,
             };
             _jobOutputViews.Add(view);

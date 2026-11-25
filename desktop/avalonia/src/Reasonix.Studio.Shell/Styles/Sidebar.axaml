@@ -9,7 +9,7 @@
   </Styles.Resources>
   <Style Selector="Button.rail-settings">
     <Setter Property="Template"><ControlTemplate>
-      <Border Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
+      <Border Name="SettingsButtonSurface" Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
         <Grid ColumnDefinitions="15,*" ColumnSpacing="8">
           <Viewbox Width="15" Height="15"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.common}" Stroke="{DynamicResource MutedBrush}" StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>
           <ContentPresenter Grid.Column="1" Content="{TemplateBinding Content}" VerticalContentAlignment="Center" TextElement.FontFamily="{TemplateBinding FontFamily}"
@@ -18,7 +18,14 @@
       </Border>
     </ControlTemplate></Setter>
   </Style>
-  <Style Selector="Button.rail-settings:pointerover /template/ Border"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
+  <Style Selector="Window.motion Button.rail-settings /template/ Border#SettingsButtonSurface">
+    <Setter Property="Transitions">
+      <Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/></Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.rail-settings:pointerover /template/ Border#SettingsButtonSurface">
+    <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+  </Style>
   <Style Selector="Button#NewSession">
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
