@@ -1,5 +1,5 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:tree="using:Reasonix.Studio.Contracts.Tree" x:Class="Reasonix.Studio.Shell.Workspace.WorkspaceMoveDialog" Background="#66000000" IsVisible="False" FontFamily="{DynamicResource WorkbenchUiFamily}" Foreground="{DynamicResource TextBrush}" KeyboardNavigation.TabNavigation="Cycle" AutomationProperties.AutomationId="class:move-session">
-  <Border MaxWidth="520" Margin="20" Padding="24" CornerRadius="12" Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+  <Border Name="DialogCard" MaxWidth="520" Margin="20" Padding="24" CornerRadius="12" Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Center">
     <ScrollViewer MaxHeight="560" HorizontalScrollBarVisibility="Disabled"><StackPanel Spacing="14">
       <TextBlock Name="Title" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap"/>
       <TextBlock Name="TargetLabel" FontSize="12"/>

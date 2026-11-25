@@ -69,6 +69,7 @@ public sealed partial class WorkspaceMoveDialog : UserControl
         ProjectChoices.IsEnabled = Cancel.IsEnabled = true;
         MoveSession.IsEnabled = projects.Count > 0;
         IsVisible = true;
+        EnterDialogCard();
         Dispatcher.UIThread.Post(() => (projects.Count > 0 ? (Control)ProjectChoices : Cancel).Focus());
     }
 
