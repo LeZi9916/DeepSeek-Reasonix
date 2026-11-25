@@ -26,7 +26,7 @@ public sealed partial class WorkspaceMoveDialog
         var animation = new Animation
         {
             Duration = TimeSpan.FromMilliseconds(120),
-            Easing = new SplineEasing(0.16, 1, 0.3, 1),
+            Easing = new SplineEasing(0.25, 0.1, 0.25, 1),
             Children =
             {
                 new KeyFrame
