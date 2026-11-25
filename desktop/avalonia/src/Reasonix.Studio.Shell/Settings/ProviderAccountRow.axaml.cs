@@ -1,7 +1,11 @@
+using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Linq;
@@ -13,7 +17,11 @@ namespace Reasonix.Studio.Shell.Settings;
 internal sealed partial class ProviderAccountRow : UserControl
 {
     /// <summary>Initializes a new instance of the <see cref="ProviderAccountRow"/> class.</summary>
-    public ProviderAccountRow() => InitializeComponent();
+    public ProviderAccountRow()
+    {
+        InitializeComponent();
+        Loaded += (_, _) => EnterRow();
+    }
 
     /// <summary>Displays the account identity and status read from the kernel.</summary>
     /// <param name="account">One endpoint and credential slot.</param>
