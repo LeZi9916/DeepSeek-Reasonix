@@ -1,5 +1,10 @@
 using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Media;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Shell.Settings;
 using System.Linq;
@@ -10,6 +15,23 @@ namespace Reasonix.Studio.Render.Tests;
 
 public sealed partial class NativeDomainTests
 {
+    /// <summary>Checks the provider row's reference 120ms hover background fade.</summary>
+    /// <returns>The provider hover transition check.</returns>
+    [Fact]
+    public Task ProviderRowsFadeTheirHoverBackground() =>
+        WithSettingsAsync(
+            "conversation",
+            (window, _) =>
+            {
+                Navigate(window, "settings-model");
+                var row = window.GetVisualDescendants().OfType<ProviderAccountRow>().First();
+                var frame = row.FindControl<Border>("Frame")!;
+                var transition = Assert.Single(frame.Transitions!.OfType<BrushTransition>());
+                Assert.Equal(TimeSpan.FromMilliseconds(120), transition.Duration);
+                Assert.IsType<SplineEasing>(transition.Easing);
+                return Task.CompletedTask;
+            });
+
     /// <summary>Checks the provider rail row's reference card entrance.</summary>
     /// <returns>The provider-row entrance check.</returns>
     [Fact]
