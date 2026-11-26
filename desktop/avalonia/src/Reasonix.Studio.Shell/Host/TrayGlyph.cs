@@ -33,20 +33,25 @@ public static class TrayGlyph
     /// </summary>
     private static WindowIcon? s_icon;
 
+    /// <summary>The tray image when a conversation is unread.</summary>
+    private static WindowIcon? s_unreadIcon;
+
     /// <summary>
     /// Gets the mark, drawing it on first use.
     /// </summary>
+    /// <param name="unread">Whether to draw the unread badge.</param>
     /// <returns>The icon, or null when this process cannot render one.</returns>
     /// <remarks>
     /// Null rather than an exception: a host with no renderer can still run, it
     /// simply shows no tray mark, which is the same outcome as a platform with no
     /// tray at all.
     /// </remarks>
-    public static WindowIcon? Icon()
+    public static WindowIcon? Icon(bool unread = false)
     {
-        if (s_icon is not null)
+        ref var icon = ref (unread ? ref s_unreadIcon : ref s_icon);
+        if (icon is not null)
         {
-            return s_icon;
+            return icon;
         }
 
         try
@@ -61,13 +66,18 @@ public static class TrayGlyph
                 context.FillRectangle(Brushes.White, new Rect(10, 10, 12, 3));
                 context.FillRectangle(Brushes.White, new Rect(10, 16, 8, 3));
                 context.FillRectangle(Brushes.White, new Rect(10, 22, 10, 3));
+                if (unread)
+                {
+                    context.DrawEllipse(Brushes.White, null, new Point(24, 8), 7, 7);
+                    context.DrawEllipse(Brushes.IndianRed, null, new Point(24, 8), 5, 5);
+                }
             }
 
             using var stream = new MemoryStream();
             bitmap.Save(stream, PngBitmapEncoderOptions.Default);
             stream.Position = 0;
-            s_icon = new WindowIcon(stream);
-            return s_icon;
+            icon = new WindowIcon(stream);
+            return icon;
         }
         catch (Exception)
         {

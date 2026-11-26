@@ -9,6 +9,9 @@ public sealed class TranscriptDisclosureChoices
     /// <summary>Gets the manual choices scoped by row identity and disclosure kind.</summary>
     internal Dictionary<(TranscriptPart Part, string Id), bool> Overrides { get; } = new();
 
+    /// <summary>Gets extension drafts addressed by the kernel's surface identity.</summary>
+    internal Dictionary<(string Plugin, string Surface, ulong Generation), ExtensionSurfaceDraft> ExtensionDrafts { get; } = [];
+
     /// <summary>Gets or sets a value indicating whether intermediate work is visible in this pane.</summary>
     internal bool WorkOpen
     {

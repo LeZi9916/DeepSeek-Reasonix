@@ -30,6 +30,7 @@ public sealed partial class MainWindow
             return;
         }
 
+        FileEditor.Capture();
         _workbench.Capture(engine, new WorkbenchPresentation
         {
             Root = _workspaceRoot,
@@ -42,6 +43,8 @@ public sealed partial class MainWindow
             Launcher = _workbenchLauncherSelected,
             Browser = ManualBrowserHost.Content as Control,
             Browsers = _browserPages.ToArray(),
+            AgentBrowserTabs = _agentBrowserTabs,
+            AgentBrowserTarget = VisibleAgentPage?.Target,
             Jobs = _jobOutputViews.ToArray(),
             Agents = _subagentRuns.ToArray(),
             SubagentRun = SubagentRunHost.IsVisible ? SubagentRunHost.Content as SubagentRunView : null,
@@ -52,7 +55,6 @@ public sealed partial class MainWindow
             Collapsed = new HashSet<string>(_fileCollapsed, StringComparer.Ordinal),
             Explorer = ExplorerPane.IsVisible,
             ExplorerOffset = ExplorerScroller.Offset,
-            Caret = FileEditor.CaretIndex,
             Git = _gitSurface,
             GitApi = _gitApi,
             GitLifetime = _gitLifetime,
@@ -67,6 +69,8 @@ public sealed partial class MainWindow
     /// <summary>Mounts retained workspace state before fresh reads can update its widgets.</summary>
     private void RestoreWorkbenchPresentation()
     {
+        _agentBrowserRead++;
+        _agentBrowserTabs = [];
         _browserPages.Clear();
         _jobOutputViews.Clear();
         _subagentRuns.Clear();
@@ -89,6 +93,7 @@ public sealed partial class MainWindow
         _fileCollapsed.UnionWith(state.Collapsed);
         ManualBrowserHost.Content = state.Browser;
         _browserPages.AddRange(state.Browsers);
+        _agentBrowserTabs = state.AgentBrowserTabs;
         _jobOutputViews.AddRange(state.Jobs);
         _subagentRuns.AddRange(state.Agents);
         _gitApi = state.GitApi;
@@ -126,6 +131,10 @@ public sealed partial class MainWindow
         {
             OpenManualBrowser(animateSelection: false);
         }
+        else if (state.AgentBrowserTarget is { } browserTarget && _agentBrowserTabs.Any(tab => tab.Target == browserTarget))
+        {
+            SelectAgentBrowserTab(browserTarget, animateSelection: false);
+        }
         else if (state.Terminal is { } terminal)
         {
             AttachTerminal(terminal, pane.Engine.Pages);
@@ -146,8 +155,6 @@ public sealed partial class MainWindow
             {
                 ShowSource();
             }
-
-            FileEditor.CaretIndex = Math.Min(state.Caret, FileEditor.Text?.Length ?? 0);
         }
         else if (state.Git is { } git)
         {

@@ -31,7 +31,7 @@ public sealed partial class NativeDomainTests
         w.FindControl<Button>("ApprovalMode")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Dispatcher.UIThread.RunJobs();
         var policy = w.FindControl<ComposerPopup>("PolicyPopup")!.FindControl<Border>("Frame")!;
-        Assert.InRange(policy.Bounds.Height, 368, 372);
+        Assert.InRange(policy.Bounds.Height, 375.5, 376.5);
         Save(policy, "policy-panel");
 
         void Save(Control control, string name)

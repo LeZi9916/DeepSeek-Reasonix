@@ -55,6 +55,10 @@
       <Border Name="Band" Classes="viewport-band" Canvas.Left="2" Width="26" CornerRadius="6"
               Background="{DynamicResource OverlayBrush}" IsHitTestVisible="False" IsVisible="False"/>
     </Canvas>
+    <Button Name="Earlier" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,12,0"
+            Height="22" MinHeight="0" Padding="7,0" CornerRadius="999" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
+            Background="{DynamicResource RaisedBrush}" Foreground="{DynamicResource MutedBrush}" FontSize="{DynamicResource StudioType11}"
+            AutomationProperties.AutomationId="action:history.rail-more" IsVisible="False"/>
     <Border Name="Peek" Classes="message-peek" AutomationProperties.AutomationId="class:srail-peek"
             HorizontalAlignment="Right" VerticalAlignment="Top" Width="250" Padding="11,9"
             Background="{DynamicResource FloatBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"

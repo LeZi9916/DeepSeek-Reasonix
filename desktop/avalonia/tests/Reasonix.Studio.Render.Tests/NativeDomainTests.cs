@@ -15,6 +15,7 @@ using Reasonix.Studio.Kernel.Session;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Pages.Rail;
 using Reasonix.Studio.Shell;
+using Reasonix.Studio.Shell.Workbench;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -97,6 +98,14 @@ public sealed partial class NativeDomainTests
                     window.FindControl<ProjectRail>("Projects")!.Show(handler.Read<TreeWorkspace[]>("/tree"), null);
                     window.ShowState(Reasonix.Studio.Testing.ReferenceConversation.Create());
                     var region = Navigate(window, target);
+                    if (target == "conversation")
+                    {
+                        window.FindControl<Reasonix.Studio.Pages.SessionPage>("Conversation")!.RestoreSessionPosition(null);
+                        window.UpdateLayout();
+                        Dispatcher.UIThread.RunJobs();
+                        window.UpdateLayout();
+                    }
+
                     Dispatcher.UIThread.RunJobs();
                     var settingsError = window.FindControl<TextBlock>("SettingsError")!.Text;
                     Assert.True(string.IsNullOrEmpty(settingsError), settingsError);
@@ -162,6 +171,18 @@ public sealed partial class NativeDomainTests
                     }
 
                     _output.WriteLine($"{file}: {mapped} observed nodes, {findings.Count} differences");
+                    if (target == "conversation")
+                    {
+                        var viewport = region.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault(control => control.Classes.Contains("conversation-scroll"));
+                        Assert.NotNull(viewport);
+                        Assert.InRange(viewport.ScrollBarMaximum.Y - viewport.Offset.Y, 0, 2);
+                        var visibleJumps = region.GetVisualDescendants().OfType<Button>().Where(button => button.IsEffectivelyVisible);
+                        Assert.DoesNotContain(visibleJumps, button => AutomationProperties.GetAutomationId(button) == "action:transcript.scroll.down");
+                        if (viewport.Offset.Y >= 48)
+                        {
+                            Assert.Contains(visibleJumps, button => AutomationProperties.GetAutomationId(button) == "action:transcript.scroll.up");
+                        }
+                    }
 
                     if (!string.IsNullOrEmpty(output))
                     {
@@ -331,7 +352,7 @@ public sealed partial class NativeDomainTests
                 var files = window.FindControl<ListBox>("WorkspaceFiles")!;
                 files.SelectedItem = files.Items.Cast<object>().Single(f => f.ToString() == "README.md");
                 Dispatcher.UIThread.RunJobs();
-                var editor = window.FindControl<TextBox>("FileEditor")!;
+                var editor = window.FindControl<WorkbenchFileEditor>("FileEditor")!;
                 var preview = window.FindControl<ScrollViewer>("RenderedFile")!;
                 Assert.NotEmpty(editor.Text!);
                 Assert.True(preview.IsEffectivelyVisible);

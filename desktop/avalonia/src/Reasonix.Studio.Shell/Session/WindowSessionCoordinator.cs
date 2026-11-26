@@ -215,7 +215,8 @@ internal sealed partial class WindowSessionCoordinator(SessionEngine owner) : IA
                     };
                     pane.StatusRead++;
                     pane.StatusConfirmed = false;
-                    pane.ScrollAnchor = default;
+                    pane.ScrollAnchor = null;
+                    pane.DisclosureChoices = new();
                     pane.WorkbenchOpen = false;
                     pane.FilePath = null;
                     pane.Unread = false;

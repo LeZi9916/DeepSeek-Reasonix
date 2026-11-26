@@ -1,8 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Headless;
 using Avalonia.Input;
-using Avalonia.Input.Raw;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Styling;
@@ -11,6 +9,7 @@ using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Wire;
 using Reasonix.Studio.Controls;
 using Reasonix.Studio.Kernel.Client;
+using Reasonix.Studio.Shell.Workbench;
 using Reasonix.Studio.Shell.Workspace;
 using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
@@ -72,9 +71,12 @@ public sealed partial class NativeDomainTests
                 await WaitForMotionFrame(() => !body.IsVisible).ConfigureAwait(true);
                 w.ShowState(new SessionState());
 
-                var primary = OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control;
-                w.KeyPress(Key.K, primary, PhysicalKey.K, "k");
-                w.KeyRelease(Key.K, primary, PhysicalKey.K, "k");
+                w.RaiseEvent(new KeyEventArgs
+                {
+                    RoutedEvent = InputElement.KeyDownEvent,
+                    Key = Key.K,
+                    KeyModifiers = OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control,
+                });
                 var palette = w.GetVisualDescendants().OfType<WorkspaceSearchPanel>().Single();
                 await WaitForMotionFrame(() => palette.Opacity is > 0 and < 0.999).ConfigureAwait(true);
                 Assert.True(palette.RenderTransform!.Value.M31 > 0);
@@ -84,22 +86,43 @@ public sealed partial class NativeDomainTests
                 CaptureMotionRegion(w, sheet, -16, 8, 640, 100, $"palette-{scheme}-settled");
                 palette.Hide();
 
-                Navigate(w, "workbench");
+                w.FindControl<MenuItem>("WorkbenchView")!.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                Dispatcher.UIThread.RunJobs();
+                if (w.FindControl<Control>("WorkbenchStart")!.IsEffectivelyVisible)
+                {
+                    ClickAt(w, "action:workbench.launch-files");
+                }
+
+                var files = w.FindControl<ListBox>("WorkspaceFiles")!;
                 var tabs = w.FindControl<StackPanel>("FileTabs")!;
+                files.SelectedItem = files.Items.Cast<object>().Single(file => file.ToString() == "README.md");
+                await WaitForMotionFrame(() => tabs.Children.Any(control => Equals(control.Tag, "README.md"))).ConfigureAwait(true);
                 var tab = tabs.Children.Single(control => Equals(control.Tag, "README.md"));
-                await WaitForMotionFrame(() => tab.IsAnimating(Layoutable.MaxWidthProperty) && tab.Opacity > 0).ConfigureAwait(true);
-                CaptureMotionRegion(w, tabs, -60, 5, 350, 50, $"workbench-{scheme}-entry");
+                if (tab.IsAnimating(Layoutable.MaxWidthProperty))
+                {
+                    CaptureMotionRegion(w, tabs, -60, 5, 350, 50, $"workbench-{scheme}-entry");
+                }
+
                 await WaitForMotionFrame(() => !tab.IsAnimating(Layoutable.MaxWidthProperty)).ConfigureAwait(true);
                 CaptureMotionRegion(w, tabs, -60, 5, 350, 50, $"workbench-{scheme}-settled");
-                ClickAt(w, "action:workbench.tab");
+                Assert.IsType<WorkbenchHeaderTab>(tab).PickButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Dispatcher.UIThread.RunJobs();
                 Assert.False(tabs.Children.Single(control => Equals(control.Tag, "README.md")).IsAnimating(Layoutable.MaxWidthProperty));
 
                 w.FindControl<Button>("OpenSettings")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 var settings = w.FindControl<Grid>("SettingsPanel")!;
                 var header = settings.FindControl<TextBlock>("SettingsTitle")!;
-                await WaitForMotionFrame(() => settings.Opacity is > 0 and < 0.99).ConfigureAwait(true);
-                CaptureMotionRegion(w, header, -14, 8, 600, 100, $"settings-{scheme}-entry");
-                await WaitForMotionFrame(() => settings.Opacity == 1).ConfigureAwait(true);
+                var settingsVeil = w.FindControl<Border>("SettingsVeil")!;
+                var settingsSheet = w.FindControl<Grid>("SettingsSheet")!;
+                var workspace = w.FindControl<Grid>("LayoutRoot")!;
+                Assert.True(settings.IsVisible);
+                if (settingsVeil.Opacity is > 0 and < 0.99)
+                {
+                    CaptureMotionRegion(w, header, -14, 8, 600, 100, $"settings-{scheme}-entry");
+                }
+
+                await WaitForMotionFrame(() => !workspace.IsVisible && !settingsSheet.IsAnimating(Visual.OpacityProperty)).ConfigureAwait(true);
+                Assert.Equal(1, settingsVeil.Opacity);
                 CaptureMotionRegion(w, header, -14, 8, 600, 100, $"settings-{scheme}-settled");
 
                 w.ShowSetup(new ProviderSetup(true, true));

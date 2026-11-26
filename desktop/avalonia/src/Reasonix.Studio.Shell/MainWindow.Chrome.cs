@@ -45,13 +45,14 @@ public sealed partial class MainWindow
             WindowDecorationProperties.SetElementRole(bar, WindowDecorationsElementRole.TitleBar);
         }
 
-        foreach (var action in new Control[] { OpenProject, ExpandRail, FindButton, ThemeSwitch, ChromeAnalysis, ViewSwitch, ChromeMore, CloseSettings })
+        foreach (var action in new Control[] { OpenProject, ExpandRail, FindButton, ThemeSwitch, ViewSwitch, ChromeMore, CloseSettings })
         {
             WindowDecorationProperties.SetElementRole(action, WindowDecorationsElementRole.User);
         }
 
         if (mac)
         {
+            ConfigureMacMenu();
             BrandLockup.Margin = new Thickness(50, 0, 0, 0);
             CloseSettings.Margin = new Thickness(96, 0, 0, 0);
             SetupTitleBar.Padding = new Thickness(96, 0, 0, 0);
@@ -88,21 +89,20 @@ public sealed partial class MainWindow
         ReducedEffects = reducedEffects;
         ApplyMotion();
         ResizeRail(width);
-        RequestedThemeVariant = theme switch
-        {
-            "Dark" => ThemeVariant.Dark,
-            "Light" => ThemeVariant.Light,
-            _ => ThemeVariant.Default,
-        };
+        SetThemeMode(theme);
     }
 
     /// <summary>Wires workspace navigation and the window's appearance controls.</summary>
     private void InitializeChrome()
     {
+        InitializeThemeSchedule();
+        InitializePower();
         Activated += (_, _) => ApplyMotion();
         CollapseRail.Click += (_, _) => ToggleRail();
         ExpandRail.Click += (_, _) => ToggleRail();
-        RailGrip.DragDelta += (_, e) => ResizeRail(_railWidth + e.Vector.X);
+        RailGrip.DragStarted += (_, _) => RailGrip.Classes.Add("gripping");
+        RailGrip.DragCompleted += (_, _) => RailGrip.Classes.Remove("gripping");
+        RailGrip.DragDelta += (_, e) => ResizeRailFromGrip(e.Vector.X);
         RailGrip.DoubleTapped += (_, _) => ResizeRail(SkeletonMetrics.RailWidth);
         RailGrip.KeyDown += OnGripKey;
         RailSearch.TextChanged += async (_, _) => await LoadTreeAsync().ConfigureAwait(true);
@@ -119,7 +119,8 @@ public sealed partial class MainWindow
         };
         ThemeSwitch.Click += (_, _) =>
         {
-            RequestedThemeVariant = ActualThemeVariant == ThemeVariant.Dark ? ThemeVariant.Light : ThemeVariant.Dark;
+            SetThemeMode(ActualThemeVariant == ThemeVariant.Dark ? "Light" : "Dark");
+            SaveWindowPreferences?.Invoke();
         };
         ActualThemeVariantChanged += (_, _) => LabelTheme();
         ConversationView.Click += (_, _) => ShowAnalysis(false);
@@ -257,7 +258,7 @@ public sealed partial class MainWindow
         else if (e.Key is Key.Left or Key.Right)
         {
             var step = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? 48 : 12;
-            ResizeRail(_railWidth + (e.Key == Key.Right ? step : -step));
+            ResizeRailFromGrip(e.Key == Key.Right ? step : -step);
         }
         else
         {
@@ -267,11 +268,32 @@ public sealed partial class MainWindow
         e.Handled = true;
     }
 
+    /// <summary>Moves the divider or briefly marks an attempted move beyond its bounds.</summary>
+    /// <param name="delta">The movement requested by the divider.</param>
+    private void ResizeRailFromGrip(double delta)
+    {
+        var previous = _railWidth;
+        ResizeRail(previous + delta);
+        RailGrip.Classes.Remove("rail-edge-left");
+        RailGrip.Classes.Remove("rail-edge-right");
+        if (Math.Abs(_railWidth - previous) < 0.01 && delta != 0)
+        {
+            RailGrip.Classes.Add(delta < 0 ? "rail-edge-left" : "rail-edge-right");
+        }
+    }
+
     /// <summary>Handles the desktop shortcuts shared across pages.</summary>
     /// <param name="sender">The window.</param>
     /// <param name="e">The key press.</param>
     private void OnWindowKey(object? sender, KeyEventArgs e)
     {
+        if (e.Key == Key.F11 && e.KeyModifiers == KeyModifiers.None && (OperatingSystem.IsWindows() || OperatingSystem.IsLinux()))
+        {
+            ToggleFullScreen();
+            e.Handled = true;
+            return;
+        }
+
         var primary = OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
         if (SettingsPanel.IsVisible || SetupPanel.IsVisible)
         {
@@ -358,7 +380,7 @@ public sealed partial class MainWindow
             };
             _ = StepZoomAsync(step);
         }
-        else if (e.Key == Key.D2 && e.KeyModifiers == primary && ChromeAnalysis.IsVisible)
+        else if (e.Key == Key.D2 && e.KeyModifiers == primary && AnalysisView.IsVisible)
         {
             ShowAnalysis(!AnalysisPanel.IsVisible);
         }

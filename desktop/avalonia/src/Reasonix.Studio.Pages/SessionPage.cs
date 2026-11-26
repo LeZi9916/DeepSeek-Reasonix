@@ -76,7 +76,7 @@ public sealed partial class SessionPage : UserControl
         UseLayoutRounding = false;
         _rows = new ViewportItems(Realize)
         {
-            Margin = new Thickness(24, 0, 24, 36),
+            Margin = new Thickness(24, 28, 24, 36),
             [!MaxWidthProperty] = StudioTypography.Resource("Column"),
             ItemsSource = _viewportRows,
             ItemsPanel = new FuncTemplate<Panel?>(() => new VirtualizingStackPanel { CacheLength = _viewportRows.Count <= LargeTranscriptThreshold ? 0.5 : 0.1 }),
@@ -101,13 +101,16 @@ public sealed partial class SessionPage : UserControl
         Grid.SetRow(_scroll, 1);
         Grid.SetRow(_messageRail, 1);
         Grid.SetRow(_messageLanding, 1);
+        Grid.SetRow(_hero, 1);
         Grid.SetRow(_replySelection, 1);
-        Content = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), Children = { _historyHeader, _scroll, _messageLanding, _messageRail, _replySelection } };
+        Grid.SetRow(_transcriptJump, 1);
+        Content = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), Children = { _historyHeader, _scroll, _messageLanding, _messageRail, _replySelection, _hero, _transcriptJump } };
         AddHandler(PointerPressedEvent, OnSelectionPointerPressed, RoutingStrategies.Tunnel, true);
         AddHandler(PointerReleasedEvent, OnSelectionPointerReleased, RoutingStrategies.Bubble, true);
         _replySelection.QuoteRequested += text => QuoteRequested?.Invoke(text);
         _replySelection.CopyFinished += succeeded => CopySelectionFinished?.Invoke(succeeded);
         InitializeMessageRail();
+        InitializeTranscriptJump();
         _backgroundClock.Tick += (_, _) =>
         {
             if (IsEffectivelyVisible)
@@ -197,12 +200,13 @@ public sealed partial class SessionPage : UserControl
             FoldsTurnWork = fold;
             Rebuild(_state.Items, recreate: true);
             _responseWait.Show(_state.ResponseWait, Language);
+            UpdateConversationHero();
         }
     }
 
     /// <summary>Sets the reading inset inside the full-width scroll viewport.</summary>
     /// <param name="inset">Symmetric horizontal flow padding.</param>
-    public void SetReadingInset(double inset) => _rows.Margin = new Thickness(inset, 0, inset, 36);
+    public void SetReadingInset(double inset) => _rows.Margin = new Thickness(inset, 28, inset, 36);
 
     /// <summary>
     /// Shows one state.
@@ -216,14 +220,14 @@ public sealed partial class SessionPage : UserControl
             throw new ArgumentNullException(nameof(state));
         }
 
-        var following = (_scroll.ScrollBarMaximum.Y > 0 || state.Running)
-            && _scroll.Offset.Y >= _scroll.ScrollBarMaximum.Y - 2;
+        var following = _followingLatest || ((_scroll.ScrollBarMaximum.Y > 0 || state.Running)
+            && _scroll.Offset.Y >= _scroll.ScrollBarMaximum.Y - 2);
         var previous = _state;
         _state = state;
         var animate = !_skipMountEntrance && !state.IsRestored && previous.EnteredThrough == state.EnteredThrough;
         _skipMountEntrance = false;
-        if (MoveNewAnswerLine() || _viewportRows.Count == 0
-            || (!ReferenceEquals(previous.Items, state.Items) && !UpdateAnswers(previous, state)))
+        if (MoveNewAnswerLine() || _viewportRows.Count == 0 || (previous.ResponseWait is null) != (state.ResponseWait is null)
+            || (!ReferenceEquals(previous.Items, state.Items) && !UpdateMountedRows(previous, state)))
         {
             _previousActivityCounts = VisibleActivityCounts(previous);
             Rebuild(state.Items);
@@ -246,12 +250,21 @@ public sealed partial class SessionPage : UserControl
                 },
                 DispatcherPriority.Loaded);
         }
-        else if (previous.Running != state.Running)
+        else
         {
-            RefreshLiveActivity(state.Items);
+            if (previous.Running != state.Running)
+            {
+                RefreshLiveActivity(state.Items);
+            }
+
+            if (animate && !ReferenceEquals(previous.Items, state.Items) && state.StreamingRow is null)
+            {
+                AnimateActivityChanges(previous);
+            }
         }
 
         _responseWait.Show(state.ResponseWait, Language);
+        UpdateConversationHero();
         if (following && (!ReferenceEquals(previous.Items, state.Items) || previous.ResponseWait != state.ResponseWait))
         {
             FollowEnd();
@@ -374,7 +387,8 @@ public sealed partial class SessionPage : UserControl
                     text => QuoteRequested?.Invoke(text),
                     _folding,
                     FoldChoice(TranscriptPart.Thinking, say.Id),
-                    open => RememberFold(TranscriptPart.Thinking, say.Id, open));
+                    open => RememberFold(TranscriptPart.Thinking, say.Id, open),
+                    WorkspaceAssets);
 
             case NoticeItem notice:
                 return new SelectableTextBlock
@@ -601,49 +615,6 @@ public sealed partial class SessionPage : UserControl
             body.Children.Add(new SelectableTextBlock
             {
                 Text = fact.Description,
-                [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
-                Opacity = 0.75,
-                TextWrapping = TextWrapping.Wrap,
-            });
-        }
-
-        return body;
-    }
-
-    /// <summary>
-    /// Draws a surface an extension published.
-    /// </summary>
-    /// <param name="item">The surface.</param>
-    /// <returns>The card's body: the plugin's name, its status, and any card text.</returns>
-    private Control ExtensionBody(ExtensionItem item)
-    {
-        var body = new StackPanel { Spacing = 4 };
-        body.Children.Add(new SelectableTextBlock
-        {
-            Text = MessageCatalog.Get(
-                "chat.extension_id",
-                Language,
-                ("id", string.IsNullOrEmpty(item.Surface.PluginID) ? item.Surface.SurfaceID : item.Surface.PluginID)),
-            [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
-            Opacity = 0.6,
-        });
-
-        if (!string.IsNullOrEmpty(item.Surface.Status?.Label))
-        {
-            body.Children.Add(new SelectableTextBlock
-            {
-                Text = item.Surface.Status.Label,
-                [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
-                FontWeight = FontWeight.SemiBold,
-                TextWrapping = TextWrapping.Wrap,
-            });
-        }
-
-        if (!string.IsNullOrEmpty(item.Surface.Status?.Detail))
-        {
-            body.Children.Add(new SelectableTextBlock
-            {
-                Text = item.Surface.Status.Detail,
                 [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
                 Opacity = 0.75,
                 TextWrapping = TextWrapping.Wrap,

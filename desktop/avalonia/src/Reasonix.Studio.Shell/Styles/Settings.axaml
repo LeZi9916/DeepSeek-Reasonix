@@ -371,6 +371,9 @@
       </Border>
     </ControlTemplate></Setter>
   </Style>
+  <Style Selector="RadioButton.segmented.data-choice">
+    <Setter Property="Padding" Value="10,0"/>
+  </Style>
   <Style Selector="RadioButton.segmented:checked">
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     <Setter Property="FontWeight" Value="Medium"/>

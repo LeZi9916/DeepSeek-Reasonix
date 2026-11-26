@@ -203,15 +203,19 @@ public sealed partial class ProjectRail : UserControl
                 continue;
             }
 
-            var project = new ProjectEntry(workspace, _collapsed.Contains(workspace.Root), () =>
-            {
-                if (!_collapsed.Remove(workspace.Root))
+            var project = new ProjectEntry(
+                workspace,
+                _collapsed.Contains(workspace.Root),
+                () =>
                 {
-                    _collapsed.Add(workspace.Root);
-                }
+                    if (!_collapsed.Remove(workspace.Root))
+                    {
+                        _collapsed.Add(workspace.Root);
+                    }
 
-                Rebuild();
-            });
+                    Rebuild();
+                },
+                language: Language);
             project.SetMenu(BuildProjectMenu(new SessionOpenTarget(string.Empty, workspace.Root, string.Empty)));
             ConfigureProjectDrag(project, workspace);
             project.SetNewAction(() => Navigate(new SessionOpenTarget(string.Empty, workspace.Root, string.Empty)), !workspace.Missing, Language);

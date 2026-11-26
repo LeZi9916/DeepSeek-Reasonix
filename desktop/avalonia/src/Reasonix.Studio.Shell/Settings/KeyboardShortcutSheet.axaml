@@ -13,7 +13,12 @@
     <Style Selector="TextBlock.keys-chord">
       <Setter Property="FontFamily" Value="{DynamicResource WorkbenchMonoFamily}"/>
       <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="LineHeight" Value="{DynamicResource KeyboardChordLineHeight}"/>
       <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    </Style>
+    <Style Selector="TextBlock.keys-label">
+      <Setter Property="FontSize" Value="{DynamicResource StudioType13}"/>
+      <Setter Property="LineHeight" Value="{DynamicResource KeyboardLabelLineHeight}"/>
     </Style>
   </local:SettingsFormView.Styles>
   <Border BorderThickness="0,1,0,0" BorderBrush="{DynamicResource HairBrush}" Padding="0,7,0,6">

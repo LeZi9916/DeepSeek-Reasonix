@@ -1,9 +1,11 @@
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Wire;
 using Reasonix.Studio.Pages;
+using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell;
 using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
@@ -57,7 +59,7 @@ public sealed class SessionPageToolOutputTests
             Call = new Tool { ID = "c1", Name = "bash", Output = "ok", ReadOnly = false },
         });
 
-        Assert.Contains("bash", texts);
+        Assert.Contains(MessageCatalog.Get("chat.run_command", InterfaceLanguage.Zh), texts);
         Assert.DoesNotContain(texts, text => text.Contains("没有放在页面里", System.StringComparison.Ordinal));
         Assert.DoesNotContain(texts, text => text.Contains("显示完整输出", System.StringComparison.Ordinal));
     }
@@ -84,7 +86,7 @@ public sealed class SessionPageToolOutputTests
 
         var (texts, _) = await Draw(row);
 
-        Assert.Contains("grep", texts);
+        Assert.Contains(MessageCatalog.Get("chat.search_code", InterfaceLanguage.Zh), texts);
         Assert.DoesNotContain(texts, text => text.Contains("没有放在页面里", System.StringComparison.Ordinal));
     }
 
@@ -109,6 +111,11 @@ public sealed class SessionPageToolOutputTests
                 Dispatcher.UIThread.RunJobs();
                 page.GetVisualDescendants().OfType<Button>().First(button => button.Classes.Contains("activity-toggle")).RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
                 Dispatcher.UIThread.RunJobs();
+                if (row.Hidden <= 0)
+                {
+                    Assert.Contains(page.GetVisualDescendants().OfType<Button>(), button => AutomationProperties.GetName(button) == row.Call.Name);
+                }
+
                 var blocks = page.GetSelfAndVisualDescendants().OfType<TextBlock>().ToList();
                 var texts = blocks.Select(block => block.Text ?? string.Empty).ToList();
                 var visible = blocks.Where(block => block.IsVisible).Select(block => block.Text ?? string.Empty).ToList();

@@ -1,20 +1,37 @@
-<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:rail="using:Reasonix.Studio.Pages.Rail"
              x:Class="Reasonix.Studio.Pages.Rail.ProjectEntry" Margin="0,1,0,0">
-  <UserControl.Styles><Style Selector="StackPanel.project-actions"><Setter Property="Opacity" Value="0"/></Style><Style Selector="UserControl:pointerover StackPanel.project-actions, UserControl:focus-within StackPanel.project-actions"><Setter Property="Opacity" Value="1"/></Style><Style Selector="UserControl:pointerover Button#Fold, UserControl:focus-within Button#Fold"><Setter Property="Padding" Value="6,0,52,0"/></Style></UserControl.Styles>
+  <UserControl.Styles>
+    <Style Selector="StackPanel.project-actions">
+      <Setter Property="Opacity" Value="0"/>
+      <Setter Property="IsHitTestVisible" Value="False"/>
+    </Style>
+    <Style Selector="rail|ProjectEntry:pointerover StackPanel.project-actions, rail|ProjectEntry:focus-within StackPanel.project-actions, rail|ProjectEntry.menu-open StackPanel.project-actions">
+      <Setter Property="Opacity" Value="1"/>
+      <Setter Property="IsHitTestVisible" Value="True"/>
+    </Style>
+    <Style Selector="rail|ProjectEntry:pointerover Button#Fold, rail|ProjectEntry:focus-within Button#Fold, rail|ProjectEntry.menu-open Button#Fold">
+      <Setter Property="Padding" Value="6,0,60,0"/>
+    </Style>
+  </UserControl.Styles>
   <Grid RowDefinitions="30,Auto">
   <Button Name="Fold" Classes="rail-button" AutomationProperties.AutomationId="action:workspace.fold"
           Height="30" Padding="6,0,4,0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-    <Grid ColumnDefinitions="10,16,*,Auto,Auto" ColumnSpacing="6">
+    <Grid ColumnDefinitions="10,16,*,Auto,Auto,Auto" ColumnSpacing="6">
       <Viewbox Name="Disclosure" Width="10" Height="10"><Canvas Width="24" Height="24"><Path Name="Chevron" Classes="rail-glyph" Data="m6 9 6 6 6-6"/></Canvas></Viewbox>
       <Viewbox Grid.Column="1" Width="14" Height="14"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="{StaticResource Glyph.folder}"/></Canvas></Viewbox>
       <TextBlock Grid.Column="2" Name="Title" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
       <TextBlock Grid.Column="3" Name="Host" MaxWidth="58" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
       <TextBlock Grid.Column="4" Name="State" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource WarnInkBrush}" VerticalAlignment="Center"/>
+      <Border Grid.Column="5" Name="UnreadBadge" MinWidth="16" Height="16" CornerRadius="8" Padding="4,0" BorderThickness="1"
+              BorderBrush="{DynamicResource BorderBrush}" VerticalAlignment="Center" IsVisible="False">
+        <TextBlock Name="UnreadCount" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource MutedBrush}"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Border>
     </Grid>
   </Button>
     <StackPanel Classes="project-actions" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-      <Button Name="NewSession" Classes="rail-button rail-icon" Width="24" Height="24" AutomationProperties.AutomationId="action:session.new"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M12 4v16 M4 12h16"/></Canvas></Viewbox></Button>
-      <Button Name="Menu" Classes="rail-button rail-icon" Width="24" Height="24" AutomationProperties.AutomationId="action:workspace.menu"><Viewbox Width="14" Height="14"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M5 12h.01 M12 12h.01 M19 12h.01" StrokeThickness="3"/></Canvas></Viewbox></Button>
+      <Button Name="NewSession" Classes="rail-button rail-icon" Width="28" Height="28" AutomationProperties.AutomationId="action:session.new"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M12 4v16 M4 12h16"/></Canvas></Viewbox></Button>
+      <Button Name="Menu" Classes="rail-button rail-icon" Width="28" Height="28" AutomationProperties.AutomationId="action:workspace.menu"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Classes="rail-glyph" Data="M5 12h.01 M12 12h.01 M19 12h.01" StrokeThickness="3"/></Canvas></Viewbox></Button>
     </StackPanel>
     <StackPanel Name="Connection" Grid.Row="1" Margin="48,0,2,4" Orientation="Horizontal" Spacing="5" IsVisible="False">
       <Viewbox Width="12" Height="12"><Canvas Width="24" Height="24"><Path Name="ConnectionGlyph" Data="M20 7v5h-5 M20 12a8 8 0 1 0-2.5 6" Stroke="{DynamicResource WarnInkBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox>

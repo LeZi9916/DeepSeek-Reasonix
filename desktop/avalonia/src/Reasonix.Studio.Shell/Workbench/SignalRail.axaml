@@ -1,9 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="Reasonix.Studio.Shell.Workbench.SignalRail">
   <StackPanel Spacing="6">
-    <Grid Height="30" ClipToBounds="True">
-      <Border Height="1" VerticalAlignment="Center" Background="{DynamicResource HairBrush}"/>
-      <Canvas Name="Markers"/>
+    <Grid Height="34" ClipToBounds="True" Background="{DynamicResource SurfaceBrush}">
+      <Border BorderThickness="0,1,0,1" BorderBrush="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
+      <Canvas Name="Markers" AutomationProperties.AutomationId="class:run-signal-line"/>
     </Grid>
-    <WrapPanel Name="Members"/>
+    <WrapPanel Name="Members" IsVisible="False"/>
   </StackPanel>
 </UserControl>

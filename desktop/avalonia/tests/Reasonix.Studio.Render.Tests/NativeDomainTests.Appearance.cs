@@ -63,6 +63,10 @@ public sealed partial class NativeDomainTests
             ControlAt<TextBox>(w, "field:appearance.mono").Text = "monospace";
             ClickAt(w, "action:appearance.apply-font");
             Assert.Equal("monospace", (string?)look["fontMono"]);
+            Assert.True(w.TryFindResource("StudioMonoFamily", out var family));
+            var code = Assert.IsType<FontFamily>(family);
+            Assert.Equal("monospace", code.Name);
+            Assert.Contains("Reasonix Workbench Full", code.ToString(), StringComparison.Ordinal);
             Assert.Equal(3, writes);
         });
 

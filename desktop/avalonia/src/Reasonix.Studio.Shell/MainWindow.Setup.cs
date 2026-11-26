@@ -102,6 +102,7 @@ public sealed partial class MainWindow
         {
             var wide = e.NewSize.Width >= 900;
             SetupDemo.IsVisible = wide;
+            WelcomeLayout.ColumnSpacing = wide ? 32 : 0;
             WelcomeCard.MaxWidth = wide ? 900 : 560;
             WelcomeCard.Height = wide ? 394 : 374;
             WelcomeCard.Padding = wide ? new Avalonia.Thickness(42, 36, 42, 34) : new Avalonia.Thickness(22, 26, 22, 24);

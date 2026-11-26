@@ -44,4 +44,31 @@
   <Style Selector="Button#NewSession:pointerover">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
   </Style>
+  <Style Selector="Thumb#RailGrip:pointerover /template/ Border.rail-guide">
+    <Setter Property="Opacity" Value="0.55"/>
+  </Style>
+  <Style Selector="Thumb#RailGrip:focus-visible /template/ Border.rail-guide">
+    <Setter Property="Opacity" Value="0.7"/>
+  </Style>
+  <Style Selector="Thumb#RailGrip.gripping /template/ Border.rail-guide">
+    <Setter Property="Opacity" Value="0.9"/>
+  </Style>
+  <Style Selector="Window.motion Thumb#RailGrip.rail-edge-left /template/ Border.rail-guide">
+    <Style.Animations>
+      <Animation Duration="0:0:0.18" Easing="0.16,1,0.3,1">
+        <KeyFrame Cue="0%"><Setter Property="TranslateTransform.X" Value="0"/></KeyFrame>
+        <KeyFrame Cue="40%"><Setter Property="TranslateTransform.X" Value="-5"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="TranslateTransform.X" Value="0"/></KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+  <Style Selector="Window.motion Thumb#RailGrip.rail-edge-right /template/ Border.rail-guide">
+    <Style.Animations>
+      <Animation Duration="0:0:0.18" Easing="0.16,1,0.3,1">
+        <KeyFrame Cue="0%"><Setter Property="TranslateTransform.X" Value="0"/></KeyFrame>
+        <KeyFrame Cue="40%"><Setter Property="TranslateTransform.X" Value="5"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="TranslateTransform.X" Value="0"/></KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
 </Styles>

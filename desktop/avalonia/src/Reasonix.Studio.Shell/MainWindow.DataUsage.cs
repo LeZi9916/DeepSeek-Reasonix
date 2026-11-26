@@ -224,6 +224,7 @@ public sealed partial class MainWindow
         {
             var pick = new RadioButton { Content = DataLabel(key), Tag = id, IsChecked = (string?)setting["mode"] == id, Margin = default };
             pick.Classes.Add("segmented");
+            pick.Classes.Add("data-choice");
             AutomationProperties.SetAutomationId(pick, "action:currency.mode");
             modes.Children.Add(pick);
             pick.Click += async (_, _) =>

@@ -174,6 +174,7 @@ public sealed partial class MainWindow
                 CancelWelcomeEntrance();
                 ComposerRunTokens.CancelFeedback();
                 _viewMotion?.Cancel.Cancel();
+                _settingsShellMotion?.Cancel();
                 _workbenchCanvasFade?.Cancel();
                 _setupDeparture?.Cancel();
             }

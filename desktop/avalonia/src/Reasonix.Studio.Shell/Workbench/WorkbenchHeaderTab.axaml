@@ -7,7 +7,7 @@
   </UserControl.Resources>
   <Border Name="Frame" Classes="wb-tab-frame">
     <Grid ColumnDefinitions="*,22">
-      <Button Name="Picker" Classes="wb-tab" Padding="31,0,0,0" HorizontalContentAlignment="Left"
+      <Button Name="Picker" Classes="wb-tab" Padding="31,0,1,0" HorizontalContentAlignment="Left"
               AutomationProperties.AutomationId="action:workbench.tab">
         <Button.ContentTemplate>
           <DataTemplate x:DataType="sys:String">

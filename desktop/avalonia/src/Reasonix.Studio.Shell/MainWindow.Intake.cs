@@ -174,6 +174,11 @@ public sealed partial class MainWindow
         Composer.SelectionEnd = menu.To;
         Composer.SelectedText = replacement;
         Composer.CaretIndex = menu.From + replacement.Length;
+        if (menu.Kind == "slash" && choice.Kind is "skill" or "subagent")
+        {
+            Composer.MarkCompletion(menu.From, choice.Insert.TrimEnd().Length, choice.Kind == "subagent");
+        }
+
         Composer.Focus();
         if (!choice.Descend || !descend)
         {

@@ -70,13 +70,13 @@ internal sealed class SessionPaneState(SessionEngine engine, SessionStatus statu
     }
 
     /// <summary>Gets or sets the reader's retained transcript position.</summary>
-    internal (string? Id, double Offset, double Inset) ScrollAnchor
+    internal (string? Id, double Offset, double Inset)? ScrollAnchor
     {
         get; set;
     }
 
-    /// <summary>Gets the disclosure choices for this transcript while its pane is retained.</summary>
-    internal TranscriptDisclosureChoices DisclosureChoices { get; } = new();
+    /// <summary>Gets or sets the disclosure choices for this transcript while its pane is retained.</summary>
+    internal TranscriptDisclosureChoices DisclosureChoices { get; set; } = new();
 
     /// <summary>Gets the divider position while this pane is retained.</summary>
     internal NewAnswerBoundary AnswerBoundary { get; } = new();

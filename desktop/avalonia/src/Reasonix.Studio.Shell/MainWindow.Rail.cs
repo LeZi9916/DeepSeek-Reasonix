@@ -52,7 +52,14 @@ public sealed partial class MainWindow
     /// </remarks>
     private void AdoptSessionPath(string path)
     {
+        var previous = _sessionPath;
         _sessionPath = path ?? string.Empty;
+        if (previous != _sessionPath && ReferenceEquals(_workbench.BoundEngine, _engine))
+        {
+            ResetAgentBrowserTabs();
+            _ = RefreshAgentBrowserTabsAsync();
+        }
+
         var scope = _sessionPath.Length == 0
             ? string.Empty
             : System.Text.Json.JsonSerializer.Serialize(new[] { _engine?.DraftHost ?? string.Empty, _sessionPath });
@@ -104,6 +111,7 @@ public sealed partial class MainWindow
     {
         Projects.Language = Language;
         Projects.Show(tree, _sessionPath);
+        Conversation.SetHeroProjectChoice(!_workspacePreferences.AcceptedDefaultWorkspace && tree.All(project => !project.Remembered));
         ObserveUnreadSpan();
         _ = RefreshPeerMarksAsync();
     }

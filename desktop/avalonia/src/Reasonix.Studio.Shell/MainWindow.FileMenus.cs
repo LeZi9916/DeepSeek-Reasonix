@@ -28,9 +28,10 @@ public sealed partial class MainWindow
             row.ContextFlyout.ShowAt(row);
             e.Handled = true;
         };
+        FileEditor.TextArea.Caret.PositionChanged += (_, _) => DrawFileStatus();
         FileEditor.PropertyChanged += (_, e) =>
         {
-            if (e.Property == TextBox.CaretIndexProperty || e.Property == TextBox.TextProperty || e.Property == IsVisibleProperty)
+            if (e.Property == IsVisibleProperty)
             {
                 DrawFileStatus();
             }

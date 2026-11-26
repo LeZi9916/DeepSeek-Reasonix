@@ -17,7 +17,7 @@ public sealed partial class MainWindow
     {
         FileTabs.Children.Clear();
         Control? selected = null;
-        var current = WorkbenchStart.IsVisible || BackgroundJobHost.IsVisible || SubagentRunHost.IsVisible || (ManualBrowserHost.IsVisible && !BackToEditor.IsVisible)
+        var current = WorkbenchStart.IsVisible || VisibleAgentPage is not null || BackgroundJobHost.IsVisible || SubagentRunHost.IsVisible || (ManualBrowserHost.IsVisible && !BackToEditor.IsVisible)
             ? null
             : SelectedWorkbenchDocument;
         foreach (var (key, buffer) in _workbench.Buffers.Where(pair => pair.Key.Root == WorkspaceBufferScope))
@@ -109,7 +109,7 @@ public sealed partial class MainWindow
                     {
                         FileEditor.IsVisible = true;
                         FileEditor.IsReadOnly = true;
-                        FileEditor.Text = string.Empty;
+                        FileEditor.ClearBuffer();
                     }
                 }
 
@@ -128,6 +128,7 @@ public sealed partial class MainWindow
         }
 
         selected = AppendSurfaceTabs(newSurface) ?? selected;
+        selected = AppendAgentBrowserTabs() ?? selected;
         selected = AppendJobOutputTabs(newSurface) ?? selected;
         selected = AppendSubagentRunTabs(newSurface) ?? selected;
         if (_workbenchLauncherSelected)
@@ -223,7 +224,7 @@ public sealed partial class MainWindow
             _fileRead++;
             _openFile = null;
             HideFileError();
-            FileEditor.Text = string.Empty;
+            FileEditor.ClearBuffer();
             FileEditor.IsReadOnly = true;
             SaveFile.IsEnabled = false;
             ReleasePreview();

@@ -136,6 +136,7 @@ public sealed partial class MainWindow
             }
         };
         EarlierHistory.Click += async (_, _) => await ReadEarlierHistoryAsync().ConfigureAwait(true);
+        Conversation.EarlierHistoryRequested += async () => await ReadEarlierHistoryAsync().ConfigureAwait(true);
         Projects.NavigateRequested += async target => await OpenTargetAsync(target).ConfigureAwait(true);
         PaneTabs.FocusRequested += async pane => await NavigatePaneAsync(pane).ConfigureAwait(true);
         PaneTabs.CloseRequested += async panes => await ClosePanesAsync(panes).ConfigureAwait(true);
@@ -180,6 +181,7 @@ public sealed partial class MainWindow
     /// <summary>Updates tab titles and activity without replacing runtime state.</summary>
     private void DrawPaneTabs()
     {
+        ReflectUnreadBadge();
         if (_workspacePreferences.ShowSessionTabs)
         {
             PaneTabs.Show(_navigation?.Panes ?? [], _activePane, Language, _peerMarks);
@@ -329,9 +331,9 @@ public sealed partial class MainWindow
 
         DisarmStop();
         SaveDraft();
-        if (_activePane is { } previous)
+        if (_activePane is { } previous && !ReferenceEquals(previous, pane))
         {
-            previous.ScrollAnchor = Conversation.ReadAnchor();
+            previous.ScrollAnchor = Conversation.ReadSessionPosition();
             previous.WorkbenchOpen = WorkbenchPanel.IsVisible;
             previous.FilePath = SelectedWorkbenchDocument;
         }
@@ -366,7 +368,7 @@ public sealed partial class MainWindow
         }
 
         DrawHistoryRead();
-        Conversation.RestoreAnchor(pane.ScrollAnchor, preferUnread: true);
+        Conversation.RestoreSessionPosition(pane.ScrollAnchor);
         DrawPaneTabs();
         _navigation!.EnsureWatching(pane);
         Dispatcher.UIThread.Post(() => _ = RefreshFocusedPaneAsync(pane, current, refreshStatus, refreshTree), DispatcherPriority.Background);
@@ -479,7 +481,8 @@ public sealed partial class MainWindow
         var compaction = kind == "notice" && frame.Payload.ValueKind == System.Text.Json.JsonValueKind.Object
             && frame.Payload.TryGetProperty("code", out var code) && code.ValueKind == JsonValueKind.String && code.GetString() is "compacted" or "compact_declined" or "compact_failed";
         var backgroundJob = StartsBackgroundJob(frame);
-        if (!status && !compaction && !backgroundJob && kind != "inbox_changed")
+        var refreshBrowser = kind is "browser_tabs_changed" or "turn_done";
+        if (!status && !compaction && !backgroundJob && !refreshBrowser && kind != "inbox_changed")
         {
             return;
         }
@@ -514,6 +517,11 @@ public sealed partial class MainWindow
                 _ = ReadPaneStatusAsync(pane);
             }
 
+            if (refreshBrowser && ReferenceEquals(_engine, engine))
+            {
+                _ = RefreshAgentBrowserTabsAsync();
+            }
+
             if (ReferenceEquals(_engine, engine) && kind is "usage" or "turn_done")
             {
                 _ = LoadComposeTelemetryAsync();
@@ -541,6 +549,8 @@ public sealed partial class MainWindow
         var history = _engine?.History;
         EarlierHistory.IsVisible = history is { HasMore: true } or { Busy: true } or { Failed: true };
         EarlierHistory.IsEnabled = history?.Busy != true;
+        Conversation.SetHeroHistoryOutstanding(EarlierHistory.IsVisible);
+        Conversation.SetMessageRailHistory(history?.Earlier ?? 0, history is { HasMore: true, Busy: false, Failed: false });
         EarlierHistory.Content = MessageCatalog.Get(history?.Busy == true ? "common.loading" : history?.Failed == true ? "common.retry" : "chat.load_earlier_messages", Language);
     }
 
@@ -555,6 +565,7 @@ public sealed partial class MainWindow
 
         using var timing = StudioPerformance.Begin("history.earlier");
         var started = StudioPerformance.Timestamp();
+        Conversation.PauseTranscriptFollow();
         var anchor = Conversation.ReadAnchor();
         try
         {

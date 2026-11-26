@@ -44,7 +44,7 @@ public sealed partial class SessionPage
             Text = tool.Call.Name + (tool.Running ? " …" : string.Empty),
             [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.55,
-            FontFamily = new FontFamily("Consolas, monospace"),
+            [!TextBlock.FontFamilyProperty] = StudioTypography.Resource("StudioMonoFamily"),
         };
     }
 
@@ -123,7 +123,7 @@ public sealed partial class SessionPage
             Text = tool.Call.Output,
             [!TextBlock.FontSizeProperty] = StudioTypography.Size(12),
             Opacity = 0.6,
-            FontFamily = new FontFamily("Consolas, monospace"),
+            [!TextBlock.FontFamilyProperty] = StudioTypography.Resource("StudioMonoFamily"),
             TextWrapping = TextWrapping.Wrap,
             IsVisible = false,
         };

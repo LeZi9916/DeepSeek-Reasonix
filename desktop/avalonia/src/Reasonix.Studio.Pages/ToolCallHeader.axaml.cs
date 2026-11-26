@@ -18,8 +18,20 @@ internal sealed partial class ToolCallHeader : UserControl
     /// <summary>The retained detail of the tool.</summary>
     private readonly ScrollViewer _output;
 
+    /// <summary>Whether this tool is presented as a child activity.</summary>
+    private readonly bool _inActivity;
+
     /// <summary>The manual step choice shared with the transcript.</summary>
     private readonly Action<bool> _rememberStep;
+
+    /// <summary>The previous snapshot used to avoid reapplying status and argument bindings.</summary>
+    private ToolItem? _presented;
+
+    /// <summary>The current automatic output clip.</summary>
+    private double _cap;
+
+    /// <summary>The reader's explicit output clip choice.</summary>
+    private bool _openOutput;
 
     /// <summary>Initializes a new instance of the <see cref="ToolCallHeader"/> class.</summary>
     /// <param name="tool">Canonical tool row.</param>
@@ -32,21 +44,12 @@ internal sealed partial class ToolCallHeader : UserControl
         AvaloniaXamlLoader.Load(this);
         _output = this.FindControl<ScrollViewer>("Output")!;
         _rememberStep = rememberStep;
+        _inActivity = inActivity;
+        _openOutput = openOutput;
         var name = this.FindControl<TextBlock>("ToolName")!;
         name.Text = tool.Call.Name == "edit_file" ? MessageCatalog.Get(MessageKey.Common.Edit, language) : tool.Call.Name;
         ToolTip.SetTip(name, tool.Call.Name);
-        this.FindControl<SelectableTextBlock>("Result")!.Text = string.IsNullOrEmpty(tool.Call.Err) ? tool.Call.Output : tool.Call.Err + "\n" + tool.Call.Output;
         var argument = this.FindControl<TextBlock>("Argument")!;
-        try
-        {
-            argument.Text = !string.IsNullOrEmpty(tool.Call.Args) && JsonNode.Parse(tool.Call.Args) is JsonObject args ? args["path"]?.ToString() ?? string.Empty : string.Empty;
-        }
-        catch (JsonException)
-        {
-            argument.Text = string.Empty;
-        }
-
-        ToolTip.SetTip(argument, tool.Call.Args);
         if (inActivity)
         {
             var glyph = this.FindControl<Path>("ToolGlyph")!;
@@ -82,7 +85,6 @@ internal sealed partial class ToolCallHeader : UserControl
 
             name.FontWeight = FontWeight.Normal;
             name.Bind(TextBlock.FontSizeProperty, StudioTypography.Size(13));
-            argument.Text = ActivityDisclosure.ShortArgument(tool.Call.Args);
             argument.Bind(TextBlock.FontSizeProperty, StudioTypography.Size(12));
             argument.Bind(TextBlock.ForegroundProperty, StudioTypography.Resource("TextBrush"));
             this.FindControl<Grid>("HeaderGrid")!.ColumnDefinitions = new ColumnDefinitions("14,Auto,*,14");
@@ -103,20 +105,9 @@ internal sealed partial class ToolCallHeader : UserControl
 
         InitializeBackgroundJob(tool, language, inActivity);
 
-        var spins = inActivity && tool.Running;
-        this.FindControl<Canvas>("RunningStatus")!.IsVisible = spins;
-        this.FindControl<Viewbox>("StaticStatus")!.IsVisible = !spins;
-        var status = this.FindControl<Path>("Status")!;
-        status.Bind(Avalonia.Controls.Shapes.Shape.StrokeProperty, StudioTypography.Resource(tool.Running ? "NetBrush" : string.IsNullOrEmpty(tool.Call.Err) ? "OkBrush" : "ErrInkBrush"));
-        if (tool.Running || !string.IsNullOrEmpty(tool.Call.Err))
-        {
-            status.Data = Geometry.Parse(tool.Running ? "M12 3 A9 9 0 1 0 21 12" : "M6 6 18 18 M18 6 6 18");
-        }
-
         var detail = this.FindControl<DisclosureMotion>("Detail")!;
         var toggle = this.FindControl<Button>("Toggle")!;
         var all = this.FindControl<Button>("ExpandOutput")!;
-        var cap = tool.Running || !string.IsNullOrEmpty(tool.Call.Err) ? 256d : 88d;
         AutomationProperties.SetName(toggle, BackgroundJobId is null ? tool.Call.Name : name.Text);
         _output.PropertyChanged += (_, change) =>
         {
@@ -125,36 +116,65 @@ internal sealed partial class ToolCallHeader : UserControl
                 ShowMore();
             }
         };
-        detail.PropertyChanged += (_, change) =>
-        {
-            if (change.Property == IsVisibleProperty)
-            {
-                ShowMore();
-            }
-        };
         toggle.Click += (_, _) =>
         {
             SetOpen(!detail.Expanded, animate: true);
             _rememberStep(detail.Expanded);
-            ShowMore();
         };
         all.Click += (_, _) =>
         {
-            openOutput = !openOutput;
-            rememberOutput(openOutput);
-            ApplyClip();
+            _openOutput = !_openOutput;
+            rememberOutput(_openOutput);
+            ApplyClip(language);
         };
-        SetOpen(openStep);
-        ApplyClip();
 
-        void ApplyClip()
+        SetOpen(openStep);
+        UpdateTool(tool, language);
+    }
+
+    /// <summary>Refreshes canonical progress without replacing the expanded detail or its selection.</summary>
+    /// <param name="tool">The current tool snapshot.</param><param name="language">The interface language.</param>
+    internal void UpdateTool(ToolItem tool, InterfaceLanguage language)
+    {
+        var result = this.FindControl<SelectableTextBlock>("Result")!;
+        var next = string.IsNullOrEmpty(tool.Call.Err) ? tool.Call.Output ?? string.Empty : tool.Call.Err + "\n" + tool.Call.Output;
+        if (result.Text != next)
         {
-            _output.MaxHeight = openOutput ? double.PositiveInfinity : cap;
-            all.Content = MessageCatalog.Get(openOutput ? "common.collapse" : "chat.show_all", language);
-            ShowMore();
+            var start = result.SelectionStart;
+            var end = result.SelectionEnd;
+            result.Text = next;
+            result.SelectionStart = Math.Min(start, next.Length);
+            result.SelectionEnd = Math.Min(end, next.Length);
         }
 
-        void ShowMore() => all.IsVisible = detail.Expanded && _output.Extent.Height > cap;
+        if (_presented is null || _presented.Call.Args != tool.Call.Args)
+        {
+            var argument = this.FindControl<TextBlock>("Argument")!;
+            argument.Text = _inActivity ? ActivityDisclosure.ShortArgument(tool.Call.Args) : PathArgument(tool.Call.Args);
+            ToolTip.SetTip(argument, tool.Call.Args);
+        }
+
+        var failed = !string.IsNullOrEmpty(tool.Call.Err);
+        if (_presented is null || _presented.Running != tool.Running || string.IsNullOrEmpty(_presented.Call.Err) == failed)
+        {
+            var spins = _inActivity && tool.Running;
+            this.FindControl<Canvas>("RunningStatus")!.IsVisible = spins;
+            this.FindControl<Viewbox>("StaticStatus")!.IsVisible = !spins;
+            var status = this.FindControl<Path>("Status")!;
+            status.Bind(Avalonia.Controls.Shapes.Shape.StrokeProperty, StudioTypography.Resource(tool.Running ? "NetBrush" : failed ? "ErrInkBrush" : "OkBrush"));
+            if (tool.Running || failed)
+            {
+                status.Data = Geometry.Parse(tool.Running ? "M12 3 A9 9 0 1 0 21 12" : "M6 6 18 18 M18 6 6 18");
+            }
+            else
+            {
+                status.Bind(Path.DataProperty, StudioTypography.Resource("Glyph.check"));
+            }
+        }
+
+        _presented = tool;
+        _cap = tool.Running || failed ? 256d : 88d;
+        ApplyClip(language);
     }
 
     /// <summary>Shows the detail when find matches the tool output.</summary>
@@ -163,6 +183,35 @@ internal sealed partial class ToolCallHeader : UserControl
         SetOpen(true);
         _rememberStep(true);
     }
+
+    /// <summary>Reads the path field from a standalone tool's arguments.</summary>
+    /// <param name="raw">The structured arguments.</param>
+    /// <returns>The path or an empty label.</returns>
+    private static string PathArgument(string? raw)
+    {
+        try
+        {
+            return !string.IsNullOrEmpty(raw) && JsonNode.Parse(raw) is JsonObject args
+                ? args["path"]?.ToString() ?? string.Empty
+                : string.Empty;
+        }
+        catch (JsonException)
+        {
+            return string.Empty;
+        }
+    }
+
+    /// <summary>Projects the reader's clip choice onto the existing scroll viewer.</summary>
+    /// <param name="language">The interface language.</param>
+    private void ApplyClip(InterfaceLanguage language)
+    {
+        _output.MaxHeight = _openOutput ? double.PositiveInfinity : _cap;
+        this.FindControl<Button>("ExpandOutput")!.Content = MessageCatalog.Get(_openOutput ? "common.collapse" : "chat.show_all", language);
+        ShowMore();
+    }
+
+    /// <summary>Keeps the operation in the same measured region throughout a disclosure.</summary>
+    private void ShowMore() => this.FindControl<Button>("ExpandOutput")!.IsVisible = _openOutput || _output.Extent.Height > _cap;
 
     /// <summary>Updates the mounted detail and its disclosure mark.</summary>
     /// <param name="open">Whether the step is expanded.</param>

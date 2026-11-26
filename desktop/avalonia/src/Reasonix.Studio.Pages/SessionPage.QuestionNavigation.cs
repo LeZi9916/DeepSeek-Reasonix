@@ -10,6 +10,7 @@ public sealed partial class SessionPage
     /// <param name="next">Whether to move down the transcript.</param>
     public void MoveBetweenUserMessages(bool next)
     {
+        PauseTranscriptFollow();
         var anchor = ReadAnchor();
         var start = anchor.Id is { } id ? _indices.GetValueOrDefault(id) : 0;
         var authored = _state.Items.OfType<UserItem>();

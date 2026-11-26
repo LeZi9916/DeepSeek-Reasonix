@@ -14,9 +14,10 @@ output.mkdir(parents=True, exist_ok=True)
 styles = {400: "Regular", 500: "Medium", 600: "SemiBold", 700: "Bold"}
 
 for stem, filename, family, weights in (
-    ("WorkbenchCjk", "noto-studio-core.woff2", "Reasonix Workbench CJK", (500, 600, 700)),
+    ("WorkbenchCjk", "noto-studio-core.woff2", "Reasonix Workbench CJK", (400, 500, 600, 700)),
+    ("WorkbenchFallback", "noto-studio.woff2", "Reasonix Workbench Full", (400,)),
     ("WorkbenchUi", "inter-studio-{weight}.ttf", "Reasonix Workbench UI", (400, 500, 600)),
-    ("WorkbenchMono", "IBMPlexMonoVariable.woff2", "Reasonix Workbench Mono", (500, 600)),
+    ("WorkbenchMono", "IBMPlexMonoVariable.woff2", "Reasonix Workbench Mono", (400, 500, 600)),
 ):
     for weight in weights:
         with TTFont(source / filename.format(weight=weight), recalcTimestamp=False) as font:

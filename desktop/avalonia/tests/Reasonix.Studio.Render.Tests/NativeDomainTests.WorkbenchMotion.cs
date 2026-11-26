@@ -27,17 +27,34 @@ public sealed partial class NativeDomainTests
                 var fold = window.GetVisualDescendants().OfType<Button>()
                     .Single(button => AutomationProperties.GetAutomationId(button) == "action:workbench.section-fold");
                 var changes = window.GetVisualDescendants().OfType<StackPanel>().Single(panel => panel.Name == "Changes");
-                fold.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                if (changes.IsVisible)
+                var rotate = Assert.IsType<RotateTransform>(icon.RenderTransform);
+                if (!changes.IsVisible)
                 {
                     fold.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    await WaitForSettingsFrame(() => rotate.Angle >= -0.1 && !rotate.IsAnimating(RotateTransform.AngleProperty)).ConfigureAwait(true);
                 }
 
-                await Task.Delay(20).ConfigureAwait(true);
-                await WaitForSettingsFrame(() => Angle(icon) is < -1 and > -89).ConfigureAwait(true);
-                await WaitForSettingsFrame(() => Angle(icon) <= -89.9).ConfigureAwait(true);
+                var passedThroughIntermediateAngle = false;
+                rotate.PropertyChanged += Observe;
+                try
+                {
+                    fold.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    Assert.False(changes.IsVisible);
+                    await WaitForSettingsFrame(() => rotate.Angle <= -89.9 && !rotate.IsAnimating(RotateTransform.AngleProperty)).ConfigureAwait(true);
+                    Assert.True(passedThroughIntermediateAngle);
+                }
+                finally
+                {
+                    rotate.PropertyChanged -= Observe;
+                }
 
-                static double Angle(Control control) => (control.RenderTransform as RotateTransform)?.Angle ?? 0;
+                void Observe(object? sender, AvaloniaPropertyChangedEventArgs e)
+                {
+                    if (e.Property == RotateTransform.AngleProperty && rotate.Angle is < -1 and > -89)
+                    {
+                        passedThroughIntermediateAngle = true;
+                    }
+                }
             },
             allowMotion: true);
 }

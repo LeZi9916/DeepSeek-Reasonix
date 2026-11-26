@@ -47,6 +47,7 @@ public sealed partial class KeyboardShortcutSheet : SettingsFormView
             var label = new TextBlock
             {
                 Text = Text(title),
+                Classes = { "keys-label" },
                 TextWrapping = TextWrapping.Wrap,
                 VerticalAlignment = VerticalAlignment.Center,
             };

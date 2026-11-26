@@ -86,6 +86,10 @@ internal sealed partial class ActivityDisclosure
             var since = tool.Call.StartedAt > 0 ? tool.Call.StartedAt : DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             _live = (caption, since, language);
         }
+        else
+        {
+            _live = null;
+        }
 
         RefreshLiveHeading();
     }

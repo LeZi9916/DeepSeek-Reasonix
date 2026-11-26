@@ -1,9 +1,12 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Tree;
 using Reasonix.Studio.Pages.I18n;
 using System;
+using System.Linq;
 
 namespace Reasonix.Studio.Pages.Rail;
 
@@ -19,6 +22,11 @@ internal sealed partial class ProjectEntry : UserControl
     {
         InitializeComponent();
         Title.Text = workspace.Name;
+        var unread = workspace.Sessions.Count(session => session.Unread);
+        UnreadBadge.IsVisible = folded && unread > 0;
+        UnreadCount.Text = Format.Count(unread, language);
+        AutomationProperties.SetName(Menu, MessageCatalog.Get("common.project_actions_name", language, ("name", workspace.Name)));
+        ToolTip.SetTip(Menu, MessageCatalog.Get("common.more_actions", language));
         Opacity = workspace.Missing ? 0.5 : 1;
         Chevron.Data = Geometry.Parse(folded ? "m9 6 6 6-6 6" : "m6 9 6 6 6-6");
         Disclosure.Opacity = workspace.Sessions.Count > 0 || workspace.Total > 0 ? 1 : 0;
@@ -60,7 +68,25 @@ internal sealed partial class ProjectEntry : UserControl
     {
         Fold.ContextFlyout = menu;
         Menu.Flyout = menu;
-        Avalonia.Automation.AutomationProperties.SetName(Menu, Title.Text);
+        Control? anchor = null;
+        menu.Opened += (_, _) =>
+        {
+            anchor = menu.Target;
+            Classes.Add("menu-open");
+        };
+        menu.Closed += (_, _) =>
+        {
+            var target = anchor ?? Fold;
+            anchor = null;
+            Classes.Remove("menu-open");
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (!menu.IsOpen && target.IsAttachedToVisualTree() && target.IsEffectivelyVisible)
+                {
+                    target.Focus();
+                }
+            });
+        };
     }
 
     /// <summary>Opens a new canonical session from the project's hover action.</summary>
@@ -69,6 +95,7 @@ internal sealed partial class ProjectEntry : UserControl
     {
         NewSession.IsEnabled = enabled;
         AutomationProperties.SetName(NewSession, MessageCatalog.Get("common.start_a_new_session_in", language, ("name", Title.Text ?? string.Empty)));
+        ToolTip.SetTip(NewSession, AutomationProperties.GetName(NewSession));
         NewSession.Click += (_, _) => open();
     }
 }

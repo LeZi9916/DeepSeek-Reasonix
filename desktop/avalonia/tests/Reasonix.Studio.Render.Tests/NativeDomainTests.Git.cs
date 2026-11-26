@@ -5,6 +5,7 @@ using Avalonia.Headless;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Shell.Workbench;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -83,7 +84,7 @@ public sealed partial class NativeDomainTests
         (w, _) =>
         {
             w.FindControl<Button>("EditFile")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            var source = w.FindControl<TextBox>("FileEditor")!;
+            var source = w.FindControl<WorkbenchFileEditor>("FileEditor")!;
             source.Text = "unsaved file draft";
             Dispatcher.UIThread.RunJobs();
             Assert.True(w.FindControl<Button>("SaveFile")!.IsEnabled);

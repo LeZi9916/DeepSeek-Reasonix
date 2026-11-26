@@ -67,7 +67,7 @@
   <Style Selector="Button.compose-changes TextBlock, Button.compose-context TextBlock"><Setter Property="LineHeight" Value="{DynamicResource StudioType11}"/><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="FontSize" Value="{DynamicResource StudioType11}"/></Style>
   <Style Selector="Button.compose-context"><Setter Property="CornerRadius" Value="5"/><Setter Property="FontSize" Value="{DynamicResource StudioType11}"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="Padding" Value="6,0"/><Setter Property="Height" Value="25"/></Style>
   <Style Selector="Button.compose-context TextBlock"><Setter Property="FontFeatures" Value="tnum"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/></Style>
-  <Style Selector="Button.compose-context TextBlock.compose-reading"><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
+  <Style Selector="Button.compose-context TextBlock.compose-reading"><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
   <Style Selector="Button#ContextToggle"><Setter Property="Foreground" Value="{DynamicResource ContextMeterInkBrush}"/></Style>
   <Style Selector="Window.motion Button.compose-context"><Setter Property="Transitions" Value="{x:Null}"/></Style>
   <Style Selector="Button#SpeedToggle:pointerover, Button#CacheToggle:pointerover">

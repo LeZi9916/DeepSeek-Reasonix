@@ -32,6 +32,7 @@ public sealed partial class SessionPage
                 return;
             }
 
+            PauseTranscriptFollow();
             _choices = value;
             _viewportVersion++;
             _state = new();

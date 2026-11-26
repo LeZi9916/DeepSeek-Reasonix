@@ -17,6 +17,13 @@ public sealed partial class MainWindow
     private void InitializePlanStrip()
     {
         SizeChanged += (_, e) => ComposerPlan.SetViewport(e.NewSize.Height);
+        ComposerPlan.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == IsVisibleProperty)
+            {
+                Conversation.SetJumpPlanClearance(ComposerPlan.IsVisible);
+            }
+        };
         AddHandler(
             PointerPressedEvent,
             (_, e) =>

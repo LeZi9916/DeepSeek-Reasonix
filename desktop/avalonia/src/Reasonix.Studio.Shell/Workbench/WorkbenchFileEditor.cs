@@ -1,214 +1,175 @@
 using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.Presenters;
-using Avalonia.Controls.Primitives;
-using Avalonia.Media;
-using Avalonia.VisualTree;
+using Avalonia.Styling;
+using Avalonia.Threading;
+using AvaloniaEdit;
+using AvaloniaEdit.Document;
+using AvaloniaEdit.Folding;
+using AvaloniaEdit.TextMate;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
+using System.IO;
+using System.Linq;
+using TextMateSharp.Grammars;
 
 namespace Reasonix.Studio.Shell.Workbench;
 
-/// <summary>Draws the workbench gutter against the native text box's scroll and caret positions.</summary>
-public sealed class WorkbenchFileEditor : TextBox
+/// <summary>Edits native, retained workspace documents and exposes their reading position.</summary>
+public sealed class WorkbenchFileEditor : TextEditor
 {
-    /// <summary>The available width of the line number and folding columns.</summary>
-    public static readonly DirectProperty<WorkbenchFileEditor, double> GutterWidthProperty =
-        AvaloniaProperty.RegisterDirect<WorkbenchFileEditor, double>(nameof(GutterWidth), editor => editor.GutterWidth);
+    /// <summary>The grammar catalog used by this window's editor.</summary>
+    private static readonly Lazy<RegistryOptions> s_grammar = new(() => new RegistryOptions(ThemeName.LightPlus));
 
-    /// <summary>The brush used behind the editor and gutter.</summary>
-    public static readonly StyledProperty<IBrush?> CanvasBrushProperty =
-        AvaloniaProperty.Register<WorkbenchFileEditor, IBrush?>(nameof(CanvasBrush));
+    /// <summary>Coalesces folding scans while typing.</summary>
+    private readonly DispatcherTimer _foldUpdates = new() { Interval = TimeSpan.FromMilliseconds(150) };
 
-    /// <summary>The brush mixed into the active text line.</summary>
-    public static readonly StyledProperty<IBrush?> ActiveLineBrushProperty =
-        AvaloniaProperty.Register<WorkbenchFileEditor, IBrush?>(nameof(ActiveLineBrush));
+    /// <summary>Tracks the current native folding markers.</summary>
+    private FoldingManager? _folds;
 
-    /// <summary>The brush for line numbers outside the active row.</summary>
-    public static readonly StyledProperty<IBrush?> LineNumberBrushProperty =
-        AvaloniaProperty.Register<WorkbenchFileEditor, IBrush?>(nameof(LineNumberBrush));
+    /// <summary>Colors the file with its TextMate grammar.</summary>
+    private TextMate.Installation? _syntax;
 
-    /// <summary>The brush for the caret's line number.</summary>
-    public static readonly StyledProperty<IBrush?> ActiveLineNumberBrushProperty =
-        AvaloniaProperty.Register<WorkbenchFileEditor, IBrush?>(nameof(ActiveLineNumberBrush));
+    /// <summary>The file shown in this editor, including when the preview obscures it.</summary>
+    private FileBuffer? _file;
 
-    /// <summary>Buffer offsets for logical lines, including the empty line after a trailing newline.</summary>
-    private readonly List<int> _lineStarts = [0];
-
-    /// <summary>The native control that owns the scrolling offsets.</summary>
-    private ScrollViewer? _scroll;
-
-    /// <summary>The native text layout and caret.</summary>
-    private TextPresenter? _presenter;
-
-    /// <summary>The current width reserved for line numbering.</summary>
-    private double _gutterWidth = 29.2;
-
-    /// <summary>Gets the width reserved for the editor gutter.</summary>
-    public double GutterWidth => _gutterWidth;
-
-    /// <summary>Gets or sets the brush behind the editor and gutter.</summary>
-    public IBrush? CanvasBrush
+    /// <summary>Initializes a new instance of the <see cref="WorkbenchFileEditor"/> class.</summary>
+    public WorkbenchFileEditor()
     {
-        get => GetValue(CanvasBrushProperty);
-        set => SetValue(CanvasBrushProperty, value);
-    }
-
-    /// <summary>Gets or sets the brush mixed into the active line.</summary>
-    public IBrush? ActiveLineBrush
-    {
-        get => GetValue(ActiveLineBrushProperty);
-        set => SetValue(ActiveLineBrushProperty, value);
-    }
-
-    /// <summary>Gets or sets the brush for ordinary line numbers.</summary>
-    public IBrush? LineNumberBrush
-    {
-        get => GetValue(LineNumberBrushProperty);
-        set => SetValue(LineNumberBrushProperty, value);
-    }
-
-    /// <summary>Gets or sets the brush for the caret's line number.</summary>
-    public IBrush? ActiveLineNumberBrush
-    {
-        get => GetValue(ActiveLineNumberBrushProperty);
-        set => SetValue(ActiveLineNumberBrushProperty, value);
-    }
-
-    /// <summary>Gets the current one-based line of the caret.</summary>
-    public int CurrentLine
-    {
-        get
+        Options.HighlightCurrentLine = true;
+        Options.EnableHyperlinks = false;
+        Options.EnableEmailHyperlinks = false;
+        Options.AllowScrollBelowDocument = true;
+        Options.LineHeightFactor = 1.35;
+        TextChanged += (_, _) =>
         {
-            var position = _lineStarts.BinarySearch(CaretIndex);
-            return position < 0 ? ~position : position + 1;
-        }
+            if (_folds is not null)
+            {
+                _foldUpdates.Stop();
+                _foldUpdates.Start();
+            }
+        };
+        _foldUpdates.Tick += (_, _) =>
+        {
+            _foldUpdates.Stop();
+            RebuildFolds();
+        };
+        ActualThemeVariantChanged += (_, _) => ApplySyntaxTheme();
+        DetachedFromVisualTree += (_, _) => _foldUpdates.Stop();
     }
+
+    /// <summary>Gets the one-based line containing the caret.</summary>
+    public int CurrentLine => TextArea.Caret.Line;
 
     /// <inheritdoc/>
-    protected override Type StyleKeyOverride => typeof(TextBox);
+    protected override Type StyleKeyOverride => typeof(TextEditor);
 
-    /// <inheritdoc/>
-    public override void Render(DrawingContext context)
+    /// <summary>Mounts a retained text document and its navigation state.</summary>
+    /// <param name="file">The newly selected file buffer.</param>
+    internal void Open(FileBuffer file)
     {
-        base.Render(context);
-        if (CanvasBrush is { } background)
+        if (ReferenceEquals(_file, file))
         {
-            context.FillRectangle(background, new Rect(Bounds.Size));
-        }
-
-        if (_scroll is not { } scroll || _presenter is not { } presenter || !(LineHeight > 0)
-            || presenter.TranslatePoint(default, this) is not { } origin
-            || scroll.TranslatePoint(default, this) is not { } viewport)
-        {
+            IsReadOnly = file.Original.ReadOnly;
             return;
         }
 
-        var bottom = Math.Min(Bounds.Height, viewport.Y + scroll.Viewport.Height);
-        var right = Math.Min(Bounds.Width, viewport.X + scroll.Viewport.Width);
-        var clip = new Rect(0, 0, right, bottom);
-        using var clipping = context.PushClip(clip);
-        var current = CurrentLine - 1;
-        var first = Math.Max(0, (int)Math.Floor(-origin.Y / LineHeight));
-        var last = Math.Min(_lineStarts.Count, (int)Math.Ceiling((bottom - origin.Y) / LineHeight));
-        var numberRight = GutterWidth - (2 + (FontSize * 0.6)) - 3;
-        var typeface = new Typeface(FontFamily, FontStyle, FontWeight);
-        for (var index = first; index < last; index++)
-        {
-            var y = origin.Y + (index * LineHeight);
-            if (index == current && ActiveLineBrush is { } active && right > GutterWidth)
-            {
-                using var opacity = context.PushOpacity(0.55);
-                context.FillRectangle(active, new Rect(GutterWidth, y, right - GutterWidth, LineHeight));
-            }
+        Capture();
+        ResetTools();
+        _file = file;
+        Document = file.Document;
+        IsReadOnly = file.Original.ReadOnly;
+        var caret = Math.Clamp(file.EditorPosition.Caret, 0, Document.TextLength);
+        var selection = Math.Clamp(file.EditorPosition.SelectionStart, 0, Document.TextLength);
+        Select(selection, Math.Clamp(file.EditorPosition.SelectionLength, 0, Document.TextLength - selection));
+        CaretOffset = caret;
 
-            var ink = index == current ? ActiveLineNumberBrush : LineNumberBrush;
-            if (ink is not null)
+        var extension = Path.GetExtension(file.Original.Path).ToLowerInvariant();
+        if (s_grammar.Value.GetScopeByExtension(extension) is { Length: > 0 } scope)
+        {
+            _syntax = this.InstallTextMate(s_grammar.Value, false);
+            _syntax.SetGrammar(scope);
+            ApplySyntaxTheme();
+        }
+
+        if (WorkbenchCodeFolds.Supports(extension))
+        {
+            _folds = FoldingManager.Install(TextArea);
+            RebuildFolds();
+            foreach (var fold in _folds.AllFoldings)
             {
-                var label = new FormattedText(
-                    (index + 1).ToString(CultureInfo.InvariantCulture),
-                    CultureInfo.InvariantCulture,
-                    FlowDirection.LeftToRight,
-                    typeface,
-                    FontSize,
-                    ink);
-                context.DrawText(label, new Point(numberRight - label.Width, y + ((LineHeight - label.Height) / 2)));
+                fold.IsFolded = file.FoldedOffsets.Contains(fold.StartOffset);
             }
+        }
+
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                if (ReferenceEquals(_file, file))
+                {
+                    ScrollToHorizontalOffset(file.EditorPosition.Offset.X);
+                    ScrollToVerticalOffset(file.EditorPosition.Offset.Y);
+                }
+            },
+            DispatcherPriority.Loaded);
+    }
+
+    /// <summary>Remembers selection, scroll and folds while the file stays open.</summary>
+    internal void Capture()
+    {
+        if (_file is { } file && ReferenceEquals(Document, file.Document))
+        {
+            file.EditorPosition = (CaretOffset, SelectionStart, SelectionLength, new Vector(HorizontalOffset, VerticalOffset));
+            file.FoldedOffsets = _folds?.AllFoldings.Where(fold => fold.IsFolded).Select(fold => fold.StartOffset).ToArray() ?? [];
         }
     }
 
-    /// <inheritdoc/>
-    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    /// <summary>Detaches the current document without modifying retained content.</summary>
+    internal void ClearBuffer()
     {
-        if (_scroll is not null)
-        {
-            _scroll.ScrollChanged -= OnEditorScrollChanged;
-        }
-
-        base.OnApplyTemplate(e);
-        _presenter = e.NameScope.Find<TextPresenter>("PART_TextPresenter");
-        _scroll = e.NameScope.Find<ScrollViewer>("PART_ScrollViewer");
-        if (_scroll is not null)
-        {
-            _scroll.ScrollChanged += OnEditorScrollChanged;
-        }
-
-        MeasureGutter();
+        Capture();
+        ResetTools();
+        _file = null;
+        Document = new TextDocument();
     }
 
-    /// <inheritdoc/>
-    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    /// <summary>Moves the caret to a file line and focuses the native editing surface.</summary>
+    /// <param name="line">A one-based line number.</param>
+    internal void GoToLine(int line)
     {
-        base.OnPropertyChanged(change);
-        if (change.Property == TextProperty)
+        var location = Document.GetLineByNumber(Math.Clamp(line, 1, Document.LineCount));
+        foreach (var fold in _folds?.GetFoldingsContaining(location.Offset) ?? [])
         {
-            IndexLines();
-            MeasureGutter();
+            fold.IsFolded = false;
         }
-        else if (change.Property == FontSizeProperty)
+
+        Select(location.Offset, 0);
+        CaretOffset = location.Offset;
+        ScrollToLine(location.LineNumber);
+        TextArea.Focus();
+    }
+
+    /// <summary>Switches the grammar color palette with the window.</summary>
+    private void ApplySyntaxTheme() => _syntax?.SetTheme(s_grammar.Value.LoadTheme(
+        ActualThemeVariant == ThemeVariant.Dark ? ThemeName.DarkPlus : ThemeName.LightPlus));
+
+    /// <summary>Updates fold markers for the active document text.</summary>
+    private void RebuildFolds()
+    {
+        if (_file is { } file && _folds is not null)
         {
-            MeasureGutter();
-        }
-        else if (change.Property == CaretIndexProperty || change.Property == CanvasBrushProperty
-            || change.Property == ActiveLineBrushProperty || change.Property == LineNumberBrushProperty
-            || change.Property == ActiveLineNumberBrushProperty)
-        {
-            InvalidateVisual();
+            _folds.UpdateFoldings(WorkbenchCodeFolds.Create(Document, Path.GetExtension(file.Original.Path).ToLowerInvariant()), -1);
         }
     }
 
-    /// <summary>Refreshes row positions when the native text area scrolls or resizes.</summary>
-    /// <param name="sender">The text area's scroll viewer.</param><param name="e">The changed scroll geometry.</param>
-    private void OnEditorScrollChanged(object? sender, ScrollChangedEventArgs e) => InvalidateVisual();
-
-    /// <summary>Counts the digit widths used by the reference gutter and tracks the editor font scale.</summary>
-    private void MeasureGutter()
+    /// <summary>Releases file-specific editor state before replacing the document.</summary>
+    private void ResetTools()
     {
-        var digitWidth = FontSize * 0.6;
-        var digits = _lineStarts.Count.ToString(CultureInfo.InvariantCulture).Length;
-        SetAndRaise(GutterWidthProperty, ref _gutterWidth, Math.Max(20, 8 + (digitWidth * digits)) + 2 + digitWidth);
-        SetCurrentValue(LineHeightProperty, FontSize * 1.65);
-        InvalidateVisual();
-    }
-
-    /// <summary>Indexes line starts without modifying the buffer's newline convention.</summary>
-    private void IndexLines()
-    {
-        _lineStarts.Clear();
-        _lineStarts.Add(0);
-        var text = Text ?? string.Empty;
-        for (var index = 0; index < text.Length; index++)
+        _foldUpdates.Stop();
+        SearchPanel?.Close();
+        _syntax?.Dispose();
+        _syntax = null;
+        if (_folds is { } folds)
         {
-            if (text[index] == '\r' && index + 1 < text.Length && text[index + 1] == '\n')
-            {
-                index++;
-            }
-
-            if (text[index] is '\r' or '\n')
-            {
-                _lineStarts.Add(index + 1);
-            }
+            FoldingManager.Uninstall(folds);
+            _folds = null;
         }
     }
 }

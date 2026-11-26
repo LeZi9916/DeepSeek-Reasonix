@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="12.1.6" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
+    <PackageReference Include="AvaloniaEdit.TextMate" Version="12.0.0" />
     <PackageReference Include="AvaloniaTerminal" Version="1.0.0" />
     <PackageReference Include="Avalonia.Controls.WebView" Version="12.1.2" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.6" />
@@ -32,6 +34,8 @@
     <InternalsVisibleTo Include="Reasonix.Studio.WebView.Smoke" />
     <AvaloniaResource Include="Assets/wordmark.png" />
     <AvaloniaResource Include="Assets/office-preview.html.gz" />
+    <AvaloniaResource Include="Assets/pdf-preview.html.gz" />
+    <None Update="Assets/pdf-preview-licenses.txt" Link="licenses/pdf-preview.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Assets/office-preview-licenses.txt" Link="licenses/office-preview.txt" CopyToOutputDirectory="PreserveNewest" />
     <AvaloniaResource Include="Assets/Community/qq-group-qr.png" />
     <AvaloniaResource Include="../../../frontend-next/src/assets/douyin-qr.jpg" Link="Assets/Community/douyin-qr.jpg" />

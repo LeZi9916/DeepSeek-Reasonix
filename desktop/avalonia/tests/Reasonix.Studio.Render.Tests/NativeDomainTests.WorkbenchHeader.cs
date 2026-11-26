@@ -5,6 +5,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Shell.Workbench;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -75,7 +76,7 @@ public sealed partial class NativeDomainTests
             ClickAt(window, "action:workbench.tab");
             Assert.Contains("active", FileTab().Classes);
             window.FindControl<Button>("EditFile")!.RaiseEvent(new Avalonia.Interactivity.RoutedEventArgs(Button.ClickEvent));
-            window.FindControl<TextBox>("FileEditor")!.Text = "Unsaved tab appearance fixture";
+            window.FindControl<WorkbenchFileEditor>("FileEditor")!.Text = "Unsaved tab appearance fixture";
             Measure();
             Assert.Contains(FileTab().GetVisualDescendants().OfType<Border>(), dot => dot.Name == "DirtyMark" && dot.IsEffectivelyVisible && dot.Bounds.Width == 7);
             Capture("dirty");

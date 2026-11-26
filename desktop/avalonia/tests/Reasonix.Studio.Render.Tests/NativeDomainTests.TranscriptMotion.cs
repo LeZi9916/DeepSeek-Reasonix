@@ -149,7 +149,8 @@ public sealed partial class NativeDomainTests
         toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Assert.Equal(-1, chevron.RenderTransform!.Value.M12, 5);
         Assert.True(body.IsVisible);
-        Assert.Equal(0, body.Height);
+        w.UpdateLayout();
+        Assert.InRange(body.Bounds.Height, 0, 0.5);
         foreach (var (ms, rotation) in new[] { (30, -0.878), (60, -0.307), (119, -0.001) })
         {
             await WaitForMotionFrame(() => chevron.RenderTransform!.Value.M12 >= rotation).ConfigureAwait(true);
@@ -157,7 +158,7 @@ public sealed partial class NativeDomainTests
             CaptureMotionRegion(w, chevron, -6, 8, 320, 96, $"disclosure-{scheme}-{ms}");
         }
 
-        Assert.True(body.Height > 0);
+        Assert.True(body.Bounds.Height > 0);
         toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         w.Classes.Remove("motion");
         Assert.False(body.IsVisible);

@@ -1,4 +1,6 @@
-<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:workbench="using:Reasonix.Studio.Shell.Workbench">
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:edit="using:AvaloniaEdit.Editing" xmlns:editor="using:AvaloniaEdit.Rendering" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:workbench="using:Reasonix.Studio.Shell.Workbench">
+  <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
   <Style Selector="Button.wb-open-editor"><Setter Property="Height" Value="28"/><Setter Property="CornerRadius" Value="5"/><Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/><Setter Property="Padding" Value="0"/></Style>
   <Styles.Resources>
     <StreamGeometry x:Key="Glyph.git-branch">M15 6a9 9 0 0 0-9 9V3 M21 6a3 3 0 1 0-6 0 3 3 0 1 0 6 0z M9 18a3 3 0 1 0-6 0 3 3 0 1 0 6 0z</StreamGeometry>
@@ -99,12 +101,12 @@
     <Setter Property="CornerRadius" Value="999"/><Setter Property="Padding" Value="8,3"/>
     <Setter Property="VerticalAlignment" Value="Center"/>
   </Style>
-  <Style Selector="TextBox.workbench-editor /template/ TextPresenter#PART_TextPresenter">
-    <Setter Property="Margin" Value="0,0,0,80"/>
+  <Style Selector="edit|TextArea">
+    <Setter Property="SelectionBrush" Value="{DynamicResource AccentWashBrush}"/>
   </Style>
-  <Style Selector="TextBox.workbench-editor:pointerover /template/ Border#PART_BorderElement, TextBox.workbench-editor:focus /template/ Border#PART_BorderElement">
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="BorderThickness" Value="0"/>
+  <Style Selector="editor|TextView">
+    <Setter Property="CurrentLineBackground" Value="{DynamicResource OverlayBrush}"/>
+    <Setter Property="CurrentLineBorder" Value="{x:Null}"/>
   </Style>
   <Style Selector="Button.wb-header-button">
     <Setter Property="Width" Value="28"/><Setter Property="Height" Value="28"/><Setter Property="VerticalAlignment" Value="Center"/>
@@ -122,8 +124,7 @@
   </Style>
   <Style Selector="workbench|WorkbenchHeaderTab"><Setter Property="Height" Value="34"/></Style>
   <Style Selector="workbench|WorkbenchHeaderTab.active"><Setter Property="Height" Value="35"/></Style>
-  <Style Selector="workbench|WorkbenchHeaderTab"><Setter Property="Height" Value="34"/></Style>
-  <Style Selector="workbench|WorkbenchHeaderTab.active"><Setter Property="Height" Value="35"/></Style>
+  <Style Selector="workbench|WorkbenchHeaderTab.agent-page-active Path#TabGlyph"><Setter Property="Stroke" Value="{DynamicResource NetBrush}"/></Style>
   <Style Selector="Border.wb-tab-frame">
     <Setter Property="BorderThickness" Value="1,1,1,0"/><Setter Property="BorderBrush" Value="{DynamicResource BorderClearBrush}"/>
     <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/><Setter Property="CornerRadius" Value="10,10,0,0"/>

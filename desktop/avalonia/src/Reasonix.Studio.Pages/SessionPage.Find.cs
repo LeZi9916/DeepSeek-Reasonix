@@ -41,6 +41,7 @@ public sealed partial class SessionPage
             return (0, 0);
         }
 
+        PauseTranscriptFollow();
         var selected = ((ordinal % matches.Length) + matches.Length) % matches.Length;
         var index = matches[selected].index;
         if (RevealTranscriptRow(index) is { } control)
@@ -88,6 +89,7 @@ public sealed partial class SessionPage
     /// <param name="id">The kernel's call identity.</param>
     public void RevealToolCall(string id)
     {
+        PauseTranscriptFollow();
         for (var i = 0; i < _state.Items.Count; i++)
         {
             if (_state.Items[i] is ToolItem tool && tool.Call.ID == id)

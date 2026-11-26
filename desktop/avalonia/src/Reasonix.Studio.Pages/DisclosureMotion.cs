@@ -16,8 +16,14 @@ internal sealed class DisclosureMotion : Decorator
     public static readonly StyledProperty<bool> MotionEnabledProperty =
         AvaloniaProperty.Register<DisclosureMotion, bool>(nameof(MotionEnabled));
 
+    /// <summary>Fraction of the measured content currently revealed.</summary>
+    private static readonly StyledProperty<double> s_progress = AvaloniaProperty.Register<DisclosureMotion, double>("Progress", 1);
+
     /// <summary>The in-flight change of visible height.</summary>
     private CancellationTokenSource? _transition;
+
+    /// <summary>Initializes static members of the <see cref="DisclosureMotion"/> class.</summary>
+    static DisclosureMotion() => AffectsMeasure<DisclosureMotion>(s_progress);
 
     /// <summary>Gets or sets a value indicating whether interaction may animate this body.</summary>
     public bool MotionEnabled
@@ -31,6 +37,9 @@ internal sealed class DisclosureMotion : Decorator
     {
         get; set;
     } = 240;
+
+    /// <summary>Gets or sets the easing used for both disclosure directions.</summary>
+    public Easing Easing { get; set; } = new SplineEasing(0.16, 1, 0.3, 1);
 
     /// <summary>Gets or sets a value indicating whether to also fade the content.</summary>
     public bool FadeContent
@@ -55,11 +64,11 @@ internal sealed class DisclosureMotion : Decorator
         }
 
         Expanded = open;
-        var fromHeight = !IsVisible ? 0 : double.IsNaN(Height) ? Bounds.Height : Height;
+        var progress = IsVisible ? GetValue(s_progress) : 0;
         var fromOpacity = IsVisible ? Opacity : 0;
         _transition?.Cancel();
         _transition = null;
-        if (!animate || !MotionEnabled || this.GetVisualParent() is not Control parent || parent.Bounds.Width <= 0 || Child is not { } child)
+        if (!animate || !MotionEnabled || this.GetVisualParent() is not Control { Bounds.Width: > 0 } || Child is null)
         {
             Settle();
             return;
@@ -67,9 +76,7 @@ internal sealed class DisclosureMotion : Decorator
 
         using var motion = new CancellationTokenSource();
         _transition = motion;
-        child.Measure(new Size(parent.Bounds.Width, double.PositiveInfinity));
-        var toHeight = open ? child.DesiredSize.Height : 0;
-        Height = fromHeight;
+        SetValue(s_progress, progress);
         if (FadeContent)
         {
             Opacity = fromOpacity;
@@ -77,8 +84,8 @@ internal sealed class DisclosureMotion : Decorator
 
         IsVisible = true;
         IsHitTestVisible = open;
-        var start = new KeyFrame { Cue = new Cue(0), Setters = { new Setter(HeightProperty, fromHeight) } };
-        var end = new KeyFrame { Cue = new Cue(1), Setters = { new Setter(HeightProperty, toHeight) } };
+        var start = new KeyFrame { Cue = new Cue(0), Setters = { new Setter(s_progress, progress) } };
+        var end = new KeyFrame { Cue = new Cue(1), Setters = { new Setter(s_progress, open ? 1d : 0d) } };
         if (FadeContent)
         {
             start.Setters.Add(new Setter(OpacityProperty, fromOpacity));
@@ -88,7 +95,7 @@ internal sealed class DisclosureMotion : Decorator
         var animation = new Animation
         {
             Duration = TimeSpan.FromMilliseconds(DurationMs),
-            Easing = new SplineEasing(0.16, 1, 0.3, 1),
+            Easing = Easing,
             Children = { start, end },
         };
         try
@@ -112,7 +119,8 @@ internal sealed class DisclosureMotion : Decorator
     protected override Size MeasureOverride(Size availableSize)
     {
         Child?.Measure(new Size(availableSize.Width, double.PositiveInfinity));
-        return Child?.DesiredSize ?? default;
+        var desired = Child?.DesiredSize ?? default;
+        return desired.WithHeight(desired.Height * GetValue(s_progress));
     }
 
     /// <inheritdoc/>
@@ -155,7 +163,7 @@ internal sealed class DisclosureMotion : Decorator
     {
         IsVisible = Expanded;
         IsHitTestVisible = Expanded;
-        ClearValue(HeightProperty);
+        ClearValue(s_progress);
         ClearValue(OpacityProperty);
     }
 }

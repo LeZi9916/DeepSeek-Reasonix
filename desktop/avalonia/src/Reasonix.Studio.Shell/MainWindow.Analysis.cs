@@ -61,7 +61,7 @@ public sealed partial class MainWindow
         grid.Children.Add(child);
     }
 
-    /// <summary>Refreshes the analysis button when the pane or its running state changes.</summary>
+    /// <summary>Refreshes analysis availability when the pane or its running state changes.</summary>
     /// <param name="running">Whether the active runtime is running a turn.</param>
     private void UpdateChromeTrajectory(bool running)
     {
@@ -72,7 +72,7 @@ public sealed partial class MainWindow
         _analysisWasRunning = running;
         if (changed)
         {
-            ChromeAnalysis.IsVisible = false;
+            AnalysisView.IsVisible = false;
         }
 
         if (_engine is not null && (changed || runChanged))
@@ -106,7 +106,7 @@ public sealed partial class MainWindow
                 return;
             }
 
-            ChromeAnalysis.IsVisible = RunTimeline.From(trace["events"] as JsonArray ?? []).Rows.Count > 0;
+            AnalysisView.IsVisible = RunTimeline.From(trace["events"] as JsonArray ?? []).Rows.Count > 0;
             if (AnalysisPanel.IsVisible)
             {
                 DrawTrajectory(trace);
@@ -209,22 +209,25 @@ public sealed partial class MainWindow
 
         distribution.Children.Add(bar);
         distribution.Children.Add(legend);
-        body.Add(AnalysisCard(distribution, "class:run-budget", new Thickness(15, 12)));
+        var budget = AnalysisCard(distribution, "class:run-budget", new Thickness(15, 12));
+        budget.Margin = new Thickness(0, -2, 0, 0);
+        body.Add(budget);
 
-        var zoom = new Slider { Minimum = 1, Maximum = 16, Value = 1, Width = 130, TickFrequency = 1, IsSnapToTickEnabled = true };
+        var zoom = new Slider { Minimum = 1, Maximum = 16, Value = 1, Width = 130, Height = 28, MinHeight = 0, TickFrequency = 1, IsSnapToTickEnabled = true };
         var scale = Detail("1×");
         var reset = new Button { Content = MessageCatalog.Get("panels.reset_zoom", Language), Height = 28, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };
         AutomationProperties.SetAutomationId(zoom, "action:analysis.zoom");
         AutomationProperties.SetAutomationId(reset, "action:analysis.reset-zoom");
-        var controls = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+        var controls = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Height = 28, Margin = new Thickness(0, -2, 0, -1) };
         controls.Children.Add(Detail(MessageCatalog.Get("panels.timeline_zoom", Language)));
         controls.Children.Add(zoom);
         controls.Children.Add(scale);
         controls.Children.Add(reset);
         body.Add(controls);
 
-        var track = new StackPanel { Spacing = 10 };
+        var track = new StackPanel { Spacing = 14 };
         var scroller = new ScrollViewer { Content = track, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        AutomationProperties.SetAutomationId(scroller, "class:run-timeline-scroll");
         var detail = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap, IsVisible = false, [!TextBlock.FontFamilyProperty] = StudioTypography.Resource("StudioMonoFamily"), [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };
         var signals = new Workbench.SignalRail();
         var points = new System.Collections.Generic.List<RunTimeline.Entry>();
@@ -241,7 +244,7 @@ public sealed partial class MainWindow
                 continue;
             }
 
-            var pick = new Button { Content = entry.Label, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12), Margin = new Thickness(0, 0, 4, 2) };
+            var pick = new Button { Content = entry.Label, Height = 38, MinHeight = 0, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12), Margin = new Thickness(0, 0, 4, 0) };
             pick.Click += (_, _) => Inspect(entry);
             if (entry.Duration is not > 0)
             {
@@ -266,14 +269,35 @@ public sealed partial class MainWindow
         }
 
         signals.Open(points, timeline.Span, Inspect);
-        var signalCard = new StackPanel { Spacing = 8 };
-        signalCard.Children.Add(Detail(MessageCatalog.Get("panels.signal_rail", Language)));
-        signalCard.Children.Add(signals);
-        track.Children.Add(AnalysisCard(signalCard, "class:run-signals", new Thickness(15)));
-        var roundsCard = new StackPanel { Spacing = 8 };
-        roundsCard.Children.Add(Detail(MessageCatalog.Get("panels.activity_rounds", Language)));
+        if (points.Count > 0)
+        {
+            var signalCard = new StackPanel { Spacing = 8 };
+            var signalHeading = new WrapPanel { ItemSpacing = 8 };
+            var caption = Detail(MessageCatalog.Get("panels.signal_rail", Language));
+            caption.FontWeight = FontWeight.SemiBold;
+            caption.LineHeight = 16.8;
+            var shared = Detail(MessageCatalog.Get("panels.shares_the_timeline_below", Language));
+            shared.LineHeight = 16.8;
+            signalHeading.Children.Add(caption);
+            signalHeading.Children.Add(shared);
+            signalCard.Children.Add(signalHeading);
+            var explains = Detail(MessageCatalog.Get("panels.records_with_no_duration_that", Language));
+            explains[!TextBlock.FontSizeProperty] = StudioTypography.Size(11);
+            explains.LineHeight = 17.05;
+            explains.Margin = new Thickness(0, -2, 0, 2);
+            signalCard.Children.Add(explains);
+            signalCard.Children.Add(signals);
+            track.Children.Add(AnalysisCard(signalCard, "class:run-signals", new Thickness(15, 14)));
+            scroller.SizeChanged += (_, _) => LayoutSignals();
+            LayoutSignals();
+        }
+
+        var roundsCard = new StackPanel { Spacing = 10 };
+        var roundsTitle = Detail(MessageCatalog.Get("panels.activity_rounds", Language));
+        roundsTitle.LineHeight = 16.8;
+        roundsCard.Children.Add(roundsTitle);
         roundsCard.Children.Add(rows);
-        track.Children.Add(AnalysisCard(roundsCard, "class:run-rounds", new Thickness(15)));
+        track.Children.Add(AnalysisCard(roundsCard, "class:run-rounds", new Thickness(15, 14)));
         scroller.SizeChanged += (_, e) => track.Width = e.NewSize.Width * zoom.Value;
         zoom.ValueChanged += (_, _) =>
         {
@@ -282,6 +306,17 @@ public sealed partial class MainWindow
         };
         body.Add(scroller);
         body.Add(detail);
+
+        void LayoutSignals()
+        {
+            var width = LayoutRoot.Bounds.Width;
+            signals.Margin = width switch
+            {
+                <= 580 => new Thickness(48, 5, 10, 5),
+                <= 880 => new Thickness(52, 5, 162, 5),
+                _ => new Thickness(56, 5, 330, 5),
+            };
+        }
 
         void Inspect(RunTimeline.Entry entry)
         {

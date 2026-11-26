@@ -45,11 +45,23 @@ public sealed partial class SignalRail : UserControl
             foreach (var group in groups)
             {
                 var count = group.Items.Count;
-                var marker = new Button { Content = count == 1 ? "●" : count.ToString(CultureInfo.CurrentCulture), Width = 22, Height = 22, Padding = default, CornerRadius = new Avalonia.CornerRadius(11) };
+                var marker = new Button
+                {
+                    Content = count == 1 ? "◆" : count.ToString(CultureInfo.CurrentCulture),
+                    Width = 20,
+                    Height = 30,
+                    MinWidth = 0,
+                    MinHeight = 0,
+                    Padding = default,
+                    BorderThickness = default,
+                    Background = Avalonia.Media.Brushes.Transparent,
+                    HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                    VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                };
                 AutomationProperties.SetAutomationId(marker, "action:analysis.signal");
                 AutomationProperties.SetName(marker, string.Join(" · ", group.Items.Select(e => e.Label)));
-                Canvas.SetLeft(marker, Math.Clamp(group.Left - 11, 0, Math.Max(0, width - 22)));
-                Canvas.SetTop(marker, 4);
+                Canvas.SetLeft(marker, group.Left - 10);
+                Canvas.SetTop(marker, 2);
                 marker.Click += (_, _) =>
                 {
                     selected = group.Items[0];
@@ -67,6 +79,7 @@ public sealed partial class SignalRail : UserControl
         void ShowMembers(List<RunTimeline.Entry> group)
         {
             Members.Children.Clear();
+            Members.IsVisible = group.Count > 1;
             foreach (var entry in group)
             {
                 var button = new Button { Content = entry.Label, [!TextBlock.FontSizeProperty] = StudioTypography.Size(12) };

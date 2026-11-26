@@ -83,6 +83,7 @@ public sealed partial class MainWindow
         var draftKey = DraftStore.KeyFor(engine.DraftHost, status.WorkspaceRoot, status.SessionPath);
         if (draftKey != DraftKey)
         {
+            Composer.ClearCompletions();
             CloseComposerMenus();
             ClearAttachments();
         }

@@ -91,12 +91,6 @@ internal sealed class WorkbenchPresentation
         get; init;
     }
 
-    /// <summary>Gets or initializes the file caret position.</summary>
-    internal int Caret
-    {
-        get; init;
-    }
-
     /// <summary>Gets or initializes the selected Git surface.</summary>
     internal (string Title, Control View)? Git
     {
@@ -120,6 +114,15 @@ internal sealed class WorkbenchPresentation
 
     /// <summary>Gets or initializes the independently open browser pages.</summary>
     internal Browser.ManualWebPreview[] Browsers { get; init; } = [];
+
+    /// <summary>Gets or initializes the browser metadata reported for this runtime.</summary>
+    internal AgentBrowserTab[] AgentBrowserTabs { get; init; } = [];
+
+    /// <summary>Gets or initializes the selected agent browser tab identity.</summary>
+    internal string? AgentBrowserTarget
+    {
+        get; init;
+    }
 
     /// <summary>Gets or initializes the independently open background job tabs.</summary>
     internal BackgroundJobOutputView[] Jobs { get; init; } = [];

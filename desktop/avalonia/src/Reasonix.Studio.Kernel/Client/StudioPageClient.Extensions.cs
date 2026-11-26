@@ -8,6 +8,22 @@ namespace Reasonix.Studio.Kernel.Client;
 
 public sealed partial class StudioPageClient
 {
+    /// <summary>Invokes an action declared by the current extension surface.</summary>
+    /// <param name="name">The namespaced action.</param><param name="token">Request lifetime.</param>
+    /// <returns>The result message supplied by the extension.</returns>
+    public async Task<string> InvokeExtensionActionAsync(string name, CancellationToken token)
+    {
+        var result = await DataPostAsync("/extensions/action", new JsonObject { ["name"] = name }, token).ConfigureAwait(false);
+        return (string?)result["message"] ?? string.Empty;
+    }
+
+    /// <summary>Submits a response to the current extension surface.</summary>
+    /// <param name="plugin">The extension identity.</param><param name="surface">The form's surface identity.</param>
+    /// <param name="values">The values proposed by the reader.</param><param name="token">Request lifetime.</param>
+    /// <returns>The kernel acknowledgement.</returns>
+    public Task SubmitExtensionFormAsync(string plugin, string surface, JsonObject values, CancellationToken token) =>
+        PostAsync("/extensions/submit", new JsonObject { ["pluginId"] = plugin, ["surfaceId"] = surface, ["values"] = values }, token);
+
     /// <summary>Reads project scopes available to the extension manager.</summary>
     /// <param name="token">Request lifetime.</param>
     /// <returns>The project choices.</returns>

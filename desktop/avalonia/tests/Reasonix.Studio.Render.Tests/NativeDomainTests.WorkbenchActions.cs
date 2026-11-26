@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Kernel.Client;
+using Reasonix.Studio.Shell.Workbench;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Nodes;
@@ -26,7 +27,7 @@ public sealed partial class NativeDomainTests
         });
         Navigate(w, "workbench");
         w.FindControl<Button>("EditFile")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-        var editor = w.FindControl<TextBox>("FileEditor")!;
+        var editor = w.FindControl<WorkbenchFileEditor>("FileEditor")!;
         editor.Text = "workspace draft kept by the runtime";
         w.AdoptComposer(status with
         {
@@ -58,7 +59,17 @@ public sealed partial class NativeDomainTests
         Assert.Equal(2, host.Children.Count);
         Assert.All(host.Children, page => Assert.True(page.IsAttachedToVisualTree()));
         Assert.Single(host.Children, page => page.IsVisible);
+        var pages = host.Children.ToArray();
         var menu = Assert.IsType<MenuFlyout>(tabs[0].ContextFlyout);
+        menu.Items.OfType<MenuItem>().Single(item => AutomationProperties.GetAutomationId(item) == "action:workbench.rename-tab").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        w.UpdateLayout();
+        Dispatcher.UIThread.RunJobs();
+        ControlAt<TextBox>(w, "field:workspace.action").Text = "Reference Docs";
+        ClickAt(w, "action:workspace.confirm");
+        Dispatcher.UIThread.RunJobs();
+        var renamed = w.FindControl<StackPanel>("FileTabs")!.GetVisualDescendants().OfType<Button>().Single(button => (button.Content as string) == "Reference Docs");
+        Assert.Equal(pages, host.Children.ToArray());
+        menu = Assert.IsType<MenuFlyout>(renamed.ContextFlyout);
         menu.Items.OfType<MenuItem>().Single(item => AutomationProperties.GetAutomationId(item) == "action:workbench.close-all-browsers").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         Dispatcher.UIThread.RunJobs();
         Assert.False(host.IsVisible);
@@ -80,9 +91,9 @@ public sealed partial class NativeDomainTests
         actions.Single(item => AutomationProperties.GetAutomationId(item) == "action:workbench.add-to-chat").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         Assert.Contains("@README.md", w.FindControl<TextBox>("Composer")!.Text);
         w.FindControl<Button>("EditFile")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-        var editor = w.FindControl<TextBox>("FileEditor")!;
+        var editor = w.FindControl<WorkbenchFileEditor>("FileEditor")!;
         editor.Text = "first\nsecond";
-        editor.CaretIndex = editor.Text.Length;
+        editor.CaretOffset = editor.Text.Length;
         Dispatcher.UIThread.RunJobs();
         Assert.True(w.FindControl<Control>("FileStatus")!.IsEffectivelyVisible);
         Assert.Equal("Markdown", w.FindControl<TextBlock>("FileLanguage")!.Text);

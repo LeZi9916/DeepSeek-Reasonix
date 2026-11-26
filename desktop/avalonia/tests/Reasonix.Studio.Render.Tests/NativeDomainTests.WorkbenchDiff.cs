@@ -6,6 +6,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Shell.Workbench;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Nodes;
@@ -59,7 +60,7 @@ public sealed partial class NativeDomainTests
                 ? JsonReply(new JsonObject { ["diff"] = patch, ["truncated"] = truncated })
                 : null);
 
-            var editor = w.FindControl<TextBox>("FileEditor")!;
+            var editor = w.FindControl<WorkbenchFileEditor>("FileEditor")!;
             var diff = w.FindControl<Button>("DiffFile")!;
             var surface = w.FindControl<ScrollViewer>("RenderedFile")!;
             OpenDiff();

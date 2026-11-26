@@ -65,7 +65,7 @@ public sealed partial class MainWindow
     /// <param name="file">The current buffer and host file grant.</param>
     private void DrawFileToolbar(FileBuffer file)
     {
-        var renderable = file.Kind is "markdown" or "html";
+        var renderable = file.Kind is "markdown" or "html" or "table";
         PreviewFile.IsVisible = renderable;
         PreviewFile.Content = MessageCatalog.Get(file.Kind == "markdown" ? MessageKey.Workbench.Read : MessageKey.Common.Preview, Language);
         EditFile.Content = MessageCatalog.Get(!file.Original.ReadOnly && renderable ? MessageKey.Common.Edit : MessageKey.Common.Files, Language);

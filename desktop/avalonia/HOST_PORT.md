@@ -2,7 +2,7 @@
 owner: @esengine
 backup: @SivanCola
 status: active
-reviewed: 2026-11-21
+reviewed: 2026-11-26
 ---
 
 # Host capability ledger
@@ -32,10 +32,10 @@ with two deliberate changes:
 | `syncTheme` | `prefs.js` → `nativeTheme` | `Window.RequestedThemeVariant` | `EveryMemberIsImplemented` |
 | `capturesWindow`, `captureWindow` | `capture.js` → `capturePage` | `RenderTargetBitmap` + `PngBitmapEncoderOptions` | `AShellWithoutAWindowAnswersUnsupported` |
 | `graphics` | `graphics.js` | the window's `PlatformImpl` type | `EveryMemberIsImplemented` |
-| `globalShortcut`, `setGlobalShortcut` | `globalshortcut.js` | `Unsupported` — Avalonia exposes it on Windows only | `TheGlobalShortcutIsUnsupportedRatherThanPretended` |
+| `globalShortcut`, `setGlobalShortcut` | `globalshortcut.js` | macOS, Windows and X11 registrations through the native platform registrars. Unsupported platforms return a typed status. | `GlobalShortcutTests`; Wayland desktop acceptance pending |
 | `processMemory` | `procmem.js` | `Process.GetCurrentProcess` | `EveryMemberIsImplemented` |
 | `openExternal` | `links.js` | `ILauncher.LaunchUriAsync`, http/https only | `EveryMemberIsImplemented` |
-| `setUnreadBadge` | `badge.js` | `TrayIcon.ToolTipText` | `EveryMemberIsImplemented` |
+| `setUnreadBadge` | `badge.js` | `DesktopUnreadBadge` updates the macOS Dock label and Windows taskbar overlay. The tray image carries an unread dot where a tray is available, including Linux. | `EveryMemberIsImplemented`; desktop badge acceptance pending |
 | `pathsForFiles` | `preload.js` → `webUtils` | the drop's own paths | `EveryMemberIsImplemented` |
 | `saveText`, `saveBytes` | dialog IPC | `StorageProvider.SaveFilePickerAsync` | `AShellWithoutAWindowAnswersUnsupported` |
 | `showTextContextMenu` | `textcontextmenu.js` | `null`: the control that owns the selection draws its own | `AShellWithoutAWindowAnswersUnsupported` |
@@ -58,28 +58,33 @@ menu's own cut/copy/paste. Avalonia's text controls carry that themselves.
 | tray icon | `tray.js`, `trayimage.js` | `MainWindow.AttachTray` uses `/tray/prefs` and `/tray/state` for its native menu and close behavior | platform acceptance pending |
 | host spawn + lease | `host.js`, `hostclient.js`, `hostprobe.js`, `hostexit.js` | pending `plan_step_16` | — |
 | window layout, startup, launcher | `layout.js`, `starting.js`, `launcher.js`, `ground.js` | responsive native window, launch and setup views | `WindowLayoutTests`, `NativeDomainTests` |
-| page preferences | `prefs.js` | pending `plan_step_16` (the page keeps its own `rx-` keys) | — |
-| menu, edit menu | `menu.js`, `editmenu.js` | pending `plan_step_16` | — |
+| desktop theme | `prefs.js`, scheduled appearance in the page | `WindowStateStore` retains the theme mode; `WorkspacePreferences` retains the local schedule. | `ScheduleReadsLocalTimeIncludingAnOvernightInterval`, `ScheduledThemeShowsItsLocalTimeFields` |
+| menu, edit menu | `menu.js`, `editmenu.js` | `ConfigureMacMenu` exposes native Edit and Window commands. Edit actions use the focused Avalonia text controls. | macOS menu acceptance pending |
 | credential cookie | `credential.js` | `CredentialHandler`, `CredentialKeeper` | `CredentialHandlerTests`, `RealKernelTests` |
 | package grants | `packagegrants.js` | pending `plan_step_5` (packaging) | — |
-| power, keyboard, input wake | `powerguard.js`, `keyboard.js`, `inputwake.js` | Avalonia handles these; no shell verb | — |
+| prevent sleep while a turn runs | `powerguard.js` | `AppSleepLease` uses Avalonia app-sleep inhibition and the owning host’s `/tray/running` result, also while the window is hidden. The appearance preference is device-local. | `PowerLeaseSeparatesIdleAndUnreachablePanes`; platform inhibition acceptance pending |
 | graphics policy, ozone, app icon | `graphics.js`, `ozone.js`, `appicon.js` | `GraphicsInfo`, `Window.Icon` | — |
 | language | `uilang.js` | read from config, as the kernel does | — |
-| reload, raise, fullscreen | `reload.js`, `raise.js`, `fullscreen.js` | window verbs above | — |
+| reload, raise, fullscreen | `reload.js`, `raise.js`, `fullscreen.js` | Desktop instance activation raises the native window. F11 toggles Windows and Linux full screen and restores the previous state. | `AnotherLaunchRaisesTheListener`; F11 acceptance pending on Windows and Linux |
 
-The two rows marked "see note" are covered by the contract case only: each needs a
-real tray or a real log directory on the platform, which a unit test cannot supply
-without asserting on the test machine's state rather than on the code. Their
-behaviour is checked when the vertical slice runs the real window.
+The shell contract and headless cases exercise projected state and command routing.
+Platform acceptance covers the real tray, menu, Dock and taskbar badge, global
+registration, F11, and the operating system’s sleep behavior. The platform badge
+uses the application tray on Linux when a tray is available.
 
 ## Manual preview and the agent browser
 
-The workbench manual preview uses the installed system web runtime, with an address bar, back, forward and reload. The URL policy is held by `ManualPreviewTests`. System WebView smoke testing and headless main-window geometry are separate checks.
+The workbench manual preview uses the installed system web runtime, with an address
+bar, back, forward and reload. Retained tabs can be renamed through the menu, F2,
+or a double-click. `WorkbenchBrowserTabsCloseWithoutClosingFiles` covers tab
+renaming and the retained pages.
 
-`browserguard.js`, `browserprotocol.js`, `browserrelay.js`, `browserviews.js`,
-`elementpick.js` and `cua.js` draw the agent's pages.
+`ManualPreviewTests` holds the URL policy. System WebView smoke testing covers
+the real native adapter.
 
-- `browserviews.js`, `browserrelay.js`, `browserprotocol.js`, `elementpick.js` → `plan_step_25`
-- `browserguard.js`, `cua.js` → the platform capability layer
+The workbench reads existing `GET /browser/tabs` metadata for agent-owned pages.
+It shows a read-only label, address and active state and restores the session's
+selection. The native surface displays metadata, while the Electron host
+modules continue to own the renderer and its input channel.
 
 `legacy.js` has no counterpart: this shell has no earlier version to migrate from.

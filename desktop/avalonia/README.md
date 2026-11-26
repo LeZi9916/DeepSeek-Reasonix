@@ -70,13 +70,14 @@ make studio-avalonia-publish RID=win-x64        # or linux-x64, osx-arm64, ...
 bash scripts/build-studio-avalonia.sh --help    # all options
 ```
 
-This runs `dotnet publish` on the shell project for one RID, self-contained by
-default, and cross-compiles the CGO-free Go kernel host into the same publish
-directory so `HostLauncher.Locate` finds it at startup. The default output is
-`desktop/avalonia/bin/publish/<RID>`; `--output`, `--configuration`,
-`--single-file`, `--no-self-contained` and `--no-restore` are available on the
-script. Test projects declare `IsPublishable=false`, so publishing the whole
-solution does not emit their artifacts either.
+The command publishes the shell self-contained by default. It puts the CGO-free Go
+host beside the shell so `HostLauncher.Locate` can find it at startup.
+
+The script defaults to `desktop/avalonia/bin/publish/<RID>`. It accepts `--output`,
+`--configuration`, `--single-file`, `--no-self-contained` and `--no-restore`.
+
+Test projects declare `IsPublishable=false`, which excludes their artifacts when
+publishing the solution.
 
 ### One-click test build
 
@@ -85,21 +86,21 @@ make studio-test-build RID=win-x64
 bash scripts/build-studio-test.sh --help
 ```
 
-This builds both halves into one test-build directory —
-`desktop/avalonia/bin/test-build/<date>-<shortsha>/<platform>/` — matching the
-verification records already kept there. It publishes the Avalonia frontend
-self-contained, cross-compiles the Go kernel host beside it, builds the solution,
-runs both test projects with the host alongside their assemblies, and writes a
-`verification/` folder with the build/test logs and `validation.json`.
-`--skip-tests` builds without running the suites; `--dir` overrides the output.
+The command puts a self-contained Avalonia shell and a cross-compiled Go host
+in `desktop/avalonia/bin/test-build/<date>-<shortsha>/<platform>/`.
 
-The workbench's **Browser** menu opens a manual system WebView. Workspace HTML, DOCX and XLSX files also offer previews. The Office renderer uses the same read-only view as the Electron frontend.
+It also builds the solution and runs both test projects with the host alongside
+their assemblies. The `verification/` directory holds the logs and
+`validation.json`. Use `--skip-tests` to build without running the suites or
+`--dir` to choose the output directory.
 
-After changing that view, run `node desktop/frontend-next/tools/build-native-office.mjs` with the frontend dependencies installed. The generated renderer is embedded in the Avalonia assembly so a .NET build can run independently of Node.
+The workbench's **Browser** menu opens a manual system WebView. Workspace HTML, DOCX, XLSX, PDF, CSV and TSV files also offer previews. Delimited files use the native table, including while previewing a source draft.
+
+After editing the document renderers, run `node desktop/frontend-next/tools/build-native-office.mjs` or `node desktop/frontend-next/tools/build-native-pdf.mjs` with the frontend dependencies installed. Both renderers are embedded in the Avalonia assembly so a .NET build can run independently of Node.
 
 To check the actual adapter on a desktop, run `dotnet run --project desktop/avalonia/tests/Reasonix.Studio.WebView.Smoke` from the repository root.
 
-The smoke test serves two local pages, opens them through the workbench, and verifies navigation, history, reload and isolated HTML preview. It also opens a Word document in the Office renderer. The Studio workflow exposes the same check through its `system_webview` manual input.
+The smoke test verifies browsing, isolated HTML previews, Office rendering, and PDF page navigation and zoom on the platform adapter. The Studio workflow exposes the same check through its `system_webview` manual input.
 
 ## Running the kernel-side gates
 

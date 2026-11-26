@@ -1,11 +1,13 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.Shell.Browser;
 using Reasonix.Studio.Shell.Workbench;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell;
 
@@ -22,7 +24,7 @@ public sealed partial class MainWindow
         WorkbenchHeaderTab? active = null;
         foreach (var page in _browserPages.ToArray())
         {
-            var title = MessageCatalog.Get("workbench.browser", Language);
+            var title = page.TabTitle ?? MessageCatalog.Get("workbench.browser", Language);
             var target = new WorkbenchSurfaceTarget(
                 title,
                 () =>
@@ -41,12 +43,25 @@ public sealed partial class MainWindow
             var tab = group.PickButton;
             AutomationProperties.SetAutomationId(tab, "action:workbench.browser-tab");
             tab.Click += (_, _) => target.Open();
+            tab.DoubleTapped += async (_, _) => await RenameBrowserAsync(page, title).ConfigureAwait(true);
+            tab.KeyDown += async (_, e) =>
+            {
+                if (e.Key == Key.F2)
+                {
+                    e.Handled = true;
+                    await RenameBrowserAsync(page, title).ConfigureAwait(true);
+                }
+            };
             var menu = new MenuFlyout();
             menu.Items.Add(new MenuItem
             {
                 Header = MessageCatalog.Get("workbench.browser_tab_named", Language, ("name", title)),
                 IsEnabled = false,
             });
+            var rename = new MenuItem { Header = MessageCatalog.Get("workbench.rename_tab", Language) };
+            AutomationProperties.SetAutomationId(rename, "action:workbench.rename-tab");
+            rename.Click += async (_, _) => await RenameBrowserAsync(page, title).ConfigureAwait(true);
+            menu.Items.Add(rename);
             Add("workbench.close_tab", "workbench.close-browser", () => CloseBrowsers([page]));
             Add("workbench.close_other_browser_tabs", "workbench.close-other-browsers", () => CloseBrowsers(_browserPages.Where(other => !ReferenceEquals(other, page)).ToArray()));
             Add("workbench.close_browser_tabs_to_the", "workbench.close-right-browsers", () => CloseBrowsers(_browserPages.SkipWhile(other => !ReferenceEquals(other, page)).Skip(1).ToArray()));
@@ -77,6 +92,22 @@ public sealed partial class MainWindow
         }
 
         return active;
+    }
+
+    /// <summary>Renames a browser tab without replacing its live document.</summary>
+    /// <param name="page">The current browser tab.</param><param name="title">Its display name.</param>
+    /// <returns>The rename interaction.</returns>
+    private async Task RenameBrowserAsync(ManualWebPreview page, string title)
+    {
+        var name = await AskWorkspaceAsync(MessageCatalog.Get("workbench.rename_tab", Language), title, title).ConfigureAwait(true);
+        if (name is not null && _browserPages.Contains(page))
+        {
+            page.TabTitle = string.IsNullOrWhiteSpace(name) ? null : name.Trim();
+            RebuildTabs(animateSelection: false);
+            var tab = FileTabs.Children.OfType<WorkbenchHeaderTab>()
+                .FirstOrDefault(candidate => candidate.Tag is WorkbenchSurfaceTarget target && ReferenceEquals(target.Canvas, page));
+            tab?.PickButton.Focus();
+        }
     }
 
     /// <summary>Closes selected browser pages and restores the surviving surface.</summary>

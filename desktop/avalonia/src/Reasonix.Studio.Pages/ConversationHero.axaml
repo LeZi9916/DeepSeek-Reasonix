@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Pages.ConversationHero" VerticalAlignment="Center" HorizontalAlignment="Center"
+             MaxWidth="428" Margin="14,0,14,20" IsVisible="False">
+  <UserControl.Styles>
+    <Style Selector="Button.hero-suggestion">
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Padding" Value="12,0"/>
+      <Setter Property="CornerRadius" Value="999"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.hero-suggestion:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+    </Style>
+  </UserControl.Styles>
+  <StackPanel Spacing="12" AutomationProperties.AutomationId="class:hero">
+    <Border Width="44" Height="44" HorizontalAlignment="Center" CornerRadius="{DynamicResource RMd}" Background="{DynamicResource AccentBrush}">
+      <Viewbox Width="28" Height="28"><Path Name="Mark" Fill="{DynamicResource AccentFgBrush}"/></Viewbox>
+    </Border>
+    <TextBlock Name="Title" Margin="0,8,0,0" FontSize="{DynamicResource StudioType22}" FontWeight="SemiBold" TextAlignment="Center"
+               Foreground="{DynamicResource TextBrush}" TextWrapping="Wrap"/>
+    <TextBlock Name="Description" MaxWidth="380" FontSize="{DynamicResource StudioType13}" TextAlignment="Center"
+               Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+    <WrapPanel Name="Suggestions" HorizontalAlignment="Center" Margin="0,6,0,0" ItemSpacing="8" LineSpacing="8">
+      <Button Name="Explain" Classes="hero-suggestion" AutomationProperties.AutomationId="action:hero.suggest"/>
+      <Button Name="Regression" Classes="hero-suggestion" AutomationProperties.AutomationId="action:hero.suggest"/>
+      <Button Name="WriteTests" Classes="hero-suggestion" AutomationProperties.AutomationId="action:hero.suggest"/>
+    </WrapPanel>
+    <StackPanel Name="Projects" HorizontalAlignment="Center" Spacing="9" Margin="0,7,0,0" IsVisible="False">
+      <Button Name="OpenProject" Classes="hero-suggestion" HorizontalAlignment="Center" AutomationProperties.AutomationId="action:workspace.add"/>
+      <Button Name="KeepProject" Classes="hero-suggestion" HorizontalAlignment="Center" AutomationProperties.AutomationId="action:hero.keep-project"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

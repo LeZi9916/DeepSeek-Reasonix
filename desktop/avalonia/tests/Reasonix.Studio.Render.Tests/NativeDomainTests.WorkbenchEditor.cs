@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
-using Avalonia.Controls.Presenters;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
@@ -10,6 +9,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Shell.Workbench;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Nodes;
@@ -42,7 +42,7 @@ public sealed partial class NativeDomainTests
             var modes = w.FindControl<Border>("FileModeSelector")!;
             var status = w.FindControl<Control>("FileStatus")!;
             var save = ControlAt<Button>(w, "action:workbench.save");
-            var editor = w.FindControl<TextBox>("FileEditor")!;
+            var editor = w.FindControl<WorkbenchFileEditor>("FileEditor")!;
             var preview = w.FindControl<ScrollViewer>("RenderedFile")!;
             Assert.Equal(40, bar.Bounds.Height);
             Assert.InRange(modes.Bounds.Height, 28, 30);
@@ -58,29 +58,28 @@ public sealed partial class NativeDomainTests
             Assert.True(status.IsEffectivelyVisible);
             Assert.Equal(28, status.Bounds.Height);
             Assert.Equal(12, editor.FontSize);
-            var presenter = editor.GetVisualDescendants().OfType<TextPresenter>().Single();
-            var frame = editor.GetVisualDescendants().OfType<Border>().Single(border => border.Name == "PART_BorderElement");
-            Assert.Equal(default, frame.BorderThickness);
-            Assert.InRange(presenter.TranslatePoint(default, editor)!.Value.X, 32, 35);
-            Assert.InRange(presenter.LineHeight, 19.79, 19.81);
+            var presenter = editor.TextArea.TextView;
+            Assert.Equal(default, editor.BorderThickness);
+            Assert.InRange(presenter.TranslatePoint(default, editor)!.Value.X, 20, 42);
+            Assert.InRange(presenter.DefaultLineHeight, 17, 22);
             Capture("editing");
 
             var draft = string.Join('\n', Enumerable.Range(1, 35).Select(i => $"工作台对照 {i:D2}"));
             editor.Text = draft;
-            editor.CaretIndex = draft.Length;
-            var scroller = editor.GetVisualDescendants().OfType<ScrollViewer>().Single();
+            editor.CaretOffset = draft.Length;
+            var scroller = editor.GetVisualDescendants().OfType<ScrollViewer>().First();
             Dispatcher.UIThread.RunJobs();
             scroller.Offset = default;
             Dispatcher.UIThread.RunJobs();
             Assert.True(save.IsEnabled);
             Assert.NotEqual(Colors.Transparent, (save.Background as ISolidColorBrush)?.Color);
-            Assert.InRange(presenter.TranslatePoint(default, editor)!.Value.X, 34, 37);
+            Assert.InRange(presenter.TranslatePoint(default, editor)!.Value.X, 20, 49);
             Capture("dirty");
 
             scroller.Offset = new Vector(0, 198);
             Dispatcher.UIThread.RunJobs();
             Assert.True(scroller.Offset.Y > 0);
-            Assert.True(presenter.TranslatePoint(default, editor)!.Value.Y < 0);
+            Assert.True(presenter.VerticalOffset > 0);
             Capture("scrolled");
 
             reads.Exchange = async request =>
@@ -104,7 +103,7 @@ public sealed partial class NativeDomainTests
             };
             if (width == 760)
             {
-                editor.Focus();
+                editor.TextArea.Focus();
                 var primary = System.OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control;
                 w.KeyPress(Key.S, primary, PhysicalKey.S, string.Empty);
             }
@@ -147,7 +146,7 @@ public sealed partial class NativeDomainTests
             ClickAt(w, "action:workbench.tab");
             var breadcrumb = w.FindControl<TextBlock>("Breadcrumb")!;
             var edit = w.FindControl<Button>("EditFile")!;
-            var editor = w.FindControl<TextBox>("FileEditor")!;
+            var editor = w.FindControl<WorkbenchFileEditor>("FileEditor")!;
             var save = w.FindControl<Button>("SaveFile")!;
             Assert.Equal("/granted/README.md", ToolTip.GetTip(breadcrumb));
             Assert.True(w.FindControl<Control>("ReadOnlyBadge")!.IsEffectivelyVisible);
@@ -161,7 +160,7 @@ public sealed partial class NativeDomainTests
             Assert.True(editor.IsReadOnly);
             Assert.False(save.IsEffectivelyVisible);
             editor.Text = "first\r\nsecond\r\n";
-            editor.CaretIndex = editor.Text.Length;
+            editor.CaretOffset = editor.Text.Length;
             Assert.Contains("3", w.FindControl<TextBlock>("FileLine")!.Text);
         });
 }

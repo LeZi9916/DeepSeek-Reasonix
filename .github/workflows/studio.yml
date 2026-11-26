@@ -51,8 +51,10 @@ jobs:
       - name: typecheck
         run: pnpm typecheck
 
-      - name: verify embedded Office renderer
-        run: node tools/build-native-office.mjs --check
+      - name: verify embedded document renderers
+        run: |
+          node tools/build-native-office.mjs --check
+          node tools/build-native-pdf.mjs --check
 
       # The reducer and the event port carry the two pieces of logic a type
       # error cannot reach: what a card means when a turn is interrupted, and

@@ -51,6 +51,7 @@ internal sealed partial class MessageRail : UserControl
     public MessageRail()
     {
         InitializeComponent();
+        Earlier.Click += (_, _) => EarlierRequested?.Invoke();
         _closer.Tick += (_, _) => CloseRun();
         Track.PointerMoved += (_, args) => Aim(args.GetPosition(Track).Y);
         Track.PointerExited += (_, _) =>
@@ -68,6 +69,9 @@ internal sealed partial class MessageRail : UserControl
         Run.PointerEntered += (_, _) => _closer.Stop();
         Run.PointerExited += (_, _) => _closer.Start();
     }
+
+    /// <summary>Raised when the reader requests the preceding history window.</summary>
+    internal event Action? EarlierRequested;
 
     /// <summary>Raised when a rail mark requests a jump to its message.</summary>
     internal event Action<string>? JumpRequested;
@@ -129,6 +133,19 @@ internal sealed partial class MessageRail : UserControl
         {
             RefreshStar(slot);
         }
+    }
+
+    /// <summary>Shows the history count on the rail when earlier messages are available.</summary>
+    /// <param name="earlier">The number of preceding messages.</param>
+    /// <param name="load">Whether the preceding page is available to load.</param>
+    /// <param name="language">The interface language.</param>
+    internal void SetEarlier(int earlier, bool load, InterfaceLanguage language)
+    {
+        var label = MessageCatalog.Get("chat.n_more_messages_before_these", language, ("n", Format.Count(earlier, language)));
+        Earlier.Content = "↑ " + Format.Count(earlier, language);
+        Earlier.IsVisible = earlier > 0 && load;
+        AutomationProperties.SetName(Earlier, label);
+        ToolTip.SetTip(Earlier, label);
     }
 
     /// <summary>Applies the reference's narrow-window fold.</summary>
@@ -223,7 +240,11 @@ internal sealed partial class MessageRail : UserControl
     /// <summary>Maps the transcript's scroll extent into the padded track.</summary>
     /// <param name="fraction">The relative position in the transcript.</param>
     /// <returns>The vertical track coordinate.</returns>
-    private double Place(double fraction) => 18 + (Math.Clamp(fraction, 0, 1) * Math.Max(0, Bounds.Height - 36));
+    private double Place(double fraction)
+    {
+        var head = Earlier.IsVisible ? 38 : 18;
+        return head + (Math.Clamp(fraction, 0, 1) * Math.Max(0, Bounds.Height - head - 18));
+    }
 
     /// <summary>Draws dense runs as one segment when gaps are under five pixels.</summary>
     private void BuildSegments()

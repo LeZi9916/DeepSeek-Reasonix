@@ -9,6 +9,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Reasonix.Studio.Controls;
+using Reasonix.Studio.Shell.Workbench;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -86,14 +87,14 @@ public sealed partial class NativeDomainTests
             Capture("explorer");
 
             w.FindControl<Button>("EditFile")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            var editor = w.FindControl<TextBox>("FileEditor")!;
+            var editor = w.FindControl<WorkbenchFileEditor>("FileEditor")!;
             editor.Text = "Launcher draft fixture";
-            editor.CaretIndex = 8;
+            editor.CaretOffset = 8;
             ClickAt(w, "action:workbench.new");
             ClickAt(w, "action:workbench.new");
             Assert.True(editor.IsEffectivelyVisible);
             Assert.Equal("Launcher draft fixture", editor.Text);
-            Assert.Equal(8, editor.CaretIndex);
+            Assert.Equal(8, editor.CaretOffset);
             Assert.True(ControlAt<Button>(w, "action:workbench.save").IsEnabled);
             Capture("editor-restored");
 

@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Pages.MarkdownImage" HorizontalAlignment="Left">
+  <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="{DynamicResource RSm}" ClipToBounds="True">
+    <Grid>
+      <Image Name="Preview" Stretch="Uniform" StretchDirection="DownOnly" MaxWidth="640" MaxHeight="360" IsVisible="False"/>
+      <TextBlock Name="Caption" Margin="8,4" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+    </Grid>
+  </Border>
+</UserControl>

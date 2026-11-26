@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:wire="using:Reasonix.Studio.Contracts.Wire" x:Class="Reasonix.Studio.Pages.ExtensionSurfaceView">
+  <StackPanel Spacing="8" AutomationProperties.AutomationId="class:extcard">
+    <TextBlock Name="Title" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+    <TextBlock Name="Identity" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+    <StackPanel Name="Details" Spacing="5"/>
+    <ItemsControl Name="Fields">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="wire:ExtensionKeyValue">
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="0,2">
+            <SelectableTextBlock Text="{Binding Key}" Foreground="{DynamicResource MutedBrush}"/>
+            <SelectableTextBlock Grid.Column="1" Text="{Binding Value}" TextWrapping="Wrap"/>
+          </Grid>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+    <WrapPanel Name="Actions" ItemSpacing="6" LineSpacing="6"/>
+    <StackPanel Name="Form" Spacing="6" IsVisible="False">
+      <StackPanel Name="Inputs" Spacing="7"/>
+      <Button Name="Submit" AutomationProperties.AutomationId="action:extensions.submit"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

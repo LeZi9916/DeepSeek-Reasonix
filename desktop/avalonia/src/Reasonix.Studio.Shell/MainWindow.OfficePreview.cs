@@ -17,7 +17,14 @@ public sealed partial class MainWindow
 {
     /// <summary>Gets the selected text or Office document for pane restoration.</summary>
     private string? SelectedWorkbenchDocument => _openFile?.Original.Path
-        ?? (RenderedFile.IsVisible ? (RenderedFile.Content as OfficeDocumentPreview)?.Path : null);
+        ?? (RenderedFile.IsVisible
+            ? RenderedFile.Content switch
+            {
+                OfficeDocumentPreview office => office.Path,
+                PdfDocumentPreview pdf => pdf.Path,
+                _ => null,
+            }
+            : null);
 
     /// <summary>Adds the device-local preview preference to the display settings.</summary>
     /// <param name="card">The files and previews card.</param>
@@ -60,7 +67,7 @@ public sealed partial class MainWindow
             enabled,
             Language,
             () => OpenEntryAsync(entry),
-            engine.IsRemote ? null : () => OpenExternalOfficeAsync(engine, entry),
+            engine.IsRemote ? null : () => OpenExternalDocumentAsync(engine, entry),
             OpenOfficeSettingAsync);
         var version = (string?)info["version"] ?? string.Empty;
         _workbench.Buffers[(WorkspaceBufferScope, entry.Path)] = new FileBuffer(new WorkspaceFile(entry.Path, string.Empty, version, ReadOnly: true), "office");
@@ -100,7 +107,7 @@ public sealed partial class MainWindow
     /// <summary>Asks the owning desktop host to open this exact workspace file.</summary>
     /// <param name="engine">The runtime that owns this file.</param><param name="entry">The selected workspace entry.</param>
     /// <returns>The launch acknowledgement.</returns>
-    private async Task OpenExternalOfficeAsync(SessionEngine engine, FileEntry entry)
+    private async Task OpenExternalDocumentAsync(SessionEngine engine, FileEntry entry)
     {
         try
         {

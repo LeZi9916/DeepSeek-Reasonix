@@ -50,7 +50,7 @@ public sealed partial class AvaloniaHost : IHostPort
     }
 
     /// <summary>
-    /// Gets or sets the tray icon whose tooltip carries the unread mark.
+    /// Gets or sets the tray icon whose image carries the unread mark.
     /// </summary>
     /// <remarks>
     /// Set by whoever created the icon; a window with no tray shows the mark
@@ -276,10 +276,17 @@ public sealed partial class AvaloniaHost : IHostPort
     /// <inheritdoc/>
     public Task SetUnreadBadgeAsync(bool unread)
     {
-        var tray = Tray;
-        if (tray is not null)
+        if (_window is { } window)
         {
-            tray.ToolTipText = unread ? "Reasonix Studio — unread" : "Reasonix Studio";
+            var description = window.FindControl<Pages.SessionPage>("Conversation") is { } conversation
+                ? Pages.I18n.MessageCatalog.Get("common.unread", conversation.Language)
+                : "Unread";
+            DesktopUnreadBadge.Set(window, unread, description);
+        }
+
+        if (Tray is { } tray && TrayGlyph.Icon(unread) is { } icon)
+        {
+            tray.Icon = icon;
         }
 
         return Task.CompletedTask;

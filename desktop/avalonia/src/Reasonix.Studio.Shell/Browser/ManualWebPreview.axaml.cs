@@ -77,6 +77,12 @@ public sealed partial class ManualWebPreview : UserControl
         Reload.Click += (_, _) => _guest?.Refresh();
     }
 
+    /// <summary>Gets or sets the reader's display name for this retained tab.</summary>
+    internal string? TabTitle
+    {
+        get; set;
+    }
+
     /// <summary>Focuses the address field for an explicit navigation.</summary>
     internal void FocusAddress()
     {

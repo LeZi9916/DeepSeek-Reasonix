@@ -68,6 +68,9 @@ internal static class GateFixture
                 window.ShowState(Reasonix.Studio.Testing.ReferenceConversation.Create());
                 Dispatcher.UIThread.RunJobs();
 
+                var exporter = new GeometryExporter(GeometryComparerOptions.Studio);
+                var compact = exporter.Export(window);
+
                 // The DOM capture measures descendants of closed details; expose native
                 // work bodies so the coverage audit still measures every recorded row.
                 foreach (var toggle in window.GetVisualDescendants().OfType<Button>().Where(button => button.Classes.Contains("activity-toggle")).ToArray())
@@ -76,7 +79,19 @@ internal static class GateFixture
                 }
 
                 Dispatcher.UIThread.RunJobs();
-                var found = new GeometryExporter(GeometryComparerOptions.Studio).Export(window);
+                var found = new Dictionary<string, ObservedNode>(exporter.Export(window));
+                foreach (var id in found.Keys.Where(key => key.StartsWith("action:transcript.scroll.", StringComparison.Ordinal)).ToArray())
+                {
+                    if (compact.TryGetValue(id, out var button))
+                    {
+                        found[id] = button;
+                    }
+                    else
+                    {
+                        found.Remove(id);
+                    }
+                }
+
                 window.Close();
                 return found;
             },

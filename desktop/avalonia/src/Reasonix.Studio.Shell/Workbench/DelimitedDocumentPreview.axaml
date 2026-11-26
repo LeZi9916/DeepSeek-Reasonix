@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Workbench.DelimitedDocumentPreview">
+  <UserControl.Styles>
+    <Style Selector="TableView /template/ TableViewColumnHeadersPresenter">
+      <Setter Property="IsVisible" Value="False"/>
+    </Style>
+  </UserControl.Styles>
+  <Panel>
+    <TableView Name="Cells" CanUserResizeColumns="False"
+               FontSize="{DynamicResource StudioType12}" AutomationProperties.AutomationId="action:document.scroll"/>
+    <TextBlock Name="Notice" Margin="12,8" TextWrapping="Wrap" IsVisible="False"/>
+  </Panel>
+</UserControl>

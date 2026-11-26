@@ -108,6 +108,9 @@ public sealed partial class MainWindow : Window
         InitializeChrome();
         InitializeIntake();
         InitializePreferences();
+        InitializeConversationHero();
+        InitializeExtensionSurfaces();
+        InitializeMarkdownAssets();
         InitializePlanStrip();
         InitializeNavigation();
         InitializeWorkspaceSearch();
@@ -334,6 +337,7 @@ public sealed partial class MainWindow : Window
 
                 ShowState(engine.State);
                 DrawHistoryRead();
+                Conversation.RestoreSessionPosition(null);
                 if (!SetupPanel.IsVisible && !SettingsPanel.IsVisible)
                 {
                     LayoutRoot.IsVisible = true;

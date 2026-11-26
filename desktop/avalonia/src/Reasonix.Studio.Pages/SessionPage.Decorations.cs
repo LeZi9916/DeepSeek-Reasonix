@@ -110,6 +110,7 @@ public sealed partial class SessionPage
     /// <returns>The mounted disclosure and its retained body.</returns>
     private Control ActivityGroup(IReadOnlyList<TranscriptItem> work, bool headerOnly = false)
     {
+        work = ReadCurrentWork(work);
         var tally = ActivityTally.Of(work);
         var id = work[0].Id;
         var open = ActivityOpen(work, tally);
@@ -137,10 +138,9 @@ public sealed partial class SessionPage
             {
                 if (body.Children.Count == 0)
                 {
-                    foreach (var row in work)
+                    foreach (var row in ReadCurrentWork((IReadOnlyList<TranscriptItem>)disclosure.Tag!))
                     {
-                        var current = _indices.TryGetValue(row.Id, out var index) ? _state.Items[index] : row;
-                        body.Children.Add(RowOf(current, inActivity: true));
+                        body.Children.Add(RowOf(row, inActivity: true));
                     }
                 }
             };
@@ -160,7 +160,9 @@ public sealed partial class SessionPage
     /// <param name="work">Group members.</param><param name="tally">Current tool lifecycle counts.</param>
     /// <returns>Whether the group is open.</returns>
     private bool ActivityOpen(IReadOnlyList<TranscriptItem> work, ActivityTally tally) =>
-        work.Any(row => row is ApprovalItem { Open: true } or AskItem { Answered: null, Outcome: null })
+        work.Any(row => row is ApprovalItem { Open: true }
+            or AskItem { Answered: null, Outcome: null }
+            or ExtensionItem { Surface.Form: not null, Surface.Code: null or "" })
         || (FoldChoice(TranscriptPart.Activity, work[0].Id) ?? _folding.StartsOpen(
             TranscriptPart.Activity,
             live: !tally.Settled || work.Any(row => _liveWork.Contains(row.Id)),

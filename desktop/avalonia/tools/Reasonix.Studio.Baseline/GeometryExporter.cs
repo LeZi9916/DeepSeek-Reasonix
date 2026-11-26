@@ -275,14 +275,13 @@ public sealed class GeometryExporter
         return string.Create(CultureInfo.InvariantCulture, $"rgb({color.R}, {color.G}, {color.B})");
     }
 
-    /// <summary>
-    /// Formats a colour the way CSS reports a fill that may be transparent.
-    /// </summary>
-    /// <param name="color">The colour to format.</param>
-    /// <returns>The colour as <c>rgba(r, g, b, a)</c>.</returns>
-    private static string Rgba(Color color)
+    /// <summary>Formats the effective color of a solid fill.</summary>
+    /// <param name="brush">The resolved brush and its opacity.</param>
+    /// <returns>The color as <c>rgba(r, g, b, a)</c>.</returns>
+    private static string Rgba(ISolidColorBrush brush)
     {
-        var alpha = color.A / 255d;
+        var color = brush.Color;
+        var alpha = brush.Opacity * color.A / 255d;
         return string.Create(
             CultureInfo.InvariantCulture,
             $"rgba({color.R}, {color.G}, {color.B}, {alpha:0.###})");
@@ -338,12 +337,12 @@ public sealed class GeometryExporter
             case "backgroundColor":
                 if (control is Border { Background: ISolidColorBrush borderFill })
                 {
-                    return Rgba(borderFill.Color);
+                    return Rgba(borderFill);
                 }
 
                 if (control is TemplatedControl filled && filled.Background is ISolidColorBrush back)
                 {
-                    return Rgba(back.Color);
+                    return Rgba(back);
                 }
 
                 return null;

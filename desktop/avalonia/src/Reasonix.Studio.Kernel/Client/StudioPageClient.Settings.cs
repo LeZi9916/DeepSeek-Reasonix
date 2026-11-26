@@ -18,6 +18,11 @@ public sealed partial class StudioPageClient
     /// <returns>The tray state.</returns>
     public Task<JsonObject> TrayStateAsync(CancellationToken token) => ReadAsync<JsonObject>("/tray/state", token);
 
+    /// <summary>Reads active turns and unreachable panes directly from the owning host.</summary>
+    /// <param name="token">Cancels the request.</param>
+    /// <returns>The running and unknown pane counts.</returns>
+    public Task<JsonObject> TrayRunningAsync(CancellationToken token) => ReadAsync<JsonObject>("/tray/running", token);
+
     /// <summary>Changes close behavior through the tray preference owner.</summary>
     /// <param name="closeToTray">Whether closing the window hides it.</param>
     /// <param name="token">Cancels the request.</param>

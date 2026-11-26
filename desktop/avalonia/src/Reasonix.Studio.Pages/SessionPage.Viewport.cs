@@ -68,9 +68,6 @@ public sealed partial class SessionPage
         /// <summary>A member of a large delegate group.</summary>
         DelegateMember,
 
-        /// <summary>Empty container.</summary>
-        Empty,
-
         /// <summary>Wait container.</summary>
         Wait,
     }
@@ -95,37 +92,40 @@ public sealed partial class SessionPage
 
     /// <summary>Restores a reader's position after the virtual panel applies a projection.</summary>
     /// <param name="anchor">Row and position from before the change.</param>
-    /// <param name="preferUnread">Whether a pane without a saved position opens at its unread boundary.</param>
     /// <param name="applied">Called after the scroll position is committed.</param>
-    public void RestoreAnchor((string? Id, double Offset, double Inset) anchor, bool preferUnread = false, Action? applied = null)
+    public void RestoreAnchor((string? Id, double Offset, double Inset) anchor, Action? applied = null)
     {
         var version = _viewportVersion;
         var ticket = ++_anchorTicket;
-        Dispatcher.UIThread.Post(
-            () =>
+        Dispatcher.UIThread.Post(() => Restore(realize: true), DispatcherPriority.Loaded);
+
+        void Restore(bool realize)
+        {
+            if (version != _viewportVersion || ticket != _anchorTicket)
             {
-                if (version != _viewportVersion || ticket != _anchorTicket)
+                return;
+            }
+
+            if (anchor.Id is { } id && _locations.TryGetValue(id, out var index))
+            {
+                if (_realized.GetValueOrDefault(id)?.TranslatePoint(default, _scroll) is { } point)
                 {
+                    _scroll.Offset = _scroll.Offset.WithY(_scroll.Offset.Y + point.Y - anchor.Inset);
+                    applied?.Invoke();
                     return;
                 }
 
-                if (anchor.Id is { } id && Locate(id)?.TranslatePoint(default, _scroll) is { } point)
-                {
-                    _scroll.Offset = _scroll.Offset.WithY(_scroll.Offset.Y + point.Y - anchor.Inset);
-                }
-                else if (preferUnread && anchor.Id is null && anchor.Offset == 0 && _newAnswerAt is { } unread
-                    && _locations.TryGetValue(unread, out var index))
+                if (realize)
                 {
                     _rows.ScrollIntoView(index);
+                    Dispatcher.UIThread.Post(() => Restore(realize: false), DispatcherPriority.Loaded);
+                    return;
                 }
-                else if (anchor.Id is null)
-                {
-                    _scroll.Offset = _scroll.Offset.WithY(anchor.Offset);
-                }
+            }
 
-                applied?.Invoke();
-            },
-            DispatcherPriority.Loaded);
+            _scroll.Offset = _scroll.Offset.WithY(anchor.Offset);
+            applied?.Invoke();
+        }
     }
 
     /// <summary>Tests whether an entry retains its members and decoration.</summary>
@@ -172,10 +172,11 @@ public sealed partial class SessionPage
         Dispatcher.UIThread.Post(
             () =>
             {
-                if (ticket == _anchorTicket && _scroll.Offset.Y >= offset - 2 && _viewportRows.Count > 0)
+                if (ticket == _anchorTicket && (_followingLatest || _scroll.Offset.Y >= offset - 2) && _viewportRows.Count > 0)
                 {
                     _rows.ScrollIntoView(_viewportRows.Count - 1);
                     _scroll.ScrollToEnd();
+                    UpdateTranscriptJump();
                 }
             },
             DispatcherPriority.Loaded);
@@ -216,12 +217,11 @@ public sealed partial class SessionPage
             }
         }
 
-        if (next.Count == 0)
+        if (_state.ResponseWait is not null)
         {
-            next.Add(new ViewportRow("empty", null, [], RowKind.Empty, true));
+            next.Add(new ViewportRow("wait", null, [], RowKind.Wait, false));
         }
 
-        next.Add(new ViewportRow("wait", null, [], RowKind.Wait, false));
         if (_rows.ItemsPanelRoot is VirtualizingStackPanel panel)
         {
             panel.CacheLength = next.Count <= LargeTranscriptThreshold ? 0.5 : 0.1;
@@ -274,7 +274,7 @@ public sealed partial class SessionPage
         {
             for (var i = prefix; i < newEnd; i++)
             {
-                if (!SameEntry(_viewportRows[i], next[i]))
+                if (!SameEntry(_viewportRows[i], next[i]) && !TryRetainActivityEntry(_viewportRows[i], next[i]))
                 {
                     _viewportRows[i] = next[i];
                 }
@@ -427,12 +427,7 @@ public sealed partial class SessionPage
                 _responseWait.Show(_state.ResponseWait, Language);
                 return _responseWait;
             default:
-                return new TextBlock
-                {
-                    Text = MessageCatalog.Get(MessageKey.Composer.DescribeATaskQuestionOr, Language),
-                    [!TextBlock.FontSizeProperty] = StudioTypography.Size(13),
-                    Opacity = 0.55,
-                };
+                throw new InvalidOperationException($"Missing transcript content for {entry.Decoration}.");
         }
     }
 
@@ -479,7 +474,7 @@ public sealed partial class SessionPage
         }
 
         var anchor = ReadAnchor();
-        var following = _scroll.ScrollBarMaximum.Y > 0 && _scroll.Offset.Y >= _scroll.ScrollBarMaximum.Y - 2;
+        var following = _followingLatest || (_scroll.ScrollBarMaximum.Y > 0 && _scroll.Offset.Y >= _scroll.ScrollBarMaximum.Y - 2);
         GatherLiveWork(items);
         ProjectViewport(items, recreate);
         RefreshBackgroundTools();
@@ -494,7 +489,7 @@ public sealed partial class SessionPage
     /// <param name="previousState">The previous state.</param>
     /// <param name="nextState">The acknowledged state.</param>
     /// <returns>Whether the list's structural projection can be retained.</returns>
-    private bool UpdateAnswers(SessionState previousState, SessionState nextState)
+    private bool UpdateMountedRows(SessionState previousState, SessionState nextState)
     {
         var previous = previousState.Items;
         var next = nextState.Items;
@@ -511,6 +506,7 @@ public sealed partial class SessionPage
             return true;
         }
 
+        var tools = new List<ToolItem>();
         for (var i = 0; i < next.Count; i++)
         {
             if (ReferenceEquals(previous[i], next[i]))
@@ -518,12 +514,22 @@ public sealed partial class SessionPage
                 continue;
             }
 
-            if (previous[i] is not SayItem before || next[i] is not SayItem after || before.Id != after.Id)
+            switch (previous[i], next[i])
             {
-                return false;
+                case (SayItem before, SayItem after) when before.Id == after.Id:
+                    UpdateAnswer(after);
+                    break;
+                case (ToolItem before, ToolItem after) when CanRetainTool(before, after):
+                    tools.Add(after);
+                    break;
+                default:
+                    return false;
             }
+        }
 
-            UpdateAnswer(after);
+        if (tools.Count > 0)
+        {
+            UpdateMountedTools(tools);
         }
 
         return true;
@@ -545,5 +551,9 @@ public sealed partial class SessionPage
     /// <param name="Children">Canonical work appearing in the container.</param><param name="Decoration">The view to create.</param>
     /// <param name="First">Whether the entry starts the reading column.</param>
     /// <param name="Expanded">Whether a work fold is open.</param>
-    private sealed record ViewportRow(string Id, TranscriptItem? Lead, IReadOnlyList<TranscriptItem> Children, RowKind Decoration, bool First, bool Expanded = false);
+    private sealed record ViewportRow(string Id, TranscriptItem? Lead, IReadOnlyList<TranscriptItem> Children, RowKind Decoration, bool First, bool Expanded = false)
+    {
+        /// <summary>Gets or sets the current members of the retained descriptor.</summary>
+        public IReadOnlyList<TranscriptItem> Children { get; set; } = Children;
+    }
 }

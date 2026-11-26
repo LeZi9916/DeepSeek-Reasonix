@@ -26,6 +26,21 @@ internal sealed partial class ActivityDisclosure
         AutomationProperties.SetName(this.FindControl<Button>("Toggle")!, this.FindControl<TextBlock>("Summary")!.Text + details);
     }
 
+    /// <summary>Updates a group whose mounted header survived a live frame.</summary>
+    /// <param name="count">Canonical call count.</param><param name="label">The new count text.</param>
+    /// <param name="details">Supplementary status text.</param><param name="animate">Whether a new call can animate.</param>
+    internal void UpdateCount(int count, string label, string details, bool animate)
+    {
+        var previous = _callCount;
+        var summary = this.FindControl<TextBlock>("Summary")!;
+        summary.Text = label;
+        SetCountDetails(count, details);
+        if (animate && count != previous && TopLevel.GetTopLevel(this) is Window window && window.Classes.Contains("motion"))
+        {
+            Roll((TranslateTransform)summary.RenderTransform!, summary.LineHeight, window);
+        }
+    }
+
     /// <summary>Plays a count change, or retains a running transform when the same count is redrawn.</summary>
     /// <param name="previous">The prior visible heading of this group.</param>
     internal void ContinueCountMotion(ActivityDisclosure previous)

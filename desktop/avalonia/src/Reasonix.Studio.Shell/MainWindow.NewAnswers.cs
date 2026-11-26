@@ -48,6 +48,7 @@ public sealed partial class MainWindow
     /// <summary>Reads an unread mark that arrives after the pane is already in front.</summary>
     private void ObserveUnreadSpan()
     {
+        ReflectUnreadBadge();
         if (_activePane is { } pane && IsActive && ConversationArea.IsEffectivelyVisible && RememberUnreadSince(pane))
         {
             Conversation.RefreshNewAnswers();

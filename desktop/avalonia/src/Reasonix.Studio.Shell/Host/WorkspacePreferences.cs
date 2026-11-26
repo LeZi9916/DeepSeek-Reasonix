@@ -9,6 +9,21 @@ namespace Reasonix.Studio.Shell.Host;
 /// <summary>Device-local workspace choices that do not alter kernel policy.</summary>
 internal sealed record WorkspacePreferences
 {
+    /// <summary>Gets or initializes the local time at which scheduled dark mode begins.</summary>
+    public TimeOnly DarkThemeStart { get; init; } = new(20, 0);
+
+    /// <summary>Gets or initializes the local time at which scheduled light mode resumes.</summary>
+    public TimeOnly DarkThemeEnd { get; init; } = new(7, 0);
+
+    /// <summary>Gets or initializes a value indicating whether the shell inhibits system sleep while a turn runs.</summary>
+    public bool KeepAwakeWhileRunning { get; init; } = true;
+
+    /// <summary>Gets or initializes a value indicating whether the reader has accepted the initial workspace.</summary>
+    public bool AcceptedDefaultWorkspace
+    {
+        get; init;
+    }
+
     /// <summary>Gets or initializes a value indicating whether monetary amounts are hidden.</summary>
     public bool HideAmounts
     {

@@ -72,8 +72,10 @@ internal sealed partial class AnswerCard : UserControl
     /// <param name="quote">Adds the chosen passage to the draft.</param>
     /// <param name="folding">The transcript defaults.</param><param name="thoughtChoice">A retained reader choice.</param>
     /// <param name="remember">Records a manual choice for this answer.</param>
-    internal AnswerCard(SayItem item, InterfaceLanguage language, Action<string> quote, TranscriptFolding folding, bool? thoughtChoice, Action<bool> remember)
+    /// <param name="assets">The workspace capabilities owned by this message.</param>
+    internal AnswerCard(SayItem item, InterfaceLanguage language, Action<string> quote, TranscriptFolding folding, bool? thoughtChoice, Action<bool> remember, MarkdownAssets? assets)
     {
+        _workspaceAssets = assets;
         Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
         _thought = this.FindControl<Button>("Thought")!;
         _thoughtLabel = this.FindControl<SweepTextBlock>("ThoughtLabel")!;

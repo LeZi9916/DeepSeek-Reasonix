@@ -174,6 +174,7 @@ public sealed partial class MainWindow
         {
             var b = new RadioButton { Content = DataLabel(hidden ? "data.hide" : "common.show"), IsChecked = HideLegacySessions == hidden };
             b.Classes.Add("segmented");
+            b.Classes.Add("data-choice");
             b.Click += async (_, _) => await Run(b, async () =>
             {
                 HideLegacySessions = hidden;

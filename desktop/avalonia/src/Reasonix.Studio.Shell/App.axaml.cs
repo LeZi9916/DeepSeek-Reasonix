@@ -109,7 +109,7 @@ public sealed partial class App : Application
             QueueDuringRun = window.QueueDuringRun,
             NewTaskPreset = window.NewTaskPreset,
             HideLegacySessions = window.HideLegacySessions,
-            Theme = window.RequestedThemeVariant?.Key as string,
+            Theme = window.ThemeMode,
         };
     }
 

@@ -37,6 +37,17 @@ public sealed partial class MainWindow
                     Classes = { "global-shortcut-setting" },
                 });
         }
+        else if (_connectOnOpen && OperatingSystem.IsLinux())
+        {
+            keys.Children.Add(new SettingsGroup(
+                "settings.global_show_hide_shortcut",
+                null,
+                Detail(Message("settings.global_shortcuts_are_not_supported")),
+                Language)
+            {
+                Classes = { "global-shortcut-setting" },
+            });
+        }
 
         SegmentChoice(
             keys,

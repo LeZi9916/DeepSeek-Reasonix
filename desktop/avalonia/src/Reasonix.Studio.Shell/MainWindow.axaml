@@ -156,7 +156,7 @@
           <Border Name="QueuedBadge" Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" CornerRadius="5" Background="{DynamicResource OverlayBrush}" Padding="6,3" IsVisible="False"><TextBlock Name="QueuedBadgeLabel" FontSize="{DynamicResource StudioType11}" Foreground="{DynamicResource MutedBrush}"/></Border>
           <Grid Name="ChromeGroup" Grid.Column="3">
           <Grid Name="ChromeTools">
-            <StackPanel Name="ChromeActions" Orientation="Horizontal" Spacing="4">
+            <StackPanel Name="ChromeActions" Orientation="Horizontal" Spacing="4" Margin="8,0,0,0">
             <Button Name="FindButton" Classes="icon" HorizontalAlignment="Left" AutomationProperties.AutomationId="action:transcript.find">
               <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
                 <Path Data="{StaticResource Glyph.search}" Stroke="{Binding #FindButton.Foreground}" StrokeThickness="1.4" StrokeLineCap="Round"/>
@@ -173,11 +173,6 @@
                 </Viewbox>
               </ContentControl>
             </Button>
-            <Button Name="ChromeAnalysis" Classes="icon chrome-view" IsVisible="False" AutomationProperties.AutomationId="action:pane.view">
-              <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
-                <Path Data="M2 12h4l3-9 6 18 3-9h4" Stroke="{Binding #ChromeAnalysis.Foreground}" StrokeThickness="1.4" StrokeLineCap="Round" StrokeJoin="Round"/>
-              </Canvas></Viewbox>
-            </Button>
             <Button Name="ViewSwitch" Classes="icon chrome-view" AutomationProperties.AutomationId="action:pane.view">
               <Grid Width="28" Height="28">
                 <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24">
@@ -193,7 +188,7 @@
               <Button.ContextFlyout>
                 <MenuFlyout>
                   <MenuItem Name="ConversationView" />
-                  <MenuItem Name="AnalysisView" />
+                  <MenuItem Name="AnalysisView" IsVisible="False" />
                   <MenuItem Name="WorkbenchView" />
                   <MenuItem Name="TerminalAction" />
                   <MenuItem Name="BrowserAction" />
@@ -217,7 +212,7 @@
               <pages:SessionPage.TopContent><Button Name="EarlierHistory" IsVisible="False" HorizontalAlignment="Center" Margin="8,4" MinHeight="24" FontSize="11" Background="Transparent" BorderThickness="0" AutomationProperties.AutomationId="action:history.more"/></pages:SessionPage.TopContent>
             </pages:SessionPage>
           <ScrollViewer Name="AnalysisPanel" Grid.Row="0" MaxWidth="1080" Margin="0,0,10,0" AutomationProperties.AutomationId="class:run-analysis" IsVisible="False">
-            <StackPanel Name="AnalysisContent" Margin="0,24,0,16" Spacing="16" HorizontalAlignment="Stretch" />
+            <StackPanel Name="AnalysisContent" Margin="0,24,0,16" Spacing="16" UseLayoutRounding="False" HorizontalAlignment="Stretch" />
           </ScrollViewer>
             <Border Name="FindBar" Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Right" IsVisible="False"
                     Padding="6" Margin="10" CornerRadius="7" Background="{DynamicResource RaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
@@ -298,13 +293,13 @@
                       <WrapPanel Name="AttachmentStrip"/>
                       <TextBlock Name="AttachmentWarning" IsVisible="False" FontSize="{DynamicResource StudioType10}" Foreground="{DynamicResource WarnInkBrush}" TextWrapping="Wrap"/>
                     </StackPanel>
-                    <TextBox Name="Composer" Classes="compose-input" Grid.Row="3" AcceptsReturn="True" TextWrapping="Wrap"
+                    <composer:ComposerDraftBox Name="Composer" Classes="compose-input" Grid.Row="3" AcceptsReturn="True" TextWrapping="Wrap"
                              Background="Transparent" BorderThickness="0" CornerRadius="0" Padding="0" MinHeight="42" MaxHeight="168"
                              FontFamily="{DynamicResource ConversationUiFamily}" FontWeight="Medium" FontSize="{DynamicResource StudioType14}" LineHeight="{DynamicResource StudioUserHeight}"
                              Foreground="{DynamicResource TextBrush}" PlaceholderForeground="{DynamicResource MutedBrush}" VerticalContentAlignment="Top"
                              Margin="16,10,16,0" AutomationProperties.AutomationId="role:combobox" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                       <TextBox.Resources><Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness><SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent"/></TextBox.Resources>
-                    </TextBox>
+                    </composer:ComposerDraftBox>
                     <Grid Name="ComposeFooter" Grid.Row="4" ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="*,0,0" Margin="8,6,8,8" ColumnSpacing="2">
                       <WrapPanel Name="ComposeTools" Orientation="Horizontal" ItemSpacing="2" LineSpacing="2" VerticalAlignment="Center">
                         <Button Name="Attach" Classes="compose-tool compose-icon"><Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Data="{StaticResource Glyph.plus}" Stroke="{Binding #Attach.Foreground}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round"/></Canvas></Viewbox></Button>
@@ -402,7 +397,7 @@
                   </StackPanel>
                 </Button>
                 <Grid Grid.Column="1" ColumnDefinitions="*,Auto">
-                  <ScrollViewer Name="TabViewport" Height="35" Margin="0" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" VerticalAlignment="Bottom" VerticalContentAlignment="Top"
+                  <ScrollViewer Name="TabViewport" Height="34" Margin="0,0,0,1" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" VerticalAlignment="Bottom" VerticalContentAlignment="Top"
                                 AutomationProperties.AutomationId="role:tablist">
                     <StackPanel Name="FileTabs" Orientation="Horizontal" Spacing="2" Height="35" VerticalAlignment="Top" />
                   </ScrollViewer>
@@ -527,16 +522,22 @@
                     <Border Height="1" VerticalAlignment="Bottom" Background="{DynamicResource HairBrush}" IsHitTestVisible="False"/>
                   </Grid>
                   <workbench:WorkbenchFileEditor Name="FileEditor" Grid.Row="1" Classes="workbench-editor"
-                           IsReadOnly="True" AcceptsReturn="True" AcceptsTab="True" Background="Transparent" BorderThickness="0"
-                           Padding="4,4,0,0" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}" FontWeight="Normal"
-                           Foreground="{DynamicResource TextBrush}" CaretBrush="{DynamicResource TextBrush}" TextWrapping="NoWrap"
-                           CanvasBrush="{DynamicResource RaisedBrush}" ActiveLineBrush="{DynamicResource OverlayBrush}"
-                           LineNumberBrush="{DynamicResource GhostBrush}" ActiveLineNumberBrush="{DynamicResource MutedBrush}"
-                           ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
-                    <workbench:WorkbenchFileEditor.InnerLeftContent>
-                      <Border Width="{Binding #FileEditor.GutterWidth}" IsHitTestVisible="False"/>
-                    </workbench:WorkbenchFileEditor.InnerLeftContent>
-                  </workbench:WorkbenchFileEditor>
+                           IsReadOnly="True" ShowLineNumbers="True" Background="{DynamicResource RaisedBrush}" BorderThickness="0"
+                           Padding="4" FontFamily="{DynamicResource StudioMonoFamily}" FontSize="{DynamicResource StudioType12}" FontWeight="Normal"
+                           Foreground="{DynamicResource TextBrush}" LineNumbersForeground="{DynamicResource GhostBrush}"
+                           LineNumbersMargin="0,0,3,0" SearchResultsBrush="{DynamicResource AccentWashBrush}"
+                           HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+                  <Button Grid.Row="1" Name="QuoteFileSelection" ZIndex="2" Classes="wb-command" HorizontalAlignment="Right" VerticalAlignment="Top"
+                          Margin="0,8,12,0" Padding="8,3" Focusable="False" IsVisible="False"
+                          AutomationProperties.AutomationId="action:workbench.quote-selection"/>
+                  <Border Grid.Row="1" Name="FileGoto" ZIndex="3" HorizontalAlignment="Right" VerticalAlignment="Top"
+                          Margin="0,8,12,0" Padding="6" IsVisible="False" CornerRadius="{DynamicResource RSm}"
+                          Background="{DynamicResource RaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                      <TextBox Name="FileGotoLine" Width="96" AutomationProperties.AutomationId="action:workbench.go-to-line"/>
+                      <Button Name="GoToFileLine" Classes="wb-command"/>
+                    </StackPanel>
+                  </Border>
                   <ScrollViewer Grid.Row="1" Name="RenderedFile" Padding="10" IsVisible="False"/>
                   <Border Name="FileErrorPanel" Grid.Row="1" IsVisible="False" Background="{DynamicResource RaisedBrush}" Padding="24">
                     <StackPanel MaxWidth="420" Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -653,11 +654,20 @@
     </Popup>
     <Thumb Name="RailGrip" Grid.Column="0" Width="7" Margin="0,48,-6,0" HorizontalAlignment="Right"
            Background="Transparent" Focusable="True" Cursor="SizeWestEast">
-      <Thumb.Template><ControlTemplate><Border Background="{TemplateBinding Background}" /></ControlTemplate></Thumb.Template>
+      <Thumb.Template>
+        <ControlTemplate>
+          <Grid Background="{TemplateBinding Background}">
+            <Border Classes="rail-guide" Width="2" Opacity="0" HorizontalAlignment="Center" Background="{DynamicResource FaintBrush}" IsHitTestVisible="False">
+              <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
+            </Border>
+          </Grid>
+        </ControlTemplate>
+      </Thumb.Template>
     </Thumb>
   </Grid>
-  <Grid Name="SettingsPanel" Focusable="True" Background="{DynamicResource SurfaceBrush}" IsVisible="False" RowDefinitions="48,*"
+  <Grid Name="SettingsPanel" Focusable="True" IsVisible="False" RowDefinitions="48,*"
         TextElement.Foreground="{DynamicResource TextBrush}" TextElement.FontWeight="Medium">
+    <Border Name="SettingsVeil" Grid.RowSpan="2" Background="{DynamicResource SurfaceBrush}"/>
     <Grid Name="SettingsTitleBar" ColumnDefinitions="Auto,*" Background="{DynamicResource PageBrush}" AutomationProperties.AutomationId="class:prefs-windowbar">
       <Border Grid.ColumnSpan="2" Height="1" VerticalAlignment="Bottom" Background="{DynamicResource HairBrush}" />
       <Button Name="CloseSettings" AutomationProperties.AutomationId="action:settings.close" Margin="12,0" Padding="10,0" Height="32"
@@ -670,7 +680,8 @@
       <TextBlock Name="SettingsError" Grid.Column="1" Margin="16,0" VerticalAlignment="Center"
                  TextTrimming="CharacterEllipsis" Foreground="{DynamicResource ErrBrush}" />
     </Grid>
-    <Grid Name="SettingsSheet" Grid.Row="1" ColumnDefinitions="Auto,*" AutomationProperties.AutomationId="class:prefs-sheet">
+    <Grid Name="SettingsSheet" Grid.Row="1" ColumnDefinitions="Auto,*" Background="{DynamicResource SurfaceBrush}" AutomationProperties.AutomationId="class:prefs-sheet">
+      <Grid.RenderTransform><TranslateTransform/></Grid.RenderTransform>
       <Grid Name="SettingsRail" Width="240" RowDefinitions="46,32,8,*" Background="{DynamicResource PageBrush}">
         <TextBlock Name="SettingsTitle" Margin="18,0" FontWeight="SemiBold" FontSize="{DynamicResource StudioType14}" VerticalAlignment="Center" />
         <Grid Grid.Row="1" Margin="10,0" AutomationProperties.AutomationId="class:prefs-find">
@@ -780,30 +791,30 @@
         <TextBlock Text="STUDIO" FontSize="{DynamicResource StudioType9}" LetterSpacing="2" HorizontalAlignment="Right" />
       </StackPanel>
     </Border>
-    <Border Name="WelcomeCard" Grid.Row="1" MaxWidth="900" Height="394" Margin="16,0" Padding="42,36,42,34" CornerRadius="15"
+    <Border Name="WelcomeCard" Grid.Row="1" MaxWidth="900" Height="394" UseLayoutRounding="False" Margin="16,0" Padding="42,36,42,34" CornerRadius="15"
             Background="{DynamicResource SurfaceBrush}" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"
             BoxShadow="0 22 48 0 #20191e19" VerticalAlignment="Center" AutomationProperties.AutomationId="class:onb-shell">
       <Border.RenderTransform><ScaleTransform/></Border.RenderTransform>
-      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="32" AutomationProperties.AutomationId="class:onb-card">
-        <Grid Name="WelcomeContent" RowDefinitions="*,Auto,*" AutomationProperties.AutomationId="class:onb-welcome">
-        <StackPanel Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" Spacing="8">
-          <settings:OnboardingReveal Name="WelcomeMark" Height="26" Width="120" Margin="0,0,0,24">
+      <Grid Name="WelcomeLayout" ColumnDefinitions="*,Auto" ColumnSpacing="32" AutomationProperties.AutomationId="class:onb-card">
+        <Grid Name="WelcomeContent" AutomationProperties.AutomationId="class:onb-welcome">
+        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="0,28,0,10" Spacing="14" TextElement.FontFamily="{DynamicResource ConversationUiFamily}">
+          <settings:OnboardingReveal Name="WelcomeMark" Height="38.92" Width="168" Margin="0,0,0,14">
             <settings:OnboardingReveal.RenderTransform><TranslateTransform/></settings:OnboardingReveal.RenderTransform>
             <Image Source="/Assets/wordmark.png" Stretch="Uniform"/>
           </settings:OnboardingReveal>
-          <TextBlock Name="WelcomeTitle" HorizontalAlignment="Center" FontSize="{DynamicResource StudioType22}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" AutomationProperties.AutomationId="class:onb-t">
+          <TextBlock Name="WelcomeTitle" HorizontalAlignment="Center" Margin="0,2,0,0" FontSize="{DynamicResource StudioType22}" FontWeight="Bold" LineHeight="27.5" LetterSpacing="-0.55" Foreground="{DynamicResource TextBrush}" AutomationProperties.AutomationId="class:onb-t">
             <TextBlock.RenderTransform><TranslateTransform/></TextBlock.RenderTransform>
           </TextBlock>
-          <TextBlock Name="WelcomeDescription" AutomationProperties.AutomationId="class:onb-s" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource FaintBrush}">
+          <TextBlock Name="WelcomeDescription" AutomationProperties.AutomationId="class:onb-s" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="440" Margin="0,-5,0,5" FontSize="{DynamicResource StudioType12}" FontWeight="Medium" LineHeight="20.4" Foreground="{DynamicResource FaintBrush}">
             <TextBlock.RenderTransform><TranslateTransform/></TextBlock.RenderTransform>
           </TextBlock>
-          <StackPanel Name="WelcomeActions" Spacing="8">
+          <StackPanel Name="WelcomeActions" Spacing="10" Margin="0,6,0,0">
             <StackPanel.RenderTransform><TranslateTransform/></StackPanel.RenderTransform>
-            <Button Name="BeginSetup" AutomationProperties.AutomationId="action:onboarding.begin" Width="240" Height="40" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Margin="0,16,0,0"
+            <Button Name="BeginSetup" AutomationProperties.AutomationId="action:onboarding.begin" Width="240" Height="40" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Margin="0,2,0,0" FontSize="{DynamicResource StudioType13}" FontWeight="SemiBold"
                     Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource AccentFgBrush}" CornerRadius="10" />
-            <Button Name="SkipWelcome" Height="24" MinHeight="0" Padding="8,0" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" AutomationProperties.AutomationId="action:onboarding.skip" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" />
+            <Button Name="SkipWelcome" Width="68" Height="24" MinHeight="0" Padding="0" HorizontalContentAlignment="Center" FontWeight="Medium" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}" AutomationProperties.AutomationId="action:onboarding.skip" HorizontalAlignment="Center" Background="Transparent" BorderThickness="0" />
           </StackPanel>
-          <TextBlock Name="SetupTime" AutomationProperties.AutomationId="class:onb-note" HorizontalAlignment="Center" Margin="0,12,0,0" FontSize="{DynamicResource StudioType12}" Foreground="{DynamicResource MutedBrush}">
+          <TextBlock Name="SetupTime" AutomationProperties.AutomationId="class:onb-note" HorizontalAlignment="Center" Margin="0,12,0,0" FontSize="{DynamicResource StudioType12}" FontWeight="Medium" LineHeight="19.2" Foreground="{DynamicResource FaintBrush}">
             <TextBlock.RenderTransform><TranslateTransform/></TextBlock.RenderTransform>
           </TextBlock>
         </StackPanel>

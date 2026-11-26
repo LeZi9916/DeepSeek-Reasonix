@@ -20,6 +20,9 @@ public sealed partial class SessionPage
     /// <summary>The newest explicit request to land on a user message.</summary>
     private CancellationTokenSource? _railJump;
 
+    /// <summary>Raised by the history entry on the message rail.</summary>
+    public event Action? EarlierHistoryRequested;
+
     /// <summary>Loads saved bookmarks and connects changes to desktop persistence.</summary>
     /// <param name="bookmarks">Previously saved marks grouped by conversation.</param>
     /// <param name="save">Persists the updated marks of a saved conversation.</param>
@@ -38,9 +41,18 @@ public sealed partial class SessionPage
     /// <param name="visible">Whether the current window supports the rail.</param>
     public void SetMessageRailAvailable(bool visible) => _messageRail.SetAvailable(visible);
 
+    /// <summary>Updates the earlier-history command alongside the message marks.</summary>
+    /// <param name="earlier">The number of earlier messages.</param><param name="load">Whether the earlier page is available.</param>
+    public void SetMessageRailHistory(int earlier, bool load)
+    {
+        _messageRail.SetEarlier(earlier, load, Language);
+        QueueRailMeasure();
+    }
+
     /// <summary>Connects the rail to its viewport and the mounted rows.</summary>
     private void InitializeMessageRail()
     {
+        _messageRail.EarlierRequested += () => EarlierHistoryRequested?.Invoke();
         _rows.SizeChanged += (_, _) => QueueRailMeasure();
         _messageRail.SizeChanged += (_, _) => QueueRailMeasure();
         _scroll.ScrollChanged += (_, change) =>
@@ -57,16 +69,25 @@ public sealed partial class SessionPage
         };
         _messageRail.JumpRequested += id =>
         {
+            PauseTranscriptFollow();
             if (Locate(id) is { } row)
             {
                 JumpToTranscriptRow(row);
+                return;
             }
+
+            var ticket = _anchorTicket;
+            Dispatcher.UIThread.Post(
+                () =>
+                {
+                    if (ticket == _anchorTicket && _realized.GetValueOrDefault(id) is { } realized)
+                    {
+                        JumpToTranscriptRow(realized);
+                    }
+                },
+                DispatcherPriority.Loaded);
         };
-        _scroll.PointerWheelChanged += (_, _) =>
-        {
-            _anchorTicket++;
-            CancelRailJump();
-        };
+        _scroll.PointerWheelChanged += (_, _) => PauseTranscriptFollow();
         _scroll.DetachedFromVisualTree += (_, _) => CancelRailJump();
     }
 

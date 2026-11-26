@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Reasonix.Studio.Shell.Workbench;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -148,10 +149,9 @@ public sealed partial class NativeDomainTests
         "workbench",
         (w, _) =>
         {
-            var editor = w.FindControl<TextBox>("FileEditor")!;
+            var editor = w.FindControl<WorkbenchFileEditor>("FileEditor")!;
             editor.Text = "first line\nsecond line";
-            editor.SelectionStart = 0;
-            editor.SelectionEnd = "first line".Length;
+            editor.Select(0, "first line".Length);
             var menu = Assert.IsType<ContextMenu>(editor.ContextMenu);
             menu.Open(editor);
             Dispatcher.UIThread.RunJobs();

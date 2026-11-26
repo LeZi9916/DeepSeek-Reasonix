@@ -157,10 +157,14 @@ public sealed partial class MainWindow
         CloseQuickLinks();
         CloseComposerMenus();
         DisarmStop();
+        var entering = !SettingsPanel.IsVisible || _settingsShellMotion is not null;
         SetupPanel.IsVisible = false;
-        LayoutRoot.IsVisible = false;
         SettingsPanel.IsVisible = true;
-        EnterView(SettingsPanel, durationMs: 120, easing: new Avalonia.Animation.KeySpline(0.16, 1, 0.3, 1));
+        if (entering)
+        {
+            EnterSettingsShell();
+        }
+
         BackLabel.Text = MessageCatalog.Get(MessageKey.Settings.BackToWorkspace, Language);
         Avalonia.Automation.AutomationProperties.SetName(CloseSettings, BackLabel.Text);
         SettingsTitle.Text = MessageCatalog.Get(MessageKey.Common.Settings, Language);
@@ -187,6 +191,16 @@ public sealed partial class MainWindow
 
         var leavingSetup = animateSetupDeparture && SetupPanel.IsVisible;
         if (leavingSetup && !await PlaySetupDepartureAsync().ConfigureAwait(true))
+        {
+            return;
+        }
+
+        if (_closing.IsCancellationRequested || current?.Invoke() == false)
+        {
+            return;
+        }
+
+        if (SettingsPanel.IsVisible && !await AnimateSettingsShellAsync(opening: false).ConfigureAwait(true))
         {
             return;
         }
@@ -319,7 +333,9 @@ public sealed partial class MainWindow
                         var type = new Settings.TypographyForm { Tag = "look.typeface" };
                         Card(column, "look.typeface").Children.Add(type);
                         type.Open(look, Language, api, accepted => ApplyAppearance(accepted, Conversation.FoldsTurnWork), DescribeError, _closing.Token);
-                        ZoomChoice(Card(column, "common.window"), look);
+                        var window = Card(column, "common.window");
+                        ZoomChoice(window, look);
+                        AddPowerSetting(window);
                     }
 
                     break;
@@ -592,12 +608,17 @@ public sealed partial class MainWindow
             new SectionEntry("Default", MessageCatalog.Get(MessageKey.Look.FollowTheSystem, Language)),
             new SectionEntry("Light", MessageCatalog.Get(MessageKey.Look.Light, Language)),
             new SectionEntry("Dark", MessageCatalog.Get(MessageKey.Look.Dark, Language)),
+            new SectionEntry("Scheduled", MessageCatalog.Get("look.scheduled", Language)),
         };
-        Choice(content, MessageKey.Settings.LightAndDark, choices, RequestedThemeVariant?.Key as string ?? "Default", id =>
+        var schedule = ThemeScheduleFields();
+        Choice(content, MessageKey.Settings.LightAndDark, choices, ThemeMode, id =>
         {
-            RequestedThemeVariant = id == "Dark" ? ThemeVariant.Dark : id == "Light" ? ThemeVariant.Light : ThemeVariant.Default;
+            SetThemeMode(id);
+            schedule.IsVisible = id == "Scheduled";
+            SaveWindowPreferences?.Invoke();
             return Task.CompletedTask;
         });
+        content.Children.Add(schedule);
     }
 
     /// <summary>Adds the kernel-owned language preference.</summary>

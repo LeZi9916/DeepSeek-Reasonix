@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Workbench.PdfDocumentPreview"
+             AutomationProperties.AutomationId="class:pdf-document-preview">
+  <UserControl.Styles>
+    <Style Selector="Button.pdf-command">
+      <Setter Property="MinWidth" Value="28"/>
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="Padding" Value="6,0"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+    </Style>
+  </UserControl.Styles>
+  <Grid RowDefinitions="Auto,*" TextBlock.FontSize="{DynamicResource StudioType12}">
+    <WrapPanel Margin="8,4" ItemSpacing="4" LineSpacing="4">
+      <Button Name="Previous" Classes="pdf-command" Content="‹" AutomationProperties.AutomationId="action:document.page.previous"/>
+      <NumericUpDown Name="PageNumber" Width="72" Height="28" Minimum="1" Maximum="1" Value="1" FormatString="0"
+                     ShowButtonSpinner="False" AutomationProperties.AutomationId="action:document.page"/>
+      <TextBlock Name="Total" Text="/ —" VerticalAlignment="Center"/>
+      <Button Name="Next" Classes="pdf-command" Content="›" AutomationProperties.AutomationId="action:document.page.next"/>
+      <Button Name="ZoomOut" Classes="pdf-command" Content="−" AutomationProperties.AutomationId="action:document.zoom.out"/>
+      <TextBlock Name="Zoom" Text="—" VerticalAlignment="Center"/>
+      <Button Name="ZoomIn" Classes="pdf-command" Content="+" AutomationProperties.AutomationId="action:document.zoom.in"/>
+      <Button Name="Fit" Classes="pdf-command" AutomationProperties.AutomationId="action:document.zoom.fit"/>
+      <Button Name="Refresh" Classes="pdf-command" AutomationProperties.AutomationId="action:document.refresh"/>
+      <Button Name="OpenInApp" Classes="pdf-command" AutomationProperties.AutomationId="action:workbench.open-file"/>
+    </WrapPanel>
+    <ContentControl Name="Document" Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+    <TextBlock Name="Notice" Grid.Row="1" Margin="12,8" TextWrapping="Wrap"/>
+  </Grid>
+</UserControl>

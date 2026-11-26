@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Reasonix.Studio.Kernel.Client;
@@ -141,7 +142,7 @@ public sealed partial class MainWindow
     {
         var copy = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
         var name = DataText(DataLabel(key), 13, 19, true);
-        name.FontWeight = FontWeight.Medium;
+        name.FontWeight = FontWeight.SemiBold;
         var description = DataText(DataLabel(hint), 12, 18, true);
         description.Bind(TextBlock.ForegroundProperty, description.GetResourceObservable("MutedBrush"));
         AutomationProperties.SetAutomationId(name, "class:srow-name");
@@ -168,6 +169,7 @@ public sealed partial class MainWindow
         DataColumn(row, 1, field);
         var frame = new Border { Tag = key, Child = row, Padding = new Thickness(0, 6), MinHeight = 52, BorderThickness = new Thickness(0, 1, 0, 0) };
         frame.Bind(Border.BorderBrushProperty, frame.GetResourceObservable("HairBrush"));
+        frame.Bind(TextElement.FontSizeProperty, frame.GetResourceObservable("StudioType13"));
         AutomationProperties.SetAutomationId(frame, "class:srow");
         card.Children.Add(frame);
     }

@@ -1,0 +1,14 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Reasonix.Studio.Shell.Workbench.AgentPageNote"
+             AutomationProperties.AutomationId="class:agent-browser-page">
+  <Border Margin="12,10" Padding="14" CornerRadius="{DynamicResource RMd}" VerticalAlignment="Top"
+          Background="{DynamicResource RaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+    <StackPanel Spacing="6">
+      <TextBlock Name="PageTitle" FontWeight="SemiBold" FontSize="{DynamicResource StudioType14}" TextWrapping="Wrap"/>
+      <SelectableTextBlock Name="PageAddress" FlowDirection="LeftToRight" FontFamily="{DynamicResource StudioMonoFamily}"
+                           Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+      <TextBlock Name="PageStatus" Foreground="{DynamicResource NetBrush}" TextWrapping="Wrap"/>
+      <TextBlock Name="ReadOnlyHint" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+    </StackPanel>
+  </Border>
+</UserControl>

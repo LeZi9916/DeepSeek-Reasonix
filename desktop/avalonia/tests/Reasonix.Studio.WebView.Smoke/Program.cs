@@ -50,6 +50,7 @@ internal static class Program
                 await CheckAsync(window, baseUrl).ConfigureAwait(true);
                 await CheckRedirectAsync(baseUrl, privateOrigin).ConfigureAwait(true);
                 await OfficePreviewSmoke.RunAsync().ConfigureAwait(true);
+                await PdfPreviewSmoke.RunAsync().ConfigureAwait(true);
                 window.FindControl<StackPanel>("FileTabs")!.GetVisualDescendants().OfType<Button>()
                     .Single(button => AutomationProperties.GetAutomationId(button) == "action:workbench.close-browser")
                     .RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

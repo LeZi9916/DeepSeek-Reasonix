@@ -14,6 +14,9 @@ namespace Reasonix.Studio.Pages;
 
 internal sealed partial class AnswerCard
 {
+    /// <summary>The workspace files available to this answer.</summary>
+    private readonly MarkdownAssets? _workspaceAssets;
+
     /// <summary>Offsets of the last painted content, keyed weakly to each native block.</summary>
     private readonly ConditionalWeakTable<SelectableTextBlock, BlockPaint> _blockPaint = new();
 
@@ -172,7 +175,7 @@ internal sealed partial class AnswerCard
         if (!canReuse || stamp.Kind != kind || stamp.Start > _paintedSource.Length - stamp.Length
             || !span.SequenceEqual(_paintedSource.AsSpan(stamp.Start, stamp.Length)))
         {
-            MarkdownAnswer.ShowParsed(text, block, span);
+            MarkdownAnswer.ShowParsed(text, block, span, _workspaceAssets);
         }
 
         stamp.Kind = kind;
