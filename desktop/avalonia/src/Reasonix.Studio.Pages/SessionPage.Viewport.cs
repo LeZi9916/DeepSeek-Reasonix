@@ -453,7 +453,14 @@ public sealed partial class SessionPage
         _anchorTicket++;
         if (!_realized.ContainsKey(id) && _locations.TryGetValue(id, out var index))
         {
+            var extent = _scroll.Extent.Height;
             _rows.ScrollIntoView(index);
+
+            // A distant jump can revise the estimated extent before the target is realized.
+            if (_rows.ContainerFromIndex(index) is null && _scroll.Extent.Height != extent)
+            {
+                _rows.ScrollIntoView(index);
+            }
         }
 
         return _realized.GetValueOrDefault(id);

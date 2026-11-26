@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -143,10 +144,20 @@ public sealed class SessionPageDecorationTests
                     Dispatcher.UIThread.RunJobs();
                     Assert.InRange(page.GetVisualDescendants().OfType<UserMessage>().Count(), 1, 120);
 
-                    Assert.Equal((1, 1), page.FindMatch("message 4999", 0));
-                    Dispatcher.UIThread.RunJobs();
-                    Assert.Contains(page.GetVisualDescendants().OfType<TextBlock>(), block => block.Text == "message 4999");
-                    Assert.InRange(page.GetVisualDescendants().OfType<UserMessage>().Count(), 1, 120);
+                    var viewport = page.GetVisualDescendants().OfType<ScrollViewer>().First();
+                    foreach (var match in new[] { "message 4999", "message 2500", "message 0" })
+                    {
+                        Assert.Equal((1, 1), page.FindMatch(match, 0));
+                        Dispatcher.UIThread.RunJobs();
+
+                        var text = Assert.Single(page.GetVisualDescendants().OfType<SelectableTextBlock>(), block => block.Text == match);
+                        var position = text.TranslatePoint(default, viewport);
+                        Assert.NotNull(position);
+                        Assert.InRange(position.Value.Y, 0, viewport.Viewport.Height - text.Bounds.Height);
+                        Assert.Equal(0, text.SelectionStart);
+                        Assert.Equal(match.Length, text.SelectionEnd);
+                        Assert.InRange(page.GetVisualDescendants().OfType<UserMessage>().Count(), 1, 120);
+                    }
                 }
                 finally
                 {
