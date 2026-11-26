@@ -5,7 +5,6 @@ using Avalonia.Media;
 using Reasonix.Studio.Pages.I18n;
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell.Settings;
 
@@ -50,7 +49,7 @@ internal sealed partial class SettingsGroup : UserControl
 
         LandingRing.Opacity = 0.66;
         LandingRing.IsVisible = true;
-        _ = PlayLandingAsync(++_landingMotion);
+        PlayLanding(window, ++_landingMotion);
     }
 
     /// <summary>Removes a pending landing without waiting for its animation.</summary>
@@ -62,23 +61,30 @@ internal sealed partial class SettingsGroup : UserControl
     }
 
     /// <summary>Fades the fixed landing ink so it reads as an outline color returning to transparent.</summary>
-    /// <param name="generation">The landing this loop owns.</param>
-    /// <returns>The completed fade.</returns>
-    private async Task PlayLandingAsync(int generation)
+    /// <param name="window">The window providing render frames.</param>
+    /// <param name="generation">The current landing.</param>
+    private void PlayLanding(Window window, int generation)
     {
-        var clock = Stopwatch.StartNew();
-        while (generation == _landingMotion)
+        Stopwatch? clock = null;
+        window.RequestAnimationFrame(Frame);
+
+        void Frame(TimeSpan timestamp)
         {
-            var progress = Math.Clamp(clock.Elapsed.TotalMilliseconds / 900, 0, 1);
-            LandingRing.Opacity = 0.66 * (1 - s_landingEase.Ease(progress));
-            if (progress >= 1)
+            if (generation != _landingMotion)
             {
-                LandingRing.IsVisible = false;
-                LandingRing.Opacity = 0;
                 return;
             }
 
-            await Task.Delay(16).ConfigureAwait(true);
+            clock ??= Stopwatch.StartNew();
+            var progress = Math.Clamp(clock.Elapsed.TotalMilliseconds / 900, 0, 1);
+            if (progress >= 1 || !window.Classes.Contains("motion") || TopLevel.GetTopLevel(this) != window)
+            {
+                ClearLanding();
+                return;
+            }
+
+            LandingRing.Opacity = 0.66 * (1 - s_landingEase.Ease(progress));
+            window.RequestAnimationFrame(Frame);
         }
     }
 }

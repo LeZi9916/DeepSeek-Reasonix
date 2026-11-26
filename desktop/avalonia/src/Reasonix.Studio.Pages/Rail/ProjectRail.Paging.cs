@@ -237,9 +237,10 @@ public sealed partial class ProjectRail
     }
 
     /// <summary>Preserves loaded previews at the canonical ceiling and names search for older rows.</summary>
+    /// <param name="rows">The target row collection.</param>
     /// <param name="host">Owning machine.</param><param name="workspace">Canonical project.</param>
     /// <param name="loaded">Matching loaded rows.</param><param name="visible">Currently displayed rows.</param>
-    private void AddWindowTail(string host, TreeWorkspace workspace, int loaded, int visible)
+    private void AddWindowTail(ICollection<Control> rows, string host, TreeWorkspace workspace, int loaded, int visible)
     {
         if (_scope is not ("all" or "archived") || (loaded <= visible && workspace.Remaining == 0))
         {
@@ -248,11 +249,11 @@ public sealed partial class ProjectRail
 
         if (loaded > visible || workspace.Sessions.Count < TreeWindow.MaxRows)
         {
-            _rows.Children.Add(MoreButton(host, workspace, loaded, visible));
+            rows.Add(MoreButton(host, workspace, loaded, visible));
             return;
         }
 
-        _rows.Children.Add(new TextBlock
+        rows.Add(new TextBlock
         {
             Classes = { "session-window-note" },
             Text = MessageCatalog.Get(workspace.CountsComplete == false ? "session.search_to_find_more_conversations" : "session.n_older_conversations_use_search", Language, ("n", Format.Count(workspace.Remaining, Language))),

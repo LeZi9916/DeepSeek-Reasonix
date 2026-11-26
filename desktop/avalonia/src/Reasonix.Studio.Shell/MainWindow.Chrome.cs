@@ -185,7 +185,7 @@ public sealed partial class MainWindow
     /// <summary>Opens or closes the workspace and leaves focus on the reachable toggle.</summary>
     private void ToggleRail()
     {
-        var opening = !Rail.IsVisible;
+        var opening = !(_railOpen ?? Rail.IsVisible);
         _railOpen = opening;
         if (!StartRailMotion(opening))
         {

@@ -57,21 +57,21 @@ public sealed partial class ThemeBackdrop : UserControl
     /// <param name="pack">Active pack, or null for the default Studio theme.</param>
     /// <param name="api">Authenticated kernel client.</param>
     /// <param name="token">Window lifetime.</param>
+    /// <param name="current">Whether the palette read still owns publication.</param>
+    /// <param name="publish">The resource change that accompanies the artwork.</param>
     /// <returns>The image load.</returns>
-    internal async Task ApplyAsync(JsonObject? pack, StudioPageClient api, CancellationToken token)
+    internal async Task ApplyAsync(JsonObject? pack, StudioPageClient api, CancellationToken token, Func<bool>? current = null, Action? publish = null)
     {
         var ticket = ++_generation;
-        ClearPicture();
-        _background = pack?["background"] as JsonObject;
-        Sky.Configure(pack?["sky"] as JsonObject);
-        Paint();
-        if ((bool?)_background?["image"] != true || (string?)pack?["id"] is not { } id)
+        var background = pack?["background"] as JsonObject;
+        if ((bool?)background?["image"] != true || (string?)pack?["id"] is not { } id)
         {
+            Commit(null);
             return;
         }
 
         var bytes = await api.ThemeBackgroundAsync(id, token).ConfigureAwait(true);
-        if (ticket != _generation || token.IsCancellationRequested)
+        if (ticket != _generation || token.IsCancellationRequested || current?.Invoke() == false)
         {
             return;
         }
@@ -88,12 +88,29 @@ public sealed partial class ThemeBackdrop : UserControl
         }
 
         using var pixels = new MemoryStream(bytes, writable: false);
-        _bitmap = Math.Max(size.Width, size.Height) <= 2560
+        var next = Math.Max(size.Width, size.Height) <= 2560
             ? new Bitmap(pixels)
             : size.Width >= size.Height ? Bitmap.DecodeToWidth(pixels, 2560) : Bitmap.DecodeToHeight(pixels, 2560);
-        Picture.Source = _bitmap;
-        Crop();
-        Paint();
+        Commit(next);
+
+        void Commit(Bitmap? image)
+        {
+            if (ticket != _generation || token.IsCancellationRequested || current?.Invoke() == false)
+            {
+                image?.Dispose();
+                return;
+            }
+
+            var prior = _bitmap;
+            _background = background;
+            _bitmap = image;
+            Picture.Source = image;
+            Sky.Configure(pack?["sky"] as JsonObject);
+            publish?.Invoke();
+            Crop();
+            Paint();
+            prior?.Dispose();
+        }
     }
 
     /// <summary>Reads a normalized theme opacity or focal coordinate.</summary>

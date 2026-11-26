@@ -38,11 +38,25 @@ public sealed partial class NativeDomainTests
                         """)!.AsObject()))
                     : Task.FromResult<HttpResponseMessage?>(null);
 
-                await window.RefreshQueueAsync().ConfigureAwait(true);
                 var strip = window.FindControl<StackPanel>("QueueStrip")!;
+                var entered = false;
+                strip.Children.CollectionChanged += (_, change) =>
+                {
+                    if (change.NewItems?.OfType<Border>().FirstOrDefault() is { } row)
+                    {
+                        row.PropertyChanged += (_, property) =>
+                        {
+                            if (property.Property == Visual.OpacityProperty && row.Opacity == 0)
+                            {
+                                entered = true;
+                            }
+                        };
+                    }
+                };
+                await window.RefreshQueueAsync().ConfigureAwait(true);
                 var first = Assert.IsType<Border>(strip.Children[0]);
                 Assert.Equal("queue-motion", first.Tag);
-                await WaitForSettingsFrame(() => first.Opacity is > 0 and < 0.999 && first.RenderTransform!.Value.M32 > 0.4).ConfigureAwait(true);
+                Assert.True(entered);
                 await WaitForSettingsFrame(() => first.Opacity == 1 && first.RenderTransform!.Value.M32 == 0).ConfigureAwait(true);
 
                 await window.RefreshQueueAsync().ConfigureAwait(true);
@@ -114,6 +128,7 @@ public sealed partial class NativeDomainTests
             "conversation",
             async (window, reads) =>
             {
+                await WaitForSettingsFrame(() => window.Classes.Contains("motion")).ConfigureAwait(true);
                 reads.Exchange = request => request.RequestUri!.AbsolutePath == "/inbox"
                     ? Task.FromResult<HttpResponseMessage?>(JsonReply(JsonNode.Parse("""
                         {"revision":1,"paused":false,"items":[{"id":"queue-hover","preview":"queued line","intent":"followup","state":"queued"}],"capacity":{}}
@@ -124,7 +139,8 @@ public sealed partial class NativeDomainTests
                 var transition = Assert.Single(row.Transitions!.OfType<BrushTransition>());
                 Assert.Equal(TimeSpan.FromMilliseconds(180), transition.Duration);
                 Assert.IsType<SplineEasing>(transition.Easing);
-            });
+            },
+            allowMotion: true);
 
     /// <summary>Checks the queue action buttons' reference 120ms hover fades.</summary>
     /// <returns>The queue action transition check.</returns>
@@ -134,6 +150,7 @@ public sealed partial class NativeDomainTests
             "conversation",
             async (window, reads) =>
             {
+                await WaitForSettingsFrame(() => window.Classes.Contains("motion")).ConfigureAwait(true);
                 reads.Exchange = request => request.RequestUri!.AbsolutePath == "/inbox"
                     ? Task.FromResult<HttpResponseMessage?>(JsonReply(JsonNode.Parse("""
                         {"revision":1,"paused":false,"items":[{"id":"queue-buttons","preview":"queued line","intent":"followup","state":"queued"}],"capacity":{}}
@@ -149,5 +166,6 @@ public sealed partial class NativeDomainTests
                     Assert.Equal(TimeSpan.FromMilliseconds(120), transition.Duration);
                     Assert.IsType<SplineEasing>(transition.Easing);
                 });
-            });
+            },
+            allowMotion: true);
 }

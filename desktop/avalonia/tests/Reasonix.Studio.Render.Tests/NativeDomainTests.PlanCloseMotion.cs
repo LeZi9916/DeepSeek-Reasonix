@@ -5,6 +5,7 @@ using Avalonia.Styling;
 using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.State;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
@@ -50,7 +51,7 @@ public sealed partial class NativeDomainTests
                 async Task StartClose()
                 {
                     summary.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                    await WaitForMotionFrame(() => body.IsEffectivelyVisible && !body.IsAnimating(Visual.OpacityProperty)).ConfigureAwait(true);
+                    await WaitForMotionFrame(() => body.IsEffectivelyVisible && body.Opacity == 1 && !body.IsAnimating(Visual.OpacityProperty)).ConfigureAwait(true);
                     w.UpdateLayout();
                     Assert.True(body.Bounds.Height > 34);
                     Assert.True(close.Focus());
@@ -99,6 +100,30 @@ public sealed partial class NativeDomainTests
                 Assert.True(double.IsNaN(body.Height));
                 w.UpdateLayout();
                 CaptureMotionRegion(w, root, 483, -588, 768, 200, $"plan-close-{scheme}-final");
+
+                summary.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.True(body.Opacity < 1 && double.IsFinite(body.Height));
+                var currentHeight = body.Height;
+                var currentOpacity = body.Opacity;
+                var reversed = new List<(double Height, double Opacity)>();
+                void CaptureReverse(object? sender, AvaloniaPropertyChangedEventArgs change)
+                {
+                    if (body.IsVisible && (change.Property == Visual.OpacityProperty || change.Property == Avalonia.Layout.Layoutable.HeightProperty))
+                    {
+                        reversed.Add((body.Height, body.Opacity));
+                    }
+                }
+
+                body.PropertyChanged += CaptureReverse;
+                close.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await WaitForMotionFrame(() => !body.IsVisible).ConfigureAwait(true);
+                body.PropertyChanged -= CaptureReverse;
+                Assert.NotEmpty(reversed);
+                Assert.All(reversed, frame =>
+                {
+                    Assert.InRange(frame.Height, 0, currentHeight + 0.01);
+                    Assert.InRange(frame.Opacity, 0, currentOpacity + 0.001);
+                });
 
                 await StartClose().ConfigureAwait(true);
                 w.Classes.Remove("motion");

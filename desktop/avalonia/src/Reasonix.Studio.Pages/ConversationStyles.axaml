@@ -18,9 +18,9 @@
     </Style.Animations>
   </Style>
   <Style Selector="Button.conversation-action, Button.conversation-disclosure">
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
-    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource HairClearBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="7"/>
     <Setter Property="Padding" Value="0"/>
@@ -39,6 +39,13 @@
   </Style>
   <Style Selector="Button.conversation-action"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="Width" Value="26"/><Setter Property="Height" Value="26"/></Style>
   <Style Selector="Button.conversation-disclosure"><Setter Property="BorderThickness" Value="0"/></Style>
+  <Style Selector="Window.motion Button.conversation-action, Window.motion Button.conversation-disclosure">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <BrushTransition Property="BorderBrush" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
   <Style Selector="Button.conversation-action:pointerover, Button.conversation-disclosure:pointerover">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>

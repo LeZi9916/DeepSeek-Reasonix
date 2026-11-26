@@ -1,9 +1,9 @@
 <Styles xmlns="https://github.com/avaloniaui" xmlns:local="using:Reasonix.Studio.Shell.Composer">
     <Style Selector="Button.compose-deck-chip">
-      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/>
       <Setter Property="Foreground" Value="{DynamicResource FaintBrush}"/>
       <Setter Property="Padding" Value="8,0"/>
-      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource HairClearBrush}"/>
       <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="CornerRadius" Value="11"/>
       <Setter Property="Height" Value="22"/>

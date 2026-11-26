@@ -54,8 +54,9 @@ public sealed partial class NativeDomainTests
     public Task WorkbenchFileRowsFadeHoverBackgroundAndInk() =>
         WithSettingsAsync(
             "conversation",
-            (window, _) =>
+            async (window, _) =>
             {
+                await WaitForSettingsFrame(() => window.Classes.Contains("motion")).ConfigureAwait(true);
                 Navigate(window, "workbench");
                 var row = window.GetVisualDescendants().OfType<WorkspaceFileRow>().First();
                 var button = row.GetVisualDescendants().OfType<Button>().Single(item => item.Classes.Contains("workspace-file-row"));
@@ -66,6 +67,6 @@ public sealed partial class NativeDomainTests
                     Assert.Equal(TimeSpan.FromMilliseconds(120), transition.Duration);
                     Assert.IsType<SplineEasing>(transition.Easing);
                 });
-                return Task.CompletedTask;
-            });
+            },
+            allowMotion: true);
 }

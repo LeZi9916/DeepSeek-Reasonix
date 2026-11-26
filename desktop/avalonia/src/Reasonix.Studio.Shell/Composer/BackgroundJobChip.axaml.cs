@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Reasonix.Studio.Contracts.Jobs;
 using Reasonix.Studio.Controls;
 using Reasonix.Studio.Kernel.Client;
@@ -117,6 +118,7 @@ internal sealed partial class BackgroundJobChip : UserControl
             _cleared.Clear();
             _stopping.Clear();
             Classes.Remove("live");
+            _jobRendered.Clear();
             Close();
         }
 
@@ -124,6 +126,12 @@ internal sealed partial class BackgroundJobChip : UserControl
         if (_source == source && _jobs.SequenceEqual(jobs))
         {
             return;
+        }
+
+        if (_source is { } shown && shown != source)
+        {
+            Rows.Children.Clear();
+            _controls.Clear();
         }
 
         _source = source;
@@ -214,17 +222,21 @@ internal sealed partial class BackgroundJobChip : UserControl
     {
         UpdateTrigger(language);
         JobsChanged?.Invoke(_jobs);
-        _confirmationMotion?.Cancel();
-        Rows.Children.Clear();
-        _controls.Clear();
         _elapsed.Clear();
         var current = _jobs.Select(job => job.Id).ToHashSet(StringComparer.Ordinal);
+        foreach (var id in _controls.Keys.Where(id => !current.Contains(id)).ToArray())
+        {
+            _controls.Remove(id);
+        }
+
+        var prior = Rows.Children.OfType<Border>().Where(row => row.Tag is string).ToDictionary(row => (string)row.Tag!, StringComparer.Ordinal);
+        var desired = new List<Control>();
         var running = _jobs.Where(job => job.Status == "running").ToArray();
         var ended = _jobs.Where(job => job.Status != "running").ToArray();
-        AddSection(running, true, language);
+        AddSection(running, true, language, prior, desired);
         if (running.Length > 0 && ended.Length > 0)
         {
-            Rows.Children.Add(new Border
+            desired.Add(new Border
             {
                 Height = 1,
                 Margin = new Thickness(0, 4, 0, 0),
@@ -232,7 +244,36 @@ internal sealed partial class BackgroundJobChip : UserControl
             });
         }
 
-        AddSection(ended, false, language);
+        AddSection(ended, false, language, prior, desired);
+        var retained = desired.ToHashSet();
+        for (var index = Rows.Children.Count - 1; index >= 0; index--)
+        {
+            if (!retained.Contains(Rows.Children[index]))
+            {
+                Rows.Children.RemoveAt(index);
+            }
+        }
+
+        for (var index = 0; index < desired.Count; index++)
+        {
+            var child = desired[index];
+            var oldIndex = Rows.Children.IndexOf(child);
+            if (oldIndex < 0)
+            {
+                Rows.Children.Insert(index, child);
+            }
+            else if (oldIndex != index)
+            {
+                Rows.Children.Move(oldIndex, index);
+            }
+
+            if (child is Border { Tag: string id } row && _jobRendered.Add(id) && Details.IsOpen && row.IsAttachedToVisualTree())
+            {
+                EnterJobRow(row);
+            }
+        }
+
+        RefreshStopButtons();
         if (_armed is { } armed && !_controls.ContainsKey(armed))
         {
             SetArmed(null);
@@ -254,7 +295,8 @@ internal sealed partial class BackgroundJobChip : UserControl
     /// <param name="jobs">The jobs for this section.</param>
     /// <param name="running">Whether they are running.</param>
     /// <param name="language">The reader's language.</param>
-    private void AddSection(BackgroundJobStatus[] jobs, bool running, InterfaceLanguage language)
+    /// <param name="prior">Mounted job surfaces by identity.</param><param name="desired">The next row order.</param>
+    private void AddSection(BackgroundJobStatus[] jobs, bool running, InterfaceLanguage language, Dictionary<string, Border> prior, List<Control> desired)
     {
         if (jobs.Length == 0)
         {
@@ -286,9 +328,26 @@ internal sealed partial class BackgroundJobChip : UserControl
             header.Children.Add(clear);
         }
 
-        Rows.Children.Add(header);
+        desired.Add(header);
         foreach (var job in jobs)
         {
+            if (!prior.TryGetValue(job.Id, out var surface))
+            {
+                surface = new Border { Tag = job.Id, Classes = { "job-deck-row" }, CornerRadius = new CornerRadius(7), Padding = new Thickness(8) };
+            }
+
+            desired.Add(surface);
+            if (surface.DataContext is ValueTuple<BackgroundJobStatus, TextBlock> previous && previous.Item1 == job)
+            {
+                if (running)
+                {
+                    _elapsed.Add((job, previous.Item2));
+                }
+
+                continue;
+            }
+
+            _controls.Remove(job.Id);
             var row = new StackPanel { Spacing = 3 };
             var top = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
             var title = Line(string.IsNullOrWhiteSpace(job.Description) ? job.Label : job.Description, 13, "TextBrush");
@@ -335,11 +394,8 @@ internal sealed partial class BackgroundJobChip : UserControl
                 AddLine(MessageCatalog.Get("panels.exit_code", language, ("code", Format.Count(code, language))), 11, code == 0 ? "FaintBrush" : "ErrInkBrush");
             }
 
-            Rows.Children.Add(new Border { Tag = job.Id, Classes = { "job-deck-row" }, Child = row, CornerRadius = new CornerRadius(7), Padding = new Thickness(8) });
-            if (_jobRendered.Add(job.Id))
-            {
-                EnterJobRow((Border)Rows.Children[^1]);
-            }
+            surface.DataContext = (job, time);
+            surface.Child = row;
 
             void AddLine(string? text, int size, string ink)
             {

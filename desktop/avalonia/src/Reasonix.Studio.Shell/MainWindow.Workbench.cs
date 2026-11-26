@@ -381,6 +381,11 @@ public sealed partial class MainWindow
     private async Task OpenWorkbenchAsync()
     {
         RevealWorkbench(animate: true);
+        if (ManualBrowserHost.IsVisible && !WorkbenchStart.IsVisible && ManualBrowserHost.Content is ManualWebPreview page)
+        {
+            page.Wake();
+        }
+
         await Task.WhenAll(ListFilesAsync(), LoadGitAsync()).ConfigureAwait(true);
         RefreshWorkbenchLauncher(refreshContents: true);
     }
@@ -421,7 +426,8 @@ public sealed partial class MainWindow
         Grid.SetColumn(WorkbenchPanel, overlay ? 0 : 1);
         WorkbenchPanel.Width = overlay ? double.NaN : Math.Min(510, room - 246);
         WorkbenchPanel.Margin = new Avalonia.Thickness(overlay ? 2 : 0, 8, 8, 8);
-        ConversationArea.IsVisible = !(overlay && WorkbenchPanel.IsVisible);
+        ConversationArea.IsHitTestVisible = !(overlay && WorkbenchPanel.IsVisible);
+        ConversationArea.IsVisible = ConversationArea.IsHitTestVisible || _workbenchEntrance is not null || _workbenchDismiss is not null;
         var stacked = LayoutRoot.Bounds.Width <= 840;
         Conversation.SetMessageRailAvailable(!stacked);
         var docked = WorkbenchPanel.IsVisible && !overlay;

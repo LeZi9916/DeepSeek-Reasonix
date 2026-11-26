@@ -16,6 +16,46 @@ namespace Reasonix.Studio.Render.Tests;
 
 public sealed partial class NativeDomainTests
 {
+    /// <summary>Keeps the hovered message and marker mounted when an answer grows.</summary>
+    /// <returns>The streaming rail interaction.</returns>
+    [Fact]
+    public Task StreamingKeepsTheMessageRailPreviewMounted() => WithSettingsAsync(
+        "conversation",
+        async (w, _) =>
+        {
+            var answer = string.Join("\n\n", Enumerable.Repeat("An answer with several paragraphs.", 8));
+            var items = Enumerable.Range(1, 7).SelectMany(index => new TranscriptItem[]
+            {
+                new UserItem { Id = $"q{index}", Text = $"Question {index}" },
+                new SayItem { Id = $"a{index}", Text = answer, Done = index < 7 },
+            }).ToArray();
+            w.ShowState(new SessionState { Items = items, Running = true });
+            w.UpdateLayout();
+            var page = w.FindControl<SessionPage>("Conversation")!;
+            var track = page.GetVisualDescendants().OfType<Canvas>().Single(canvas => canvas.Name == "Track");
+            var peek = page.GetVisualDescendants().OfType<Border>().Single(border => border.Name == "Peek");
+            await WaitForMotionFrame(() => track.Children.OfType<Button>().Count() == 7).ConfigureAwait(true);
+            var mark = track.Children.OfType<Button>().ElementAt(2);
+            var initialTop = Canvas.GetTop(mark);
+            var point = track.TranslatePoint(new Point(16, initialTop + (mark.Height / 2)), w)!.Value;
+            w.MouseMove(point);
+            Assert.True(peek.IsVisible);
+            var updated = items.ToArray();
+            var last = (SayItem)items[^1];
+            updated[^1] = last with
+            {
+                Text = answer + "\n\n" + answer,
+            };
+            w.ShowState(new SessionState { Items = updated, Running = true });
+            w.UpdateLayout();
+            Dispatcher.UIThread.RunJobs();
+
+            Assert.True(peek.IsVisible);
+            Assert.Same(mark, track.Children.OfType<Button>().ElementAt(2));
+            Assert.NotEqual(initialTop, Canvas.GetTop(mark));
+        },
+        allowMotion: true);
+
     /// <summary>Shows the timed preview for a question and jumps to that question from its mark.</summary>
     /// <param name="dark">Whether to use the dark palette.</param>
     /// <returns>The message rail interaction.</returns>

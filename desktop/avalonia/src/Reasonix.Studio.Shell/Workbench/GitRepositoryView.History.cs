@@ -242,7 +242,8 @@ public sealed partial class GitRepositoryView
     /// <param name="board">The expanded changes canvas.</param>
     private void DrawBoard(GitChangesView board)
     {
-        board.Files.Children.Clear();
+        var prior = board.Files.Children.OfType<GitChangeRow>().ToDictionary(row => (string)row.Tag!, StringComparer.Ordinal);
+        var desired = new List<Control>();
         var many = _changes.Length > 8;
         var untracked = _changes.Count(change => (string?)change["status"] == "??");
         var counts = Text(
@@ -281,63 +282,59 @@ public sealed partial class GitRepositoryView
             var oldPath = (string?)change["oldPath"];
             var status = (string?)change["status"];
             var startsFolded = status is "A" or "??";
-            var row = new GitChangeRow();
+            var existing = prior.Remove(path, out var row);
+            row ??= new GitChangeRow { Tag = path };
+            var stage = row.IndexControl ?? StageBox([change], path, "workbench.stage", () => _changes.Where(current => (string?)current["path"] == path).ToArray());
+            stage.IsChecked = FullyStaged([change]) ? true : (bool?)change["staged"] == true ? null : false;
             row.ShowFile(
                 path,
                 oldPath is null ? path : oldPath + " → " + path,
                 string.IsNullOrEmpty(status) ? "M" : status,
-                StageBox([change], path, "workbench.stage"),
+                stage,
                 (int?)change["insertions"] is int added ? "+" + added.ToString(CultureInfo.CurrentCulture) : null,
                 (int?)change["deletions"] is int removed ? "−" + removed.ToString(CultureInfo.CurrentCulture) : null,
                 startsFolded && many ? Text(status == "??" ? "workbench.tag_untracked" : "workbench.tag_new") : null,
                 startsFolded && !many ? Text(status == "??" ? "workbench.untracked_open_to_see" : "workbench.new_file_open_to_see") : null);
-            row.Expanded = _expanded.TryGetValue(path, out var open) ? open : !startsFolded;
-            row.OnOpen(Text("workbench.open_file"), () => _open(path));
+            if (!existing)
+            {
+                row.Expanded = _expanded.TryGetValue(path, out var open) ? open : !startsFolded;
+                row.OnOpen(Text("workbench.open_file"), () => _open(path));
+                row.OnToggle(async expand =>
+                {
+                    row.Expanded = expand;
+                    _expanded[path] = expand;
+                    if (expand)
+                    {
+                        await row.LoadPatchAsync(ReadPatch, Caption(Text("common.loading"))).ConfigureAwait(true);
+                    }
+                });
+            }
+
             row.OnDiscard(
                 Text("workbench.discard"),
                 Text("workbench.confirm_discard"),
                 Text("workbench.discard_the_change_to_path", ("path", path)),
                 Discardable(change) ? () => WriteAsync(() => _api.GitDiscardAsync(_repo, path, _token), path) : null);
-            var patch = row.Patch;
-            var loading = false;
-            row.OnToggle(async expand =>
-            {
-                row.Expanded = expand;
-                _expanded[path] = expand;
-                if (expand)
-                {
-                    await ReadPatch().ConfigureAwait(true);
-                }
-            });
-
-            board.Files.Children.Add(row);
+            desired.Add(row);
             if (row.Expanded)
             {
-                _ = ReadPatch();
+                _ = row.LoadPatchAsync(ReadPatch, Caption(Text("common.loading")), refresh: true);
+            }
+            else
+            {
+                row.InvalidatePatch();
             }
 
-            async Task ReadPatch()
+            async Task<Control?> ReadPatch()
             {
-                if (loading || patch.Content is not null)
-                {
-                    return;
-                }
-
-                loading = true;
                 try
                 {
                     var reply = await _api.GitDiffAsync(_repo, path, _token).ConfigureAwait(true);
-                    if (!_token.IsCancellationRequested)
-                    {
-                        patch.Content = Patch(reply, path);
-                    }
+                    return _token.IsCancellationRequested ? null : Patch(reply, path);
                 }
                 catch (Exception error)
                 {
-                    if (!_token.IsCancellationRequested)
-                    {
-                        patch.Content = Caption(_describe(error));
-                    }
+                    return _token.IsCancellationRequested ? null : Caption(_describe(error));
                 }
             }
         }
@@ -349,7 +346,29 @@ public sealed partial class GitRepositoryView
             hint.Margin = new Thickness(12, 10);
             hint.FontWeight = FontWeight.Medium;
             hint.Bind(TextBlock.ForegroundProperty, hint.GetResourceObservable("FaintBrush"));
-            board.Files.Children.Add(hint);
+            desired.Add(hint);
+        }
+
+        var retained = desired.ToHashSet();
+        for (var index = board.Files.Children.Count - 1; index >= 0; index--)
+        {
+            if (!retained.Contains(board.Files.Children[index]))
+            {
+                board.Files.Children.RemoveAt(index);
+            }
+        }
+
+        for (var index = 0; index < desired.Count; index++)
+        {
+            var oldIndex = board.Files.Children.IndexOf(desired[index]);
+            if (oldIndex < 0)
+            {
+                board.Files.Children.Insert(index, desired[index]);
+            }
+            else if (oldIndex != index)
+            {
+                board.Files.Children.Move(oldIndex, index);
+            }
         }
     }
 }

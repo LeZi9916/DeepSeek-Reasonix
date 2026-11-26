@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Reasonix.Studio.Controls;
 using Reasonix.Studio.Pages.I18n;
 using Reasonix.Studio.State;
@@ -31,6 +32,9 @@ public sealed partial class SessionPage
 
     /// <summary>Contains only rows whose controls are attached.</summary>
     private readonly Dictionary<string, Control> _realized = new(StringComparer.Ordinal);
+
+    /// <summary>In-flight disclosures that the virtual panel is replacing.</summary>
+    private readonly Dictionary<(TranscriptPart Part, string Id), DisclosureMotion.Pose> _foldPoses = [];
 
     /// <summary>Invalidates deferred work after structural changes.</summary>
     private long _viewportVersion;
@@ -272,10 +276,17 @@ public sealed partial class SessionPage
 
         if (oldEnd - prefix == newEnd - prefix)
         {
+            var captured = false;
             for (var i = prefix; i < newEnd; i++)
             {
                 if (!SameEntry(_viewportRows[i], next[i]) && !TryRetainActivityEntry(_viewportRows[i], next[i]))
                 {
+                    if (!captured)
+                    {
+                        CaptureFoldPoses();
+                        captured = true;
+                    }
+
                     _viewportRows[i] = next[i];
                 }
             }
@@ -283,8 +294,52 @@ public sealed partial class SessionPage
             return;
         }
 
+        CaptureFoldPoses();
         _viewportRows.RemoveRange(prefix, oldEnd - prefix);
         _viewportRows.InsertRange(prefix, next.GetRange(prefix, newEnd - prefix));
+    }
+
+    /// <summary>Retains a visible in-flight fold when its projected row must be replaced.</summary>
+    private void CaptureFoldPoses()
+    {
+        _foldPoses.Clear();
+        var version = _viewportVersion;
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                if (_viewportVersion == version)
+                {
+                    _foldPoses.Clear();
+                }
+            },
+            DispatcherPriority.Background);
+
+        foreach (var (id, row) in _realized)
+        {
+            if (row is Border { Child: ToolCallHeader tool } && tool.FindControl<DisclosureMotion>("Detail")?.CapturePose() is { } pose)
+            {
+                _foldPoses[(TranscriptPart.Steps, id)] = pose;
+            }
+        }
+
+        foreach (var group in _rows.GetVisualDescendants().OfType<ActivityDisclosure>())
+        {
+            if (group.Tag is IReadOnlyList<TranscriptItem> work && group.FindControl<DisclosureMotion>("Body")?.CapturePose() is { } pose)
+            {
+                _foldPoses[(TranscriptPart.Activity, work[0].Id)] = pose;
+            }
+        }
+    }
+
+    /// <summary>Transfers an interrupted fold to the replacement for the same transcript record.</summary>
+    /// <param name="part">The kind of disclosure.</param><param name="id">Its canonical record.</param>
+    /// <param name="body">The replacement body, before it is mounted.</param>
+    private void RestoreFoldPose(TranscriptPart part, string id, DisclosureMotion body)
+    {
+        if (_foldPoses.Remove((part, id), out var pose))
+        {
+            body.RestorePose(pose);
+        }
     }
 
     /// <summary>Groups each run of work with the preceding answer when present.</summary>

@@ -115,9 +115,11 @@
   <Style Selector="settings|SettingsGroup.global-shortcut-setting TextBlock#Heading">
     <Setter Property="FontWeight" Value="Medium"/>
   </Style>
+  <Style Selector="Window.motion ScrollViewer#SettingsScroller ScrollBar">
+    <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12"/></Transitions></Setter>
+  </Style>
   <Style Selector="ScrollViewer#SettingsScroller ScrollBar">
     <Setter Property="Opacity" Value="0"/>
-    <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12"/></Transitions></Setter>
   </Style>
   <Style Selector="ScrollViewer#SettingsScroller ScrollBar:pointerover">
     <Setter Property="Opacity" Value="1"/>
@@ -230,6 +232,13 @@
       </Border>
     </ControlTemplate></Setter>
   </Style>
+  <Style Selector="Window.motion Button.preset-pick">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="Button.preset-pick"><Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/></Style>
   <Style Selector="Button.preset-muted"><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/></Style>
   <Style Selector="Button.preset-muted:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/></Style>
   <Style Selector="Button.preset-act">
@@ -366,9 +375,9 @@
     <Setter Property="Padding" Value="9.75,0"/><Setter Property="Margin" Value="1,0"/><Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
     <Setter Property="Background" Value="{DynamicResource RaisedClearBrush}"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
     <Setter Property="Template"><ControlTemplate>
-      <Border Name="SegmentFrame" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+      <Grid Name="SegmentMotion"><Border Name="SegmentFrame" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
         <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-      </Border>
+      </Border></Grid>
     </ControlTemplate></Setter>
   </Style>
   <Style Selector="RadioButton.segmented.data-choice">
@@ -382,11 +391,9 @@
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
   </Style>
   <Style Selector="Window.motion RadioButton.segmented">
-    <Setter Property="RenderTransform" Value="scale(1)"/>
     <Setter Property="Transitions"><Transitions>
       <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
       <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
-      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="{StaticResource SpringEasing}"/>
     </Transitions></Setter>
   </Style>
   <Style Selector="RadioButton.segmented /template/ Border#SegmentFrame">
@@ -400,7 +407,13 @@
       <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
     </Transitions></Setter>
   </Style>
-  <Style Selector="Window.motion RadioButton.segmented:pressed">
+  <Style Selector="Window.motion RadioButton.segmented /template/ Grid#SegmentMotion">
+    <Setter Property="RenderTransform" Value="scale(1)"/>
+    <Setter Property="Transitions"><Transitions>
+      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="{StaticResource SpringEasing}"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="Window.motion RadioButton.segmented:pressed /template/ Grid#SegmentMotion">
     <Setter Property="RenderTransform" Value="scale(0.96)"/>
     <Setter Property="Transitions"><Transitions>
       <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.06"/>
@@ -443,17 +456,19 @@
     <Setter Property="Effect"><BlurEffect Radius="6"/></Setter>
   </Style>
   <Style Selector="Border.fold-option-surface">
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource AccentClearBrush}"/>
     <Setter Property="Padding" Value="12,10"/>
     <Setter Property="BorderThickness" Value="0,1,0,0"/>
   </Style>
   <Style Selector="TextBlock.fold-option-caption"><Setter Property="FontWeight" Value="Medium"/></Style>
+  <Style Selector="Border.fold-example-part"><Setter Property="Background" Value="{DynamicResource AccentClearBrush}"/></Style>
   <Style Selector="Window.motion Border.fold-option-surface, Window.motion Border.fold-example-part">
     <Setter Property="Transitions"><Transitions>
       <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
     </Transitions></Setter>
   </Style>
   <Style Selector="Window.motion settings|FoldingPreviewFrame">
+    <Setter Property="Background" Value="{DynamicResource AccentClearBrush}"/>
     <Setter Property="Transitions"><Transitions>
       <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
       <ColorTransition Property="Outline" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>

@@ -10,14 +10,37 @@ namespace Reasonix.Studio.Shell.Workbench;
 /// <summary>Displays a changed-file heading and its optional patch.</summary>
 public sealed partial class GitChangeRow : UserControl
 {
+    /// <summary>The current discard action and its two accessible labels.</summary>
+    private (string Label, string Confirm, Func<Task>? Run) _discard;
+
+    /// <summary>The latest diff request made for this surface.</summary>
+    private int _patchRead;
+
     /// <summary>Initializes a new instance of the <see cref="GitChangeRow"/> class.</summary>
     public GitChangeRow()
     {
         InitializeComponent();
+        DiscardButton.LostFocus += (_, _) => ResetDiscard();
+        DiscardButton.Click += async (_, _) =>
+        {
+            if (_discard.Run is not { } discard)
+            {
+                return;
+            }
+
+            if (DiscardButton.Classes.Contains("confirming"))
+            {
+                await discard().ConfigureAwait(true);
+                return;
+            }
+
+            DiscardButton.Content = _discard.Confirm;
+            DiscardButton.Classes.Add("confirming");
+        };
     }
 
-    /// <summary>Gets the patch body for the repository reader to populate.</summary>
-    internal ContentControl Patch => PatchHost;
+    /// <summary>Gets the existing index control when the file has already been drawn.</summary>
+    internal GitStageBox? IndexControl => StageHost.Content as GitStageBox;
 
     /// <summary>Gets or sets a value indicating whether the patch is expanded.</summary>
     internal bool Expanded
@@ -63,6 +86,7 @@ public sealed partial class GitChangeRow : UserControl
         TagBody.IsVisible = tag is not null;
         FileTag.Text = tag;
         PeekLabel.Text = peek;
+        PeekBody.IsVisible = PeekButton.IsVisible = !Expanded && peek is not null;
         if (peek is not null)
         {
             AutomationProperties.SetName(PeekButton, peek);
@@ -94,34 +118,57 @@ public sealed partial class GitChangeRow : UserControl
     /// <param name="discard">The confirmed repository mutation, if allowed.</param>
     internal void OnDiscard(string label, string confirm, string description, Func<Task>? discard)
     {
+        _discard = (label, confirm, discard);
         DiscardButton.IsVisible = discard is not null;
-        if (discard is null)
+        if (!DiscardButton.Classes.Contains("confirming") || discard is null)
+        {
+            ResetDiscard();
+        }
+
+        AutomationProperties.SetName(DiscardButton, description);
+    }
+
+    /// <summary>Discards the cached patch for a closed file after an index refresh.</summary>
+    internal void InvalidatePatch()
+    {
+        _patchRead++;
+        PatchHost.Content = null;
+    }
+
+    /// <summary>Keeps the preview's space until the latest diff or error is ready.</summary>
+    /// <param name="load">The current repository diff read.</param><param name="loading">The themed loading surface.</param>
+    /// <param name="refresh">Whether to supersede a cached or pending read.</param>
+    /// <returns>The current read.</returns>
+    internal async Task LoadPatchAsync(Func<Task<Control?>> load, Control loading, bool refresh = false)
+    {
+        if (!refresh && PatchHost.Content is not null)
         {
             return;
         }
 
-        DiscardButton.Content = label;
-        AutomationProperties.SetName(DiscardButton, description);
-        DiscardButton.LostFocus += (_, _) =>
+        var ticket = ++_patchRead;
+        if (PatchHost.Content is null)
         {
-            DiscardButton.Content = label;
-            DiscardButton.Classes.Remove("confirming");
-        };
-        DiscardButton.Click += async (_, _) =>
-        {
-            if (DiscardButton.Classes.Contains("confirming"))
-            {
-                await discard().ConfigureAwait(true);
-                return;
-            }
+            loading.MinHeight = Math.Max(PeekButton.Height + 1, PeekBody.Bounds.Height);
+            PatchHost.Content = loading;
+        }
 
-            DiscardButton.Content = confirm;
-            DiscardButton.Classes.Add("confirming");
-        };
+        var next = await load().ConfigureAwait(true);
+        if (ticket == _patchRead && next is not null)
+        {
+            PatchHost.Content = next;
+        }
     }
 
     /// <summary>Moves the heading down inside its own section without affecting layout.</summary>
     /// <param name="offset">Distance scrolled through the section.</param>
     internal void Pin(double offset) => ((TranslateTransform)FileHeader.RenderTransform!).Y =
         Math.Clamp(offset, 0, Math.Max(0, Bounds.Height - FileHeader.Bounds.Height));
+
+    /// <summary>Clears confirmation when the discard action loses focus.</summary>
+    private void ResetDiscard()
+    {
+        DiscardButton.Content = _discard.Label;
+        DiscardButton.Classes.Remove("confirming");
+    }
 }

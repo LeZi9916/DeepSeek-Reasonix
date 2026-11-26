@@ -197,6 +197,11 @@ public sealed partial class MainWindow
 
         if (_closing.IsCancellationRequested || current?.Invoke() == false)
         {
+            if (leavingSetup && !_closing.IsCancellationRequested)
+            {
+                ResetSetupDeparturePose();
+            }
+
             return;
         }
 
@@ -207,6 +212,11 @@ public sealed partial class MainWindow
 
         if (_closing.IsCancellationRequested || current?.Invoke() == false)
         {
+            if (!_closing.IsCancellationRequested && SettingsPanel.IsVisible && _settingsShellMotion is null)
+            {
+                EnterSettingsShell();
+            }
+
             return;
         }
 
@@ -222,6 +232,11 @@ public sealed partial class MainWindow
 
         SetupPanel.IsVisible = false;
         SettingsPanel.IsVisible = false;
+        if (leavingSetup)
+        {
+            ResetSetupDeparturePose();
+        }
+
         CancelSettingsScroll();
         ClearSettingsLanding();
         StopSettingsColumn();

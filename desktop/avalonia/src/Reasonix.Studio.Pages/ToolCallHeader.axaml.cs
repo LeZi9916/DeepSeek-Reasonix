@@ -125,7 +125,7 @@ internal sealed partial class ToolCallHeader : UserControl
         {
             _openOutput = !_openOutput;
             rememberOutput(_openOutput);
-            ApplyClip(language);
+            ApplyClip(language, animate: true);
         };
 
         SetOpen(openStep);
@@ -203,9 +203,18 @@ internal sealed partial class ToolCallHeader : UserControl
 
     /// <summary>Projects the reader's clip choice onto the existing scroll viewer.</summary>
     /// <param name="language">The interface language.</param>
-    private void ApplyClip(InterfaceLanguage language)
+    /// <param name="animate">Whether the user toggled the visible output.</param>
+    private void ApplyClip(InterfaceLanguage language, bool animate = false)
     {
-        _output.MaxHeight = _openOutput ? double.PositiveInfinity : _cap;
+        if (animate)
+        {
+            _ = AnimateOutputClipAsync();
+        }
+        else if (_outputClipMotion is null)
+        {
+            _output.MaxHeight = _openOutput ? double.PositiveInfinity : _cap;
+        }
+
         this.FindControl<Button>("ExpandOutput")!.Content = MessageCatalog.Get(_openOutput ? "common.collapse" : "chat.show_all", language);
         ShowMore();
     }

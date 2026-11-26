@@ -18,17 +18,14 @@ internal sealed partial class ProjectEntry : UserControl
     /// <param name="folded">Whether its sessions are hidden.</param>
     /// <param name="toggle">Changes the disclosure.</param>
     /// <param name="host">Remote machine, or null for local.</param><param name="language">Interface language.</param>
-    internal ProjectEntry(TreeWorkspace workspace, bool folded, Action toggle, RemoteRailHost? host = null, InterfaceLanguage language = InterfaceLanguage.Zh)
+    internal ProjectEntry(TreeWorkspace workspace, bool folded, Action<ProjectEntry> toggle, RemoteRailHost? host = null, InterfaceLanguage language = InterfaceLanguage.Zh)
     {
         InitializeComponent();
         Title.Text = workspace.Name;
-        var unread = workspace.Sessions.Count(session => session.Unread);
-        UnreadBadge.IsVisible = folded && unread > 0;
-        UnreadCount.Text = Format.Count(unread, language);
+        SetFolded(workspace, folded, language);
         AutomationProperties.SetName(Menu, MessageCatalog.Get("common.project_actions_name", language, ("name", workspace.Name)));
         ToolTip.SetTip(Menu, MessageCatalog.Get("common.more_actions", language));
         Opacity = workspace.Missing ? 0.5 : 1;
-        Chevron.Data = Geometry.Parse(folded ? "m9 6 6 6-6 6" : "m6 9 6 6 6-6");
         Disclosure.Opacity = workspace.Sessions.Count > 0 || workspace.Total > 0 ? 1 : 0;
         Host.Text = host?.Name;
         State.Text = host?.Status switch
@@ -59,7 +56,18 @@ internal sealed partial class ProjectEntry : UserControl
         AutomationProperties.SetName(Fold, workspace.Name);
         ToolTip.SetTip(Fold, workspace.Root);
         ToolTip.SetTip(Host, host?.Target);
-        Fold.Click += (_, _) => toggle();
+        Fold.Click += (_, _) => toggle(this);
+    }
+
+    /// <summary>Updates the retained project header when its session range changes.</summary>
+    /// <param name="workspace">The project shown by this header.</param><param name="folded">Whether its sessions are hidden.</param>
+    /// <param name="language">The reader's language.</param>
+    internal void SetFolded(TreeWorkspace workspace, bool folded, InterfaceLanguage language)
+    {
+        var unread = workspace.Sessions.Count(session => session.Unread);
+        UnreadBadge.IsVisible = folded && unread > 0;
+        UnreadCount.Text = Format.Count(unread, language);
+        Chevron.Data = Geometry.Parse(folded ? "m9 6 6 6-6 6" : "m6 9 6 6 6-6");
     }
 
     /// <summary>Shares the same menu between the row and its visible action button.</summary>

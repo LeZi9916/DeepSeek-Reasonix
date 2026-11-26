@@ -17,8 +17,9 @@ public sealed partial class ProjectRail
     private readonly HashSet<string> _spread = new(StringComparer.Ordinal);
 
     /// <summary>Draws preserved transcripts only after the owner explicitly expands them.</summary>
+    /// <param name="rows">The target row collection.</param>
     /// <param name="root">Owning project root.</param><param name="owner">Canonical transcript with preserved versions.</param>
-    private void AddKeptRows(string root, TreeSession owner)
+    private void AddKeptRows(ICollection<Control> rows, string root, TreeSession owner)
     {
         if (!_spread.Contains(owner.Path))
         {
@@ -50,7 +51,7 @@ public sealed partial class ProjectRail
             Grid.SetColumn(delete, 1);
             row.Children.Add(open);
             row.Children.Add(delete);
-            _rows.Children.Add(row);
+            rows.Add(row);
         }
     }
 }

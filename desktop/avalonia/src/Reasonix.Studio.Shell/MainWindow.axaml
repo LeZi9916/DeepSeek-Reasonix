@@ -21,6 +21,8 @@
       <ResourceDictionary.MergedDictionaries><ResourceInclude Source="avares://Reasonix.Studio.Pages/Rail/WorkspaceMenu.axaml"/></ResourceDictionary.MergedDictionaries>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="UtilityHoverBrush" Color="Black" Opacity="0.1"/>
+          <SolidColorBrush x:Key="UtilityClearBrush" Color="Black" Opacity="0"/>
           <SolidColorBrush x:Key="ComposeMaskBrush" Color="{DynamicResource Ghost}"/>
           <SolidColorBrush x:Key="ComposeContextProgressBrush" Color="#858981"/>
           <SolidColorBrush x:Key="ComposeContextHoleBrush" Color="{DynamicResource Surface}"/>
@@ -30,6 +32,8 @@
           <SolidColorBrush x:Key="CacheMeterHoverInkBrush" Color="{DynamicResource Ghost}"/>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="UtilityHoverBrush" Color="White" Opacity="0.1"/>
+          <SolidColorBrush x:Key="UtilityClearBrush" Color="White" Opacity="0"/>
           <SolidColorBrush x:Key="ComposeMaskBrush" Color="{DynamicResource Muted}"/>
           <SolidColorBrush x:Key="ComposeContextProgressBrush" Color="{DynamicResource Accent}"/>
           <SolidColorBrush x:Key="ComposeContextHoleBrush" Color="{DynamicResource Raised}"/>
@@ -42,23 +46,28 @@
       <SolidColorBrush x:Key="OverlayClearBrush" Color="{DynamicResource Overlay}" Opacity="0"/>
       <SolidColorBrush x:Key="RaisedClearBrush" Color="{DynamicResource Raised}" Opacity="0"/>
       <SolidColorBrush x:Key="BorderClearBrush" Color="{DynamicResource Border}" Opacity="0"/>
+      <SolidColorBrush x:Key="HairClearBrush" Color="{DynamicResource Hair}" Opacity="0"/>
+      <SolidColorBrush x:Key="FloatHiClearBrush" Color="{DynamicResource FloatHi}" Opacity="0"/>
+      <SolidColorBrush x:Key="AccentClearBrush" Color="{DynamicResource Accent}" Opacity="0"/>
     </ResourceDictionary>
   </Window.Resources>
   <Window.Styles>
-    <Style Selector="Window.motion Button">
+    <Style Selector="Window:not(.motion) Button">
+      <Setter Property="Transitions" Value="{x:Null}"/>
+    </Style>
+    <Style Selector="Window.motion Button.icon:not(.rail-settings):not(.rail-shortcuts) /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Transitions"><Transitions>
         <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
-        <BrushTransition Property="BorderBrush" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
         <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
-        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.075"/>
       </Transitions></Setter>
     </Style>
-    <Style Selector="Window.motion Button /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Window.motion Button#CloseSettings /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Transitions"><Transitions>
         <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
-        <BrushTransition Property="BorderBrush" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
-        <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
       </Transitions></Setter>
+    </Style>
+    <Style Selector="Button#CloseSettings:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource UtilityHoverBrush}"/>
     </Style>
     <Style Selector="Window.motion notices|CopyNotice.arriving">
       <Style.Animations><Animation Duration="0:0:0.18" Easing="0.16,1,0.3,1">
@@ -671,7 +680,7 @@
     <Grid Name="SettingsTitleBar" ColumnDefinitions="Auto,*" Background="{DynamicResource PageBrush}" AutomationProperties.AutomationId="class:prefs-windowbar">
       <Border Grid.ColumnSpan="2" Height="1" VerticalAlignment="Bottom" Background="{DynamicResource HairBrush}" />
       <Button Name="CloseSettings" AutomationProperties.AutomationId="action:settings.close" Margin="12,0" Padding="10,0" Height="32"
-              VerticalAlignment="Center" BorderThickness="0" Background="Transparent" CornerRadius="7">
+              VerticalAlignment="Center" BorderThickness="0" Background="{DynamicResource UtilityClearBrush}" CornerRadius="7">
         <StackPanel Orientation="Horizontal" Spacing="8">
           <Viewbox Width="16" Height="16"><Canvas Width="24" Height="24"><Path Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Data="{StaticResource Glyph.back}" /></Canvas></Viewbox>
           <TextBlock Name="BackLabel" FontSize="{DynamicResource StudioType13}" FontWeight="Medium" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>

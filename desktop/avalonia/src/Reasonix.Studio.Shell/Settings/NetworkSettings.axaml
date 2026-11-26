@@ -41,7 +41,7 @@
       <Setter Property="FontWeight" Value="Medium"/>
       <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/>
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
       <Setter Property="Template"><ControlTemplate>
         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
@@ -49,6 +49,12 @@
           <ContentPresenter Content="{TemplateBinding Content}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
         </Border>
       </ControlTemplate></Setter>
+    </Style>
+    <Style Selector="Window.motion Button.proxy-action">
+      <Setter Property="Transitions"><Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      </Transitions></Setter>
     </Style>
     <Style Selector="Button.proxy-action:pointerover:not(:disabled)">
       <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>

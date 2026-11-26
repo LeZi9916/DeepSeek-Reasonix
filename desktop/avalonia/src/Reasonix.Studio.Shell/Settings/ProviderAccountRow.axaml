@@ -22,13 +22,20 @@
     </Style>
     <Style Selector="Button.service-row-icon">
       <Setter Property="Width" Value="24"/><Setter Property="Height" Value="28"/>
-      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/>
+    </Style>
+    <Style Selector="Window.motion Button.service-row-icon">
+      <Setter Property="Transitions"><Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      </Transitions></Setter>
     </Style>
     <Style Selector="Button.service-row-icon:pointerover">
       <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
       <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
     </Style>
-    <Style Selector="Border#Frame"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderBrush" Value="Transparent"/>
+    <Style Selector="Border#Frame"><Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/><Setter Property="BorderBrush" Value="Transparent"/></Style>
+    <Style Selector="Window.motion Border#Frame">
       <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/></Transitions></Setter>
     </Style>
     <Style Selector="Border#Frame:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>

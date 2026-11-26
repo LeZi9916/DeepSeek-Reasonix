@@ -150,6 +150,7 @@ public sealed partial class SessionPage
             }
         }
 
+        RestoreFoldPose(TranscriptPart.Activity, id, disclosure.FindControl<DisclosureMotion>("Body")!);
         disclosure.SetCountDetails(tally.Calls, ActivityDetails(tally));
         BindActivityCount(id, disclosure);
         disclosure.ConfigureLive(work.OfType<ToolItem>().LastOrDefault(tool => tool.Running), tally.Running, tally.Failed > 0, Language);

@@ -128,9 +128,11 @@ public sealed partial class PlanStrip : UserControl
     /// <summary>Returns to the compact view when its owning pane changes.</summary>
     internal void Reset()
     {
-        _transition?.Cancel();
+        var transition = _transition;
+        _transition = null;
+        transition?.Cancel();
         _expanded = false;
-        SetBodyVisible(false);
+        SettleFold(false, restoreFocus: false);
     }
 
     /// <summary>Fits the expanded list within the reference viewport budget.</summary>
@@ -194,7 +196,13 @@ public sealed partial class PlanStrip : UserControl
         }
 
         _expanded = expanded;
-        _transition?.Cancel();
+        var previous = _transition;
+        var fromHeight = Body.IsVisible ? (double.IsNaN(Body.Height) ? Body.Bounds.Height : Body.Height) : 34;
+        var fromOpacity = Body.IsVisible ? Body.Opacity : 0.4;
+        _transition = null;
+        Body.Height = fromHeight;
+        Body.Opacity = fromOpacity;
+        previous?.Cancel();
         if (TopLevel.GetTopLevel(this) is not Window window || !window.Classes.Contains("motion"))
         {
             SettleFold(expanded, restoreFocus);
@@ -202,15 +210,16 @@ public sealed partial class PlanStrip : UserControl
             return;
         }
 
-        _ = AnimateFoldAsync(window, expanded, restoreFocus);
+        _ = AnimateFoldAsync(window, expanded, restoreFocus, fromHeight, fromOpacity);
     }
 
     /// <summary>Animates the plan's reserved height while it opens or exits.</summary>
     /// <param name="window">The window that owns the motion preference.</param>
     /// <param name="expanded">The requested view.</param>
     /// <param name="restoreFocus">Whether the summary receives keyboard focus.</param>
+    /// <param name="fromHeight">The rendered height at the handoff.</param><param name="fromOpacity">The rendered opacity at the handoff.</param>
     /// <returns>Completion of the current fold.</returns>
-    private async Task AnimateFoldAsync(Window window, bool expanded, bool restoreFocus)
+    private async Task AnimateFoldAsync(Window window, bool expanded, bool restoreFocus, double fromHeight, double fromOpacity)
     {
         const double CompactHeight = 34;
         using var transition = new CancellationTokenSource();
@@ -218,10 +227,15 @@ public sealed partial class PlanStrip : UserControl
         SetBodyVisible(true);
         Body.IsHitTestVisible = expanded;
         StepsScroll.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-        Body.Measure(new Size(Math.Max(1, Bounds.Width - 2), double.PositiveInfinity));
+        var targetHeight = (double)CompactHeight;
+        if (expanded)
+        {
+            Body.ClearValue(HeightProperty);
+            Body.Measure(new Size(Math.Max(1, Bounds.Width - 2), double.PositiveInfinity));
+            targetHeight = Math.Max(CompactHeight, Body.DesiredSize.Height);
+            Body.Height = fromHeight;
+        }
 
-        // The CSS close keyframe starts from the natural height even if opening was interrupted.
-        var naturalHeight = Math.Max(CompactHeight, Body.DesiredSize.Height);
         var duration = TimeSpan.FromMilliseconds(expanded ? 260 : 120);
         var easing = expanded ? new SplineEasing(0.16, 1, 0.3, 1) : new SplineEasing(0.55, 0, 1, 0.45);
         window.Classes.CollectionChanged += MotionChanged;
@@ -230,8 +244,8 @@ public sealed partial class PlanStrip : UserControl
         {
             // One animator per task keeps visual-tree teardown from completing the same task twice.
             await Task.WhenAll(
-                AnimateFoldValue(HeightProperty, expanded ? CompactHeight : naturalHeight, expanded ? naturalHeight : CompactHeight, duration, easing, transition.Token),
-                AnimateFoldValue(OpacityProperty, expanded ? 0.4 : 1, expanded ? 1 : 0, duration, easing, transition.Token)).ConfigureAwait(true);
+                AnimateFoldValue(HeightProperty, fromHeight, targetHeight, duration, easing, transition.Token),
+                AnimateFoldValue(OpacityProperty, fromOpacity, expanded ? 1 : 0, duration, easing, transition.Token)).ConfigureAwait(true);
             if (!transition.IsCancellationRequested)
             {
                 SettleFold(expanded, restoreFocus);
@@ -272,6 +286,7 @@ public sealed partial class PlanStrip : UserControl
         {
             Duration = duration,
             Easing = easing,
+            FillMode = FillMode.Forward,
             Children =
             {
                 new KeyFrame { Cue = new Cue(0), Setters = { new Setter(property, from) } },
@@ -285,6 +300,8 @@ public sealed partial class PlanStrip : UserControl
     private void SettleFold(bool expanded, bool restoreFocus)
     {
         SetBodyVisible(expanded);
+        Body.ClearValue(HeightProperty);
+        Body.ClearValue(OpacityProperty);
         if (!expanded && restoreFocus)
         {
             Summary.Focus();

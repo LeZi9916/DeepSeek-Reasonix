@@ -60,6 +60,11 @@ public sealed partial class MainWindow
 
         using var motion = CancellationTokenSource.CreateLinkedTokenSource(_motionLifetime.Token);
         _workbenchEntrance = (motion, docked);
+        if (!docked)
+        {
+            ConversationArea.IsVisible = true;
+        }
+
         var property = expands ? WidthProperty : OpacityProperty;
         var from = expands ? width : opacity;
         var to = expands ? targetWidth : 1;
@@ -208,6 +213,11 @@ public sealed partial class MainWindow
 
         using var motion = CancellationTokenSource.CreateLinkedTokenSource(_motionLifetime.Token);
         _workbenchDismiss = motion;
+        if (double.IsNaN(width))
+        {
+            ConversationArea.IsVisible = true;
+        }
+
         var animation = WorkbenchTransition(OpacityProperty, opacity, 0, 160, new SplineEasing(0.42, 0, 1, 1), FillMode.Forward);
         WorkbenchPanel.PropertyChanged += FollowOpacity;
         try

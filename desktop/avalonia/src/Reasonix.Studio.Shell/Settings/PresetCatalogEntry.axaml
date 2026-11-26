@@ -29,7 +29,7 @@
   <Panel>
     <Border Name="BuiltinCard" Classes="preset-card" CornerRadius="15" BorderThickness="1" ClipToBounds="True">
       <Grid RowDefinitions="*,Auto,Auto">
-        <Button Name="Pick" Classes="preset-flat" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+        <Button Name="Pick" Classes="preset-flat preset-pick" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                 Padding="24,15" MinHeight="139" AutomationProperties.AutomationId="action:agent-preset.new-task-default">
           <StackPanel Spacing="20">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">

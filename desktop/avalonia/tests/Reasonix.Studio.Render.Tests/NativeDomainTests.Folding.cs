@@ -10,6 +10,7 @@ using Reasonix.Studio.Pages;
 using Reasonix.Studio.Shell.Settings;
 using Reasonix.Studio.State;
 using Reasonix.Studio.State.Transcript;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -18,6 +19,123 @@ namespace Reasonix.Studio.Render.Tests;
 
 public sealed partial class NativeDomainTests
 {
+    /// <summary>Observes the visible progress of a real tool disclosure through the exit.</summary>
+    /// <returns>The close-frame check.</returns>
+    [Fact]
+    public Task ToolDisclosureDoesNotReopenBeforeItHides() => WithSettingsAsync(
+        "conversation",
+        async (w, _) =>
+        {
+            await WaitForMotionFrame(() => w.Classes.Contains("motion")).ConfigureAwait(true);
+            w.ShowState(new SessionState
+            {
+                Items = new TranscriptItem[]
+                {
+                    new SayItem { Id = "answer", Done = true, Text = "Answer" },
+                    new ToolItem { Id = "tool", Call = new Tool { Name = "bash", Output = "tool output" } },
+                },
+            });
+            w.UpdateLayout();
+            var page = w.FindControl<SessionPage>("Conversation")!;
+            var activity = page.GetVisualDescendants().OfType<Control>().First(control => control.GetType().Name == "ActivityDisclosure");
+            var group = activity.FindControl<Control>("Body")!;
+            if (!group.IsVisible)
+            {
+                activity.FindControl<Button>("Toggle")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            }
+
+            await WaitForMotionFrame(() => group.IsVisible && group.Opacity == 1).ConfigureAwait(true);
+            w.UpdateLayout();
+            var tool = activity.GetVisualDescendants().OfType<Control>().Single(control => control.GetType().Name == "ToolCallHeader");
+            var body = tool.FindControl<Control>("Detail")!;
+            var toggle = tool.FindControl<Button>("Toggle")!;
+            var progress = AvaloniaPropertyRegistry.Instance.FindRegistered(body, "Progress")!;
+            if (!body.IsVisible)
+            {
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            }
+
+            await WaitForMotionFrame(() => body.IsVisible && (double)body.GetValue(progress)! == 1).ConfigureAwait(true);
+            w.UpdateLayout();
+            Assert.True(body.Bounds.Height > 0);
+            var samples = new List<double>();
+            body.PropertyChanged += (_, change) =>
+            {
+                if (change.Property == progress && body.IsVisible)
+                {
+                    samples.Add((double)body.GetValue(progress)!);
+                }
+            };
+            toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await WaitForMotionFrame(() => !body.IsVisible).ConfigureAwait(true);
+            Assert.Contains(samples, value => value is > 0 and < 1);
+            Assert.Equal(samples.OrderDescending(), samples);
+        },
+        allowMotion: true);
+
+    /// <summary>Transfers a live disclosure to its virtualized row at the activity boundary.</summary>
+    /// <returns>The streaming fold interaction.</returns>
+    [Fact]
+    public Task ToolDisclosureContinuesWhenActivityStartsVirtualizing() => WithSettingsAsync(
+        "conversation",
+        async (w, _) =>
+        {
+            await WaitForMotionFrame(() => w.Classes.Contains("motion")).ConfigureAwait(true);
+            var answer = new SayItem { Id = "answer", Done = true, Text = "Read the workspace" };
+            var output = string.Join("\n", Enumerable.Repeat("File contents", 20));
+            var tools = Enumerable.Range(0, 25).Select(index => new ToolItem
+            {
+                Id = $"fold-tool-{index}",
+                Call = new Tool { Name = "read_file", Output = output },
+            }).ToArray();
+            var start = new SessionState
+            {
+                RunSince = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                Running = true,
+                Items = [answer, .. tools.Take(24)],
+            };
+            w.ShowState(start);
+            w.UpdateLayout();
+            var page = w.FindControl<SessionPage>("Conversation")!;
+            var group = page.GetVisualDescendants().OfType<Control>().First(control => control.GetType().Name == "ActivityDisclosure");
+            var groupBody = group.FindControl<Control>("Body")!;
+            if (!groupBody.IsVisible)
+            {
+                group.FindControl<Button>("Toggle")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            }
+
+            await WaitForMotionFrame(() => groupBody.IsVisible && groupBody.Opacity == 1).ConfigureAwait(true);
+            w.UpdateLayout();
+            var before = FirstTool();
+            var detail = before.FindControl<Control>("Detail")!;
+            var toggle = before.FindControl<Button>("Toggle")!;
+            var progress = AvaloniaPropertyRegistry.Instance.FindRegistered(detail, "Progress")!;
+            if (detail.IsVisible)
+            {
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await WaitForMotionFrame(() => !detail.IsVisible).ConfigureAwait(true);
+            }
+
+            detail.GetType().GetProperty("DurationMs")!.SetValue(detail, 750d);
+            toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await WaitForMotionFrame(() => (double)detail.GetValue(progress)! is > 0.05 and < 0.9).ConfigureAwait(true);
+            var fraction = (double)detail.GetValue(progress)!;
+            w.ShowState(start with
+            {
+                Items = [answer, .. tools],
+            });
+            w.UpdateLayout();
+            var replacement = FirstTool();
+            Assert.NotSame(before, replacement);
+            var continued = replacement.FindControl<Control>("Detail")!;
+            Assert.InRange((double)continued.GetValue(progress)!, fraction - 0.001, 0.999);
+            await WaitForMotionFrame(() => (double)continued.GetValue(progress)! == 1).ConfigureAwait(true);
+
+            Control FirstTool() => page.GetVisualDescendants().OfType<Border>()
+                .First(border => border.Tag is ToolItem { Id: "fold-tool-0" }).Child!;
+        },
+        allowMotion: true);
+
     /// <summary>Exercises the preview modes and native transcript through the same settings entry point.</summary>
     /// <param name="width">The viewport width.</param><param name="dark">Whether to use dark appearance.</param>
     /// <returns>The settings interaction and captures.</returns>

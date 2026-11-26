@@ -21,16 +21,17 @@ public sealed partial class NativeDomainTests
     public Task ProviderRowsFadeTheirHoverBackground() =>
         WithSettingsAsync(
             "conversation",
-            (window, _) =>
+            async (window, _) =>
             {
+                await WaitForSettingsFrame(() => window.Classes.Contains("motion")).ConfigureAwait(true);
                 Navigate(window, "settings-model");
                 var row = window.GetVisualDescendants().OfType<ProviderAccountRow>().First();
                 var frame = row.FindControl<Border>("Frame")!;
                 var transition = Assert.Single(frame.Transitions!.OfType<BrushTransition>());
                 Assert.Equal(TimeSpan.FromMilliseconds(120), transition.Duration);
                 Assert.IsType<SplineEasing>(transition.Easing);
-                return Task.CompletedTask;
-            });
+            },
+            allowMotion: true);
 
     /// <summary>Checks the provider rail row's reference card entrance.</summary>
     /// <returns>The provider-row entrance check.</returns>

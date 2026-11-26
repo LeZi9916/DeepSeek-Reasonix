@@ -187,40 +187,52 @@ public sealed partial class MainWindow
         var packs = await api.ThemesAsync(_closing.Token).ConfigureAwait(true);
         if (ticket == _paletteRead && !_closing.IsCancellationRequested)
         {
-            if (_palette is not null)
-            {
-                Resources.MergedDictionaries.Remove(_palette);
-                _palette = null;
-            }
-
             var active = packs.OfType<JsonObject>().FirstOrDefault(p => (bool?)p["active"] == true);
-            if (active is not null)
-            {
-                _palette = PaletteResources(active);
-                Resources.MergedDictionaries.Add(_palette);
-            }
-
-            Classes.Set("illustrated", active?["sky"] is not null || (bool?)active?["background"]?["image"] == true);
             Backdrop.SetBusy(Conversation.State.Running);
             if (deferBackdrop)
             {
-                Dispatcher.UIThread.Post(() => _ = ApplyPaletteBackdropAsync(active, api, ticket), DispatcherPriority.Background);
+                ApplyPaletteResources(active);
+                Dispatcher.UIThread.Post(() => _ = ApplyPaletteBackdropAsync(active, api, ticket, applyResources: false), DispatcherPriority.Background);
             }
             else
             {
-                await ApplyPaletteBackdropAsync(active, api, ticket).ConfigureAwait(true);
+                await ApplyPaletteBackdropAsync(active, api, ticket, applyResources: true).ConfigureAwait(true);
             }
         }
 
         return packs;
     }
 
+    /// <summary>Publishes the selected palette to the window and its illustrated surfaces.</summary>
+    /// <param name="active">The installed pack, or the built-in theme.</param>
+    private void ApplyPaletteResources(JsonObject? active)
+    {
+        var next = active is null ? null : PaletteResources(active);
+        if (_palette is not null && next is not null)
+        {
+            var index = Resources.MergedDictionaries.IndexOf(_palette);
+            Resources.MergedDictionaries[index] = next;
+        }
+        else if (_palette is not null)
+        {
+            Resources.MergedDictionaries.Remove(_palette);
+        }
+        else if (next is not null)
+        {
+            Resources.MergedDictionaries.Add(next);
+        }
+
+        _palette = next;
+        Classes.Set("illustrated", active?["sky"] is not null || (bool?)active?["background"]?["image"] == true);
+    }
+
     /// <summary>Applies the selected palette's optional artwork.</summary>
     /// <param name="active">The current palette.</param>
     /// <param name="api">The palette owner.</param>
     /// <param name="ticket">The palette read generation.</param>
+    /// <param name="applyResources">Whether the window palette is also waiting for this image.</param>
     /// <returns>The optional backdrop update.</returns>
-    private async Task ApplyPaletteBackdropAsync(JsonObject? active, StudioPageClient api, long ticket)
+    private async Task ApplyPaletteBackdropAsync(JsonObject? active, StudioPageClient api, long ticket, bool applyResources)
     {
         if (_closing.IsCancellationRequested || ticket != _paletteRead)
         {
@@ -229,7 +241,12 @@ public sealed partial class MainWindow
 
         try
         {
-            await Backdrop.ApplyAsync(active, api, _closing.Token).ConfigureAwait(true);
+            await Backdrop.ApplyAsync(
+                active,
+                api,
+                _closing.Token,
+                () => ticket == _paletteRead,
+                applyResources ? () => ApplyPaletteResources(active) : null).ConfigureAwait(true);
         }
         catch (OperationCanceledException) when (_closing.IsCancellationRequested)
         {

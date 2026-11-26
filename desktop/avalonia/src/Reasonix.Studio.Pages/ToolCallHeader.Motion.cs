@@ -14,6 +14,9 @@ namespace Reasonix.Studio.Pages;
 
 internal sealed partial class ToolCallHeader
 {
+    /// <summary>The current explicit output-height transition.</summary>
+    private CancellationTokenSource? _outputClipMotion;
+
     /// <summary>Slides a newly dispatched activity row into view.</summary>
     /// <param name="order">The index among calls dispatched together.</param>
     internal void EnterActivity(int order)
@@ -118,6 +121,65 @@ internal sealed partial class ToolCallHeader
         void MotionChanged(object? sender, NotifyCollectionChangedEventArgs args)
         {
             if (window?.Classes.Contains("motion") == false)
+            {
+                motion.Cancel();
+            }
+        }
+    }
+
+    /// <summary>Slides the output viewport between its clipped and full heights.</summary>
+    /// <returns>The current output transition.</returns>
+    private async Task AnimateOutputClipAsync()
+    {
+        var prior = _outputClipMotion;
+        var from = prior is null ? _output.Bounds.Height : _output.MaxHeight;
+        _outputClipMotion = null;
+        _output.MaxHeight = from;
+        prior?.Cancel();
+
+        var target = _openOutput ? double.PositiveInfinity : _cap;
+        if (TopLevel.GetTopLevel(this) is not Window window || !window.Classes.Contains("motion") || from <= 0)
+        {
+            _output.MaxHeight = target;
+            return;
+        }
+
+        using var motion = new CancellationTokenSource();
+        _outputClipMotion = motion;
+        var height = Math.Min(target, Math.Max(_output.Extent.Height, _output.Viewport.Height));
+        var animation = new Animation
+        {
+            Duration = TimeSpan.FromMilliseconds(120),
+            Easing = new SplineEasing(0, 0, 0.58, 1),
+            FillMode = FillMode.Forward,
+            Children =
+            {
+                new KeyFrame { Cue = new Cue(0), Setters = { new Setter(MaxHeightProperty, from) } },
+                new KeyFrame { Cue = new Cue(1), Setters = { new Setter(MaxHeightProperty, height) } },
+            },
+        };
+        window.Classes.CollectionChanged += MotionChanged;
+        DetachedFromVisualTree += Cancel;
+        try
+        {
+            await animation.RunAsync(_output, motion.Token).ConfigureAwait(true);
+        }
+        finally
+        {
+            window.Classes.CollectionChanged -= MotionChanged;
+            DetachedFromVisualTree -= Cancel;
+            if (_outputClipMotion == motion)
+            {
+                _outputClipMotion = null;
+                _output.MaxHeight = _openOutput ? double.PositiveInfinity : _cap;
+            }
+        }
+
+        void Cancel(object? sender, VisualTreeAttachmentEventArgs args) => motion.Cancel();
+
+        void MotionChanged(object? sender, NotifyCollectionChangedEventArgs args)
+        {
+            if (!window.Classes.Contains("motion"))
             {
                 motion.Cancel();
             }

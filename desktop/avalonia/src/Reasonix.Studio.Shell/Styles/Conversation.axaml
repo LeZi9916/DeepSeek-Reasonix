@@ -108,13 +108,15 @@
   </Style>
   <Style Selector="TextBox.compose-input, TextBox.compose-input:focus, TextBox.compose-input:pointerover"><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="CaretBrush" Value="{DynamicResource TextBrush}"/></Style>
   <Style Selector="TextBox.compose-input /template/ Border#PART_BorderElement, TextBox.compose-input:focus /template/ Border#PART_BorderElement, TextBox.compose-input:pointerover /template/ Border#PART_BorderElement"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
+  <Style Selector="Window.motion Border.compose-queue-row">
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.18" Easing="0.16,1,0.3,1"/></Transitions></Setter>
+  </Style>
   <Style Selector="Border.compose-queue-row">
     <Setter Property="Background" Value="{DynamicResource PageBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="{DynamicResource RMd}"/>
     <Setter Property="Padding" Value="10,6,8,6"/>
-    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.18" Easing="0.16,1,0.3,1"/></Transitions></Setter>
   </Style>
   <Style Selector="Border.compose-queue-row:pointerover">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
@@ -128,6 +130,9 @@
   <Style Selector="TextBlock.compose-queue-label.held">
     <Setter Property="Foreground" Value="{DynamicResource WarnInkBrush}"/>
   </Style>
+  <Style Selector="Window.motion Button.compose-queue-action">
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/><BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></Setter>
+  </Style>
   <Style Selector="Button.compose-queue-action">
     <Setter Property="Height" Value="20"/>
     <Setter Property="Padding" Value="7,0"/>
@@ -137,7 +142,6 @@
     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
     <Setter Property="Background" Value="{DynamicResource RaisedBrush}"/>
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/><BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.25,0.1,0.25,1"/></Transitions></Setter>
   </Style>
   <Style Selector="Button.compose-queue-action:pointerover, Button.compose-queue-action:pressed">
     <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
@@ -169,6 +173,7 @@
   <Style Selector="StackPanel.compose-area.tight Button.compose-icon"><Setter Property="Padding" Value="0"/></Style>
   <Style Selector="StackPanel.compose-area.tiny Button.compose-effort, StackPanel.compose-area.tiny Border#EffortSeparator"><Setter Property="IsVisible" Value="False"/></Style>
   <Style Selector="Button.workspace-quick-link">
+    <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/>
     <Setter Property="Height" Value="36"/><Setter Property="Padding" Value="10,0"/>
     <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Left"/>
     <Setter Property="CornerRadius" Value="7"/>
@@ -185,9 +190,11 @@
   <Style Selector="Window.motion Button.workspace-quick-link:pressed">
     <Setter Property="RenderTransform" Value="scale(0.94)"/>
   </Style>
+  <Style Selector="Window.motion ScrollViewer.conversation-scroll ScrollBar">
+    <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12"/></Transitions></Setter>
+  </Style>
   <Style Selector="ScrollViewer.conversation-scroll ScrollBar">
     <Setter Property="Opacity" Value="0"/>
-    <Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.12"/></Transitions></Setter>
   </Style>
   <Style Selector="ScrollViewer.conversation-scroll ScrollBar:pointerover">
     <Setter Property="Opacity" Value="1"/>

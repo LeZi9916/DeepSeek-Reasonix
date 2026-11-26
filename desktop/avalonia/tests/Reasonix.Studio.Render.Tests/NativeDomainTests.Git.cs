@@ -19,6 +19,48 @@ namespace Reasonix.Studio.Render.Tests;
 
 public sealed partial class NativeDomainTests
 {
+    /// <summary>Reserves the peek height during a diff read and respects a later close.</summary>
+    /// <returns>The pending diff interaction.</returns>
+    [Fact]
+    public Task GitDiffKeepsItsSpaceWhileLoading() => WithSettingsAsync(
+        "conversation",
+        async (w, reads) =>
+        {
+            var pending = new TaskCompletionSource<HttpResponseMessage?>();
+            var changes = JsonNode.Parse("""{"repo":true,"changes":[{"path":"new.txt","status":"??","unstaged":true}]}""")!;
+            reads.Exchange = request => request.RequestUri!.AbsolutePath switch
+            {
+                "/changes" => Task.FromResult<HttpResponseMessage?>(JsonReply(changes)),
+                "/changes/diff" => pending.Task,
+                _ => Task.FromResult<HttpResponseMessage?>(null),
+            };
+
+            Navigate(w, "workbench");
+            ClickAt(w, "action:workbench.changes-page");
+            var row = w.GetVisualDescendants().OfType<GitChangeRow>().Single();
+            var patch = row.FindControl<ContentControl>("PatchHost")!;
+            var toggle = row.FindControl<Button>("FoldButton")!;
+            w.UpdateLayout();
+            var restingHeight = row.Bounds.Height;
+            try
+            {
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                w.UpdateLayout();
+                Assert.True(patch.IsVisible);
+                Assert.IsType<TextBlock>(patch.Content);
+                Assert.InRange(Math.Abs(row.Bounds.Height - restingHeight), 0, 1);
+                toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            }
+            finally
+            {
+                pending.TrySetResult(JsonReply(new JsonObject { ["diff"] = "@@ -0,0 +1 @@\n+new\n" }));
+            }
+
+            await WaitForMotionFrame(() => patch.Content is GitPatchView).ConfigureAwait(true);
+            Assert.False(patch.IsVisible);
+        },
+        allowMotion: true);
+
     /// <summary>Keeps changed-file folds and the command bar stable while staging and scrolling.</summary>
     /// <param name="width">Window width.</param>
     /// <param name="dark">Whether the dark palette is active.</param>

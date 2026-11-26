@@ -59,29 +59,40 @@ internal sealed partial class MessageRail
             return;
         }
 
-        if (_active != slot)
-        {
-            _active = slot;
-            for (var index = 0; index < _segments.Count; index++)
-            {
-                var (first, last, button, line) = _segments[index];
-                button.Classes.Set("current", index == slot);
-                if (first == last)
-                {
-                    var distance = Math.Abs(index - slot);
-                    line.Width = 10 + (slot >= 0 && distance < s_growth.Length ? s_growth[distance] : 0);
-                }
-            }
-        }
-
+        UpdateHighlight(slot);
         if (slot < 0 || _opened >= 0 || _segments[slot].First != _segments[slot].Last)
         {
+            _peekId = null;
             Peek.Classes.Remove("shown");
             Peek.IsVisible = false;
             return;
         }
 
-        var mark = _segments[slot].First;
+        ShowPeek(_segments[slot].First);
+    }
+
+    /// <summary>Moves the current highlight without replacing the preview.</summary>
+    /// <param name="slot">The selected marker, or negative when none is active.</param>
+    private void UpdateHighlight(int slot)
+    {
+        _active = slot;
+        for (var index = 0; index < _segments.Count; index++)
+        {
+            var (first, last, button, line) = _segments[index];
+            button.Classes.Set("current", index == slot);
+            if (first == last)
+            {
+                var distance = Math.Abs(index - slot);
+                line.Width = 10 + (slot >= 0 && distance < s_growth.Length ? s_growth[distance] : 0);
+            }
+        }
+    }
+
+    /// <summary>Anchors the preview to the current location of the same message.</summary>
+    /// <param name="mark">The selected message index.</param>
+    private void ShowPeek(int mark)
+    {
+        _peekId = _marks[mark].Id;
         Heading.Text = MessageCatalog.Get("chat.your_message_n", _language, ("n", Number(mark + 1)));
         Excerpt.Text = _marks[mark].Text;
         Peek.IsVisible = true;
@@ -111,8 +122,8 @@ internal sealed partial class MessageRail
         });
         for (var mark = first; mark <= last; mark++)
         {
-            var index = mark;
-            var text = _marks[index].Text;
+            var message = _marks[mark];
+            var text = message.Text;
             var row = new Grid { ColumnDefinitions = new ColumnDefinitions("22,*"), ColumnSpacing = 8 };
             var number = new TextBlock
             {
@@ -136,7 +147,11 @@ internal sealed partial class MessageRail
             button.Click += (_, _) =>
             {
                 CloseRun();
-                Jump(index);
+                var index = Array.FindIndex(_marks, item => item.Id == message.Id);
+                if (index >= 0)
+                {
+                    Jump(index);
+                }
             };
             RunRows.Children.Add(button);
         }

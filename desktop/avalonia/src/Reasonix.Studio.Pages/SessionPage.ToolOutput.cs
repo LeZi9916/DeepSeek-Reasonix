@@ -75,6 +75,7 @@ public sealed partial class SessionPage
                 FoldChoice(TranscriptPart.Output, tool.Id) ?? _folding.StartsOpen(TranscriptPart.Output),
                 open => RememberFold(TranscriptPart.Steps, tool.Id, open),
                 open => RememberFold(TranscriptPart.Output, tool.Id, open));
+            RestoreFoldPose(TranscriptPart.Steps, tool.Id, header.FindControl<DisclosureMotion>("Detail")!);
             if (header.BackgroundJobId is { } jobId)
             {
                 header.BackgroundOutputRequested += OpenBackgroundToolOutput;

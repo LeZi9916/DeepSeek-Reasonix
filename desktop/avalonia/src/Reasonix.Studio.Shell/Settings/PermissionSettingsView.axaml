@@ -17,8 +17,15 @@
       <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
     </Style>
     <Style Selector="Button.permission-group">
+      <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/>
       <Setter Property="Height" Value="36"/><Setter Property="Padding" Value="2,0"/>
       <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="Window.motion Button.permission-group">
+      <Setter Property="Transitions"><Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      </Transitions></Setter>
     </Style>
     <Style Selector="Button.permission-group:pointerover"><Setter Property="Background" Value="{DynamicResource OverlayBrush}"/></Style>
     <Style Selector="ComboBox.permission-verdict /template/ Border#PopupBorder"><Setter Property="MinWidth" Value="140"/></Style>

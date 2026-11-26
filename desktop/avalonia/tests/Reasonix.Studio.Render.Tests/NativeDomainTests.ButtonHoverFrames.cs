@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Headless;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
@@ -9,6 +10,7 @@ using Reasonix.Studio.Kernel.Client;
 using Reasonix.Studio.Shell.Workbench;
 using Reasonix.Studio.State;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -17,6 +19,76 @@ namespace Reasonix.Studio.Render.Tests;
 
 public sealed partial class NativeDomainTests
 {
+    /// <summary>Checks the painted hover opacity of the navigation and copy actions.</summary>
+    /// <param name="dark">Whether to use the dark palette.</param>
+    /// <param name="copyPath">Whether to enter the branch menu instead of settings.</param>
+    /// <returns>The frame check.</returns>
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public Task UtilityButtonsKeepHoverWithinTheirPaintedEndpoints(bool dark, bool copyPath) => WithSettingsAsync(
+        copyPath ? "conversation" : "settings-common",
+        async (window, reads) =>
+        {
+            window.RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light;
+            Button button;
+            if (copyPath)
+            {
+                window.AdoptComposer(reads.Read<SessionStatus>("/status"));
+                window.FindControl<Button>("ComposeBranch")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                var popup = window.FindControl<Control>("BranchPopup")!;
+                var frame = popup.FindControl<Border>("Frame")!;
+                await WaitForMotionFrame(() => frame.IsEffectivelyVisible && frame.Opacity == 1).ConfigureAwait(true);
+                button = window.GetVisualDescendants().OfType<Button>().Single(candidate => candidate.Name == "CopyPath");
+            }
+            else
+            {
+                button = window.FindControl<Button>("CloseSettings")!;
+                var sheet = window.FindControl<Grid>("SettingsSheet")!;
+                await WaitForMotionFrame(() => sheet.Opacity == 1 && !sheet.IsAnimating(Visual.OpacityProperty)).ConfigureAwait(true);
+            }
+
+            window.UpdateLayout();
+            var surface = button.GetVisualDescendants().OfType<ContentPresenter>().Single();
+            var paint = new List<double>();
+            surface.PropertyChanged += (_, change) =>
+            {
+                if (change.Property == ContentPresenter.BackgroundProperty && surface.Background is ISolidColorBrush brush)
+                {
+                    paint.Add(brush.Opacity * brush.Color.A / 255d);
+                }
+            };
+
+            var outside = new Point(700, 80);
+            await WaitForMotionFrame(PointAtButton).ConfigureAwait(true);
+            window.MouseMove(outside);
+            await WaitForMotionFrame(PointAtButton).ConfigureAwait(true);
+
+            bool PointAtButton()
+            {
+                window.UpdateLayout();
+                var inside = button.TranslatePoint(new Point(button.Bounds.Width / 2, button.Bounds.Height / 2), window);
+                if (!button.IsEffectivelyVisible || inside is not { } point)
+                {
+                    return false;
+                }
+
+                window.MouseMove(point);
+                return button.IsPointerOver;
+            }
+
+            await WaitForMotionFrame(() => !button.IsAnimating(Button.BackgroundProperty) && !surface.IsAnimating(ContentPresenter.BackgroundProperty)).ConfigureAwait(true);
+            var hover = Assert.IsAssignableFrom<ISolidColorBrush>(surface.Background);
+            Assert.Equal(0.1, hover.Opacity * hover.Color.A / 255d, 3);
+            window.MouseMove(outside);
+            await WaitForMotionFrame(() => !button.IsAnimating(Button.BackgroundProperty) && !surface.IsAnimating(ContentPresenter.BackgroundProperty)).ConfigureAwait(true);
+            Assert.NotEmpty(paint);
+            Assert.All(paint, sample => Assert.InRange(sample, 0, 0.1001));
+        },
+        allowMotion: true);
+
     /// <summary>Samples the backgrounds painted by the mounted controls on pointer entry and exit.</summary>
     /// <param name="dark">Whether to use the dark palette.</param>
     /// <param name="workbench">Whether to open the workbench fixture.</param>

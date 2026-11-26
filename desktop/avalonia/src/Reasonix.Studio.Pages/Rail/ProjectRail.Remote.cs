@@ -106,15 +106,7 @@ public sealed partial class ProjectRail
                 var project = new ProjectEntry(
                     workspace,
                     folded,
-                    () =>
-                    {
-                        if (!_collapsed.Remove(key))
-                        {
-                            _collapsed.Add(key);
-                        }
-
-                        Rebuild();
-                    },
+                    header => ToggleProject(header, host.Name, workspace, sessions),
                     host,
                     Language);
                 project.SetMenu(BuildProjectMenu(new SessionOpenTarget(host.Name, workspace.Root, string.Empty)));
@@ -125,13 +117,7 @@ public sealed partial class ProjectRail
                     continue;
                 }
 
-                var visible = PreviewRows(host.Name, key, sessions);
-                foreach (var session in visible)
-                {
-                    _rows.Children.Add(RemoteSessionRow(host.Name, workspace.Root, session));
-                }
-
-                AddWindowTail(host.Name, workspace, sessions.Length, visible.Length);
+                AddProjectSessions(_rows.Children, host.Name, workspace, sessions);
             }
         }
     }

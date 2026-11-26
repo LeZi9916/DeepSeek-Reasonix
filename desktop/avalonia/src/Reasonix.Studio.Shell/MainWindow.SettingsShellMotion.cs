@@ -35,9 +35,16 @@ public sealed partial class MainWindow
         var transform = (TranslateTransform)SettingsSheet.RenderTransform!;
         var x = running is null && opening ? 14 : transform.X;
         var y = transform.Y;
+        _settingsShellMotion = null;
         running?.Cancel();
         if (!Classes.Contains("motion") || _closing.IsCancellationRequested)
         {
+            if (opening && !_closing.IsCancellationRequested)
+            {
+                SettingsSheet.Opacity = SettingsVeil.Opacity = SettingsTitleBar.Opacity = 1;
+                transform.X = transform.Y = 0;
+            }
+
             return !_closing.IsCancellationRequested;
         }
 
@@ -63,7 +70,15 @@ public sealed partial class MainWindow
                 veil.RunAsync(SettingsVeil, motion.Token),
                 title.RunAsync(SettingsTitleBar, motion.Token),
                 sheet.RunAsync(SettingsSheet, motion.Token)).ConfigureAwait(true);
-            return _settingsShellMotion == motion && !_closing.IsCancellationRequested;
+            if (_settingsShellMotion != motion || _closing.IsCancellationRequested)
+            {
+                return false;
+            }
+
+            var opacity = opening ? 1d : 0d;
+            SettingsSheet.Opacity = SettingsVeil.Opacity = SettingsTitleBar.Opacity = opacity;
+            transform.X = transform.Y = 0;
+            return true;
         }
         catch (OperationCanceledException) when (motion.IsCancellationRequested)
         {
@@ -80,6 +95,7 @@ public sealed partial class MainWindow
         static Animation Fade(double from, double to, int duration, Easing easing) => new()
         {
             Duration = TimeSpan.FromMilliseconds(duration),
+            FillMode = FillMode.Both,
             Easing = easing,
             Children =
             {

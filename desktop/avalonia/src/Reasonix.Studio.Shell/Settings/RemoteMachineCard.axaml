@@ -77,7 +77,13 @@
         </Border>
       </ControlTemplate></Setter>
     </Style>
-    <Style Selector="Button.remote-card-action.more"><Setter Property="Background" Value="Transparent"/></Style>
+    <Style Selector="Button.remote-card-action.more"><Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/></Style>
+    <Style Selector="Window.motion Button.remote-card-action">
+      <Setter Property="Transitions"><Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      </Transitions></Setter>
+    </Style>
     <Style Selector="Button.remote-card-action:pointerover, Button.remote-card-action.menu-open">
       <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/>
     </Style>

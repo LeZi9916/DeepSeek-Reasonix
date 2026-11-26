@@ -38,6 +38,9 @@ internal sealed partial class MessageRail : UserControl
     /// <summary>The index of the closest segment to the pointer or keyboard focus.</summary>
     private int _active = -1;
 
+    /// <summary>The displayed single message, even if the layout groups it with its neighbors.</summary>
+    private string? _peekId;
+
     /// <summary>The index of the expanded cluster.</summary>
     private int _opened = -1;
 
@@ -167,14 +170,18 @@ internal sealed partial class MessageRail : UserControl
     internal void SetMarks(UserItem[] marks, InterfaceLanguage language)
     {
         var sameMarks = marks.Length == _marks.Length && marks.Select(mark => mark.Id).SequenceEqual(_marks.Select(mark => mark.Id));
+        _marks = marks;
+        _language = language;
         if (!sameMarks)
         {
             _positions = [];
-            BuildSegments();
+            if (_segments.Count > 0)
+            {
+                _positions = Enumerable.Range(0, marks.Length).Select(index => Place(index / (double)Math.Max(1, marks.Length - 1))).ToArray();
+                BuildSegments();
+            }
         }
 
-        _marks = marks;
-        _language = language;
         SetAvailable(_available);
         AutomationProperties.SetName(Track, MessageCatalog.Get("chat.what_you_said", language));
         Hint.Text = MessageCatalog.Get("chat.click_to_jump_right_click", language);
@@ -249,13 +256,9 @@ internal sealed partial class MessageRail : UserControl
     /// <summary>Draws dense runs as one segment when gaps are under five pixels.</summary>
     private void BuildSegments()
     {
-        CloseRun();
-        Highlight(-1);
-        foreach (var segment in _segments)
-        {
-            Track.Children.Remove(segment.Button);
-        }
-
+        var selected = _active < 0 ? null : _segments[_active].Button;
+        var opened = _opened < 0 ? null : _segments[_opened].Button;
+        var prior = _segments.ToDictionary(segment => ((string, string))segment.Button.Tag!);
         _segments.Clear();
         for (var first = 0; first < _positions.Length;)
         {
@@ -265,8 +268,54 @@ internal sealed partial class MessageRail : UserControl
                 last++;
             }
 
-            AddSegment(first, last);
+            if (prior.Remove((_marks[first].Id, _marks[last].Id), out var reusable))
+            {
+                PlaceSegment(first, last, reusable.Button, reusable.Line);
+                _segments.Add((first, last, reusable.Button, reusable.Line));
+                RefreshStar(_segments.Count - 1);
+            }
+            else
+            {
+                AddSegment(first, last);
+            }
+
             first = last + 1;
+        }
+
+        foreach (var segment in prior.Values)
+        {
+            Track.Children.Remove(segment.Button);
+        }
+
+        for (var index = 0; index < _segments.Count; index++)
+        {
+            var oldIndex = Track.Children.IndexOf(_segments[index].Button);
+            if (oldIndex != index + 1)
+            {
+                Track.Children.Move(oldIndex, index + 1);
+            }
+        }
+
+        _opened = _segments.FindIndex(segment => segment.Button == opened);
+        if (_opened >= 0)
+        {
+            var segment = _segments[_opened];
+            PlaceOverlay(Run, (_positions[segment.First] + _positions[segment.Last]) / 2, 150);
+        }
+        else
+        {
+            CloseRun();
+        }
+
+        UpdateHighlight(_segments.FindIndex(segment => segment.Button == selected));
+        var peek = Array.FindIndex(_marks, mark => mark.Id == _peekId);
+        if (Peek.IsVisible && peek >= 0 && _opened < 0)
+        {
+            ShowPeek(peek);
+        }
+        else
+        {
+            Highlight(_active);
         }
     }
 
@@ -276,24 +325,32 @@ internal sealed partial class MessageRail : UserControl
     private void AddSegment(int first, int last)
     {
         var clustered = last != first;
-        var span = Math.Max(4, _positions[last] - _positions[first]);
-        var line = new Border { Height = clustered ? span : 2, Width = clustered ? 12 : 10, CornerRadius = new CornerRadius(clustered ? 5 : 1) };
+        var line = new Border { Width = clustered ? 12 : 10, CornerRadius = new CornerRadius(clustered ? 5 : 1) };
         line.Classes.Add("message-line");
-        var button = new Button { Content = line, Width = 26, Height = clustered ? span + 8 : 12 };
+        var button = new Button { Content = line, Width = 26, Tag = (_marks[first].Id, _marks[last].Id) };
         button.Classes.Add("message-mark");
         var text = _marks[first].Text;
         var label = clustered
             ? MessageCatalog.Get("chat.jump_to_questions_a_to", _language, ("a", Number(first + 1)), ("b", Number(last + 1)))
             : MessageCatalog.Get("chat.jump_to_what_you_said", _language, ("text", text[..Math.Min(40, text.Length)]));
         AutomationProperties.SetName(button, label);
-        var slot = _segments.Count;
-        Canvas.SetLeft(button, 2);
-        var middle = (_positions[first] + _positions[last]) / 2;
-        Canvas.SetTop(button, middle - (button.Height / 2));
-        button.GotFocus += (_, _) => Highlight(slot);
-        button.LostFocus += (_, _) => Highlight(-1);
+        PlaceSegment(first, last, button, line);
+        button.GotFocus += (_, _) => Highlight(_segments.FindIndex(segment => segment.Button == button));
+        button.LostFocus += (_, _) =>
+        {
+            if (_active >= 0 && _active < _segments.Count && _segments[_active].Button == button)
+            {
+                Highlight(-1);
+            }
+        };
         button.Click += (_, _) =>
         {
+            var slot = _segments.FindIndex(segment => segment.Button == button);
+            if (slot < 0)
+            {
+                return;
+            }
+
             if (clustered && _opened != slot)
             {
                 OpenRun(slot);
@@ -301,28 +358,41 @@ internal sealed partial class MessageRail : UserControl
             else
             {
                 CloseRun();
-                Jump(first);
+                Jump(_segments[slot].First);
             }
         };
         button.KeyDown += (_, args) =>
         {
-            if (args.Key == Key.S)
+            if (args.Key == Key.S && _segments.FindIndex(segment => segment.Button == button) is var slot && slot >= 0)
             {
-                Star(first);
+                Star(_segments[slot].First);
                 args.Handled = true;
             }
         };
         button.PointerPressed += (_, args) =>
         {
-            if (args.GetCurrentPoint(button).Properties.IsRightButtonPressed)
+            if (args.GetCurrentPoint(button).Properties.IsRightButtonPressed && _segments.FindIndex(segment => segment.Button == button) is var slot && slot >= 0)
             {
-                Star(first);
+                Star(_segments[slot].First);
                 args.Handled = true;
             }
         };
         _segments.Add((first, last, button, line));
         Track.Children.Add(button);
-        RefreshStar(slot);
+        RefreshStar(_segments.Count - 1);
+    }
+
+    /// <summary>Updates a retained marker's geometry to the new transcript extent.</summary>
+    /// <param name="first">First message in the segment.</param><param name="last">Last message in the segment.</param>
+    /// <param name="button">The segment's input surface.</param><param name="line">The painted marker.</param>
+    private void PlaceSegment(int first, int last, Button button, Border line)
+    {
+        var span = Math.Max(4, _positions[last] - _positions[first]);
+        line.Height = first == last ? 2 : span;
+        button.Height = first == last ? 12 : span + 8;
+        Canvas.SetLeft(button, 2);
+        var middle = (_positions[first] + _positions[last]) / 2;
+        Canvas.SetTop(button, middle - (button.Height / 2));
     }
 
     /// <summary>Formats a question number using the reader's language.</summary>

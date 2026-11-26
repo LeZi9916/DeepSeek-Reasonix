@@ -211,7 +211,35 @@ internal static class Program
             throw new InvalidOperationException("The browser did not settle on the redirected address.");
         }
 
-        Console.WriteLine($"{guest.AdapterInfo.Type}: address, tabs, retained history, close, reload, loading feedback, redirect replacement and workspace HTML passed; Windows render scaling {window.RenderScaling}.");
+        var workbench = window.FindControl<Border>("WorkbenchPanel")!;
+        var surface = pane.FindControl<Border>("GuestHost")!;
+        window.FindControl<Button>("CloseWorkbench")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        using var workbenchExit = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        while (workbench.IsVisible)
+        {
+            await Task.Delay(16, workbenchExit.Token).ConfigureAwait(true);
+        }
+
+        pane.SleepWhenIdle(DateTimeOffset.UtcNow.AddMinutes(16));
+        if (surface.Child is not null)
+        {
+            throw new InvalidOperationException("The idle browser did not release its native guest.");
+        }
+
+        window.FindControl<Button>("ViewSwitch")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if (surface.Child is not NativeWebView awake || ReferenceEquals(awake, guest))
+        {
+            throw new InvalidOperationException("Reopening the workbench did not wake its selected browser.");
+        }
+
+        guest = awake;
+        documentReady = false;
+        guest.NavigationStarted += (_, _) => documentReady = false;
+        guest.NavigationCompleted += (_, args) => documentReady = args.IsSuccess;
+        await UntilAsync("document.title", "two").ConfigureAwait(true);
+        AssertReadyFooter(pane);
+
+        Console.WriteLine($"{guest.AdapterInfo?.Type}: navigation, tabs, retained history, reload, redirect, workspace HTML and idle wake passed at render scaling {window.RenderScaling}.");
 
         void Click(string name) => pane.FindControl<Button>(name)!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 

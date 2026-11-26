@@ -45,14 +45,16 @@
         </Grid>
       </StackPanel>
     </Button>
-    <local:DisclosureMotion Name="ReasoningBody">
-      <Grid>
-        <SelectableTextBlock Name="Reasoning" Margin="14,5,0,0" FontSize="{DynamicResource StudioType13}" LineHeight="21.84" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}"/>
-        <local:StreamCaret Name="ThoughtCaret" Fill="{DynamicResource FaintBrush}" MarkSize="5,11"/>
-      </Grid>
-    </local:DisclosureMotion>
-    <TextBlock Name="ReasoningPreview" Margin="14,1,0,3" FontSize="{DynamicResource StudioType12}" LineHeight="18"
-               Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis" IsVisible="False"/>
+    <Grid>
+      <local:DisclosureMotion Name="ReasoningBody">
+        <Grid>
+          <SelectableTextBlock Name="Reasoning" Margin="14,5,0,0" FontSize="{DynamicResource StudioType13}" LineHeight="21.84" TextWrapping="Wrap" Foreground="{DynamicResource FaintBrush}"/>
+          <local:StreamCaret Name="ThoughtCaret" Fill="{DynamicResource FaintBrush}" MarkSize="5,11"/>
+        </Grid>
+      </local:DisclosureMotion>
+      <TextBlock Name="ReasoningPreview" Margin="14,1,0,3" FontSize="{DynamicResource StudioType12}" LineHeight="18"
+                 Foreground="{DynamicResource FaintBrush}" TextTrimming="CharacterEllipsis" IsVisible="False" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Raw"/>
+    </Grid>
     <Grid>
       <StackPanel Name="AnswerBlocks" AutomationProperties.AutomationId="class:txt">
         <SelectableTextBlock Name="Answer" FontSize="{DynamicResource StudioReadingSize}" LineHeight="{DynamicResource StudioReadingHeight}" FontWeight="Medium" TextWrapping="Wrap"/>

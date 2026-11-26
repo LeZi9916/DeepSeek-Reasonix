@@ -25,15 +25,14 @@ public sealed partial class MainWindow
             return;
         }
 
-        if (row.RenderTransform is not TranslateTransform)
-        {
-            row.RenderTransform = new TranslateTransform();
-        }
+        row.Opacity = 0;
+        row.RenderTransform = new TranslateTransform(0, 6);
 
         var animation = new Animation
         {
             Duration = TimeSpan.FromMilliseconds(180),
             Easing = new SplineEasing(0.16, 1, 0.3, 1),
+            FillMode = FillMode.Forward,
             Children =
             {
                 new KeyFrame
@@ -70,6 +69,8 @@ public sealed partial class MainWindow
         finally
         {
             row.DetachedFromVisualTree -= Detached;
+            row.Opacity = 1;
+            ((TranslateTransform)row.RenderTransform!).Y = 0;
         }
     }
 }

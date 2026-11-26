@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,6 +37,7 @@ public sealed partial class MainWindow
         var animation = new Animation
         {
             Duration = TimeSpan.FromMilliseconds(240),
+            FillMode = FillMode.Forward,
             Easing = new SplineEasing(0.42, 0, 1, 1),
             Children =
             {
@@ -57,5 +59,20 @@ public sealed partial class MainWindow
         }
 
         return !_motionLifetime.IsCancellationRequested;
+    }
+
+    /// <summary>Restores cards for the next visit or a superseded departure.</summary>
+    private void ResetSetupDeparturePose()
+    {
+        foreach (var card in new Control[] { WelcomeCard, ProjectStep, SetupShell })
+        {
+            card.Opacity = 1;
+            var scale = card.RenderTransform as ScaleTransform
+                ?? (card.RenderTransform as TransformGroup)?.Children.OfType<ScaleTransform>().FirstOrDefault();
+            if (scale is not null)
+            {
+                scale.ScaleX = scale.ScaleY = 1;
+            }
+        }
     }
 }

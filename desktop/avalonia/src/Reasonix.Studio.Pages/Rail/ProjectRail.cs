@@ -173,10 +173,7 @@ public sealed partial class ProjectRail : UserControl
 
         FoldAll.IsEnabled = _tree.Count > 0 || _remotes.Count > 0;
         RecentTab.IsEnabled = true;
-        var allFolded = _tree.Select(w => w.Root).Concat(_remotes.SelectMany(h => h.Projects.Select(w => RemoteKey(h.Name, w.Root)))).All(_collapsed.Contains);
-        FoldShape.Data = Geometry.Parse(allFolded ? "M15 3h6v6 M21 3l-7 7 M3 15v6h6 M3 21l7-7" : "m14 10 7-7 M20 10h-6V4 m-11 17 7-7 M4 14h6v6");
-        AutomationProperties.SetName(FoldAll, MessageCatalog.Get(allFolded ? "session.expand_all_projects" : "session.collapse_all_projects", Language));
-        ToolTip.SetTip(FoldAll, AutomationProperties.GetName(FoldAll));
+        UpdateFoldAll();
         ScopeLabel.Text = MessageCatalog.Get(
             _scope switch
             {
@@ -206,15 +203,7 @@ public sealed partial class ProjectRail : UserControl
             var project = new ProjectEntry(
                 workspace,
                 _collapsed.Contains(workspace.Root),
-                () =>
-                {
-                    if (!_collapsed.Remove(workspace.Root))
-                    {
-                        _collapsed.Add(workspace.Root);
-                    }
-
-                    Rebuild();
-                },
+                header => ToggleProject(header, string.Empty, workspace, sessions),
                 language: Language);
             project.SetMenu(BuildProjectMenu(new SessionOpenTarget(string.Empty, workspace.Root, string.Empty)));
             ConfigureProjectDrag(project, workspace);
@@ -225,14 +214,7 @@ public sealed partial class ProjectRail : UserControl
                 continue;
             }
 
-            var visible = PreviewRows(string.Empty, workspace.Root, sessions);
-            foreach (var session in visible)
-            {
-                _rows.Children.Add(SessionRow(session));
-                AddKeptRows(workspace.Root, session);
-            }
-
-            AddWindowTail(string.Empty, workspace, sessions.Length, visible.Length);
+            AddProjectSessions(_rows.Children, string.Empty, workspace, sessions);
         }
 
         RebuildRemotes();
@@ -241,6 +223,93 @@ public sealed partial class ProjectRail : UserControl
         {
             _rows.Children.OfType<SessionEntry>().FirstOrDefault(row => row.SessionPath == editPath)?.RestoreRename(editText);
         }
+    }
+
+    /// <summary>Replaces only the selected project's visible session range.</summary>
+    /// <param name="header">The mounted project header.</param><param name="host">The remote host or the local scope.</param>
+    /// <param name="workspace">The project snapshot.</param><param name="sessions">The sessions passing the current filters.</param>
+    private void ToggleProject(ProjectEntry header, string host, TreeWorkspace workspace, TreeSession[] sessions)
+    {
+        var start = _rows.Children.IndexOf(header) + 1;
+        if (start == 0)
+        {
+            return;
+        }
+
+        var local = host.Length == 0;
+        var key = local ? workspace.Root : RemoteKey(host, workspace.Root);
+        var folded = !_collapsed.Remove(key);
+        if (folded)
+        {
+            _collapsed.Add(key);
+        }
+
+        header.SetFolded(workspace, folded, Language);
+        UpdateFoldAll();
+        if (!local && _remoteQuery.Length > 0)
+        {
+            return;
+        }
+
+        if (folded)
+        {
+            var end = start;
+            while (end < _rows.Children.Count && _rows.Children[end] is not ProjectEntry)
+            {
+                if (local && _rows.Children[end] is SessionEntry session)
+                {
+                    _displayed.RemoveAll(row => row.Path == session.SessionPath);
+                }
+
+                end++;
+            }
+
+            _rows.Children.RemoveRange(start, end - start);
+        }
+        else
+        {
+            var rows = new List<Control>();
+            var displayStart = _displayed.Count;
+            AddProjectSessions(rows, host, workspace, sessions);
+            _rows.Children.InsertRange(start, rows);
+            if (local)
+            {
+                var inserted = _displayed.GetRange(displayStart, _displayed.Count - displayStart);
+                var offset = _rows.Children.Take(start).OfType<SessionEntry>().Count();
+                _displayed.RemoveRange(displayStart, inserted.Count);
+                _displayed.InsertRange(offset, inserted);
+            }
+        }
+
+        UpdateBatch();
+    }
+
+    /// <summary>Builds a local or remote project's visible session range.</summary>
+    /// <param name="rows">The target row collection.</param><param name="host">The remote host or the local scope.</param>
+    /// <param name="workspace">The project snapshot.</param><param name="sessions">The sessions passing the current filters.</param>
+    private void AddProjectSessions(ICollection<Control> rows, string host, TreeWorkspace workspace, TreeSession[] sessions)
+    {
+        var local = host.Length == 0;
+        var visible = PreviewRows(host, local ? workspace.Root : RemoteKey(host, workspace.Root), sessions);
+        foreach (var session in visible)
+        {
+            rows.Add(local ? SessionRow(session) : RemoteSessionRow(host, workspace.Root, session));
+            if (local)
+            {
+                AddKeptRows(rows, workspace.Root, session);
+            }
+        }
+
+        AddWindowTail(rows, host, workspace, sessions.Length, visible.Length);
+    }
+
+    /// <summary>Projects the aggregate fold state in the toolbar.</summary>
+    private void UpdateFoldAll()
+    {
+        var allFolded = _tree.Select(w => w.Root).Concat(_remotes.SelectMany(h => h.Projects.Select(w => RemoteKey(h.Name, w.Root)))).All(_collapsed.Contains);
+        FoldShape.Data = Geometry.Parse(allFolded ? "M15 3h6v6 M21 3l-7 7 M3 15v6h6 M3 21l7-7" : "m14 10 7-7 M20 10h-6V4 m-11 17 7-7 M4 14h6v6");
+        AutomationProperties.SetName(FoldAll, MessageCatalog.Get(allFolded ? "session.expand_all_projects" : "session.collapse_all_projects", Language));
+        ToolTip.SetTip(FoldAll, AutomationProperties.GetName(FoldAll));
     }
 
     /// <summary>

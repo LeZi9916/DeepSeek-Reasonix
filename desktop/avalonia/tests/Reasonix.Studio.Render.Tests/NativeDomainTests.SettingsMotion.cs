@@ -3,6 +3,8 @@ using Avalonia.Animation;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
@@ -148,7 +150,8 @@ public sealed partial class NativeDomainTests
                     .OfType<RadioButton>().First(radio => AutomationProperties.GetAutomationId(radio) == "action:appearance.esc-stop" && radio.IsChecked != true);
                 Assert.Contains(choice.Transitions!.OfType<BrushTransition>(), transition => transition.Property == TemplatedControl.BackgroundProperty);
                 Assert.Contains(choice.Transitions!.OfType<BrushTransition>(), transition => transition.Property == TemplatedControl.ForegroundProperty);
-                Assert.Contains(choice.Transitions!.OfType<TransformOperationsTransition>(), transition => transition.Property == Visual.RenderTransformProperty);
+                var scale = choice.GetVisualDescendants().OfType<Grid>().Single(grid => grid.Name == "SegmentMotion");
+                Assert.Contains(scale.Transitions!.OfType<TransformOperationsTransition>(), transition => transition.Property == Visual.RenderTransformProperty);
                 var paints = new List<Color>();
                 choice.PropertyChanged += (_, change) =>
                 {
@@ -165,6 +168,15 @@ public sealed partial class NativeDomainTests
                 Assert.Same(raised, choice.Background);
                 var expected = Assert.IsAssignableFrom<ISolidColorBrush>(raised).Color;
                 Assert.All(paints, paint => Assert.Equal(expected, paint));
+                choice.BringIntoView();
+                w.UpdateLayout();
+                var point = choice.TranslatePoint(new Point(choice.Bounds.Width / 2, choice.Bounds.Height / 2), w)!.Value;
+                var colorTransitions = choice.Transitions;
+                w.MouseMove(point);
+                w.MouseDown(point, MouseButton.Left);
+                Assert.True(choice.IsPressed);
+                Assert.Same(colorTransitions, choice.Transitions);
+                w.MouseUp(point, MouseButton.Left);
             },
             allowMotion: true);
 

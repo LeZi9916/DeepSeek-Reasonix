@@ -4,7 +4,7 @@
     <Style Selector="Button.ext-switch-tab, Button.ext-command, Button.ext-menu-item">
       <Setter Property="MinWidth" Value="0"/><Setter Property="MinHeight" Value="0"/>
       <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/><Setter Property="FontWeight" Value="Medium"/>
-      <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/><Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
       <Setter Property="Cursor" Value="Hand"/>
       <Setter Property="Template"><ControlTemplate>
         <Border Padding="{TemplateBinding Padding}" CornerRadius="{TemplateBinding CornerRadius}" BorderBrush="{TemplateBinding BorderBrush}"
@@ -29,11 +29,17 @@
     </Style>
     <Style Selector="Button.ext-command.scope">
       <Setter Property="Height" Value="24"/><Setter Property="Padding" Value="10,0"/><Setter Property="CornerRadius" Value="12"/>
-      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/>
     </Style>
     <Style Selector="Button.ext-menu-item">
       <Setter Property="Padding" Value="10,6"/><Setter Property="CornerRadius" Value="7"/>
       <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    </Style>
+    <Style Selector="Window.motion Button.ext-command, Window.motion Button.ext-menu-item">
+      <Setter Property="Transitions"><Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+        <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+      </Transitions></Setter>
     </Style>
     <Style Selector="Button.ext-command:pointerover, Button.ext-menu-item:pointerover, Button.ext-menu-item:focus-visible">
       <Setter Property="Background" Value="{DynamicResource OverlayBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>

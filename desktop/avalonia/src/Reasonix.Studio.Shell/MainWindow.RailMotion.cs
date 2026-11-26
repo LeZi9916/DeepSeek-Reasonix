@@ -3,7 +3,6 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell;
 
@@ -28,6 +27,7 @@ public sealed partial class MainWindow
     {
         if (!Classes.Contains("motion") || LayoutRoot.Bounds.Width <= 640)
         {
+            _railMotion++;
             _railMotionActive = false;
             return false;
         }
@@ -38,7 +38,7 @@ public sealed partial class MainWindow
         var icons = mode == "on" || (mode == "collapsed" && !opening);
         NavigationRail.IsVisible = icons;
         var iconWidth = icons ? NavigationRail.Width : 0;
-        var from = opening ? (Rail.IsVisible ? Rail.Bounds.Width : 0) : Rail.Bounds.Width;
+        var from = Rail.IsVisible ? Rail.Width : 0;
         var fromOpacity = Rail.Opacity;
         var to = opening ? _railWidth : 0;
         if (opening)
@@ -51,7 +51,7 @@ public sealed partial class MainWindow
 
         RailGrip.IsVisible = opening;
         ExpandRail.IsVisible = !opening;
-        _ = AnimateRailAsync(++_railMotion, opening, iconWidth, from, to, fromOpacity);
+        AnimateRail(++_railMotion, opening, iconWidth, from, to, fromOpacity);
         return true;
     }
 
@@ -62,12 +62,26 @@ public sealed partial class MainWindow
     /// <param name="from">The starting docked width.</param>
     /// <param name="to">The target docked width.</param>
     /// <param name="fromOpacity">The starting rail opacity.</param>
-    /// <returns>The completed motion.</returns>
-    private async Task AnimateRailAsync(int generation, bool opening, double iconWidth, double from, double to, double fromOpacity)
+    private void AnimateRail(int generation, bool opening, double iconWidth, double from, double to, double fromOpacity)
     {
-        var clock = Stopwatch.StartNew();
-        while (generation == _railMotion)
+        Stopwatch? clock = null;
+        RequestAnimationFrame(Frame);
+
+        void Frame(TimeSpan timestamp)
         {
+            if (generation != _railMotion || _closing.IsCancellationRequested)
+            {
+                return;
+            }
+
+            if (!Classes.Contains("motion"))
+            {
+                _railMotionActive = false;
+                LayoutPanels();
+                return;
+            }
+
+            clock ??= Stopwatch.StartNew();
             var elapsed = clock.Elapsed.TotalMilliseconds;
             var widthProgress = Math.Clamp(elapsed / 260, 0, 1);
             var fadeProgress = Math.Clamp(elapsed / 180, 0, 1);
@@ -78,23 +92,14 @@ public sealed partial class MainWindow
             Rail.Margin = new Thickness(iconWidth, 0, 0, 0);
             LayoutRoot.ColumnDefinitions[0].Width = new GridLength(iconWidth + width);
             QuickLinksFrame.Width = Math.Max(0, Math.Min(260, width - 20));
-            if (widthProgress >= 1)
+            if (widthProgress < 1)
             {
-                break;
+                RequestAnimationFrame(Frame);
+                return;
             }
 
-            await Task.Delay(16).ConfigureAwait(true);
+            _railMotionActive = false;
+            LayoutPanels();
         }
-
-        if (generation != _railMotion)
-        {
-            return;
-        }
-
-        Rail.Width = to;
-        Rail.Opacity = opening ? 1 : 0;
-        LayoutRoot.ColumnDefinitions[0].Width = new GridLength(iconWidth + to);
-        _railMotionActive = false;
-        LayoutPanels();
     }
 }

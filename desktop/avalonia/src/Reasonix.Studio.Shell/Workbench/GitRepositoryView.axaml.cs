@@ -304,13 +304,21 @@ public sealed partial class GitRepositoryView : SettingsFormView
     /// <param name="changes">Authoritative paths represented by the control.</param>
     /// <param name="path">Accessible path label.</param>
     /// <param name="id">Canonical action.</param>
+    /// <param name="latest">A read of the current changes for a retained row.</param>
     /// <returns>The host-driven three-state checkbox.</returns>
-    private GitStageBox StageBox(JsonObject[] changes, string path, string id)
+    private GitStageBox StageBox(JsonObject[] changes, string path, string id, Func<JsonObject[]>? latest = null)
     {
         var box = new GitStageBox { IsChecked = FullyStaged(changes) ? true : changes.Any(c => (bool?)c["staged"] == true) ? null : false };
         AutomationProperties.SetAutomationId(box, "action:" + id);
         AutomationProperties.SetName(box, Text("workbench.stage_path", ("path", path)));
-        box.Click += async (_, _) => await StageAsync(changes).ConfigureAwait(true);
+        box.Click += async (_, _) =>
+        {
+            var current = latest?.Invoke() ?? changes;
+            if (current.Length > 0)
+            {
+                await StageAsync(current).ConfigureAwait(true);
+            }
+        };
         return box;
     }
 

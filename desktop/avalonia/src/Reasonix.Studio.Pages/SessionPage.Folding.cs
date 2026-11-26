@@ -40,6 +40,7 @@ public sealed partial class SessionPage
             _rows.ClearRecent();
             _forms.Clear();
             _locations.Clear();
+            _foldPoses.Clear();
             _indices.Clear();
             _skipMountEntrance = true;
             _replySelection.Clear();

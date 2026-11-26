@@ -10,7 +10,7 @@
    <TextBlock Tag="onboarding.which_project" FontSize="{DynamicResource StudioType22}" FontWeight="Medium" Foreground="{DynamicResource TextBrush}"/>
    <TextBlock Tag="onboarding.drop_to_choose" TextWrapping="Wrap"/>
    <Border Name="DropZone" Classes="onb-drop" DragDrop.AllowDrop="True" MinHeight="150"
-           CornerRadius="{DynamicResource RMd}" ClipToBounds="True" Background="Transparent">
+           CornerRadius="{DynamicResource RMd}" ClipToBounds="True">
     <Grid>
      <local:OnboardingStripes Name="DropStripes" IsVisible="False" IsHitTestVisible="False" Opacity="0.06" Ink="{DynamicResource AccentBrush}"/>
      <Rectangle Classes="onb-drop-frame" RadiusX="10" RadiusY="10" StrokeThickness="1.5" IsHitTestVisible="False"/>

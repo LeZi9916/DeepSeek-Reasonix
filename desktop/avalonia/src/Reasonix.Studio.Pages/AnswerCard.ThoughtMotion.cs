@@ -34,6 +34,7 @@ internal sealed partial class AnswerCard
         return new Animation
         {
             Duration = TimeSpan.FromMilliseconds(180),
+            FillMode = slide ? FillMode.Forward : FillMode.None,
             Easing = new SplineEasing(0.16, 1, 0.3, 1),
             Children = { first, last },
         };
@@ -79,6 +80,8 @@ internal sealed partial class AnswerCard
                 _thoughtSwap = null;
                 outgoing.IsVisible = false;
                 outgoing.Text = null;
+                outgoing.Opacity = 1;
+                ((TranslateTransform)outgoing.RenderTransform!).Y = 0;
             }
         }
     }

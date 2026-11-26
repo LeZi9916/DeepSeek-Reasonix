@@ -1,6 +1,10 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
+using Reasonix.Studio.Pages.I18n;
+using Reasonix.Studio.Shell.Composer;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -25,9 +29,29 @@ public sealed partial class NativeDomainTests
                 await WaitForSettingsFrame(() => window.Classes.Contains("motion")).ConfigureAwait(true);
                 window.AdoptComposer(Status());
                 window.UpdateLayout();
-                var chip = window.FindControl<UserControl>("BackgroundJobs")!;
-                var row = chip.FindControl<StackPanel>("Rows")!.Children.OfType<Border>().First(border => Equals(border.Tag, "job-motion"));
-                await WaitForSettingsFrame(() => row.Opacity is > 0 and < 0.999 && row.RenderTransform!.Value.M32 > 0.4).ConfigureAwait(true);
+                var chip = window.FindControl<BackgroundJobChip>("BackgroundJobs")!;
+                var rows = chip.FindControl<StackPanel>("Rows")!;
+                var original = rows.Children.OfType<Border>().Single(border => Equals(border.Tag, "job-motion"));
+                Assert.False(original.IsAnimating(Visual.OpacityProperty));
+                chip.FindControl<Button>("Trigger")!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                window.UpdateLayout();
+                await WaitForSettingsFrame(original.IsAttachedToVisualTree).ConfigureAwait(true);
+                Assert.Equal(1, original.Opacity);
+                var status = Status();
+                var next = status.Jobs!.Single() with
+                {
+                    Id = "job-arrived",
+                };
+                chip.Show(
+                    status with
+                    {
+                        Jobs = [.. status.Jobs!, next],
+                    },
+                    InterfaceLanguage.Zh);
+                Assert.Same(original, rows.Children.OfType<Border>().Single(border => Equals(border.Tag, "job-motion")));
+                var row = rows.Children.OfType<Border>().Single(border => Equals(border.Tag, "job-arrived"));
+                Assert.Equal(0, row.Opacity);
+                Assert.Equal(6, row.RenderTransform!.Value.M32);
                 await WaitForSettingsFrame(() => row.Opacity == 1 && row.RenderTransform!.Value.M32 == 0).ConfigureAwait(true);
             },
             allowMotion: true);

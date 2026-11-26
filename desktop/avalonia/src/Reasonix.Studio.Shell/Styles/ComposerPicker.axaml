@@ -54,7 +54,7 @@
     <Setter Property="FontSize" Value="{DynamicResource StudioType11}"/>
     <Setter Property="FontWeight" Value="Medium"/>
     <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="{DynamicResource RPill}"/>
@@ -118,7 +118,7 @@
     <Setter Property="Margin" Value="0,1,0,0"/>
     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource FloatHiClearBrush}"/>
     <Setter Property="BorderThickness" Value="0"/>
     <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
     <Setter Property="Template">
@@ -167,7 +167,7 @@
     <Setter Property="Margin" Value="0"/>
     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource HairBrush}"/>
     <Setter Property="BorderThickness" Value="0,1,0,0"/>
     <Setter Property="FontSize" Value="{DynamicResource StudioType12}"/>
@@ -203,7 +203,7 @@
     <Setter Property="Margin" Value="0,1,0,0"/>
     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
-    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Background" Value="{DynamicResource OverlayClearBrush}"/>
     <Setter Property="BorderThickness" Value="0"/>
     <Setter Property="CornerRadius" Value="{DynamicResource RSm}"/>
     <Setter Property="Template">
@@ -289,4 +289,10 @@
     <Setter Property="Margin" Value="10,4,10,6"/>
     <Setter Property="TextWrapping" Value="Wrap"/>
   </Style>
+<Style Selector="Window.motion Button.model-chip, Window.motion Button.model-row, Window.motion Button.model-manage, Window.motion Button.effort-row">
+  <Setter Property="Transitions"><Transitions>
+    <BrushTransition Property="Background" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+    <BrushTransition Property="Foreground" Duration="0:0:0.12" Easing="0.16,1,0.3,1"/>
+  </Transitions></Setter>
+</Style>
 </Styles>

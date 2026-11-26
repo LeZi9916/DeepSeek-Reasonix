@@ -5,7 +5,6 @@ using Avalonia.Media;
 using Reasonix.Studio.Shell.Settings;
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace Reasonix.Studio.Shell;
 
@@ -22,9 +21,6 @@ public sealed partial class MainWindow
 
     /// <summary>Identifies the current page-index scroll.</summary>
     private int _settingsScrollMotion;
-
-    /// <summary>The start and end offsets of the current page-index scroll.</summary>
-    private (Vector From, Vector To) _settingsScroll;
 
     /// <summary>The group carrying the current landing outline.</summary>
     private SettingsGroup? _settingsLanded;
@@ -51,7 +47,7 @@ public sealed partial class MainWindow
 
         content.Opacity = 0;
         move.Y = 6;
-        _ = PlaySettingsColumnAsync(++_settingsColumnMotion, content, move);
+        PlaySettingsColumn(++_settingsColumnMotion, content, move);
     }
 
     /// <summary>Brings a setting below the pinned index, then plays the group landing when it has one.</summary>
@@ -105,24 +101,34 @@ public sealed partial class MainWindow
     /// <param name="generation">The entrance this loop owns.</param>
     /// <param name="content">The settings column wrapper.</param>
     /// <param name="move">Its translation transform.</param>
-    /// <returns>The completed entrance.</returns>
-    private async Task PlaySettingsColumnAsync(int generation, Control content, TranslateTransform move)
+    private void PlaySettingsColumn(int generation, Control content, TranslateTransform move)
     {
-        var clock = Stopwatch.StartNew();
-        while (generation == _settingsColumnMotion)
+        TimeSpan? previous = null;
+        var elapsed = 0d;
+        RequestAnimationFrame(Frame);
+
+        void Frame(TimeSpan timestamp)
         {
-            var progress = Math.Clamp(clock.Elapsed.TotalMilliseconds / 120, 0, 1);
-            var eased = s_settingsEase.Ease(progress);
-            content.Opacity = eased;
-            move.Y = 6 * (1 - eased);
-            if (progress >= 1)
+            if (generation != _settingsColumnMotion || _closing.IsCancellationRequested)
             {
-                content.Opacity = 1;
-                move.Y = 0;
                 return;
             }
 
-            await Task.Delay(16).ConfigureAwait(true);
+            if (previous is { } last)
+            {
+                // A synchronous layout stall must not consume the whole entrance.
+                elapsed += Math.Clamp((timestamp - last).TotalMilliseconds, 0, 32);
+            }
+
+            previous = timestamp;
+            var progress = Classes.Contains("motion") ? Math.Clamp(elapsed / 120, 0, 1) : 1;
+            var eased = s_settingsEase.Ease(progress);
+            content.Opacity = eased;
+            move.Y = 6 * (1 - eased);
+            if (progress < 1)
+            {
+                RequestAnimationFrame(Frame);
+            }
         }
     }
 
@@ -139,34 +145,26 @@ public sealed partial class MainWindow
             return;
         }
 
-        _settingsScroll = (from, destination);
-        _ = PlaySettingsScrollAsync(_settingsScrollMotion);
-    }
-
-    /// <summary>Advances a page-index scroll over 300 ms.</summary>
-    /// <param name="generation">The scroll this loop owns.</param>
-    /// <returns>The completed scroll.</returns>
-    private async Task PlaySettingsScrollAsync(int generation)
-    {
-        var clock = Stopwatch.StartNew();
-
-        // Reference smooth scrolling measured ~300 ms over 313 px and ~750 ms over 1986 px.
-        var distance = Math.Abs(_settingsScroll.To.Y - _settingsScroll.From.Y);
+        var generation = _settingsScrollMotion;
+        Stopwatch? clock = null;
         var duration = Math.Clamp(300 + (Math.Max(0, distance - 400) * 0.275), 300, 800);
-        while (generation == _settingsScrollMotion)
+        RequestAnimationFrame(Frame);
+
+        void Frame(TimeSpan timestamp)
         {
-            var progress = Math.Clamp(clock.Elapsed.TotalMilliseconds / duration, 0, 1);
-            var eased = s_settingsScrollEase.Ease(progress);
-            SettingsScroller.Offset = new Vector(
-                _settingsScroll.From.X + ((_settingsScroll.To.X - _settingsScroll.From.X) * eased),
-                _settingsScroll.From.Y + ((_settingsScroll.To.Y - _settingsScroll.From.Y) * eased));
-            if (progress >= 1)
+            if (generation != _settingsScrollMotion || _closing.IsCancellationRequested)
             {
-                SettingsScroller.Offset = _settingsScroll.To;
                 return;
             }
 
-            await Task.Delay(16).ConfigureAwait(true);
+            clock ??= Stopwatch.StartNew();
+            var progress = Classes.Contains("motion") ? Math.Clamp(clock.Elapsed.TotalMilliseconds / duration, 0, 1) : 1;
+            var eased = s_settingsScrollEase.Ease(progress);
+            SettingsScroller.Offset = from + ((destination - from) * eased);
+            if (progress < 1)
+            {
+                RequestAnimationFrame(Frame);
+            }
         }
     }
 }

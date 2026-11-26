@@ -92,6 +92,13 @@ internal sealed partial class AnswerCard : UserControl
         _answerCaret = this.FindControl<StreamCaret>("AnswerCaret")!;
         _reasoningBody = this.FindControl<DisclosureMotion>("ReasoningBody")!;
         _preview = this.FindControl<TextBlock>("ReasoningPreview")!;
+        _reasoningBody.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == IsVisibleProperty)
+            {
+                _preview.Opacity = _reasoningBody.IsVisible ? 0 : 1;
+            }
+        };
         _answer = this.FindControl<SelectableTextBlock>("Answer")!;
         _folding = folding;
         _openThought = thoughtChoice;
@@ -255,7 +262,8 @@ internal sealed partial class AnswerCard : UserControl
     private void ShowReasoning(bool open, bool animate = false)
     {
         _reasoningBody.SetExpanded(open, animate);
-        _preview.IsVisible = _folding.ThinkingPreview && !open && _thought.IsVisible && !string.IsNullOrEmpty(_preview.Text);
+        _preview.IsVisible = _folding.ThinkingPreview && _thought.IsVisible && !string.IsNullOrEmpty(_preview.Text);
+        _preview.Opacity = _reasoningBody.IsVisible ? 0 : 1;
         this.FindControl<Avalonia.Controls.Shapes.Path>("ThoughtChevron")!.Data = Geometry.Parse(open ? "M6 9 12 15 18 9" : "M9 6 15 12 9 18");
     }
 
